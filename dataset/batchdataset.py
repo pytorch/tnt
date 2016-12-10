@@ -13,9 +13,9 @@ class BatchDataset(dataset.Dataset):
 
     def __len__(self):
         if self.policy == 'include-last':
-            return math.ceil(float(self.dataset.size()) / self.batchsize)
+            return math.ceil(float(len(self.dataset) / self.batchsize)
         elif self.policy == 'skip-last':
-            return math.floor(float(self.dataset.size()) / self.batchsize)
+            return math.floor(float(len(sel.dataset) / self.batchsize)
         elif self.policy == 'divisible-only':
             assert len(self.dataset) % self.batchsize == 0, \
                     'dataset size is not divisible by batch size'

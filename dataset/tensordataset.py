@@ -5,12 +5,11 @@ class TensorDataset(dataset.Dataset):
     def __init__(self, data):
         assert isinstance(data, dict)
         assert len(data) > 0, "Should have at least one element"
-        size = lambda x: torch.is_tensor(x) and x.size(0) or len(x)
         
         # check that all fields have the same size
-        n_elem = size(data.values()[0])
+        n_elem = len(data.values()[0])
         for v in data.values():
-            assert size(v) == n_elem
+            assert len(v) == n_elem
         self.data = data
 
     def __len__(self):

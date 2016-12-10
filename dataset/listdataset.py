@@ -24,7 +24,7 @@ class ListDataset(dataset.Dataset):
         self.load = load
 
     def __len__(self):
-        return torch.is_tensor(self.list) and self.list.numel() or len(self.list)
+        return len(self.list)
 
     def __getitem__(self, idx):
         assert idx >= 0 and idx < len(self)
