@@ -5,7 +5,7 @@ import meter.confusionmeter
 import meter.classerrormeter
 import numpy as np
     
-class TestAutograd(unittest.TestCase):
+class TestMeters(unittest.TestCase):
     def testAverageValueMeter(self):
         m = meter.averagevaluemeter.AverageValueMeter()
         for i in range(1,10):
