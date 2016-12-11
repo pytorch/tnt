@@ -1,13 +1,14 @@
 import unittest
 import torch
-import meter.averagevaluemeter
-import meter.confusionmeter
-import meter.classerrormeter
+import meter
 import numpy as np
+
+import ipdb
+ipdb.set_trace()
     
 class TestMeters(unittest.TestCase):
     def testAverageValueMeter(self):
-        m = meter.averagevaluemeter.AverageValueMeter()
+        m = meter.AverageValueMeter()
         for i in range(1,10):
             m.add(i)
         mean, std = m.value()
@@ -17,7 +18,7 @@ class TestMeters(unittest.TestCase):
         self.assert_(np.isnan(mean))
 
     def testClassErrorMeter(self):
-        mtr = meter.classerrormeter.ClassErrorMeter(topk = [1])
+        mtr = meter.ClassErrorMeter(topk = [1])
         output = torch.eye(3)
         target = torch.range(0,2)
         mtr.add(output, target)
@@ -33,7 +34,7 @@ class TestMeters(unittest.TestCase):
         self.assertEqual(err, [50.0], "Half should be correct")
 
     def testConfusionMeter(self):
-        mtr = meter.confusionmeter.ConfusionMeter(k = 3)
+        mtr = meter.ConfusionMeter(k = 3)
 
         output = torch.Tensor([[.8,0.1,0.1],[10,11,10],[0.2,0.2,.3]])
         target = torch.range(0,2)
@@ -61,7 +62,7 @@ class TestMeters(unittest.TestCase):
         self.assertEqual(conf_mtrx[2][2], 1, \
                 "Bottom row has only the first test correct")
 
-        mtr = meter.confusionmeter.ConfusionMeter(k = 4, normalized = True)
+        mtr = meter.ConfusionMeter(k = 4, normalized = True)
         output = torch.Tensor([
             [.8,0.1,0.1,0],
             [10,11,10,0],

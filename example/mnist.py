@@ -1,16 +1,12 @@
 import torch
 import torch.optim
 import torch.nn
-from dataset.listdataset import ListDataset
-from dataset.tensordataset import TensorDataset
-from dataset.batchdataset import BatchDataset
-from dataset.progressbardataset import ProgressBarDataset
-from engine.engine import Engine
+import dataset
+import engine
+import meter
 from torch.utils.data import DataLoader
 from torch.utils.serialization.read_lua_file import load_lua
 from torch.autograd import Variable
-from meter.averagevaluemeter import AverageValueMeter
-from meter.classerrormeter import ClassErrorMeter
 import functional as F
 import math
 
