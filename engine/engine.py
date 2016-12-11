@@ -27,6 +27,7 @@ class Engine(object):
                 def closure():
                     loss, output = state['network'](state['sample'])
                     state['output'] = output
+                    state['loss'] = loss
                     loss.backward()
                     self.hook('onForward', state)
                     return loss
@@ -37,12 +38,14 @@ class Engine(object):
             state['epoch'] += 1
             self.hook('onEndEpoch', state)
         self.hook('onEnd', state)
+        return state
 
     def test(self, network, iterator):
         state = {
             'network': network,
             'iterator': iterator,
             't': 0,
+            'train': False,
             }
 
         self.hook('onStart', state)
@@ -52,6 +55,8 @@ class Engine(object):
           
             loss, output = state['network'](state['sample'])
             state['output'] = output
+            state['loss'] = loss
             self.hook('onForward', state)
         self.hook('onEnd', state)
+        return state
 

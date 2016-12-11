@@ -2,6 +2,7 @@ import unittest
 import torch
 import dataset.listdataset
 import dataset.tensordataset
+import dataset.batchdataset
 import numpy as np
 import os
 
@@ -52,6 +53,15 @@ class TestDatasets(unittest.TestCase):
         d = dataset.tensordataset.TensorDataset(data)
         self.assertEqual(len(d), 8)
         self.assertEqual(d[2], {'input': 2, 'target': 2})
+
+    def testBatchDataset(self):
+        t = torch.range(0,15).long()
+        batchsize = 8
+        d = dataset.listdataset.ListDataset(t, lambda x: {'input': x})
+        d = dataset.batchdataset.BatchDataset(d, batchsize)
+        ex = d[0]['input']
+        self.assertEqual(len(ex), batchsize)
+        self.assertEqual(ex[-1], batchsize - 1)
 
 
 if __name__ == '__main__':
