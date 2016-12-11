@@ -1,4 +1,4 @@
-import transform
+import torchnet.transform as transform
 import unittest
 import torch
 

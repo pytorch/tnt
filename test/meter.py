@@ -1,11 +1,8 @@
 import unittest
 import torch
-import meter
+import torchnet.meter as meter
 import numpy as np
 
-import ipdb
-ipdb.set_trace()
-    
 class TestMeters(unittest.TestCase):
     def testAverageValueMeter(self):
         m = meter.AverageValueMeter()

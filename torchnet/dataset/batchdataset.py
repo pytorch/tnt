@@ -1,7 +1,7 @@
 from . import dataset
 import math
 import torch
-import transform
+from .. import transform
 
 class BatchDataset(dataset.Dataset):
     def __init__(self,

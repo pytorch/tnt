@@ -1,9 +1,9 @@
 import torch
 import torch.optim
 import torch.nn
-import dataset
-import engine
-import meter
+import torchnet.meter as meter
+import torchnet.dataset as dataset
+from torchnet.engine import Engine
 from torch.utils.data import DataLoader
 from torch.utils.serialization.read_lua_file import load_lua
 from torch.autograd import Variable

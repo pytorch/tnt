@@ -1,6 +1,6 @@
 import unittest
 import torch
-import dataset
+import torchnet.dataset as dataset
 import numpy as np
 import os
 
