@@ -14,19 +14,19 @@ import math
 # torch.save('./example/mnist.t7',{train = mnist.traindataset(), test = mnist.testdataset()})
 mnist = load_lua('./example/mnist.t7')
 
-train_ds = TensorDataset({
+train_ds = dataset.TensorDataset({
     'input': mnist.train.data,
     'target': mnist.train.label,
     })
-train_ds = BatchDataset(train_ds, 128)
-train_ds = ProgressBarDataset(train_ds)
+train_ds = dataset.BatchDataset(train_ds, 128)
+train_ds = dataset.ProgressBarDataset(train_ds)
 
-test_ds = TensorDataset({
+test_ds = dataset.TensorDataset({
     'input': mnist.test.data,
     'target': mnist.test.label,
     })
-test_ds = BatchDataset(test_ds, 128)
-test_ds = ProgressBarDataset(test_ds)
+test_ds = dataset.BatchDataset(test_ds, 128)
+test_ds = dataset.ProgressBarDataset(test_ds)
 
 conv_init = lambda ni, no, k: torch.Tensor(no, ni, k, k).normal_(0,2/math.sqrt(ni*k*k))
 linear_init = lambda ni, no: torch.Tensor(no, ni).normal_(0,2/math.sqrt(ni))
@@ -65,8 +65,8 @@ def h(sample):
     o = f(params, inputs, sample['mode'])
     return F.cross_entropy(o, targets), o
 
-meter_loss = AverageValueMeter()
-classerr = ClassErrorMeter(accuracy=True)
+meter_loss = meter.AverageValueMeter()
+classerr = meter.ClassErrorMeter(accuracy=True)
 
 def onSample(state):
     state['sample']['mode'] = state['train']
