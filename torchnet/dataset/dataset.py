@@ -1,4 +1,5 @@
 import torchnet
+from torch.utils.data import DataLoader
 
 class Dataset(object):
     def __init__(self):
@@ -20,3 +21,6 @@ class Dataset(object):
 
     def shuffle(self, *args, **kwargs):
         return torchnet.dataset.ShuffleDataset(self, *args, **kwargs)
+
+    def parallel(self, *args, **kwargs):
+        return DataLoader(self, collate_fn = lambda x: x[0], *args, **kwargs)

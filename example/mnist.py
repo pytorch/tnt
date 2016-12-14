@@ -18,7 +18,7 @@ mnist = load_lua('./example/mnist.t7')
 train_ds = dataset.TensorDataset({
     'input': mnist.train.data,
     'target': mnist.train.label,
-    }).shuffle().batch(128)
+    }).shuffle().batch(128).parallel(num_workers=4)
 
 test_ds = dataset.TensorDataset({
     'input': mnist.test.data,
