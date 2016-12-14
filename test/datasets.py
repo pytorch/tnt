@@ -43,6 +43,7 @@ class TestDatasets(unittest.TestCase):
         os.remove(filename)
 
     def testTensorDataset(self):
+        # dict input
         data = {
                 # 'input': torch.range(0,7),
                 'input': np.arange(0,8),
@@ -51,6 +52,17 @@ class TestDatasets(unittest.TestCase):
         d = dataset.TensorDataset(data)
         self.assertEqual(len(d), 8)
         self.assertEqual(d[2], {'input': 2, 'target': 2})
+
+        # tensor input
+        a = torch.randn(8)
+        d = dataset.TensorDataset(a)
+        self.assertEqual(len(a), len(d))
+        self.assertEqual(a[1], d[1])
+
+        # list of tensors input
+        d = dataset.TensorDataset([a])
+        self.assertEqual(len(a), len(d))
+        self.assertEqual(a[1], d[1][0])
 
     def testBatchDataset(self):
         t = torch.range(0,15).long()
@@ -61,6 +73,21 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(len(ex), batchsize)
         self.assertEqual(ex[-1], batchsize - 1)
 
+    # def testTransformDataset(self):
+    #     d = dataset.TransformDataset(dataset.TensorDataset()
+
+    def testResampleDataset(self):
+        tbl = dataset.TensorDataset(np.asarray([0,1,2]))
+        d = dataset.ResampleDataset(tbl, lambda dataset, i: i % 2)
+        self.assertEqual(len(d), 3)
+        self.assertEqual(d[0], 0)
+        self.assertEqual(d[2], 0)
+
+    def testShuffleDataset(self):
+        tbl = dataset.TensorDataset(np.asarray([0,1,2,3,4]))
+        d = dataset.ShuffleDataset(tbl)
+        self.assertEqual(len(d), 5)
+        # TODO: every item should appear exactly once
 
 if __name__ == '__main__':
     unittest.main()

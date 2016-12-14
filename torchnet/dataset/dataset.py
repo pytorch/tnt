@@ -17,3 +17,6 @@ class Dataset(object):
 
     def transform(self, *args, **kwargs):
         return torchnet.dataset.TransformDataset(self, *args, **kwargs)
+
+    def shuffle(self, *args, **kwargs):
+        return torchnet.dataset.ShuffleDataset(self, *args, **kwargs)
