@@ -7,8 +7,9 @@ from torchnet.engine import Engine
 from torch.utils.data import DataLoader
 from torch.utils.serialization.read_lua_file import load_lua
 from torch.autograd import Variable
-import functional as F
+import torch.nn.functional as F
 import math
+from tqdm import tqdm
 
 # mnist = require 'mnist'
 # torch.save('./example/mnist.t7',{train = mnist.traindataset(), test = mnist.testdataset()})
@@ -19,14 +20,13 @@ train_ds = dataset.TensorDataset({
     'target': mnist.train.label,
     })
 train_ds = dataset.BatchDataset(train_ds, 128)
-train_ds = dataset.ProgressBarDataset(train_ds)
+
 
 test_ds = dataset.TensorDataset({
     'input': mnist.test.data,
     'target': mnist.test.label,
     })
 test_ds = dataset.BatchDataset(test_ds, 128)
-test_ds = dataset.ProgressBarDataset(test_ds)
 
 conv_init = lambda ni, no, k: torch.Tensor(no, ni, k, k).normal_(0,2/math.sqrt(ni*k*k))
 linear_init = lambda ni, no: torch.Tensor(no, ni).normal_(0,2/math.sqrt(ni))
@@ -81,7 +81,7 @@ def onStartEpoch(state):
 def onEndEpoch(state):
     print classerr.value()
 
-optimizer = torch.optim.SGD(params.values(), lr = 0.01, momentum = 0.9, weight_decay = 0.0005)
+optimizer = torch.optim.SGD(params.values(), lr=0.01, momentum=0.9, weight_decay=0.0005)
 
 engine = Engine()
 engine.hooks['onSample'] = onSample
@@ -89,5 +89,5 @@ engine.hooks['onForward'] = onForward
 engine.hooks['onStartEpoch'] = onStartEpoch
 engine.hooks['onEndEpoch'] = onEndEpoch
 engine.hooks['onEnd'] = onEndEpoch
-engine.train(h, train_ds, 2, optimizer) 
-engine.test(h, test_ds)
+engine.train(h, tqdm(train_ds), 2, optimizer) 
+engine.test(h, tqdm(test_ds))
