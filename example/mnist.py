@@ -18,15 +18,12 @@ mnist = load_lua('./example/mnist.t7')
 train_ds = dataset.TensorDataset({
     'input': mnist.train.data,
     'target': mnist.train.label,
-    })
-train_ds = dataset.BatchDataset(train_ds, 128)
-
+    }).batch(128)
 
 test_ds = dataset.TensorDataset({
     'input': mnist.test.data,
     'target': mnist.test.label,
-    })
-test_ds = dataset.BatchDataset(test_ds, 128)
+    }).batch(128)
 
 conv_init = lambda ni, no, k: torch.Tensor(no, ni, k, k).normal_(0,2/math.sqrt(ni*k*k))
 linear_init = lambda ni, no: torch.Tensor(no, ni).normal_(0,2/math.sqrt(ni))
