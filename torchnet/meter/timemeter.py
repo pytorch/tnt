@@ -22,7 +22,7 @@ class TimeMeter(meter.Meter):
 
     def reset(self):
         self.n = 0
-        self.time = time.now()
+        self.time = time.time()
 
     def value(self):
-        return time.now() - self.time
+        return time.time() - self.time
