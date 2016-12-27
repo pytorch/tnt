@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 class Engine(object):
     def __init__(self):
         self.hooks = {}
@@ -53,10 +55,16 @@ class Engine(object):
             state['sample'] = sample
             self.hook('onSample', state)
           
-            loss, output = state['network'](state['sample'])
-            state['output'] = output
-            state['loss'] = loss
-            self.hook('onForward', state)
+            def closure():
+                loss, output = state['network'](state['sample'])
+                state['output'] = output
+                state['loss'] = loss
+                self.hook('onForward', state)
+                # to free memory in save_for_backward
+                state['output'] = None
+                state['loss'] = None
+
+            closure()
         self.hook('onEnd', state)
         return state
 
