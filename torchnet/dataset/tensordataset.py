@@ -1,15 +1,17 @@
-from . import dataset
+from .dataset import Dataset
 import torch
 import numpy as np
 
-class TensorDataset(dataset.Dataset):
-    '''
+
+class TensorDataset(Dataset):
+    """
     Accept:
      * dict of tensors or numpy arrays
      * list of tensors or numpy arrays
      * tensor or numpy array
-    '''
+    """
     def __init__(self, data):
+        super(TensorDataset, self).__init__()
         if isinstance(data, dict):
             assert len(data) > 0, "Should have at least one element"
             # check that all fields have the same size
@@ -32,6 +34,7 @@ class TensorDataset(dataset.Dataset):
             return len(self.data)
 
     def __getitem__(self, idx):
+        super(TensorDataset, self).__getitem__(idx)
         if isinstance(self.data, dict):
             return {k: v[idx] for k,v in self.data.items()}
         elif isinstance(self.data, list):

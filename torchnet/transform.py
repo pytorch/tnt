@@ -38,7 +38,7 @@ def makebatch(merge = None):
     else:
         makebatch = compose([
             tablemergekeys(),
-            tableapply(lambda field: canmerge(field) and mergetensor(field) or field)
+            tableapply(lambda field: mergetensor(field) if canmerge(field) else field)
             ])
 
     return lambda samples: makebatch(samples)
