@@ -65,6 +65,7 @@ class Engine(object):
                 state['loss'] = None
 
             closure()
+            state['t'] +=1
         self.hook('onEnd', state)
         return state
 

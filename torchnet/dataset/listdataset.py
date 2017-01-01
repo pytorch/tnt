@@ -18,7 +18,7 @@ class ListDataset(Dataset):
         super(ListDataset, self).__init__()
         if isinstance(elem_list, str):
             with open(elem_list) as f:
-                self.list = [line[:-1] for line in f]
+                self.list = [line.replace('\n','') for line in f]
         elif torch.is_tensor(elem_list):
             assert isinstance(elem_list, torch.LongTensor), \
                     "Only torch.LongTensor supported as list"
