@@ -21,7 +21,7 @@ class ResampleDataset(Dataset):
     data. Note that an important sub-class is ([tnt.ShuffleDataset](#ShuffleDataset)),
     provided for convenience.
     """
-    def __init__(self, dataset, sampler, size=None):
+    def __init__(self, dataset, sampler=lambda ds,idx: idx, size=None):
         super(ResampleDataset, self).__init__()
         self.dataset = dataset
         self.sampler = sampler

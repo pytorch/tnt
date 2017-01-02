@@ -5,7 +5,7 @@ from utils.table import mergetensor as mergetensor
 def compose(transforms):
     assert isinstance(transforms, list)
     for tr in transforms:
-        assert callable(tr), 'dict of functions expected'
+        assert callable(tr), 'list of functions expected'
     def composition(z):
         for tr in transforms:
             z = tr(z)

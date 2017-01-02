@@ -22,7 +22,7 @@ class Engine(object):
         self.hook('onStart', state)
         while state['epoch'] < state['maxepoch']:
             self.hook('onStartEpoch', state)
-            for sample in iterator:
+            for sample in state['iterator']:
                 state['sample'] = sample
                 self.hook('onSample', state)
 
@@ -51,7 +51,7 @@ class Engine(object):
             }
 
         self.hook('onStart', state)
-        for sample in iterator:
+        for sample in state['iterator']:
             state['sample'] = sample
             self.hook('onSample', state)
           

@@ -23,8 +23,5 @@ class Dataset(object):
     def shuffle(self, *args, **kwargs):
         return torchnet.dataset.ShuffleDataset(self, *args, **kwargs)
 
-    def parallel(self, batch_size=1, shuffle=False, sampler=None,
-                 num_workers=0, collate_fn=lambda x: x[0],
-                 pin_memory=False):
-        return DataLoader(self, batch_size, shuffle, sampler, num_workers,
-                          collate_fn, pin_memory)
+    def parallel(self, *args, **kwargs):
+        return DataLoader(self, *args, **kwargs)

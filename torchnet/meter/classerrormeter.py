@@ -9,7 +9,7 @@ class ClassErrorMeter(meter.Meter):
         self.reset()
 
     def reset(self):
-        self.sum = np.zeros(len(self.topk))
+        self.sum = {v: 0 for v in self.topk}
         self.n = 0
 
     def add(self, output, target):
@@ -29,16 +29,19 @@ class ClassErrorMeter(meter.Meter):
         no = output.shape[0]
 
         pred = torch.from_numpy(output).topk(maxk, 1, True, True)[1].numpy()
-        correct = pred == target.reshape(pred.shape)
+        correct = pred == target[:,np.newaxis].repeat(pred.shape[1], 1)
 
         for k in topk:
-            self.sum[k-1] += no - correct[:,0:k].sum()
+            self.sum[k] += no - correct[:,0:k].sum()
         self.n += no
 
     def value(self, k = -1):
         if k != -1:
-            assert k <= self.sum.shape[0] and k >= 1, \
-                    'invalid k (this k was not provided at construction time)'
-            return self.accuracy and (1-self.sum[k-1] / self.n) * 100 or self.sum[k-1]*100 / self.n
+            assert k in self.sum.keys(), \
+                   'invalid k (this k was not provided at construction time)'
+            if self.accuracy:
+                return (1. - float(self.sum[k]) / self.n) * 100.0
+            else:
+                return float(self.sum[k])  / self.n * 100.0
         else:
             return [self.value(k) for k in self.topk]
