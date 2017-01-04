@@ -1,5 +1,3 @@
-from tqdm import tqdm
-
 class Engine(object):
     def __init__(self):
         self.hooks = {}
@@ -19,27 +17,27 @@ class Engine(object):
                 'train': True,
                 }
 
-        self.hook('onStart', state)
+        self.hook('on_start', state)
         while state['epoch'] < state['maxepoch']:
-            self.hook('onStartEpoch', state)
+            self.hook('on_start_epoch', state)
             for sample in state['iterator']:
                 state['sample'] = sample
-                self.hook('onSample', state)
+                self.hook('on_sample', state)
 
                 def closure():
                     loss, output = state['network'](state['sample'])
                     state['output'] = output
                     state['loss'] = loss
                     loss.backward()
-                    self.hook('onForward', state)
+                    self.hook('on_forward', state)
                     return loss
 
                 state['optimizer'].zero_grad()
                 state['optimizer'].step(closure)
                 state['t'] += 1
             state['epoch'] += 1
-            self.hook('onEndEpoch', state)
-        self.hook('onEnd', state)
+            self.hook('on_end_epoch', state)
+        self.hook('on_end', state)
         return state
 
     def test(self, network, iterator):
@@ -50,22 +48,21 @@ class Engine(object):
             'train': False,
             }
 
-        self.hook('onStart', state)
+        self.hook('on_start', state)
         for sample in state['iterator']:
             state['sample'] = sample
-            self.hook('onSample', state)
-          
+            self.hook('on_sample', state)
+
             def closure():
                 loss, output = state['network'](state['sample'])
                 state['output'] = output
                 state['loss'] = loss
-                self.hook('onForward', state)
+                self.hook('on_forward', state)
                 # to free memory in save_for_backward
                 state['output'] = None
                 state['loss'] = None
 
             closure()
-            state['t'] +=1
-        self.hook('onEnd', state)
+            state['t'] += 1
+        self.hook('on_end', state)
         return state
-

@@ -1,45 +1,26 @@
-import argparse
+from tqdm import tqdm
+import math
 import torch
 import torch.optim
-import torch.nn
-import torchnet.meter as meter
-import torchnet.dataset as dataset
+import torchnet as tnt
 from torchnet.engine import Engine
 from torch.utils.serialization.read_lua_file import load_lua
 from torch.autograd import Variable
 import torch.nn.functional as F
-import math
 
 
 def get_iterator(mnist, mode):
     ds = mnist.train if mode else mnist.test
-    tds = dataset.TensorDataset([ds.data, ds.label])
-    return tds.parallel(batch_size=opt.batch_size,
-                        num_workers=opt.nthread,
-                        shuffle=mode)
+    tds = tnt.dataset.TensorDataset([ds.data, ds.label])
+    return tds.parallel(batch_size=128, num_workers=4, shuffle=mode)
 
 
 def conv_init(ni, no, k):
-    return torch.Tensor(no, ni, k, k).normal_(0,2/math.sqrt(ni*k*k))
+    return torch.Tensor(no, ni, k, k).normal_(0, 2/math.sqrt(ni*k*k))
 
 
 def linear_init(ni, no):
-    return torch.Tensor(no, ni).normal_(0,2/math.sqrt(ni))
-
-
-params = {
-        'conv0.weight':     conv_init(1, 50, 5),
-        'conv0.bias':       torch.zeros(50),
-        'conv1.weight':     conv_init(50, 50, 5),
-        'conv1.bias':       torch.zeros(50),
-        'linear2.weight':   linear_init(800, 512),
-        'linear2.bias':     torch.zeros(512),
-        'linear3.weight':   linear_init(512, 10),
-        'linear3.bias':     torch.zeros(10),
-        }
-
-for k, v in params.items():
-    params[k] = Variable(v, requires_grad=True)
+    return torch.Tensor(no, ni).normal_(0, 2/math.sqrt(ni))
 
 
 def f(params, inputs, mode):
@@ -62,8 +43,22 @@ def main():
     # torch.save('./example/mnist.t7',{train = mnist.traindataset(), test = mnist.testdataset()})
     mnist = load_lua('./example/mnist.t7')
 
-    meter_loss = meter.AverageValueMeter()
-    classerr = meter.ClassErrorMeter(accuracy=True)
+    meter_loss = tnt.meter.AverageValueMeter()
+    classerr = tnt.meter.ClassErrorMeter(accuracy=True)
+
+    params = {
+            'conv0.weight':     conv_init(1, 50, 5),
+            'conv0.bias':       torch.zeros(50),
+            'conv1.weight':     conv_init(50, 50, 5),
+            'conv1.bias':       torch.zeros(50),
+            'linear2.weight':   linear_init(800, 512),
+            'linear2.bias':     torch.zeros(512),
+            'linear3.weight':   linear_init(512, 10),
+            'linear3.bias':     torch.zeros(10),
+            }
+
+    for k, v in params.items():
+        params[k] = Variable(v, requires_grad=True)
 
     def h(sample):
         inputs = Variable(sample[0].float() / 255.0)
@@ -76,23 +71,25 @@ def main():
 
     def on_forward(state):
         classerr.add(state['output'].data,
-                     torch.LongTensor(state['sample']['target']))
+                     torch.LongTensor(state['sample'][1]))
         meter_loss.add(state['loss'].data[0])
 
     def on_start_epoch(state):
         classerr.reset()
+        state['iterator'] = tqdm(state['iterator'])
 
     def on_end_epoch(state):
         print classerr.value()
 
-    optimizer = torch.optim.SGD(params.values(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+    optimizer = torch.optim.SGD(params.values(), lr=0.01, momentum=0.9,
+                                weight_decay=0.0005)
 
     engine = Engine()
-    engine.hooks['onSample'] = on_sample
-    engine.hooks['onForward'] = on_forward
-    engine.hooks['onStartEpoch'] = on_start_epoch
-    engine.hooks['onEndEpoch'] = on_end_epoch
-    engine.train(h, get_iterator(mnist, True), opt.epochs, optimizer)
+    engine.hooks['on_sample'] = on_sample
+    engine.hooks['on_forward'] = on_forward
+    engine.hooks['on_start_epoch'] = on_start_epoch
+    engine.hooks['on_end_epoch'] = on_end_epoch
+    engine.train(h, get_iterator(mnist, True), 10, optimizer)
     engine.test(h, get_iterator(mnist, False))
 
 
