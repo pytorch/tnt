@@ -1,6 +1,6 @@
 import torch
-from .utils.table import canmergetensor as canmerge
-from .utils.table import mergetensor as mergetensor
+from utils.table import canmergetensor as canmerge
+from utils.table import mergetensor as mergetensor
 
 def compose(transforms):
     assert isinstance(transforms, list)
