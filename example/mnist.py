@@ -3,15 +3,17 @@ import math
 import torch
 import torch.optim
 import torchnet as tnt
+from torchvision.datasets.mnist import MNIST
 from torchnet.engine import Engine
-from torch.utils.serialization.read_lua_file import load_lua
 from torch.autograd import Variable
 import torch.nn.functional as F
 
 
-def get_iterator(mnist, mode):
-    ds = mnist.train if mode else mnist.test
-    tds = tnt.dataset.TensorDataset([ds.data, ds.label])
+def get_iterator(mode):
+    ds = MNIST(root='./', download=True, train=mode)
+    data = getattr(ds, 'train_data' if mode else 'test_data')
+    labels = getattr(ds, 'train_labels' if mode else 'test_labels')
+    tds = tnt.dataset.TensorDataset([data, labels])
     return tds.parallel(batch_size=128, num_workers=4, shuffle=mode)
 
 
@@ -37,10 +39,6 @@ def f(params, inputs, mode):
 
 
 def main():
-    # mnist = require 'mnist'
-    # torch.save('./example/mnist.t7',{train = mnist.traindataset(), test = mnist.testdataset()})
-    mnist = load_lua('./example/mnist.t7')
-
     meter_loss = tnt.meter.AverageValueMeter()
     classerr = tnt.meter.ClassErrorMeter(accuracy=True)
 
@@ -87,8 +85,8 @@ def main():
     engine.hooks['on_forward'] = on_forward
     engine.hooks['on_start_epoch'] = on_start_epoch
     engine.hooks['on_end_epoch'] = on_end_epoch
-    engine.train(h, get_iterator(mnist, True), 10, optimizer)
-    engine.test(h, get_iterator(mnist, False))
+    engine.train(h, get_iterator(True), 10, optimizer)
+    engine.test(h, get_iterator(False))
 
 
 if __name__ == '__main__':
