@@ -30,7 +30,7 @@ def tablemergekeys():
         return mergetbl
     return mergekeys
 
-tableapply = lambda f: lambda d: dict(map(lambda k,v: (k, f(v)), d.iteritems()))
+tableapply = lambda f: lambda d: dict(map(lambda (k,v): (k, f(v)), d.iteritems()))
 
 def makebatch(merge = None):
     if merge:
