@@ -30,10 +30,8 @@ def f(params, inputs, mode):
     o = F.conv2d(o, params['conv1.weight'], params['conv1.bias'], stride=2)
     o = F.relu(o)
     o = o.view(o.size(0), -1)
-    o = F.dropout(o, p=0.5, training=mode)
     o = F.linear(o, params['linear2.weight'], params['linear2.bias'])
     o = F.relu(o)
-    o = F.dropout(o, p=0.5, training=mode)
     o = F.linear(o, params['linear3.weight'], params['linear3.bias'])
     return o
 
