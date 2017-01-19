@@ -25,8 +25,7 @@ class ClassErrorMeter(meter.Meter):
         assert target.shape[0] == output.shape[0], \
             'target and output do not match'
         topk = self.topk
-        maxk = topk[-1]
-        maxk = int(topk)  # seems like Python3 wants int and not np.int64
+        maxk = int(topk[-1]) # seems like Python3 wants int and not np.int64
         no = output.shape[0]
 
         pred = torch.from_numpy(output).topk(maxk, 1, True, True)[1].numpy()
