@@ -3,6 +3,7 @@ import torch
 import torchnet.dataset as dataset
 import numpy as np
 import os
+import tempfile
 
 class TestDatasets(unittest.TestCase):
     def testListDataset(self):
@@ -30,7 +31,7 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(d[2], 'bar/foo/2')
 
     def testListDataset_file(self):
-        filename = os.tempnam()
+        _, filename = tempfile.mkstemp()
         with open(filename, 'w') as f:
             for i in range(0,50):
                 f.write(str(i) + '\n')

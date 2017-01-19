@@ -12,7 +12,8 @@ class TestMeters(unittest.TestCase):
         self.assertEqual(mean, 5.0)
         m.reset()
         mean, std = m.value()
-        self.assert_(np.isnan(mean))
+
+        self.assertTrue(np.isnan(mean))
 
     def testClassErrorMeter(self):
         mtr = meter.ClassErrorMeter(topk = [1])
@@ -20,7 +21,7 @@ class TestMeters(unittest.TestCase):
         target = torch.range(0,2)
         mtr.add(output, target)
         err = mtr.value()
-        
+
         self.assertEqual(err, [0], "All should be correct")
 
         target[0] = 1

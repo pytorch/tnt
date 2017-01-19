@@ -1,16 +1,20 @@
 import torch
-from utils.table import canmergetensor as canmerge
-from utils.table import mergetensor as mergetensor
+from six import iteritems
+from .utils.table import canmergetensor as canmerge
+from .utils.table import mergetensor as mergetensor
+
 
 def compose(transforms):
     assert isinstance(transforms, list)
     for tr in transforms:
         assert callable(tr), 'list of functions expected'
+
     def composition(z):
         for tr in transforms:
             z = tr(z)
         return z
     return composition
+
 
 def tablemergekeys():
     def mergekeys(tbl):
@@ -30,17 +34,18 @@ def tablemergekeys():
         return mergetbl
     return mergekeys
 
-tableapply = lambda f: lambda d: dict(map(lambda (k,v): (k, f(v)), d.iteritems()))
+tableapply = lambda f: lambda d: dict(
+    map(lambda kv: (kv[0], f(kv[1])), iteritems(d)))
 
-def makebatch(merge = None):
+
+def makebatch(merge=None):
     if merge:
         makebatch = compose([tablemergekeys(), merge])
     else:
         makebatch = compose([
             tablemergekeys(),
-            tableapply(lambda field: mergetensor(field) if canmerge(field) else field)
-            ])
+            tableapply(lambda field: mergetensor(field)
+                       if canmerge(field) else field)
+        ])
 
     return lambda samples: makebatch(samples)
-
-

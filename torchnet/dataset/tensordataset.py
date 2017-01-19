@@ -15,7 +15,7 @@ class TensorDataset(Dataset):
         if isinstance(data, dict):
             assert len(data) > 0, "Should have at least one element"
             # check that all fields have the same size
-            n_elem = len(data.values()[0])
+            n_elem = len(list(data.values())[0])
             for v in data.values():
                 assert len(v) == n_elem
         elif isinstance(data, list):
@@ -27,7 +27,7 @@ class TensorDataset(Dataset):
 
     def __len__(self):
         if isinstance(self.data, dict):
-            return len(self.data.values()[0])
+            return len(list(self.data.values())[0])
         elif isinstance(self.data, list):
             return len(self.data[0])
         elif torch.is_tensor(self.data) or isinstance(self.data, np.ndarray):
@@ -41,4 +41,3 @@ class TensorDataset(Dataset):
             return [v[idx] for v in self.data]
         elif torch.is_tensor(self.data) or isinstance(self.data, np.ndarray):
             return self.data[idx]
-
