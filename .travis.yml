@@ -1,0 +1,27 @@
+# https://travis-ci.org/pytorch/pytorch
+language: python
+python:
+    - 2.7
+
+install:
+    - wget -q https://s3.amazonaws.com/pytorch/whl/cu75/torch-0.1.7.post2-cp27-none-linux_x86_64.whl
+    - travis_retry pip install torch-0.1.7.post2-cp27-none-linux_x86_64.whl
+    - travis_retry pip install -r requirements.txt
+    - travis_retry pip install --upgrade numpy
+    - travis_retry pip install .
+
+script:
+    - ./test/run_test.sh
+
+addons:
+    apt:
+      packages:
+        - wget
+
+# This reportedly works around an issue downloading packages from pypi on
+# travis.  Consider removing this after the underlying issue is fixed.
+# https://github.com/travis-ci/travis-ci/issues/2389
+sudo: false
+
+matrix:
+    fast_finish: true
