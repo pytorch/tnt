@@ -30,6 +30,9 @@ class Engine(object):
                     state['loss'] = loss
                     loss.backward()
                     self.hook('on_forward', state)
+                    # to free memory in save_for_backward
+                    state['output'] = None
+                    state['loss'] = None
                     return loss
 
                 state['optimizer'].zero_grad()
