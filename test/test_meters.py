@@ -93,5 +93,13 @@ class TestMeters(unittest.TestCase):
             self.assertEqual(row.sum(), 1,
                              "Row no " + str(i) + " fails to sum to one in normalized mode")
 
+    def testMSEMeter(self):
+        a = torch.ones(7)
+        b = torch.zeros(7)
+
+        mtr = meter.MSEMeter()
+        mtr.add(a, b)
+        self.assertEqual(1.0, mtr.value())
+
 if __name__ == '__main__':
     unittest.main()
