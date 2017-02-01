@@ -1,4 +1,5 @@
 import unittest
+import math
 import torch
 import torchnet.meter as meter
 import numpy as np
@@ -100,6 +101,34 @@ class TestMeters(unittest.TestCase):
         mtr = meter.MSEMeter()
         mtr.add(a, b)
         self.assertEqual(1.0, mtr.value())
+
+    def testMovingAverageValueMeter(self):
+        mtr = meter.MovingAverageValueMeter(3)
+
+        mtr.add(1)
+        avg, var = mtr.value()
+
+        self.assertEqual(avg, 1.0)
+        self.assertEqual(var, 0.0)
+        mtr.add(3)
+        avg, var = mtr.value()
+        self.assertEqual(avg, 2.0)
+        self.assertEqual(var, math.sqrt(2))
+
+        mtr.add(5)
+        avg, var = mtr.value()
+        self.assertEqual(avg, 3.0)
+        self.assertEqual(var, 2.0)
+
+        mtr.add(4)
+        avg, var = mtr.value()
+        self.assertEqual(avg, 4.0)
+        self.assertEqual(var, 1.0)
+
+        mtr.add(0)
+        avg, var = mtr.value()
+        self.assertEqual(avg, 3.0)
+        self.assertEqual(var, math.sqrt(7))
 
 if __name__ == '__main__':
     unittest.main()
