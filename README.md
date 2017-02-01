@@ -3,6 +3,8 @@ PyTorchNet
 
 PyTorch version of https://github.com/torchnet/torchnet
 
+![travis](https://travis-ci.org/pytorch/tnt.svg?branch=master)
+
 _torchnet_ is a framework for torch which provides a set of abstractions aiming
 at encouraging code re-use as well as encouraging modular programming.
 
