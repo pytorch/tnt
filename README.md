@@ -16,7 +16,7 @@ so could potentially be used with other frameworks.
 Make sure you have PyTorch installed, then do:
 
 ```buildoutcfg
-pip install torchnet
+pip install git+https://github.com/pytorch/tnt.git@master
 ```
 
 ## Differences with lua version
