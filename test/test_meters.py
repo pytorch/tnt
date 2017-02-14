@@ -130,5 +130,26 @@ class TestMeters(unittest.TestCase):
         self.assertEqual(avg, 3.0)
         self.assertEqual(var, math.sqrt(7))
 
+    def testAUCMeter(self):
+        mtr = meter.AUCMeter()
+
+        test_size = 1000
+        mtr.add(torch.rand(test_size), torch.zeros(test_size))
+        mtr.add(torch.rand(test_size), torch.Tensor(test_size).fill_(1))
+
+        val, tpr, fpr = mtr.value()
+        self.assertTrue(math.fabs(val - 0.5) < 0.1, msg="AUC Meter fails")
+
+        mtr.reset()
+        mtr.add(torch.Tensor(test_size).fill_(0), torch.zeros(test_size))
+        mtr.add(torch.Tensor(test_size).fill_(0.1), torch.zeros(test_size))
+        mtr.add(torch.Tensor(test_size).fill_(0.2), torch.zeros(test_size))
+        mtr.add(torch.Tensor(test_size).fill_(0.3), torch.zeros(test_size))
+        mtr.add(torch.Tensor(test_size).fill_(0.4), torch.zeros(test_size))
+        mtr.add(torch.Tensor(test_size).fill_(1), torch.Tensor(test_size).fill_(1))
+        val, tpr, fpr = mtr.value()
+
+        self.assertEqual(val, 1.0, msg="AUC Meter fails")
+
 if __name__ == '__main__':
     unittest.main()
