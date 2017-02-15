@@ -32,12 +32,15 @@ What's been ported so far:
    * TransformDataset
  * Meters:
    * AverageValueMeter
+   * AUCMeter
    * ClassErrorMeter
    * ConfusionMeter
+   * MovingAverageValueMeter
+   * MSEMeter
    * TimeMeter
  * Engines:
    * Engine
  * Transforms
- 
+
  Any dataset can now be plugged into `torch.utils.DataLoader`, or called
  `.parallel(num_workers=8)` to utilize multiprocessing.
