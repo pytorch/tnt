@@ -28,8 +28,10 @@ class ListDataset(Dataset):
             `elem_list[i]` will prefixed by this string when fed to `load()`.
 
     """
+
     def __init__(self, elem_list, load, path=None):
         super(ListDataset, self).__init__()
+
         if isinstance(elem_list, str):
             with open(elem_list) as f:
                 self.list = [line.replace('\n', '') for line in f]
@@ -41,7 +43,8 @@ class ListDataset(Dataset):
         else:
             # just assume iterable
             self.list = elem_list
-        self.path = path 
+
+        self.path = path
         self.load = load
 
     def __len__(self):
@@ -49,6 +52,7 @@ class ListDataset(Dataset):
 
     def __getitem__(self, idx):
         super(ListDataset, self).__getitem__(idx)
+
         if self.path is not None:
             return self.load("%s/%s" % (self.path, self.list[idx]))
         else:

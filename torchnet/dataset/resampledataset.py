@@ -28,6 +28,7 @@ class ResampleDataset(Dataset):
             default, the new dataset will have the same size as the underlying
             one.
     """
+
     def __init__(self, dataset, sampler=lambda ds, idx: idx, size=None):
         super(ResampleDataset, self).__init__()
         self.dataset = dataset
@@ -40,6 +41,8 @@ class ResampleDataset(Dataset):
     def __getitem__(self, idx):
         super(ResampleDataset, self).__getitem__(idx)
         idx = self.sampler(self.dataset, idx)
+
         if idx < 0 or idx >= len(self.dataset):
             raise IndexError('out of range')
+
         return self.dataset[idx]

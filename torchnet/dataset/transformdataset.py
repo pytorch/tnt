@@ -25,13 +25,16 @@ class TransformDataset(Dataset):
         transforms (function/dict): Function or dict with function as values.
             These functions will be applied to data.
     """
+
     def __init__(self, dataset, transforms):
         super(TransformDataset, self).__init__()
+
         assert isinstance(transforms, dict) or callable(transforms), \
             'expected a dict of transforms or a function'
         if isinstance(transforms, dict):
             for k, v in transforms.items():
                 assert callable(v), str(k) + ' is not a function'
+
         self.dataset = dataset
         self.transforms = transforms
 
@@ -41,9 +44,11 @@ class TransformDataset(Dataset):
     def __getitem__(self, idx):
         super(TransformDataset, self).__getitem__(idx)
         z = self.dataset[idx]
+
         if isinstance(self.transforms, dict):
             for k, transform in self.transforms.items():
                 z[k] = transform(z[k])
         else:
             z = self.transforms(z)
+
         return z

@@ -24,19 +24,22 @@ class TensorDataset(Dataset):
     Args:
         data (dict/list/tensor/ndarray): Data for the dataset.
     """
+
     def __init__(self, data):
         super(TensorDataset, self).__init__()
+
         if isinstance(data, dict):
             assert len(data) > 0, "Should have at least one element"
             # check that all fields have the same size
             n_elem = len(list(data.values())[0])
             for v in data.values():
-                assert len(v) == n_elem
+                assert len(v) == n_elem, "All values must have the same size"
         elif isinstance(data, list):
             assert len(data) > 0, "Should have at least one element"
             n_elem = len(data[0])
             for v in data:
-                assert len(v) == n_elem
+                assert len(v) == n_elem, "All elements must have the same size"
+
         self.data = data
 
     def __len__(self):
