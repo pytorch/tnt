@@ -36,7 +36,7 @@ class BatchDataset(Dataset):
         perm (function, optional): Function used to shuffle the dataset before
             batching. `perm(idx, size)` should return the shuffled index of
             `idx`th sample. By default, the function is the identity.
-            merge (function, optional): Function to control batching behaviour.
+        merge (function, optional): Function to control batching behaviour.
              `transform.makebatch(merge)` is used to make the batch. Default is
              None.
         policy (str, optional): Policy to handle the corner cases when the
