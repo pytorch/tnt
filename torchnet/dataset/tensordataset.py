@@ -50,7 +50,7 @@ class TensorDataset(Dataset):
     def __getitem__(self, idx):
         super(TensorDataset, self).__getitem__(idx)
         if isinstance(self.data, dict):
-            return {k: v[idx] for k,v in self.data.items()}
+            return {k: v[idx] for k, v in self.data.items()}
         elif isinstance(self.data, list):
             return [v[idx] for v in self.data]
         elif torch.is_tensor(self.data) or isinstance(self.data, np.ndarray):

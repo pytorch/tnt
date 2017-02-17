@@ -11,7 +11,7 @@ class TransformDataset(Dataset):
 
     `transform` can also be a dict with functions as values. In this case, it
     is assumed that `dataset[idx]` is a dict which has all the keys in
-    `transform`. Then, `transform[key]` is applied to dataset[idx][key] for 
+    `transform`. Then, `transform[key]` is applied to dataset[idx][key] for
     each key in `transform`
 
     The size of the new dataset is equal to the size of the underlying
