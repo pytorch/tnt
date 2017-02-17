@@ -3,19 +3,27 @@ from .dataset import Dataset
 
 class TransformDataset(Dataset):
     """
-    Given a closure `transform()`, and a `dataset`, `tnt.TransformDataset`
-    applies the closure in an on-the-fly manner when querying a sample with
-    `tnt.Dataset.__getitem__()`.
+    Dataset which transforms a given dataset with a given function.
 
-    If key is provided, the closure is applied to the sample field specified
-    by `key` (only). The closure must return the new corresponding field value.
-    If key is not provided, the closure is applied on the full sample. The
-    closure must return the new sample table.
+    Given a function `transform`, and a `dataset`, `TransformDataset` applies
+    the function in an on-the-fly manner when querying a sample with
+    `__getitem__(idx)` and therefore returning `transform[dataset[idx]]`.
+
+    `transform` can also be a dict with functions as values. In this case, it
+    is assumed that `dataset[idx]` is a dict which has all the keys in
+    `transform`. Then, `transform[key]` is applied to dataset[idx][key] for 
+    each key in `transform`
 
     The size of the new dataset is equal to the size of the underlying
     `dataset`.
+
     Purpose: when performing pre-processing operations, it is convenient to be
     able to perform on-the-fly transformations to a dataset.
+
+    Args:
+        dataset (Dataset): Dataset which has to be transformed.
+        transforms (function/dict): Function or dict with function as values.
+            These functions will be applied to data.
     """
     def __init__(self, dataset, transforms):
         super(TransformDataset, self).__init__()

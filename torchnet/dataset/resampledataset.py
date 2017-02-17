@@ -3,16 +3,17 @@ from .dataset import Dataset
 
 class ResampleDataset(Dataset):
     """
+    Dataset which resamples a given dataset.
+
     Given a `dataset`, creates a new dataset which will (re-)sample from this
-    underlying dataset using the provided `sampler(dataset, idx)` closure.
+    underlying dataset using the provided `sampler(dataset, idx)` function.
     If `size` is provided, then the newly created dataset will have the
     specified `size`, which might be different than the underlying dataset
     size.
 
     If `size` is not provided, then the new dataset will have the same size
-    than the underlying one.
+    as the underlying one.
 
-    By default `sampler(dataset, idx)` is the identity, simply `return`ing `idx`.
     `dataset` corresponds to the underlying dataset provided at construction, and
     `idx` may take a value between 1 to `size`. It must return an index in the range
     acceptable for the underlying dataset.
@@ -20,6 +21,15 @@ class ResampleDataset(Dataset):
     Purpose: shuffling data, re-weighting samples, getting a subset of the
     data. Note that an important sub-class is ([tnt.ShuffleDataset](#ShuffleDataset)),
     provided for convenience.
+
+    Args:
+        dataset (Dataset): Dataset to be resampled.
+        sampler (function, optional): Function used for sampling. `idx`th
+            sample is returned by `sampler(dataset, i)`. By default
+            `sampler(dataset, idx)` is the identity, simply returning `idx`.
+        size (int, optional): Desired size of the dataset after resampling. By
+            default, the new dataset will have the same size as the underlying
+            one.
     """
     def __init__(self, dataset, sampler=lambda ds,idx: idx, size=None):
         super(ResampleDataset, self).__init__()

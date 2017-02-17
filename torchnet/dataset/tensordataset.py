@@ -5,10 +5,24 @@ import numpy as np
 
 class TensorDataset(Dataset):
     """
-    Accept:
-     * dict of tensors or numpy arrays
-     * list of tensors or numpy arrays
-     * tensor or numpy array
+    Dataset from a tensor or array or list or dict.
+
+    `TensorDataset` provides a way to create a dataset out of the data that is
+    already loaded into memory. It accepts data in the following forms:
+
+    tensor or numpy array
+        `idx`th sample is `data[idx]`
+
+    dict of tensors or numpy arrays
+        `idx`th sample is `{k: v[idx] for k, v in data.items()}`
+
+    list of tensors or numpy arrays
+        `idx`th sample is `[v[idx] for v in data]`
+
+    Purpose: Easy way to create a dataset out of standard data structures.
+
+    Args:
+        data (dict/list/tensor/ndarray): Data for the dataset.
     """
     def __init__(self, data):
         super(TensorDataset, self).__init__()

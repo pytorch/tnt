@@ -4,15 +4,29 @@ import torch
 
 class ListDataset(Dataset):
     """
-    Considering a `list` (can be a `string`, `torch.LongTensor`, or any other
-    iterable) i-th sample of a dataset will be returned by `load(list[i])`,
-    where `load()` is a closure provided by the user.
+    Dataset which loads data from a list using given function.
 
-    If `path` is provided, list is assumed to be a list of string, and will
-    each element `list[i]` will prefixed by `path/` when fed to `load()`.
+    Considering a `elem_list` (can be a `string`, `torch.LongTensor`, or any other
+    iterable) i-th sample of a dataset will be returned by `load(elem_list[i])`,
+    where `load()` is a function provided by the user.
+
+    If `path` is provided, `elem_list` is assumed to be a list of strings, and
+    each element `elem_list[i]` will prefixed by `path/` when fed to `load()`.
+
     Purpose: many low or medium-scale datasets can be seen as a list of files
     (for example representing input samples). For this list of file, a target
     can be often inferred in a simple manner.
+
+    Args:
+        elem_list (iterable/str): List of arguments which will be passed to
+            `load` function. It can also be a path to file with each line
+            containing the arguments to `load`
+        load (function): Function which loads the data. i-th sample is returned
+            by `load(elem_list[i])`.
+        path (str, optional): Defaults to None. If a string is provided,
+            `elem_list` is assumed to be a list of strings, and each element
+            `elem_list[i]` will prefixed by this string when fed to `load()`.
+
     """
     def __init__(self, elem_list, load, path=None):
         super(ListDataset, self).__init__()

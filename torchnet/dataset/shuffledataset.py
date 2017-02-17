@@ -4,16 +4,30 @@ import torch
 
 class ShuffleDataset(ResampleDataset):
     """
-    `tnt.ShuffleDataset` is a sub-class of
-    [tnt.ResampleDataset](#ResampleDataset) provided for convenience.
-    It samples uniformly from the given `dataset` with, or without
-    `replacement`. The chosen partition can be redrawn by calling
-    [resample()](#ShuffleDataset.resample).
+    Dataset which shuffles a given dataset.
+
+    `ShuffleDataset` is a sub-class of `ResampleDataset` provided for
+    convenience. It samples uniformly from the given `dataset` with, or without
+    `replacement`. The chosen partition can be redrawn by calling `resample()`
+
     If `replacement` is `true`, then the specified `size` may be larger than
     the underlying `dataset`.
     If `size` is not provided, then the new dataset size will be equal to the
     underlying `dataset` size.
+
     Purpose: the easiest way to shuffle a dataset!
+
+    Args:
+        dataset (Dataset): Dataset to be shuffled.
+        size (int, optional): Desired size of the shuffled dataset. If
+            `replacement` is `true`, then can be larger than the `len(dataset)`.
+            By default, the new dataset will have the same size as `dataset`.
+        replacement (bool, optional): True if uniform sampling is to be done
+            with replacement. False otherwise. Defaults to false.
+
+    Raises:
+        ValueError: If `size` is larger than the size of the underlying dataset
+            and `replacement` is False.
     """
     def __init__(self, dataset, size=None, replacement=False):
         if size and not replacement and size > len(dataset):
