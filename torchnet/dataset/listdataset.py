@@ -6,9 +6,9 @@ class ListDataset(Dataset):
     """
     Dataset which loads data from a list using given function.
 
-    Considering a `elem_list` (can be a `string`, `torch.LongTensor`, or any
-    other iterable) i-th sample of a dataset will be returned by
-    `load(elem_list[i])`, where `load()` is a function provided by the user.
+    Considering a `elem_list` (can be an iterable or a `string` ) i-th sample
+    of a dataset will be returned by `load(elem_list[i])`, where `load()`
+    is a function provided by the user.
 
     If `path` is provided, `elem_list` is assumed to be a list of strings, and
     each element `elem_list[i]` will prefixed by `path/` when fed to `load()`.
