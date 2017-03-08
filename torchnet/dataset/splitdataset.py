@@ -77,7 +77,10 @@ class SplitDataset(Dataset):
     def __getitem__(self, idx):
         super(SplitDataset, self).__getitem__(idx)
         try:
-            offset = self.partition_cum_sizes[self.current_partition_idx]
-            return self.dataset[int(offset) + idx]
+            if self.current_partition_idx == 0:
+                return self.dataset[idx]
+            else:
+                offset = self.partition_cum_sizes[self.current_partition_idx - 1]
+                return self.dataset[int(offset) + idx]
         except AttributeError:
             raise ValueError("Select a partition before accessing data.")
