@@ -41,12 +41,11 @@ class SplitDataset(Dataset):
         assert max(partitions.values()) > 0, 'all partitions cannot be empty'
 
         self.partition_names = list(self.partitions.keys())
-        self.partition_sizes = [self.partitions[parition] for parition in
-                                self.partition_names]
-        self.partition_cum_sizes = np.cumsum(self.partition_sizes)
         self.partition_index = {partition: i for i, partition in
                                 enumerate(self.partition_names)}
 
+        self.partition_sizes = [self.partitions[parition] for parition in
+                                self.partition_names]
         # if partition sizes are fractions, convert to sizes:
         if sum(self.partition_sizes) <= 1:
             self.partition_sizes = [round(x * len(dataset)) for x in
@@ -55,6 +54,8 @@ class SplitDataset(Dataset):
             for x in self.partition_sizes:
                 assert x == int(x), ('partition sizes should be integer'
                                      ' numbers, or sum up to <= 1 ')
+
+        self.partition_cum_sizes = np.cumsum(self.partition_sizes)
 
         if initial_partition is not None:
             self.select(initial_partition)
