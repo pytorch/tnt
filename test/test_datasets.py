@@ -90,5 +90,45 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(len(d), 5)
         # TODO: every item should appear exactly once
 
+    def testSplitDataset(self):
+        h = [0, 1, 2, 3]
+        listdataset = dataset.ListDataset(elem_list=h)
+        splitdataset = dataset.SplitDataset(listdataset, {'train': 3, 'val': 1})
+
+        splitdataset.select('train')
+        self.assertEqual(len(splitdataset), 3)
+        self.assertEqual(splitdataset[2], 2)
+
+        splitdataset.select('val')
+        self.assertEqual(len(splitdataset), 1)
+        self.assertEqual(splitdataset[0], 3)
+
+    def testSplitDataset_fractions(self):
+        h = [0, 1, 2, 3]
+        listdataset = dataset.ListDataset(elem_list=h)
+        splitdataset = dataset.SplitDataset(listdataset, {'train': 0.75,
+                                                          'val': 0.25})
+
+        splitdataset.select('train')
+        self.assertEqual(len(splitdataset), 3)
+        self.assertEqual(splitdataset[2], 2)
+
+        splitdataset.select('val')
+        self.assertEqual(len(splitdataset), 1)
+        self.assertEqual(splitdataset[0], 3)
+
+    def testConcatDataset(self):
+        l1 = dataset.ListDataset(elem_list=[0, 1, 2, 3])
+        l2 = dataset.ListDataset(elem_list=[10, 11, 13])
+        concatdataset = dataset.ConcatDataset([l1, l2])
+
+        self.assertEqual(len(concatdataset), 7)
+        self.assertEqual(concatdataset[0], 0)
+        self.assertEqual(concatdataset[3], 3)
+        self.assertEqual(concatdataset[4], 10)
+        self.assertEqual(concatdataset[6], 13)
+
+
+
 if __name__ == '__main__':
     unittest.main()

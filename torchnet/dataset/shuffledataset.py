@@ -41,9 +41,21 @@ class ShuffleDataset(ResampleDataset):
         self.replacement = replacement
         self.resample()
 
-    def resample(self):
+    def resample(self, seed=None):
+        """Resample the dataset.
+
+        Args:
+            seed (int, optional): Seed for resampling. By default no seed is
+            used.
+        """
+        if seed is not None:
+            gen = torch.manual_seed(seed)
+        else:
+            gen = torch.default_generator
+
         if self.replacement:
-            self.perm = torch.LongTensor(len(self)).random_(len(self.dataset))
+            self.perm = torch.LongTensor(len(self)).random_(gen,
+                                                            len(self.dataset))
         else:
             self.perm = torch.randperm(
-                len(self.dataset)).narrow(0, 0, len(self))
+                gen, len(self.dataset)).narrow(0, 0, len(self))
