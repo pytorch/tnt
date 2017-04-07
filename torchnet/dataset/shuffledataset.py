@@ -54,8 +54,6 @@ class ShuffleDataset(ResampleDataset):
             gen = torch.default_generator
 
         if self.replacement:
-            self.perm = torch.LongTensor(len(self)).random_(gen,
-                                                            len(self.dataset))
+            self.perm = torch.LongTensor(len(self)).random_(len(self.dataset), generator=gen)
         else:
-            self.perm = torch.randperm(
-                gen, len(self.dataset)).narrow(0, 0, len(self))
+            self.perm = torch.randperm(len(self.dataset), generator=gen).narrow(0, 0, len(self))

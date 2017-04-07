@@ -103,6 +103,12 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(len(splitdataset), 1)
         self.assertEqual(splitdataset[0], 3)
 
+        # test fluent api
+        splitdataset = listdataset.split({'train': 3, 'val': 1})
+        splitdataset.select('train')
+        self.assertEqual(len(splitdataset), 3)
+        self.assertEqual(splitdataset[2], 2)
+
     def testSplitDataset_fractions(self):
         h = [0, 1, 2, 3]
         listdataset = dataset.ListDataset(elem_list=h)
