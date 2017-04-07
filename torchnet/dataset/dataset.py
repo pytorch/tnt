@@ -25,3 +25,6 @@ class Dataset(object):
 
     def parallel(self, *args, **kwargs):
         return DataLoader(self, *args, **kwargs)
+
+    def split(self, *args, **kwargs):
+        return torchnet.dataset.SplitDataset(self, *args, **kwargs)

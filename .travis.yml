@@ -4,8 +4,8 @@ python:
     - 2.7
 
 install:
-    - wget -q https://s3.amazonaws.com/pytorch/whl/cu75/torch-0.1.7.post2-cp27-none-linux_x86_64.whl
-    - travis_retry pip install torch-0.1.7.post2-cp27-none-linux_x86_64.whl
+    - wget -q http://download.pytorch.org/whl/cu75/torch-0.1.11.post5-cp27-none-linux_x86_64.whl
+    - travis_retry pip install torch-0.1.11.post5-cp27-none-linux_x86_64.whl
     - travis_retry pip install -r requirements.txt
     - travis_retry pip install --upgrade numpy
     - travis_retry pip install .
