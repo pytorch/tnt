@@ -77,11 +77,11 @@ class APMeter(meter.Meter):
         if self.scores.storage().size() < self.scores.numel() + output.numel():
             new_size = math.ceil(self.scores.storage().size() * 1.5)
             new_weight_size = math.ceil(self.weights.storage().size() * 1.5)
-            self.scores.storage().resize_(new_size + output.numel())
-            self.targets.storage().resize_(new_size + output.numel())
+            self.scores.storage().resize_(int(new_size + output.numel()))
+            self.targets.storage().resize_(int(new_size + output.numel()))
             if weight is not None:
-                self.weights.storage().resize_(new_weight_size
-                                               + output.size(0))
+                self.weights.storage().resize_(int(new_weight_size
+                                               + output.size(0)))
 
         # store scores and targets
         offset = self.scores.size(0) if self.scores.dim() > 0 else 0
