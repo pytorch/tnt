@@ -169,7 +169,7 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
-        val = (1*1/1 + 0*1/2 + 2*1/3 + 0*1/4)/2
+        val = (1*1.0/1.0 + 0*1.0/2.0 + 2*1.0/3.0 + 0*1.0/4.0)/2.0
         self.assertTrue(
             math.fabs(ap[0]-val) < 0.01, msg='ap test2 failed')
 
@@ -180,13 +180,13 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
-        val = (0*1/1 + 1*2/3 + 2*0/6 + 6*1/10)/2
+        val = (0*1.0/1.0 + 1.0*2.0/3.0 + 2.0*0/6.0 + 6.0*1.0/10.0)/2.0
         self.assertTrue(math.fabs(ap[0]-val) < 0.01, msg='ap test3 failed')
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
-        val = (0*1 + 1*1/2 + 0*1/3 + 2*1/4)/2
+        val = (0*1.0 + 1*1.0/2.0 + 0*1.0/3.0 + 2*1.0/4.0)/2.0
         self.assertTrue(math.fabs(ap[0]-val) < 0.01, msg='ap test4 failed')
 
         target = torch.Tensor([0, 1, 0, 1])
@@ -195,13 +195,13 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
-        val = (4*1/4 + 6*1/6 + 0*6/9 + 0*6/10)/2
+        val = (4*1.0/4.0 + 6*1.0/6.0 + 0*6.0/9.0 + 0*6.0/10.0)/2.0
         self.assertTrue(math.fabs(ap[0]-val) < 0.01, msg='ap test5 failed')
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
-        val = (1*1 + 2*1/2 + 0*1/3 + 0*1/4)/2
+        val = (1*1 + 2*1.0/2.0 + 0*1.0/3.0 + 0*1.0/4.0)/2.0
         self.assertTrue(math.fabs(ap[0]-val) < 0.01, msg='ap test6 failed')
 
         target = torch.Tensor([0, 0, 0, 0])
@@ -224,13 +224,13 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
-        val = (1*1/1 + 1*0/4 + 1.1/4.1)/2
+        val = (1*1.0/1.0 + 1*0.0/4.0 + 1.1/4.1)/2.0
         self.assertTrue(math.fabs(ap[0]-val) < 0.01, msg='ap test7 failed')
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
-        val = (1*1 + 0*1/2 + 2*1/3)/2
+        val = (1*1.0 + 0*1.0/2.0 + 2*1.0/3.0)/2.0
         self.assertTrue(math.fabs(ap[0]-val) < 0.01, msg='ap test8 failed')
 
         # Test multiple K's
@@ -243,8 +243,8 @@ class TestMeters(unittest.TestCase):
         self.assertTrue(
           math.fabs(ap.sum() -
                     torch.Tensor([
-                        (1*3.0/3.0 + 0*3.0/5.0 + 3.5*1/5.5 + 0*3.5/6.5)/2,
-                        (0*1.0/1.0 + 1*0.5/1.5 + 0*0.5/3.5 + 1*3.5/6.5)/2
+                        (1*3.0/3.0 + 0*3.0/5.0 + 3.5*1/5.5 + 0*3.5/6.5)/2.0,
+                        (0*1.0/1.0 + 1*0.5/1.5 + 0*0.5/3.5 + 1*3.5/6.5)/2.0
                         ]).sum()) < 0.01, msg='ap test9 failed')
 
         mtr.reset()
@@ -253,8 +253,8 @@ class TestMeters(unittest.TestCase):
         self.assertTrue(
           math.fabs(ap.sum() -
                     torch.Tensor([
-                        (1*1 + 0*1/2 + 2*1/3 + 0*1/4)/2,
-                        (0*1 + 1*1/2 + 0*1/3 + 2*1/4)/2
+                        (1*1 + 0*1/2 + 2*1/3 + 0*1/4)/2.0,
+                        (0*1 + 1*1/2 + 0*1/3 + 2*1/4)/2.0
                         ]).sum()) < 0.01, msg='ap test10 failed')
 
         mtr.reset()
@@ -274,7 +274,7 @@ class TestMeters(unittest.TestCase):
         mtr.add(output, target)
 
         ap = mtr.value()
-        val = (1*1/1 + 0*1/2 + 2*1/3 + 0*1/4)/2
+        val = (1*1.0/1.0 + 0*1.0/2.0 + 2.0*1.0/3.0 + 0*1.0/4.0)/2.0
         self.assertTrue(
           math.fabs(ap-val) < 0.01,
           msg='mAP test1 failed'
@@ -283,7 +283,7 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
-        val = (1*0.1/0.1 + 0*2.0/2.1 + 1.1*1/3.1 + 0*1/4)/2.0
+        val = (1*0.1/0.1 + 0*2.0/2.1 + 1.1*1/3.1 + 0*1.0/4.0)/2.0
         self.assertTrue(
             math.fabs(ap-val) < 0.01, msg='mAP test2 failed')
 
@@ -297,8 +297,8 @@ class TestMeters(unittest.TestCase):
         self.assertTrue(
           math.fabs(ap -
                     torch.Tensor([
-                        (1*3.0/3.0 + 0*3.0/5.0 + 3.5*1/5.5 + 0*3.5/6.5)/2,
-                        (0*1.0/1.0 + 1*0.5/1.5 + 0*0.5/3.5 + 1*3.5/6.5)/2
+                        (1*3.0/3.0 + 0*3.0/5.0 + 3.5*1/5.5 + 0*3.5/6.5)/2.0,
+                        (0*1.0/1.0 + 1*0.5/1.5 + 0*0.5/3.5 + 1*3.5/6.5)/2.0
                         ]).mean()) < 0.01, msg='mAP test3 failed')
 
         mtr.reset()
@@ -307,8 +307,8 @@ class TestMeters(unittest.TestCase):
         self.assertTrue(
           math.fabs(ap -
                     torch.Tensor([
-                        (1*1 + 0*1/2 + 2*1/3 + 0*1/4)/2,
-                        (0*1 + 1*1/2 + 0*1/3 + 2*1/4)/2
+                        (1*1.0 + 0*1.0/2.0 + 2*1.0/3.0 + 0*1.0/4.0)/2.0,
+                        (0*1.0 + 1*1.0/2.0 + 0*1.0/3.0 + 2*1.0/4.0)/2.0
                         ]).mean()) < 0.01, msg='mAP test4 failed')
 
 if __name__ == '__main__':
