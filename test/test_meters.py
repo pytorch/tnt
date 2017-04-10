@@ -201,7 +201,7 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
-        val = (1*1 + 2*1.0/2.0 + 0*1.0/3.0 + 0*1.0/4.0)/2.0
+        val = (1*1.0 + 2*1.0/2.0 + 0*1.0/3.0 + 0*1.0/4.0)/2.0
         self.assertTrue(math.fabs(ap[0]-val) < 0.01, msg='ap test6 failed')
 
         target = torch.Tensor([0, 0, 0, 0])
@@ -253,8 +253,8 @@ class TestMeters(unittest.TestCase):
         self.assertTrue(
           math.fabs(ap.sum() -
                     torch.Tensor([
-                        (1*1 + 0*1/2 + 2*1/3 + 0*1/4)/2.0,
-                        (0*1 + 1*1/2 + 0*1/3 + 2*1/4)/2.0
+                        (1*1.0 + 0*1.0/2.0 + 2*1.0/3 + 0*1.0/4.0)/2.0,
+                        (0*1.0 + 1*1.0/2.0 + 0*1.0/3.0 + 2.0*1.0/4.0)/2.0
                         ]).sum()) < 0.01, msg='ap test10 failed')
 
         mtr.reset()
