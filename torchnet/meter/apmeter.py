@@ -19,6 +19,7 @@ class APMeter(meter.Meter):
     each sample.
     """
     def __init__(self):
+        super(APMeter, self).__init__()
         self.reset()
 
     def reset(self):
@@ -51,13 +52,13 @@ class APMeter(meter.Meter):
                 weight = torch.from_numpy(weight)
             weight = weight.squeeze()
         if output.dim() == 1:
-            output = output.view(output.size(0), 1)
+            output = output.unsqueeze(-1)
         else:
             assert output.dim() == 2, \
                 'wrong output size (should be 1D or 2D with one column \
                 per class)'
         if target.dim() == 1:
-            target = target.view(target.size(0), 1)
+            target = target.unsqueeze(-1)
         else:
             assert target.dim() == 2, \
                 'wrong target size (should be 1D or 2D with one column \
@@ -74,7 +75,7 @@ class APMeter(meter.Meter):
                 'dimensions for output should match previously added examples.'
 
         # make sure storage is of sufficient size
-        if self.scores.storage().size() < self.scores.numel() + output.numel():
+        if self.scores.size() < self.scores.numel() + output.numel():
             new_size = math.ceil(self.scores.storage().size() * 1.5)
             new_weight_size = math.ceil(self.weights.storage().size() * 1.5)
             self.scores.storage().resize_(int(new_size + output.numel()))
@@ -104,7 +105,7 @@ class APMeter(meter.Meter):
         if self.scores.numel() == 0:
             return 0
         ap = torch.zeros(self.scores.size(1))
-        rg = torch.range(1, self.scores.size(0)).float()
+        rg = torch.arange(1, self.scores.size(0)+1).float()
         if self.weights.numel() > 0:
             weight = self.weights.new(self.weights.size())
             weighted_truth = self.weights.new(self.weights.size())

@@ -19,6 +19,7 @@ class mAPMeter(meter.Meter):
     each sample.
     """
     def __init__(self):
+        super(mAPMeter, self).__init__()
         self.apmeter = APMeter()
 
     def reset(self):
