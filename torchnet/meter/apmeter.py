@@ -75,7 +75,7 @@ class APMeter(meter.Meter):
                 'dimensions for output should match previously added examples.'
 
         # make sure storage is of sufficient size
-        if self.scores.size() < self.scores.numel() + output.numel():
+        if self.scores.storage().size() < self.scores.numel() + output.numel():
             new_size = math.ceil(self.scores.storage().size() * 1.5)
             new_weight_size = math.ceil(self.weights.storage().size() * 1.5)
             self.scores.storage().resize_(int(new_size + output.numel()))
@@ -105,7 +105,7 @@ class APMeter(meter.Meter):
         if self.scores.numel() == 0:
             return 0
         ap = torch.zeros(self.scores.size(1))
-        rg = torch.arange(1, self.scores.size(0)+1).float()
+        rg = torch.range(1, self.scores.size(0)).float()
         if self.weights.numel() > 0:
             weight = self.weights.new(self.weights.size())
             weighted_truth = self.weights.new(self.weights.size())
