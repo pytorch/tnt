@@ -5,6 +5,7 @@ import torch
 
 class MovingAverageValueMeter(meter.Meter):
     def __init__(self, windowsize):
+        super(MovingAverageValueMeter, self).__init__()
         self.windowsize = windowsize
         self.valuequeue = torch.Tensor(windowsize)
         self.reset()
