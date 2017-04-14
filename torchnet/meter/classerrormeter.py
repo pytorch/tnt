@@ -6,6 +6,7 @@ from . import meter
 
 class ClassErrorMeter(meter.Meter):
     def __init__(self, topk=[1], accuracy=False):
+        super(ClassErrorMeter, self).__init__()
         self.topk = np.sort(topk)
         self.accuracy = accuracy
         self.reset()

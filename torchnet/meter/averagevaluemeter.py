@@ -4,6 +4,7 @@ import numpy as np
 
 class AverageValueMeter(meter.Meter):
     def __init__(self):
+        super(AverageValueMeter, self).__init__()
         self.reset()
 
     def add(self, value, n = 1):

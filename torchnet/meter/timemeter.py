@@ -17,6 +17,7 @@ class TimeMeter(meter.Meter):
        * `value()` returns the time passed since the last `reset()`; divided by the counter value when `unit=true`.
     """
     def __init__(self, unit):
+        super(TimeMeter, self).__init__()
         self.unit = unit
         self.reset()
 

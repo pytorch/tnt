@@ -21,6 +21,7 @@ class AUCMeter(meter.Meter):
     contains only values 0 (for negative examples) and 1 (for positive examples).
     """
     def __init__(self):
+        super(AUCMeter, self).__init__()
         self.reset()
 
     def reset(self):

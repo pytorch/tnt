@@ -5,6 +5,7 @@ import torch
 
 class MSEMeter(meter.Meter):
     def __init__(self, root=False):
+        super(MSEMeter, self).__init__()
         self.reset()
         self.root = root
 

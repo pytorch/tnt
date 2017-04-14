@@ -31,6 +31,7 @@ class ConfusionMeter(meter.Meter):
     columns correspond to predicted targets.
     """
     def __init__(self, k, normalized = False):
+        super(ConfusionMeter, self).__init__()
         self.conf = np.ndarray((k,k), dtype=np.int32)
         self.normalized = normalized
         self.reset()
