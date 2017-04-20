@@ -55,8 +55,7 @@ def on_start(state):
     state['iterator'] = tqdm(state['iterator'])
 
 def on_forward(state):
-    _, argmax = state['output'].data.max(1)
-    state['predictions'].append(argmax.squeeze())
+    state['predictions'].append(state['output'])
 
 def on_sample(state):
     state['sample'].append(state['train'])
