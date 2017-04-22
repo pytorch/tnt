@@ -1,12 +1,13 @@
-from .hook import Hook
+import collections
+from .hook import Hook, HooksList
 
 
 class Engine(object):
     def __init__(self, hook=None):
-        if hook is None:
-            self.hook = Hook()
+        if isinstance(hook, collections.Sequence):
+            self.hook = HooksList(hook)
         else:
-            self.hook = hook
+            self.hook = hook or Hook()
 
     def train(self, network, iterator, maxepoch, optimizer):
         state = {'network': network,
