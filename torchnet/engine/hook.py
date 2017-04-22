@@ -1,3 +1,6 @@
+class StopEngine(Exception):
+    pass
+
 class Hook(object):
     def __init__(self):
         pass
