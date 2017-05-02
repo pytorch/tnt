@@ -43,7 +43,8 @@ class Engine(object):
                     self.hook('on_step', state)
                 else:
                     closure()
-                    if (state['t'] + 1) % step_interval == 0:
+                    if (state['t'] + 1) % step_interval == 0 \
+                            or state['t'] == state['maxepoch'] - 1:
                         state['optimizer'].step()
                         state['optimizer'].zero_grad()
                         self.hook('on_step', state)
