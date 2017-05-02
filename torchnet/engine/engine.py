@@ -6,7 +6,7 @@ class Engine(object):
         if name in self.hooks:
             self.hooks[name](state)
 
-    def train(self, network, iterator, maxepoch, optimizer):
+    def train(self, network, iterator, maxepoch, optimizer, step_interval=1):
         state = {
                 'network': network,
                 'iterator': iterator,
@@ -20,6 +20,8 @@ class Engine(object):
         self.hook('on_start', state)
         while state['epoch'] < state['maxepoch']:
             self.hook('on_start_epoch', state)
+            state['optimizer'].zero_grad()
+
             for sample in state['iterator']:
                 state['sample'] = sample
                 self.hook('on_sample', state)
@@ -35,9 +37,19 @@ class Engine(object):
                     state['loss'] = None
                     return loss
 
-                state['optimizer'].zero_grad()
-                state['optimizer'].step(closure)
+                if step_interval == 1:
+                    state['optimizer'].zero_grad()
+                    state['optimizer'].step(closure)
+                    self.hook('on_step', state)
+                else:
+                    closure()
+                    if (state['t'] + 1) % step_interval == 0:
+                        state['optimizer'].step()
+                        state['optimizer'].zero_grad()
+                        self.hook('on_step', state)
+
                 state['t'] += 1
+
             state['epoch'] += 1
             self.hook('on_end_epoch', state)
         self.hook('on_end', state)
