@@ -37,6 +37,7 @@ class Engine(object):
 
                 state['optimizer'].zero_grad()
                 state['optimizer'].step(closure)
+                self.hook('on_end_sample', state)
                 state['t'] += 1
             state['epoch'] += 1
             self.hook('on_end_epoch', state)
