@@ -6,14 +6,14 @@ class Engine(object):
         if name in self.hooks:
             self.hooks[name](state)
 
-    def train(self, network, iterator, maxepoch, optimizer):
+    def train(self, network, iterator, maxepoch, optimizer, last_epoch=0, last_t=0):
         state = {
                 'network': network,
                 'iterator': iterator,
                 'maxepoch': maxepoch,
                 'optimizer': optimizer,
-                'epoch': 0,
-                't': 0,
+                'epoch': last_epoch,
+                't': last_t,
                 'train': True,
                 }
 
