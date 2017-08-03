@@ -1,13 +1,22 @@
+""" Run MNIST example and log to visdom 
+    Notes:
+        - Visdom must be installed (pip works)
+        - the Visdom server must be running at start!
+
+    Example:
+        $ python -m visdom.server & 
+        $ python mnist_with_visdom.py
+"""
 from tqdm import tqdm
 import torch
 import torch.optim
 import torchnet as tnt
-from torchnet.logger import VisdomPlotLogger, VisdomLogger
-from torchvision.datasets.mnist import MNIST
-from torchnet.engine import Engine
 from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.init import kaiming_normal
+from torchnet.engine import Engine
+from torchnet.logger import VisdomPlotLogger, VisdomLogger
+from torchvision.datasets.mnist import MNIST
 
 
 def get_iterator(mode):
