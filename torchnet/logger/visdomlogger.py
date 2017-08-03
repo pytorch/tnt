@@ -128,15 +128,12 @@ class VisdomPlotLogger(BaseVisdomLogger):
         valid_plot_types = {
             "scatter": self.viz.scatter, 
             "line": self.viz.line }
-
+        self.plot_type = plot_type
         # Set chart type
-        if 'plot_type' in self.opts:
-            if plot_type not in valid_plot_types.keys():
-                raise ValueError("plot_type \'{}\' not found. Must be one of {}".format(
-                    plot_type, valid_plot_types.keys()))
-            self.chart = valid_plot_types[plot_type]
-        else:
-            self.chart = self.viz.scatter
+        if plot_type not in valid_plot_types.keys():
+            raise ValueError("plot_type \'{}\' not found. Must be one of {}".format(
+                plot_type, valid_plot_types.keys()))
+        self.chart = valid_plot_types[plot_type]
 
     def log(self, *args, **kwargs):
         if self.win is not None:
@@ -151,8 +148,13 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 env=self.env,
                 opts=self.opts)
         else:
+            if self.plot_type == 'scatter':
+                chart_args = {'X': np.array([args])}
+            else:
+                chart_args = {'X': np.array([args[0]]),
+                              'Y': np.array([args[1]])}
             self.win = self.chart(
-                X=np.array([args]),
+                **chart_args,
                 win=self.win,
                 env=self.env,
                 opts=self.opts)

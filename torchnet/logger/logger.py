@@ -1,5 +1,5 @@
 """ Logging values to various sinks """
-print("hello")
+
 class Logger(object):
     _fields = None
 
