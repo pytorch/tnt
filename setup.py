@@ -26,7 +26,8 @@ setup_info = dict(
 
     install_requires=[
         'torch',
-        'six'
+        'six',
+        'visdom'
     ]
 )
 
