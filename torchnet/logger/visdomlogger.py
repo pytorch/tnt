@@ -82,24 +82,19 @@ class VisdomLogger(BaseVisdomLogger):
     def __init__(self, plot_type, fields=None, win=None, env=None, opts={}):
         '''
             Args:
+                fields: Currently unused
                 plot_type: The name of the plot type, in Visdom
-                fields: The fields to log. May either be the name of some stat (e.g. ProgressMonitor)
-                    will have `stat_name='progress'`, in which case all of the fields under 
-                    `log_HOOK_fields` will be logged. Finer-grained control can be specified
-                    by using individual fields such as `progress.percent`. 
-                interval: A List of 2-tuples where each tuple contains (k, HOOK_TIME). 
-                    k (int): The logger will be called every 'k' HOOK_TIMES
-                    HOOK_TIME (string): The logger will be called at the given hook
 
             Examples:
                 >>> # Image example
                 >>> img_to_use = skimage.data.coffee().swapaxes(0,2).swapaxes(1,2)
-                >>> image_plug = ConstantMonitor(img_to_use, "image")
-                >>> image_logger   = VisdomLogger('image', ["image.data"], [(2, 'iteration')])
+                >>> image_logger = VisdomLogger('image')
+                >>> image_logger.log(img_to_use)
 
                 >>> # Histogram example
-                >>> hist_plug = ConstantMonitor(np.random.rand(10000), "random")
-                >>> hist_logger = VisdomLogger('histogram', ["random.data"], [(2, 'iteration')], opts=dict(title='Random!', numbins=20))
+                >>> hist_data = np.random.rand(10000)
+                >>> hist_logger = VisdomLogger('histogram', , opts=dict(title='Random!', numbins=20))
+                >>> hist_logger.log(hist_data)
         '''
         super(VisdomLogger, self).__init__(fields, win, env, opts)
         self.plot_type = plot_type
@@ -115,14 +110,12 @@ class VisdomPlotLogger(BaseVisdomLogger):
     def __init__(self, plot_type, fields=None, win=None, env=None, opts={}):
         '''
             Args:
+                fields: Currently unused
                 plot_type: {scatter, line}
 
             Examples:
-                >>> train = Trainer(model, criterion, optimizer, dataset)
-                >>> progress_m = ProgressMonitor()
-                >>> scatter_logger = VisdomScatterLogger(["progress.samples_used", "progress.percent"], [(2, 'iteration')])
-                >>> train.register_plugin(progress_m)
-                >>> train.register_plugin(scatter_logger)
+                >>> scatter_logger = VisdomPlotLogger('line')
+                >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0])
         '''
         super(VisdomPlotLogger, self).__init__(fields, win, env, opts)
         valid_plot_types = {
@@ -154,10 +147,10 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 chart_args = {'X': np.array([args[0]]),
                               'Y': np.array([args[1]])}
             self.win = self.chart(
-                **chart_args,
                 win=self.win,
                 env=self.env,
-                opts=self.opts)
+                opts=self.opts,
+                **chart_args)
 
 
 class VisdomTextLogger(BaseVisdomLogger):
@@ -171,13 +164,7 @@ class VisdomTextLogger(BaseVisdomLogger):
     def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0]):
         '''
             Args:
-                fields: The fields to log. May either be the name of some stat (e.g. ProgressMonitor)
-                    will have `stat_name='progress'`, in which case all of the fields under 
-                    `log_HOOK_fields` will be logged. Finer-grained control can be specified
-                    by using individual fields such as `progress.percent`. 
-                interval: A List of 2-tuples where each tuple contains (k, HOOK_TIME). 
-                    k (int): The logger will be called every 'k' HOOK_TIMES
-                    HOOK_TIME (string): The logger will be called at the given hook
+                fields: Currently unused
                 update_type: One of {'REPLACE', 'APPEND'}. Default 'REPLACE'.
 
             Examples:
