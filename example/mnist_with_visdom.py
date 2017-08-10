@@ -68,7 +68,9 @@ def main():
     train_err_logger = VisdomPlotLogger('line', opts={'title': 'Train Class Error'})
     test_loss_logger = VisdomPlotLogger('line', opts={'title': 'Test Loss'})
     test_err_logger = VisdomPlotLogger('line', opts={'title': 'Test Class Error'})
-    confusion_logger = VisdomLogger('heatmap', opts={'title': 'Confusion matrix', 'columnnames': range(10), 'rownames': range(10)})
+    confusion_logger = VisdomLogger('heatmap', opts={'title': 'Confusion matrix', 
+                                                     'columnnames': list(range(10)), 
+                                                     'rownames': list(range(10))})
 
 
     def h(sample):
