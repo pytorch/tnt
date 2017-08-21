@@ -1,6 +1,5 @@
 from . import meter
 import numpy as np
-import numbers
 
 
 class ConfusionMeter(meter.Meter):
@@ -31,38 +30,48 @@ class ConfusionMeter(meter.Meter):
         Computes the confusion matrix of K x K size where K is no of classes
         Args:
             predicted: Can be an N x K tensor of predicted scores obtained from
-                the model for N examples and K classes or an N-tensor of integer
-                values between 1 and K.
+                the model for N examples and K classes or an N-tensor of
+                integer values between 1 and K.
             target: Can be a N-tensor of integer values assumed to be integer
                 values between 1 and K or N x K tensor, where targets are
                 assumed to be provided as one-hot vectors
 
         """
-        output = output.cpu().squeeze().numpy()
+        predicted = predicted.cpu().squeeze().numpy()
         target = target.cpu().squeeze().numpy()
-        onehot = np.ndim(target) != 1
+
         assert predicted.shape[0] == target.shape[0], \
             'number of targets and predicted outputs do not match'
+
         if np.ndim(predicted) != 1:
             assert predicted.shape[1] == self.k, \
                 'number of predictions does not match size of confusion matrix'
             predicted = np.argmax(predicted, 1)
         else:
             assert (predicted.max() < self.k) and (predicted.min() >= 0), \
-                'predicted values are not between 1 and K '
+                'predicted values are not between 1 and k'
 
-        assert not onehot or target.shape[1] == predicted.shape[1], \
-            'target should be 1D Tensor or have size of predicted (one-hot)'
-        if onehot:
+        onehot_target = np.ndim(target) != 1
+        if onehot_target:
+            assert target.shape[1] == self.k, \
+                'Onehot target does not match size of confusion matrix'
             assert (target >= 0).all() and (target <= 1).all(), \
                 'in one-hot encoding, target values should be 0 or 1'
             assert (target.sum(1) == 1).all(), \
                 'multi-label setting is not supported'
             target = np.argmax(target, 1)
+        else:
+            assert (predicted.max() < self.k) and (predicted.min() >= 0), \
+                'predicted values are not between 1 and k'
 
-        for i in range(self.k):
-            for j in range(self.k):
-                self.conf[i, j] += np.sum((target == i) * (predicted == j))
+        # hack for bincounting 2 arrays together
+        x = predicted + self.k * target
+        bincount_2d = np.bincount(x.astype(np.int32),
+                                  minlength=self.k ** 2)
+        assert bincount_2d.size == self.k ** 2
+        conf = bincount_2d.reshape((self.k, self.k))
+
+        self.conf += conf
 
     def value(self):
         """
