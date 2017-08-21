@@ -84,4 +84,4 @@ class ConfusionMeter(meter.Meter):
             conf = self.conf.astype(np.float32)
             return conf / conf.sum(1).clip(min=1e-12)[:, None]
         else:
-            return self.confx
+            return self.conf
