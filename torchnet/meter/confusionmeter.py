@@ -38,7 +38,7 @@ class ConfusionMeter(meter.Meter):
                 assumed to be provided as one-hot vectors
 
         """
-        output = output.cpu().squeeze().numpy()
+        predicted = predicted.cpu().squeeze().numpy()
         target = target.cpu().squeeze().numpy()
         onehot = np.ndim(target) != 1
         assert predicted.shape[0] == target.shape[0], \
