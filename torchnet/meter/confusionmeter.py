@@ -1,71 +1,87 @@
 from . import meter
 import numpy as np
-import numbers
+
 
 class ConfusionMeter(meter.Meter):
     """
-    <a name="ConfusionMeter">
-    #### tnt.ConfusionMeter(@ARGP)
-    @ARGT
-
-    The `tnt.ConfusionMeter` constructs a confusion matrix for a multi-class
+    The ConfusionMeter constructs a confusion matrix for a multi-class
     classification problems. It does not support multi-label, multi-class problems:
-    for such problems, please use `tnt.MultiLabelConfusionMeter`.
-
-    At initialization time, the `k` parameter that indicates the number
-    of classes in the classification problem under consideration must be specified.
-    Additionally, an optional parameter `normalized` (default = `false`) may be
-    specified that determines whether or not the confusion matrix is normalized
-    (that is, it contains percentages) or not (that is, it contains counts).
-
-    The `add(output, target)` method takes as input an NxK tensor `output` that
-    contains the output scores obtained from the model for N examples and K classes,
-    and a corresponding N-tensor or NxK-tensor `target` that provides the targets
-    for the N examples. When `target` is an N-tensor, the targets are assumed to be
-    integer values between 1 and K. When target is an NxK-tensor, the targets are
-    assumed to be provided as one-hot vectors (that is, vectors that contain only
-    zeros and a single one at the location of the target value to be encoded).
-
-    The `value()` method has no parameters and returns the confusion matrix in a
-    KxK tensor. In the confusion matrix, rows correspond to ground-truth targets and
-    columns correspond to predicted targets.
+    for such problems, please use MultiLabelConfusionMeter.
     """
-    def __init__(self, k, normalized = False):
+
+    def __init__(self, k, normalized=False):
+        """
+        Args:
+            k (int): number of classes in the classification problem
+            normalized (boolean): Determines whether or not the confusion matrix
+                is normalized or not
+        """
         super(ConfusionMeter, self).__init__()
-        self.conf = np.ndarray((k,k), dtype=np.int32)
+        self.conf = np.ndarray((k, k), dtype=np.int32)
         self.normalized = normalized
+        self.k = k
         self.reset()
 
     def reset(self):
         self.conf.fill(0)
 
-    def add(self, output, target):
-        output = output.cpu().squeeze().numpy()
+    def add(self, predicted, target):
+        """
+        Computes the confusion matrix of K x K size where K is no of classes
+        Args:
+            predicted (tensor): Can be an N x K tensor of predicted scores obtained from
+                the model for N examples and K classes or an N-tensor of
+                integer values between 1 and K.
+            target (tensor): Can be a N-tensor of integer values assumed to be integer
+                values between 1 and K or N x K tensor, where targets are
+                assumed to be provided as one-hot vectors
+
+        """
+        predicted = predicted.cpu().squeeze().numpy()
         target = target.cpu().squeeze().numpy()
-        if np.ndim(output) == 1:
-            output = output[None]
-        onehot = np.ndim(target) != 1
-        assert output.shape[0] == target.shape[0], \
-                'number of targets and outputs do not match'
-        assert output.shape[1] == self.conf.shape[0], \
-                'number of outputs does not match size of confusion matrix'
-        assert not onehot or target.shape[1] == output.shape[1], \
-                'target should be 1D Tensor or have size of output (one-hot)'
-        if onehot:
+
+        assert predicted.shape[0] == target.shape[0], \
+            'number of targets and predicted outputs do not match'
+
+        if np.ndim(predicted) != 1:
+            assert predicted.shape[1] == self.k, \
+                'number of predictions does not match size of confusion matrix'
+            predicted = np.argmax(predicted, 1)
+        else:
+            assert (predicted.max() < self.k) and (predicted.min() >= 0), \
+                'predicted values are not between 1 and k'
+
+        onehot_target = np.ndim(target) != 1
+        if onehot_target:
+            assert target.shape[1] == self.k, \
+                'Onehot target does not match size of confusion matrix'
             assert (target >= 0).all() and (target <= 1).all(), \
-                    'in one-hot encoding, target values should be 0 or 1'
+                'in one-hot encoding, target values should be 0 or 1'
             assert (target.sum(1) == 1).all(), \
-                    'multi-label setting is not supported'
- 
-        pred = output.argmax(1)
-        for i,n in enumerate(pred):
-            pos = onehot and target[i].argmax(0) or int(target[i])
-            self.conf[pos][n] += 1
+                'multi-label setting is not supported'
+            target = np.argmax(target, 1)
+        else:
+            assert (predicted.max() < self.k) and (predicted.min() >= 0), \
+                'predicted values are not between 1 and k'
+
+        # hack for bincounting 2 arrays together
+        x = predicted + self.k * target
+        bincount_2d = np.bincount(x.astype(np.int32),
+                                  minlength=self.k ** 2)
+        assert bincount_2d.size == self.k ** 2
+        conf = bincount_2d.reshape((self.k, self.k))
+
+        self.conf += conf
 
     def value(self):
+        """
+        Returns:
+            Confustion matrix of K rows and K columns, where rows corresponds
+            to ground-truth targets and columns corresponds to predicted
+            targets.
+        """
         if self.normalized:
             conf = self.conf.astype(np.float32)
-            return conf / conf.sum(1).clip(min=1e-12)[:,None]
+            return conf / conf.sum(1).clip(min=1e-12)[:, None]
         else:
             return self.conf
-
