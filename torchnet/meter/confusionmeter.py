@@ -37,8 +37,12 @@ class ConfusionMeter(meter.Meter):
                 assumed to be provided as one-hot vectors
 
         """
-        predicted = predicted.cpu().squeeze().numpy()
-        target = target.cpu().squeeze().numpy()
+        if (predicted.shape[0] == 1):
+            predicted = predicted.cpu().numpy()
+            target = target.cpu().numpy()
+        else:
+            predicted = predicted.cpu().squeeze().numpy()
+            target = target.cpu().squeeze().numpy()
 
         assert predicted.shape[0] == target.shape[0], \
             'number of targets and predicted outputs do not match'
