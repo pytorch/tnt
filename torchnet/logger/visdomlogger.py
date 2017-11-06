@@ -173,7 +173,7 @@ class VisdomTextLogger(BaseVisdomLogger):
                 >>> train.register_plugin(progress_m)
                 >>> train.register_plugin(logger)
         '''
-        super(VisdomTextLogger, self).__init__(fields, interval, win, env, opts)
+        super(VisdomTextLogger, self).__init__(fields, win, env, opts)
         self.text = ''
 
         if update_type not in self.valid_update_types:
