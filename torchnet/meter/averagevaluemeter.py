@@ -6,9 +6,10 @@ class AverageValueMeter(meter.Meter):
     def __init__(self):
         super(AverageValueMeter, self).__init__()
         self.reset()
+        self.val = 0
 
     def add(self, value, n = 1):
-        self.val = val
+        self.val = value
         self.sum += value
         self.var += value * value
         self.n += n
@@ -16,7 +17,7 @@ class AverageValueMeter(meter.Meter):
         if self.n == 0:
             self.mean, self.std = np.nan, np.nan
         elif self.n == 1:
-            return self.sum, np.inf
+            self.mean, self.std = self.sum, np.inf
         else:
             self.mean = self.sum / self.n
             self.std = math.sqrt( (self.var - self.n * self.mean * self.mean) / (self.n - 1.0) )
