@@ -46,7 +46,7 @@ class TestDatasets(unittest.TestCase):
     def testTensorDataset(self):
         # dict input
         data = {
-                # 'input': torch.range(0,7),
+                # 'input': torch.arange(0,8),
                 'input': np.arange(0,8),
                 'target': np.arange(0,8),
                 }
@@ -66,7 +66,7 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(a[1], d[1][0])
 
     def testBatchDataset(self):
-        t = torch.range(0,15).long()
+        t = torch.arange(0,16).long()
         batchsize = 8
         d = dataset.ListDataset(t, lambda x: {'input': x})
         d = dataset.BatchDataset(d, batchsize)
