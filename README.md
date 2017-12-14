@@ -31,6 +31,8 @@ What's been ported so far:
    * TensorDataset [new]
    * TransformDataset
  * Meters:
+   * APMeter
+   * mAPMeter
    * AverageValueMeter
    * AUCMeter
    * ClassErrorMeter
