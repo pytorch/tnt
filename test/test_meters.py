@@ -21,7 +21,10 @@ class TestMeters(unittest.TestCase):
     def testClassErrorMeter(self):
         mtr = meter.ClassErrorMeter(topk=[1])
         output = torch.eye(3)
-        target = torch.arange(0, 3)
+	if hasattr(torch,"arange"):
+           target = torch.arange(0, 3)
+        else:
+           target = torch.range(0, 2)
         mtr.add(output, target)
         err = mtr.value()
 
@@ -38,7 +41,10 @@ class TestMeters(unittest.TestCase):
         mtr = meter.ConfusionMeter(k=3)
 
         output = torch.Tensor([[.8, 0.1, 0.1], [10, 11, 10], [0.2, 0.2, .3]])
-        target = torch.arange(0, 3)
+	if hasattr(torch,"arange"):
+           target = torch.arange(0, 3)
+        else:
+           target = torch.range(0, 2)
         mtr.add(output, target)
 
         conf_mtrx = mtr.value()

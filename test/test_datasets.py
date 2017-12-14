@@ -66,7 +66,10 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(a[1], d[1][0])
 
     def testBatchDataset(self):
-        t = torch.arange(0,16).long()
+	if hasattr(torch,"arange"):
+           t = torch.arange(0,16).long()
+	else:
+           t = torch.range(0,15).long()
         batchsize = 8
         d = dataset.ListDataset(t, lambda x: {'input': x})
         d = dataset.BatchDataset(d, batchsize)

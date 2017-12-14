@@ -105,7 +105,10 @@ class APMeter(meter.Meter):
         if self.scores.numel() == 0:
             return 0
         ap = torch.zeros(self.scores.size(1))
-        rg = torch.arange(1, self.scores.size(0)+1).float()
+	if hasattr(torch, "arange"):
+           rg = torch.arange(1, self.scores.size(0)+1).float()
+	else:
+	   rg = torch.range(1, self.scores.size(0)).float()
         if self.weights.numel() > 0:
             weight = self.weights.new(self.weights.size())
             weighted_truth = self.weights.new(self.weights.size())
