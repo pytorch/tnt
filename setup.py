@@ -4,7 +4,7 @@ import shutil
 import sys
 from setuptools import setup, find_packages
 
-VERSION = '0.0.2'
+VERSION = '0.0.1'
 
 long_description = "an abstraction to train neural networks"
 
@@ -12,9 +12,9 @@ setup_info = dict(
     # Metadata
     name='torchnet',
     version=VERSION,
-    author='Barry Kui',
-    author_email='xukui.cs@gmail.com',
-    url='https://github.com/barrykui/tnt',
+    author='Sergey Zagoruyko',
+    author_email='sergey.zagoruyko@enpc.fr',
+    url='https://github.com/pytorch/tnt',
     description='an abstraction to train neural networks',
     long_description=long_description,
     license='BSD',
