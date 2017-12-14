@@ -4,7 +4,7 @@
         - the Visdom server must be running at start!
 
     Example:
-        $ python -m visdom.server & 
+        $ python -m visdom.server -port 8097 & 
         $ python mnist_with_visdom.py
 """
 from tqdm import tqdm
@@ -64,11 +64,12 @@ def main():
     classerr = tnt.meter.ClassErrorMeter(accuracy=True)
     confusion_meter = tnt.meter.ConfusionMeter(10, normalized=True)
 
-    train_loss_logger = VisdomPlotLogger('line', opts={'title': 'Train Loss'})
-    train_err_logger = VisdomPlotLogger('line', opts={'title': 'Train Class Error'})
-    test_loss_logger = VisdomPlotLogger('line', opts={'title': 'Test Loss'})
-    test_err_logger = VisdomPlotLogger('line', opts={'title': 'Test Class Error'})
-    confusion_logger = VisdomLogger('heatmap', opts={'title': 'Confusion matrix', 
+    port = 8097
+    train_loss_logger = VisdomPlotLogger('line', port=port, opts={'title': 'Train Loss'})
+    train_err_logger = VisdomPlotLogger('line', port=port, opts={'title': 'Train Class Error'})
+    test_loss_logger = VisdomPlotLogger('line', port=port, opts={'title': 'Test Loss'})
+    test_err_logger = VisdomPlotLogger('line', port=port, opts={'title': 'Test Class Error'})
+    confusion_logger = VisdomLogger('heatmap', port=port, opts={'title': 'Confusion matrix', 
                                                      'columnnames': list(range(10)), 
                                                      'rownames': list(range(10))})
 

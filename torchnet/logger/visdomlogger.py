@@ -23,12 +23,12 @@ class BaseVisdomLogger(Logger):
     def viz(self):
         return self._viz
 
-    def __init__(self, fields=None, win=None, env=None, port=8097, opts={}):
+    def __init__(self, fields=None, win=None, env=None, opts={}, port=8097):
         super(BaseVisdomLogger, self).__init__(fields)
         self.win = win
         self.env = env
         self.opts = opts
-        self._viz = visdom.Visdom(port)
+        self._viz = visdom.Visdom(port=port)
 
     def log(self, *args, **kwargs):
         raise NotImplementedError("log not implemented for BaseVisdomLogger, which is an abstract class.")
@@ -68,7 +68,7 @@ class VisdomSaver(object):
     def __init__(self, envs=None, port=8097):
         super(VisdomSaver, self).__init__()
         self.envs = envs
-        self.viz = visdom.Visdom(port)
+        self.viz = visdom.Visdom(port=port)
 
     def save(self, *args, **kwargs):
         self.viz.save(self.envs)
@@ -79,7 +79,7 @@ class VisdomLogger(BaseVisdomLogger):
         A generic Visdom class that works with the majority of Visdom plot types.
     '''
 
-    def __init__(self, plot_type, fields=None, win=None, env=None, port=8097, opts={}):
+    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097):
         '''
             Args:
                 fields: Currently unused
@@ -107,7 +107,7 @@ class VisdomLogger(BaseVisdomLogger):
 
 class VisdomPlotLogger(BaseVisdomLogger):
     
-    def __init__(self, plot_type, fields=None, win=None, env=None, port=8097,  opts={}):
+    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097):
         '''
             Args:
                 fields: Currently unused
@@ -161,7 +161,7 @@ class VisdomTextLogger(BaseVisdomLogger):
     '''
     valid_update_types = ['REPLACE', 'APPEND']
 
-    def __init__(self, fields=None, win=None, env=None, port=8097, opts={}, update_type=valid_update_types[0]):
+    def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0], port=8097):
         '''
             Args:
                 fields: Currently unused
