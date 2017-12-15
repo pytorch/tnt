@@ -1,5 +1,6 @@
 """ Logging values to various sinks """
 
+
 class Logger(object):
     _fields = None
 

@@ -26,9 +26,9 @@ class ClassErrorMeter(meter.Meter):
             output = output[np.newaxis]
         else:
             assert np.ndim(output) == 2, \
-                    'wrong output size (1D or 2D expected)'
+                'wrong output size (1D or 2D expected)'
             assert np.ndim(target) == 1, \
-                    'target and output do not match'
+                'target and output do not match'
         assert target.shape[0] == output.shape[0], \
             'target and output do not match'
         topk = self.topk
@@ -45,7 +45,7 @@ class ClassErrorMeter(meter.Meter):
     def value(self, k=-1):
         if k != -1:
             assert k in self.sum.keys(), \
-                   'invalid k (this k was not provided at construction time)'
+                'invalid k (this k was not provided at construction time)'
             if self.accuracy:
                 return (1. - float(self.sum[k]) / self.n) * 100.0
             else:

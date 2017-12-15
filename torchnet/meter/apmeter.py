@@ -18,6 +18,7 @@ class APMeter(meter.Meter):
     (for positive examples); and (3) the `weight` ( > 0) represents weight for
     each sample.
     """
+
     def __init__(self):
         super(APMeter, self).__init__()
         self.reset()
@@ -82,7 +83,7 @@ class APMeter(meter.Meter):
             self.targets.storage().resize_(int(new_size + output.numel()))
             if weight is not None:
                 self.weights.storage().resize_(int(new_weight_size
-                                               + output.size(0)))
+                                                   + output.size(0)))
 
         # store scores and targets
         offset = self.scores.size(0) if self.scores.dim() > 0 else 0
@@ -105,10 +106,10 @@ class APMeter(meter.Meter):
         if self.scores.numel() == 0:
             return 0
         ap = torch.zeros(self.scores.size(1))
-	if hasattr(torch, "arange"):
-           rg = torch.arange(1, self.scores.size(0)+1).float()
-	else:
-	   rg = torch.range(1, self.scores.size(0)).float()
+        if hasattr(torch, "arange"):
+            rg = torch.arange(1, self.scores.size(0) + 1).float()
+        else:
+            rg = torch.range(1, self.scores.size(0)).float()
         if self.weights.numel() > 0:
             weight = self.weights.new(self.weights.size())
             weighted_truth = self.weights.new(self.weights.size())

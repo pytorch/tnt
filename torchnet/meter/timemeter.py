@@ -1,6 +1,7 @@
 import time
 from . import meter
 
+
 class TimeMeter(meter.Meter):
     """
     <a name="TimeMeter">
@@ -16,6 +17,7 @@ class TimeMeter(meter.Meter):
        * `reset()` resets the timer, setting the timer and unit counter to zero.
        * `value()` returns the time passed since the last `reset()`; divided by the counter value when `unit=true`.
     """
+
     def __init__(self, unit):
         super(TimeMeter, self).__init__()
         self.unit = unit

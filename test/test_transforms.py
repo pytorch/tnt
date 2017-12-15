@@ -2,18 +2,21 @@ import torchnet.transform as transform
 import unittest
 import torch
 
+
 class TestTransforms(unittest.TestCase):
     def testCompose(self):
-        f1 = lambda x: x + 1
-        f2 = lambda x: x + 2
-        f3 = lambda x: x / 2
-        self.assertEqual(transform.compose([f1,f2,f3])(1), 2)
+        def f1(x): return x + 1
+
+        def f2(x): return x + 2
+
+        def f3(x): return x / 2
+        self.assertEqual(transform.compose([f1, f2, f3])(1), 2)
 
     def testTableMergeKeys(self):
         x = {
-                'sample1': {'input': 1, 'target': "a"},
-                'sample2': {'input': 2, 'target': "b", 'flag': "hard"}
-                }
+            'sample1': {'input': 1, 'target': "a"},
+            'sample2': {'input': 2, 'target': "b", 'flag': "hard"}
+        }
 
         y = transform.tablemergekeys()(x)
 
@@ -28,12 +31,13 @@ class TestTransforms(unittest.TestCase):
 
     def testMakeBatch(self):
         x = [
-                {'input': torch.randn(4), 'target': "a"},
-                {'input': torch.randn(4), 'target': "b"},
-                ]
+            {'input': torch.randn(4), 'target': "a"},
+            {'input': torch.randn(4), 'target': "b"},
+        ]
         y = transform.makebatch()(x)
-        self.assertEqual(y['input'].size(), torch.Size([2,4]))
+        self.assertEqual(y['input'].size(), torch.Size([2, 4]))
         self.assertEqual(y['target'], ["a", "b"])
+
 
 if __name__ == '__main__':
     unittest.main()
