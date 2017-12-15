@@ -1,5 +1,6 @@
 import torch
 
+
 def canmergetensor(tbl):
     if not isinstance(tbl, list):
         return False
@@ -12,9 +13,10 @@ def canmergetensor(tbl):
         return True
     return False
 
+
 def mergetensor(tbl):
     sz = [len(tbl)] + list(tbl[0].size())
     res = tbl[0].new(torch.Size(sz))
-    for i,v in enumerate(tbl):
+    for i, v in enumerate(tbl):
         res[i].copy_(v)
     return res

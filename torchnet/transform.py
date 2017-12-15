@@ -34,7 +34,8 @@ def tablemergekeys():
         return mergetbl
     return mergekeys
 
-tableapply = lambda f: lambda d: dict(
+
+def tableapply(f): return lambda d: dict(
     map(lambda kv: (kv[0], f(kv[1])), iteritems(d)))
 
 

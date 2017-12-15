@@ -40,14 +40,15 @@ def f(params, inputs, mode):
 
 def main():
     params = {
-            'conv0.weight': conv_init(1, 50, 5),  'conv0.bias': torch.zeros(50),
-            'conv1.weight': conv_init(50, 50, 5), 'conv1.bias': torch.zeros(50),
-            'linear2.weight': linear_init(800, 512), 'linear2.bias': torch.zeros(512),
-            'linear3.weight': linear_init(512, 10),  'linear3.bias': torch.zeros(10),
-            }
+        'conv0.weight': conv_init(1, 50, 5),  'conv0.bias': torch.zeros(50),
+        'conv1.weight': conv_init(50, 50, 5), 'conv1.bias': torch.zeros(50),
+        'linear2.weight': linear_init(800, 512), 'linear2.bias': torch.zeros(512),
+        'linear3.weight': linear_init(512, 10),  'linear3.bias': torch.zeros(10),
+    }
     params = {k: Variable(v, requires_grad=True) for k, v in params.items()}
 
-    optimizer = torch.optim.SGD(params.values(), lr=0.01, momentum=0.9, weight_decay=0.0005)
+    optimizer = torch.optim.SGD(
+        params.values(), lr=0.01, momentum=0.9, weight_decay=0.0005)
 
     engine = Engine()
     meter_loss = tnt.meter.AverageValueMeter()
@@ -67,7 +68,8 @@ def main():
         state['sample'].append(state['train'])
 
     def on_forward(state):
-        classerr.add(state['output'].data, torch.LongTensor(state['sample'][1]))
+        classerr.add(state['output'].data,
+                     torch.LongTensor(state['sample'][1]))
         meter_loss.add(state['loss'].data[0])
 
     def on_start_epoch(state):

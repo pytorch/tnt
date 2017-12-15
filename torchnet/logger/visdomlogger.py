@@ -1,9 +1,9 @@
 """ Logging to Visdom server """
-from   collections import defaultdict
+from collections import defaultdict
 import numpy as np
 import visdom
 
-from   .logger import Logger
+from .logger import Logger
 
 
 class BaseVisdomLogger(Logger):
@@ -31,7 +31,8 @@ class BaseVisdomLogger(Logger):
         self._viz = visdom.Visdom(port=port)
 
     def log(self, *args, **kwargs):
-        raise NotImplementedError("log not implemented for BaseVisdomLogger, which is an abstract class.")
+        raise NotImplementedError(
+            "log not implemented for BaseVisdomLogger, which is an abstract class.")
 
     def _viz_prototype(self, vis_fn):
         ''' Outputs a function which will log the arguments to Visdom in an appropriate way.
@@ -40,11 +41,11 @@ class BaseVisdomLogger(Logger):
                 vis_fn: A function, such as self.vis.image
         '''
         def _viz_logger(*args, **kwargs):
-            self.win = vis_fn(*args, 
-                    win=self.win,
-                    env=self.env,
-                    opts=self.opts, 
-                    **kwargs)
+            self.win = vis_fn(*args,
+                              win=self.win,
+                              env=self.env,
+                              opts=self.opts,
+                              **kwargs)
         return _viz_logger
 
     def log_state(self, state):
@@ -72,7 +73,7 @@ class VisdomSaver(object):
 
     def save(self, *args, **kwargs):
         self.viz.save(self.envs)
-    
+
 
 class VisdomLogger(BaseVisdomLogger):
     '''
@@ -106,7 +107,7 @@ class VisdomLogger(BaseVisdomLogger):
 
 
 class VisdomPlotLogger(BaseVisdomLogger):
-    
+
     def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097):
         '''
             Args:
@@ -119,8 +120,8 @@ class VisdomPlotLogger(BaseVisdomLogger):
         '''
         super(VisdomPlotLogger, self).__init__(fields, win, env, opts, port)
         valid_plot_types = {
-            "scatter": self.viz.scatter, 
-            "line": self.viz.line }
+            "scatter": self.viz.scatter,
+            "line": self.viz.line}
         self.plot_type = plot_type
         # Set chart type
         if plot_type not in valid_plot_types.keys():
@@ -177,11 +178,11 @@ class VisdomTextLogger(BaseVisdomLogger):
         self.text = ''
 
         if update_type not in self.valid_update_types:
-            raise ValueError("update type '{}' not found. Must be one of {}".format(update_type, self.valid_update_types))
+            raise ValueError("update type '{}' not found. Must be one of {}".format(
+                update_type, self.valid_update_types))
         self.update_type = update_type
 
         self.viz_logger = self._viz_prototype(self.viz.text)
-
 
     def log(self, msg, *args, **kwargs):
         text = msg

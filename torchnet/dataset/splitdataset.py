@@ -1,6 +1,7 @@
 from .dataset import Dataset
 import numpy as np
 
+
 class SplitDataset(Dataset):
     """
     Dataset to partition a given dataset.

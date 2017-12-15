@@ -27,6 +27,5 @@ class MovingAverageValueMeter(meter.Meter):
     def value(self):
         n = min(self.n, self.windowsize)
         mean = self.sum / max(1, n)
-        std = math.sqrt(max((self.var - n * mean * mean) / max(1, n-1), 0))
+        std = math.sqrt(max((self.var - n * mean * mean) / max(1, n - 1), 0))
         return mean, std
-

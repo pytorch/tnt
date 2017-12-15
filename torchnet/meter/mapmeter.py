@@ -18,6 +18,7 @@ class mAPMeter(meter.Meter):
     (for positive examples); and (3) the `weight` ( > 0) represents weight for
     each sample.
     """
+
     def __init__(self):
         super(mAPMeter, self).__init__()
         self.apmeter = APMeter()

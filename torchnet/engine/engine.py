@@ -8,14 +8,14 @@ class Engine(object):
 
     def train(self, network, iterator, maxepoch, optimizer):
         state = {
-                'network': network,
-                'iterator': iterator,
-                'maxepoch': maxepoch,
-                'optimizer': optimizer,
-                'epoch': 0,
-                't': 0,
-                'train': True,
-                }
+            'network': network,
+            'iterator': iterator,
+            'maxepoch': maxepoch,
+            'optimizer': optimizer,
+            'epoch': 0,
+            't': 0,
+            'train': True,
+        }
 
         self.hook('on_start', state)
         while state['epoch'] < state['maxepoch']:
@@ -50,7 +50,7 @@ class Engine(object):
             'iterator': iterator,
             't': 0,
             'train': False,
-            }
+        }
 
         self.hook('on_start', state)
         for sample in state['iterator']:
