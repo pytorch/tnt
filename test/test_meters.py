@@ -18,6 +18,33 @@ class TestMeters(unittest.TestCase):
 
         self.assertTrue(np.isnan(mean))
 
+    def testAverageValueMeter2(self):
+	"""Test the case of near-zero variance.
+
+	The test compares the results to numpy, and uses
+        isclose() to allow for some small differences in
+        the results, which are due to slightly different arithmetic
+	operations and order.
+	"""
+    	def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+            return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+	m = meter.AverageValueMeter()
+	samples = [0.7] * 10
+    	truth = np.array([])
+    	for sample in samples:
+            truth = np.append(truth, sample)
+            m.add(sample)
+            mean, std = m.value()
+
+            self.assertTrue(isclose(truth.mean(), mean))
+            self.assertTrue(
+		(math.isnan(std) and math.isnan(truth.std(ddof=1))) or
+                # When there is one sample in the dataset, numpy returns NaN and
+                # AverageValueMeter returns Inf.  We forgive AverageValueMeter :-)
+                (math.isinf(std) and math.isnan(truth.std(ddof=1))) or
+                isclose(std, truth.std(ddof=1), abs_tol=1e-07))
+
     def testClassErrorMeter(self):
         mtr = meter.ClassErrorMeter(topk=[1])
         output = torch.eye(3)
