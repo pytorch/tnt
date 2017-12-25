@@ -4,9 +4,9 @@
         - the Visdom server must be running at start!
 
     Example:
-        $ python -m visdom.server -port 8097 & 
         $ python mnist_with_visdom.py
 """
+import os
 from tqdm import tqdm
 import torch
 import torch.optim
@@ -15,8 +15,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.init import kaiming_normal
 from torchnet.engine import Engine
-#from torchnet.logger import VisdomPlotLogger, VisdomLogger
-from torchnet.meterlogger import MeterLogger
+from torchnet.logger import MeterLogger
 from torchvision.datasets.mnist import MNIST
 
 
@@ -75,18 +74,10 @@ def main():
         o = f(params, inputs, sample[2])
         return F.cross_entropy(o, targets), o
 
-    #def reset_meters():
-        #classerr.reset()
-        #meter_loss.reset()
-        #confusion_meter.reset()
-
     def on_sample(state):
         state['sample'].append(state['train'])
 
     def on_forward(state):
-        #classerr.add(state['output'].data, torch.LongTensor(state['sample'][1]))
-        #confusion_meter.add(state['output'].data, torch.LongTensor(state['sample'][1]))
-        #meter_loss.add(state['loss'].data[0])
 	mlog.updateMeter(state['output'], state['sample'][1], state['loss'])
 
 
@@ -95,18 +86,11 @@ def main():
 
     def on_end_epoch(state):
 	mlog.printMeter("Train", state['epoch'],  state['iterator'], nepoch)
-        #train_loss_logger.log(state['epoch'], meter_loss.value()[0])
-        #train_err_logger.log(state['epoch'], classerr.value()[0])
  
         # do validation at the end of each epoch
 	mlog.resetMeter(state['epoch'], mode='Test')
-        #reset_meters()
         engine.test(h, get_iterator(False))
 	mlog.printMeter("Test", state['epoch'],  state['iterator'], nepoch)
-        #test_loss_logger.log(state['epoch'], meter_loss.value()[0])
-        #test_err_logger.log(state['epoch'], classerr.value()[0])
-        #confusion_logger.log(confusion_meter.value())
-        #print 'Testing loss: %.4f, accuracy: %.2f%%' % (meter_loss.value()[0], classerr.value()[0])
 
     engine.hooks['on_sample'] = on_sample
     engine.hooks['on_forward'] = on_forward
