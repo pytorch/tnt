@@ -17,7 +17,7 @@ class MeterLogger(object):
         self.meter  = {}
         self.meter['time']    = tnt.meter.TimeMeter(None)
         self.meter['loss']    = tnt.meter.AverageValueMeter()
-        self.meter['acc']     = tnt.meter.ClassErrorMeter(topk=(1, 5), accuracy=True)
+        self.meter['acc']     = tnt.meter.ClassErrorMeter(topk=(1), accuracy=True)
         self.meter['map']     = tnt.meter.mAPMeter()
         self.meter['confmat'] = tnt.meter.ConfusionMeter(nclass, normalized=True)
         self.logger = {'Train':{}, 'Test':{}}
@@ -38,9 +38,9 @@ class MeterLogger(object):
               'Time %.2f ' % (mode, epoch, i, total, \
               self.meter['loss'].val, self.meter['loss'].mean, \
               self.meter['acc'].value()[0], \
-              self.meter['acc'].value()[1], \
               self.meter['map'].value(), \
               self.meter['time'].value()))
+              #self.meter['acc'].value()[1], \
     
     def ver2Tensor(self, target):
         target_mat  = torch.zeros(target.shape[0], self.nclass)
