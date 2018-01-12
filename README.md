@@ -11,12 +11,18 @@ at encouraging code re-use as well as encouraging modular programming.
 Most of the modules support NumPy arrays as well as PyTorch tensors on input,
 so could potentially be used with other frameworks.
 
+## Update
+
+ * MeterLogger
+ * Support specifying the Server and Port of visdom
+
+
 ## Installation
 
 Make sure you have PyTorch installed, then do:
 
 ```buildoutcfg
-pip install git+https://github.com/pytorch/tnt.git@master
+pip install git+https://github.com/barrykui/meterlogger.git@master
 ```
 
 ## Differences with lua version
