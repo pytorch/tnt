@@ -63,9 +63,10 @@ def main():
 
     #<<---- Meter logger code --- 
     nepoch = 10
-    port = 8888
+    server = "http://10.10.10.1"
+    port = 9999
     os.system("python -m visdom.server -port "+str(port)+" &")
-    mlog = MeterLogger(port=port, nclass=10,title="MNIST-Conv2")
+    mlog = MeterLogger(server=server, port=port, nclass=10,title="MNIST-Conv2")
     #---- Meter logger code ->> 
 
     def h(sample):

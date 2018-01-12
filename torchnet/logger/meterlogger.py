@@ -12,7 +12,7 @@ from torchnet.logger import VisdomPlotLogger, VisdomLogger
 class MeterLogger(object):
 
 
-    def __init__(self, port=8097, nclass=21, title="DNN"):
+    def __init__(self, server="http://localhost", port=8097, nclass=21, title="DNN"):
 	self.nclass = nclass
         self.meter  = {}
         self.meter['time']    = tnt.meter.TimeMeter(None)
@@ -23,10 +23,10 @@ class MeterLogger(object):
         self.logger = {'Train':{}, 'Test':{}}
         for mode in ['Train', 'Test']:
             title_pre = title+' '+mode
-            self.logger[mode]['loss']    = VisdomPlotLogger('line', port=port, opts={'title': title_pre+' Loss'})
-            self.logger[mode]['acc']     = VisdomPlotLogger('line', port=port, opts={'title': title_pre +' Accuracy'})
-            self.logger[mode]['map']     = VisdomPlotLogger('line', port=port, opts={'title': title_pre +' mAP'})
-            self.logger[mode]['confmat'] = VisdomLogger('heatmap', port=port, opts={'title':  title_pre +' Confusion matrix',
+            self.logger[mode]['loss']    = VisdomPlotLogger('line',server=server, port=port, opts={'title': title_pre+' Loss'})
+            self.logger[mode]['acc']     = VisdomPlotLogger('line',server=server, port=port, opts={'title': title_pre +' Accuracy'})
+            self.logger[mode]['map']     = VisdomPlotLogger('line',server=server, port=port, opts={'title': title_pre +' mAP'})
+            self.logger[mode]['confmat'] = VisdomLogger('heatmap', server=server, port=port, opts={'title':  title_pre +' Confusion matrix',
                                                      'columnnames': list(range(nclass)),
                                                      'rownames': list(range(nclass))})
     def printMeter(self, mode,  epoch, i, total):
