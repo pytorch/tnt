@@ -15,63 +15,101 @@ class MeterLogger(object):
     def __init__(self, server="http://localhost", port=8097, nclass=21, title="DNN"):
 	self.nclass = nclass
         self.meter  = {}
-        self.meter['time']    = tnt.meter.TimeMeter(None)
-        self.meter['loss']    = tnt.meter.AverageValueMeter()
-        self.meter['acc']     = tnt.meter.ClassErrorMeter(topk=(1, 5), accuracy=True)
-        self.meter['map']     = tnt.meter.mAPMeter()
-        self.meter['confmat'] = tnt.meter.ConfusionMeter(nclass, normalized=True)
+        self.timer    = tnt.meter.TimeMeter(None)
+	self.server = server
+	self.port = port
+	self.nclass = nclass
+	self.topk = 5 if nclass > 5 else nclass
+	self.title = title
         self.logger = {'Train':{}, 'Test':{}}
-        for mode in ['Train', 'Test']:
-            title_pre = title+' '+mode
-            self.logger[mode]['loss']    = VisdomPlotLogger('line',server=server, port=port, opts={'title': title_pre+' Loss'})
-            self.logger[mode]['acc']     = VisdomPlotLogger('line',server=server, port=port, opts={'title': title_pre +' Accuracy'})
-            self.logger[mode]['map']     = VisdomPlotLogger('line',server=server, port=port, opts={'title': title_pre +' mAP'})
-            self.logger[mode]['confmat'] = VisdomLogger('heatmap', server=server, port=port, opts={'title':  title_pre +' Confusion matrix',
-                                                     'columnnames': list(range(nclass)),
-                                                     'rownames': list(range(nclass))})
-    def printMeter(self, mode,  epoch, i, total):
-        print('%s: [%d][%d/%d]\t'
-              'Loss %.4f (%.4f)\t'
-              'Acc@1 %.3f%% \t'
-              'Acc@5 %.3f%% \t'
-              'mAP %.4f\t'
-              'Time %.2f ' % (mode, epoch, i, total, \
-              self.meter['loss'].val, self.meter['loss'].mean, \
-              self.meter['acc'].value()[0], \
-              self.meter['acc'].value()[1], \
-              self.meter['map'].value(), \
-              self.meter['time'].value()))
     
-    def ver2Tensor(self, target):
+    def __ver2Tensor(self, target):
         target_mat  = torch.zeros(target.shape[0], self.nclass)
         for i,j in enumerate(target):
             target_mat[i][j]=1
         return target_mat
 
-    def toTensor(self, var):
+    def __toTensor(self, var):
 	if isinstance(var, torch.autograd.Variable):
 		var = var.data
 	if not torch.is_tensor(var):
 		var = torch.from_numpy(var)
 	return var
 	
-
-    def updateMeter(self, output, target, loss=None):
-	output = self.toTensor(output)
-	target = self.toTensor(target)
-	if loss is not None:
-           self.meter['loss'].add(loss.data[0])
-        self.meter['acc'].add(output, target)
-        target_th = self.ver2Tensor(target)
-        self.meter['map'].add(output, target_th)
-        self.meter['confmat'].add(output,target_th)
     
-    def resetMeter(self, epoch, mode='Train'):
-	if ~np.isnan(self.meter['loss'].value()[0]):
-           self.logger[mode]['loss'].log(epoch, self.meter['loss'].value()[0])
-        self.logger[mode]['acc'].log(epoch, self.meter['acc'].value()[0])
-        self.logger[mode]['map'].log(epoch, self.meter['map'].value())
-        self.logger[mode]['confmat'].log(self.meter['confmat'].value())
-        for met in ['loss', 'acc', 'map', 'confmat']:
-            self.meter[met].reset()
+    def __addlogger(self, meter, ptype):
+	if ptype == 'line':
+	   opts={'title': self.title+' Train '+ meter}
+	   self.logger['Train'][meter]   = VisdomPlotLogger(ptype,server=self.server, port=self.port, opts=opts)
+	   opts={'title': self.title+' Test '+ meter}
+	   self.logger['Test'][meter]    = VisdomPlotLogger(ptype,server=self.server, port=self.port, opts=opts)
+	elif ptype == 'heatmap':
+	   names = list(range(self.nclass))
+	   opts={'title': self.title+' Train '+ meter, 'columnnames':names, 'rownames': names }
+	   self.logger['Train'][meter]   = VisdomLogger('heatmap', server=self.server, port=self.port, opts=opts)
+	   opts={'title': self.title+' Test '+ meter, 'columnnames':names, 'rownames': names }
+	   self.logger['Test'][meter]    = VisdomLogger('heatmap', server=self.server, port=self.port, opts=opts)
+	
+    def __addloss(self, meter):
+	self.meter[meter]    = tnt.meter.AverageValueMeter()
+	self.__addlogger(meter, 'line')
 
+    def __addmeter(self, meter):
+	if meter == 'accuracy':
+	    self.meter[meter]    = tnt.meter.ClassErrorMeter(topk=(1, self.topk), accuracy=True)
+	    self.__addlogger(meter, 'line')
+	elif meter == 'map':
+	    self.meter[meter]    = tnt.meter.mAPMeter()
+	    self.__addlogger(meter, 'line')
+	elif meter == 'confusion':
+	    self.meter[meter]    = tnt.meter.ConfusionMeter(nclass, normalized=True)
+	    self.__addlogger(meter, 'heatmap')
+
+    def updateMeterList(self, output, target, meters={'accuracy'}):
+	output = self.__toTensor(output)
+	target = self.__toTensor(target)
+	for meter in meters:
+	    if not self.meter.has_key(meter):
+	        self.__addmeter(meter)
+            if meter in ['ap', 'map', 'confusion']:
+               target_th = self.__ver2Tensor(target)
+               self.meter[meter].add(output, target_th)
+	    else:
+               self.meter[meter].add(output, target)
+
+
+    def updateLoss(self, loss, meter='loss'):
+	loss = self.__toTensor(loss)
+	if not self.meter.has_key(meter):
+            self.__addloss(meter)
+        self.meter[meter].add(loss[0])
+
+    def resetMeter(self, epoch, mode='Train'):
+	self.timer.reset()
+	for key in self.meter.keys():
+	    val = self.meter[key].value() 
+	    val = val[0] if isinstance(val, (list, tuple)) else val
+	    self.logger[mode][key].log(epoch, val)
+	    self.meter[key].reset()
+	
+    def printMeter(self, mode,  epoch, i, total, meterlist=None):
+	pstr = "%s: [%d][%d/%d] \t"
+	tval = []
+	tval.extend([mode, epoch, i, total])
+	if meterlist==None:
+	    meterlist = self.meter.keys()
+	for meter in meterlist:
+	    if meter == 'confusion':
+		continue
+	    if meter == 'accuracy':
+		pstr += "Acc@1 %.2f%% \t Acc@"+str(self.topk)+" %.2f%% \t"
+		tval.extend([self.meter[meter].value()[0], self.meter[meter].value()[1]])
+	    elif meter == 'map':
+		pstr += "mAP %.3f \t"
+		tval.extend([self.meter[meter].value()])
+	    else :
+		pstr += meter+" %.3f (%.3f)\t"
+		tval.extend([self.meter[meter].val, self.meter[meter].mean])
+	pstr += " %.2fs/its\t"
+	tval.extend([self.timer.value()])
+	print(pstr % tuple(tval))
