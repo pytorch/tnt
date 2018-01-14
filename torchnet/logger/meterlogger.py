@@ -15,13 +15,13 @@ class MeterLogger(object):
     def __init__(self, server="http://localhost", port=8097, nclass=21, title="DNN"):
 	self.nclass = nclass
         self.meter  = {}
-        self.timer    = tnt.meter.TimeMeter(None)
 	self.server = server
 	self.port = port
 	self.nclass = nclass
 	self.topk = 5 if nclass > 5 else nclass
 	self.title = title
         self.logger = {'Train':{}, 'Test':{}}
+        self.timer    = tnt.meter.TimeMeter(None)
     
     def __ver2Tensor(self, target):
         target_mat  = torch.zeros(target.shape[0], self.nclass)
@@ -65,7 +65,7 @@ class MeterLogger(object):
 	    self.meter[meter]    = tnt.meter.ConfusionMeter(nclass, normalized=True)
 	    self.__addlogger(meter, 'heatmap')
 
-    def updateMeterList(self, output, target, meters={'accuracy'}):
+    def updateMeter(self, output, target, meters={'accuracy'}):
 	output = self.__toTensor(output)
 	target = self.__toTensor(target)
 	for meter in meters:
