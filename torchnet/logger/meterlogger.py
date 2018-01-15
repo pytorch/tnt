@@ -61,6 +61,9 @@ class MeterLogger(object):
 	elif meter == 'map':
 	    self.meter[meter]    = tnt.meter.mAPMeter()
 	    self.__addlogger(meter, 'line')
+	elif meter == 'auc':
+	    self.meter[meter]    = tnt.meter.AUCMeter()
+	    self.__addlogger(meter, 'line')
 	elif meter == 'confusion':
 	    self.meter[meter]    = tnt.meter.ConfusionMeter(nclass, normalized=True)
 	    self.__addlogger(meter, 'heatmap')
@@ -106,6 +109,9 @@ class MeterLogger(object):
 		tval.extend([self.meter[meter].value()[0], self.meter[meter].value()[1]])
 	    elif meter == 'map':
 		pstr += "mAP %.3f \t"
+		tval.extend([self.meter[meter].value()])
+	    elif meter == 'auc':
+		pstr += "AUC %.3f \t"
 		tval.extend([self.meter[meter].value()])
 	    else :
 		pstr += meter+" %.3f (%.3f)\t"
