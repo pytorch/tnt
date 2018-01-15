@@ -32,5 +32,5 @@ class AverageValueMeter(meter.Meter):
         self.sum = 0.0
         self.var = 0.0
         self.val = 0.0
-        self.mean = 0.0
+        self.mean = np.nan
         self.std = np.nan
