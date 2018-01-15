@@ -42,7 +42,10 @@ What's been ported so far:
    * TimeMeter
  * Engines:
    * Engine
- * Transforms
+ * Logger
+   * Logger
+   * VisdomLogger
+   * MeterLogger [new, easy to plot multi-meter via Visdom]
 
  Any dataset can now be plugged into `torch.utils.DataLoader`, or called
  `.parallel(num_workers=8)` to utilize multiprocessing.

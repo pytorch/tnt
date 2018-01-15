@@ -65,7 +65,7 @@ class MeterLogger(object):
 	    self.meter[meter]    = tnt.meter.AUCMeter()
 	    self.__addlogger(meter, 'line')
 	elif meter == 'confusion':
-	    self.meter[meter]    = tnt.meter.ConfusionMeter(nclass, normalized=True)
+	    self.meter[meter]    = tnt.meter.ConfusionMeter(self.nclass, normalized=True)
 	    self.__addlogger(meter, 'heatmap')
 
     def updateMeter(self, output, target, meters={'accuracy'}):
@@ -87,22 +87,25 @@ class MeterLogger(object):
             self.__addloss(meter)
         self.meter[meter].add(loss[0])
 
-    def resetMeter(self, epoch, mode='Train'):
+    def resetMeter(self, iepoch, mode='Train'):
 	self.timer.reset()
 	for key in self.meter.keys():
 	    val = self.meter[key].value() 
 	    val = val[0] if isinstance(val, (list, tuple)) else val
-	    self.logger[mode][key].log(epoch, val)
+	    if key in ['confusion','histogram','image']:
+		self.logger[mode][key].log(val)
+	    else:
+	    	self.logger[mode][key].log(iepoch, val)
 	    self.meter[key].reset()
 	
-    def printMeter(self, mode,  epoch, i, total, meterlist=None):
-	pstr = "%s: [%d][%d/%d] \t"
+    def printMeter(self, mode, iepoch, ibatch=1, totalbatch=1, meterlist=None):
+	pstr = "%s:\t[%d][%d/%d] \t"
 	tval = []
-	tval.extend([mode, epoch, i, total])
+	tval.extend([mode, iepoch, ibatch, totalbatch])
 	if meterlist==None:
 	    meterlist = self.meter.keys()
 	for meter in meterlist:
-	    if meter == 'confusion':
+	    if meter in ['confusion','histogram','image']:
 		continue
 	    if meter == 'accuracy':
 		pstr += "Acc@1 %.2f%% \t Acc@"+str(self.topk)+" %.2f%% \t"
