@@ -23,12 +23,12 @@ class BaseVisdomLogger(Logger):
     def viz(self):
         return self._viz
 
-    def __init__(self, fields=None, win=None, env=None, opts={}, port=8097):
+    def __init__(self, fields=None, win=None, env=None, opts={}, port=8097, server="localhost"):
         super(BaseVisdomLogger, self).__init__(fields)
         self.win = win
         self.env = env
         self.opts = opts
-        self._viz = visdom.Visdom(port=port)
+        self._viz = visdom.Visdom(server="http://"+server, port=port)
 
     def log(self, *args, **kwargs):
         raise NotImplementedError(
@@ -66,10 +66,10 @@ class VisdomSaver(object):
         you probably only need one of these. 
     '''
 
-    def __init__(self, envs=None, port=8097):
+    def __init__(self, envs=None, port=8097, server="localhost"):
         super(VisdomSaver, self).__init__()
         self.envs = envs
-        self.viz = visdom.Visdom(port=port)
+        self.viz = visdom.Visdom(server="http://"+server, port=port)
 
     def save(self, *args, **kwargs):
         self.viz.save(self.envs)
@@ -80,7 +80,7 @@ class VisdomLogger(BaseVisdomLogger):
         A generic Visdom class that works with the majority of Visdom plot types.
     '''
 
-    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097):
+    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097, server="localhost"):
         '''
             Args:
                 fields: Currently unused
@@ -97,7 +97,7 @@ class VisdomLogger(BaseVisdomLogger):
                 >>> hist_logger = VisdomLogger('histogram', , opts=dict(title='Random!', numbins=20))
                 >>> hist_logger.log(hist_data)
         '''
-        super(VisdomLogger, self).__init__(fields, win, env, opts, port)
+        super(VisdomLogger, self).__init__(fields, win, env, opts, port, server)
         self.plot_type = plot_type
         self.chart = getattr(self.viz, plot_type)
         self.viz_logger = self._viz_prototype(self.chart)
@@ -108,7 +108,7 @@ class VisdomLogger(BaseVisdomLogger):
 
 class VisdomPlotLogger(BaseVisdomLogger):
 
-    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097):
+    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097, server="localhost"):
         '''
             Args:
                 fields: Currently unused
@@ -118,7 +118,7 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 >>> scatter_logger = VisdomPlotLogger('line')
                 >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0])
         '''
-        super(VisdomPlotLogger, self).__init__(fields, win, env, opts, port)
+        super(VisdomPlotLogger, self).__init__(fields, win, env, opts, port, server)
         valid_plot_types = {
             "scatter": self.viz.scatter,
             "line": self.viz.line}
@@ -162,7 +162,7 @@ class VisdomTextLogger(BaseVisdomLogger):
     '''
     valid_update_types = ['REPLACE', 'APPEND']
 
-    def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0], port=8097):
+    def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0], port=8097, server="localhost"):
         '''
             Args:
                 fields: Currently unused
@@ -174,7 +174,7 @@ class VisdomTextLogger(BaseVisdomLogger):
                 >>> train.register_plugin(progress_m)
                 >>> train.register_plugin(logger)
         '''
-        super(VisdomTextLogger, self).__init__(fields, win, env, opts, port)
+        super(VisdomTextLogger, self).__init__(fields, win, env, opts, port, server)
         self.text = ''
 
         if update_type not in self.valid_update_types:
