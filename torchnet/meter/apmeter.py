@@ -1,6 +1,5 @@
 import math
 from . import meter
-import numpy as np
 import torch
 
 
@@ -82,8 +81,7 @@ class APMeter(meter.Meter):
             self.scores.storage().resize_(int(new_size + output.numel()))
             self.targets.storage().resize_(int(new_size + output.numel()))
             if weight is not None:
-                self.weights.storage().resize_(int(new_weight_size
-                                                   + output.size(0)))
+                self.weights.storage().resize_(int(new_weight_size + output.size(0)))
 
         # store scores and targets
         offset = self.scores.size(0) if self.scores.dim() > 0 else 0

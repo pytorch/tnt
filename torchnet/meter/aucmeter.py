@@ -1,4 +1,3 @@
-import math
 import numbers
 from . import meter
 import numpy as np
