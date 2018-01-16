@@ -5,12 +5,7 @@ import torch
 
 class TestTransforms(unittest.TestCase):
     def testCompose(self):
-        def f1(x): return x + 1
-
-        def f2(x): return x + 2
-
-        def f3(x): return x / 2
-        self.assertEqual(transform.compose([f1, f2, f3])(1), 2)
+        self.assertEqual(transform.compose([lambda x: x + 1, lambda x: x + 2, lambda x: x / 2])(1), 2)
 
     def testTableMergeKeys(self):
         x = {

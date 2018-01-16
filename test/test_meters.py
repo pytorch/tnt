@@ -162,7 +162,7 @@ class TestMeters(unittest.TestCase):
         mtr = meter.APMeter()
 
         target = torch.Tensor([0, 1, 0, 1])
-        output = torch.Tensor([0.1,  0.2, 0.3, 4])
+        output = torch.Tensor([0.1, 0.2, 0.3, 4])
         weight = torch.Tensor([0.5, 1.0, 2.0, 0.1])
         mtr.add(output, target, weight)
 
@@ -283,7 +283,7 @@ class TestMeters(unittest.TestCase):
     def testmAPMeter(self):
         mtr = meter.mAPMeter()
         target = torch.Tensor([0, 1, 0, 1])
-        output = torch.Tensor([0.1,  0.2, 0.3, 4])
+        output = torch.Tensor([0.1, 0.2, 0.3, 4])
         weight = torch.Tensor([0.5, 1.0, 2.0, 0.1])
         mtr.add(output, target)
 

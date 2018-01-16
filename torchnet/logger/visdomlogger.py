@@ -27,7 +27,7 @@ class BaseVisdomLogger(Logger):
         self.win = win
         self.env = env
         self.opts = opts
-        self._viz = visdom.Visdom(server="http://"+server, port=port)
+        self._viz = visdom.Visdom(server="http://" + server, port=port)
 
     def log(self, *args, **kwargs):
         raise NotImplementedError(
@@ -68,7 +68,7 @@ class VisdomSaver(object):
     def __init__(self, envs=None, port=8097, server="localhost"):
         super(VisdomSaver, self).__init__()
         self.envs = envs
-        self.viz = visdom.Visdom(server="http://"+server, port=port)
+        self.viz = visdom.Visdom(server="http://" + server, port=port)
 
     def save(self, *args, **kwargs):
         self.viz.save(self.envs)

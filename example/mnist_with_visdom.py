@@ -1,10 +1,10 @@
-""" Run MNIST example and log to visdom 
+""" Run MNIST example and log to visdom
     Notes:
         - Visdom must be installed (pip works)
         - the Visdom server must be running at start!
 
     Example:
-        $ python -m visdom.server -port 8097 & 
+        $ python -m visdom.server -port 8097 &
         $ python mnist_with_visdom.py
 """
 from tqdm import tqdm
@@ -50,10 +50,10 @@ def f(params, inputs, mode):
 
 def main():
     params = {
-        'conv0.weight': conv_init(1, 50, 5),  'conv0.bias': torch.zeros(50),
+        'conv0.weight': conv_init(1, 50, 5), 'conv0.bias': torch.zeros(50),
         'conv1.weight': conv_init(50, 50, 5), 'conv1.bias': torch.zeros(50),
         'linear2.weight': linear_init(800, 512), 'linear2.bias': torch.zeros(512),
-        'linear3.weight': linear_init(512, 10),  'linear3.bias': torch.zeros(10),
+        'linear3.weight': linear_init(512, 10), 'linear3.bias': torch.zeros(10),
     }
     params = {k: Variable(v, requires_grad=True) for k, v in params.items()}
 
@@ -104,7 +104,7 @@ def main():
         state['iterator'] = tqdm(state['iterator'])
 
     def on_end_epoch(state):
-        print 'Training loss: %.4f, accuracy: %.2f%%' % (meter_loss.value()[0], classerr.value()[0])
+        print('Training loss: %.4f, accuracy: %.2f%%' % (meter_loss.value()[0], classerr.value()[0]))
         train_loss_logger.log(state['epoch'], meter_loss.value()[0])
         train_err_logger.log(state['epoch'], classerr.value()[0])
 
@@ -114,7 +114,7 @@ def main():
         test_loss_logger.log(state['epoch'], meter_loss.value()[0])
         test_err_logger.log(state['epoch'], classerr.value()[0])
         confusion_logger.log(confusion_meter.value())
-        print 'Testing loss: %.4f, accuracy: %.2f%%' % (meter_loss.value()[0], classerr.value()[0])
+        print('Testing loss: %.4f, accuracy: %.2f%%' % (meter_loss.value()[0], classerr.value()[0]))
 
     engine.hooks['on_sample'] = on_sample
     engine.hooks['on_forward'] = on_forward
