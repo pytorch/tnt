@@ -26,14 +26,14 @@ class MeterLogger(object):
         target_mat = torch.zeros(target.shape[0], self.nclass)
         for i, j in enumerate(target):
             target_mat[i][j] = 1
-            return target_mat
+        return target_mat
 
     def __toTensor(self, var):
         if isinstance(var, torch.autograd.Variable):
             var = var.data
-            if not torch.is_tensor(var):
-                var = torch.from_numpy(var)
-                return var
+        if not torch.is_tensor(var):
+            var = torch.from_numpy(var)
+        return var
 
     def __addlogger(self, meter, ptype):
         if ptype == 'line':
@@ -72,17 +72,17 @@ class MeterLogger(object):
         for meter in meters:
             if meter not in self.meter.keys():
                 self.__addmeter(meter)
-                if meter in ['ap', 'map', 'confusion']:
-                    target_th = self.__ver2Tensor(target)
-                    self.meter[meter].add(output, target_th)
-                else:
-                    self.meter[meter].add(output, target)
+            if meter in ['ap', 'map', 'confusion']:
+                target_th = self.__ver2Tensor(target)
+                self.meter[meter].add(output, target_th)
+            else:
+                self.meter[meter].add(output, target)
 
     def updateLoss(self, loss, meter='loss'):
         loss = self.__toTensor(loss)
         if meter not in self.meter.keys():
             self.__addloss(meter)
-            self.meter[meter].add(loss[0])
+        self.meter[meter].add(loss[0])
 
     def resetMeter(self, iepoch, mode='Train'):
         self.timer.reset()
@@ -93,7 +93,7 @@ class MeterLogger(object):
                 self.logger[mode][key].log(val)
             else:
                 self.logger[mode][key].log(iepoch, val)
-                self.meter[key].reset()
+            self.meter[key].reset()
 
     def printMeter(self, mode, iepoch, ibatch=1, totalbatch=1, meterlist=None):
         pstr = "%s:\t[%d][%d/%d] \t"
