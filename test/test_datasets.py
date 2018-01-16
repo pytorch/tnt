@@ -8,26 +8,24 @@ import tempfile
 
 class TestDatasets(unittest.TestCase):
     def testListDataset(self):
-        def identity(x): return x
         h = [0, 1, 2]
-        d = dataset.ListDataset(elem_list=h, load=identity)
+        d = dataset.ListDataset(elem_list=h, load=lambda x: x)
         self.assertEqual(len(d), 3)
         self.assertEqual(d[0], 0)
 
         t = torch.LongTensor([0, 1, 2])
-        d = dataset.ListDataset(elem_list=t, load=identity)
+        d = dataset.ListDataset(elem_list=t, load=lambda x: x)
         self.assertEqual(len(d), 3)
         self.assertEqual(d[0], 0)
 
         a = np.asarray([0, 1, 2])
-        d = dataset.ListDataset(elem_list=a, load=identity)
+        d = dataset.ListDataset(elem_list=a, load=lambda x: x)
         self.assertEqual(len(d), 3)
         self.assertEqual(d[0], 0)
 
     def testListDataset_path(self):
-        def prefix(x): return 'bar/' + str(x)
         tbl = [0, 1, 2]
-        d = dataset.ListDataset(tbl, prefix, 'foo')
+        d = dataset.ListDataset(tbl, 'bar/{}'.format, 'foo')
         self.assertEqual(len(d), 3)
         self.assertEqual(d[2], 'bar/foo/2')
 
@@ -37,8 +35,7 @@ class TestDatasets(unittest.TestCase):
             for i in range(0, 50):
                 f.write(str(i) + '\n')
 
-        def identity(x): return x
-        d = dataset.ListDataset(filename, identity, 'foo')
+        d = dataset.ListDataset(filename, lambda x: x, 'foo')
         self.assertEqual(len(d), 50)
         self.assertEqual(d[15], 'foo/15')
 
