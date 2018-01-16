@@ -1,4 +1,3 @@
-import torch
 from six import iteritems
 from .utils.table import canmergetensor as canmerge
 from .utils.table import mergetensor as mergetensor
@@ -22,21 +21,21 @@ def tablemergekeys():
         if isinstance(tbl, dict):
             for idx, elem in tbl.items():
                 for key, value in elem.items():
-                    if not key in mergetbl:
+                    if key not in mergetbl:
                         mergetbl[key] = {}
                     mergetbl[key][idx] = value
         elif isinstance(tbl, list):
             for elem in tbl:
                 for key, value in elem.items():
-                    if not key in mergetbl:
+                    if key not in mergetbl:
                         mergetbl[key] = []
                     mergetbl[key].append(value)
         return mergetbl
     return mergekeys
 
 
-def tableapply(f): return lambda d: dict(
-    map(lambda kv: (kv[0], f(kv[1])), iteritems(d)))
+def tableapply(f):
+    return lambda d: dict(map(lambda kv: (kv[0], f(kv[1])), iteritems(d)))
 
 
 def makebatch(merge=None):

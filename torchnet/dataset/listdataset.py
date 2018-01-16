@@ -1,5 +1,4 @@
 from .dataset import Dataset
-import torch
 
 
 class ListDataset(Dataset):

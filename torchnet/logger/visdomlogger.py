@@ -1,5 +1,4 @@
 """ Logging to Visdom server """
-from collections import defaultdict
 import numpy as np
 import visdom
 
@@ -7,16 +6,16 @@ from .logger import Logger
 
 
 class BaseVisdomLogger(Logger):
-    ''' 
-        The base class for logging output to Visdom. 
+    '''
+        The base class for logging output to Visdom.
 
         ***THIS CLASS IS ABSTRACT AND MUST BE SUBCLASSED***
 
-        Note that the Visdom server is designed to also handle a server architecture, 
-        and therefore the Visdom server must be running at all times. The server can 
-        be started with 
+        Note that the Visdom server is designed to also handle a server architecture,
+        and therefore the Visdom server must be running at all times. The server can
+        be started with
         $ python -m visdom.server
-        and you probably want to run it from screen or tmux. 
+        and you probably want to run it from screen or tmux.
     '''
 
     @property
@@ -49,7 +48,7 @@ class BaseVisdomLogger(Logger):
         return _viz_logger
 
     def log_state(self, state):
-        """ Gathers the stats from self.trainer.stats and passes them into 
+        """ Gathers the stats from self.trainer.stats and passes them into
             self.log, as a list """
         results = []
         for field_idx, field in enumerate(self.fields):
@@ -61,9 +60,9 @@ class BaseVisdomLogger(Logger):
 
 
 class VisdomSaver(object):
-    ''' Serialize the state of the Visdom server to disk. 
+    ''' Serialize the state of the Visdom server to disk.
         Unless you have a fancy schedule, where different are saved with different frequencies,
-        you probably only need one of these. 
+        you probably only need one of these.
     '''
 
     def __init__(self, envs=None, port=8097, server="localhost"):
@@ -156,13 +155,14 @@ class VisdomPlotLogger(BaseVisdomLogger):
 
 class VisdomTextLogger(BaseVisdomLogger):
     '''
-        Creates a text window in visdom and logs output to it. 
-        The output can be formatted with fancy HTML, and it new output can 
+        Creates a text window in visdom and logs output to it.
+        The output can be formatted with fancy HTML, and it new output can
             be set to 'append' or 'replace' mode.
     '''
     valid_update_types = ['REPLACE', 'APPEND']
 
-    def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0], port=8097, server="localhost"):
+    def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0],
+                 port=8097, server="localhost"):
         '''
             Args:
                 fields: Currently unused
