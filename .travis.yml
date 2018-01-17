@@ -1,27 +1,35 @@
 # https://travis-ci.org/pytorch/pytorch
+# https://github.com/uber/pyro/blob/dev/.travis.yml
 language: python
-python:
-    - 2.7
+
+env:
+    global:
+        - PYTHONPATH=$PWD:$PYTHONPATH
 
 install:
-    - wget -q http://download.pytorch.org/whl/cu75/torch-0.1.11.post5-cp27-none-linux_x86_64.whl
-    - travis_retry pip install torch-0.1.11.post5-cp27-none-linux_x86_64.whl
-    - travis_retry pip install -r requirements.txt
-    - travis_retry pip install --upgrade numpy
-    - travis_retry pip install .
+    # download and install PyTorch wheel
+    - pip install --upgrade awscli
+    - mkdir -p tmp
+    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+        aws s3 --no-sign-request sync s3://pyro-ppl/ci tmp --exclude "*" --include "*-cp27-*";
+      else
+        aws s3 --no-sign-request sync s3://pyro-ppl/ci tmp --exclude "*" --include "*-cp35-*";
+      fi
+    - pip install tmp/*
+    - rm -r tmp
+    - pip install -e .[test]
+    - pip freeze
 
-script:
-    - ./test/run_test.sh
-
-addons:
-    apt:
-      packages:
-        - wget
-
-# This reportedly works around an issue downloading packages from pypi on
-# travis.  Consider removing this after the underlying issue is fixed.
-# https://github.com/travis-ci/travis-ci/issues/2389
-sudo: false
-
-matrix:
+jobs:
     fast_finish: true
+    include:
+        - stage: lint
+          python: 2.7
+          before_install: pip install flake8 nbstripout nbformat
+          install:
+          script: flake8
+        - stage: unit test
+          python: 2.7
+          script: ./test/run_test.sh
+        - python: 3.5
+          script: ./test/run_test.sh
