@@ -30,6 +30,6 @@ jobs:
           script: flake8
         - stage: unit test
           python: 2.7
-          script: cd ./test/run_test.sh
+          script: ./test/run_test.sh
         - python: 3.5
-          script: cd ./test/run_test.sh
+          script: ./test/run_test.sh
