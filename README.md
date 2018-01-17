@@ -19,6 +19,12 @@ Make sure you have PyTorch installed, then do:
 pip install git+https://github.com/pytorch/tnt.git@master
 ```
 
+To update:
+
+```buildoutcfg
+pip install --upgrade git+https://github.com/pytorch/tnt.git@master
+```
+
 ## Differences with lua version
 
 What's been ported so far:
