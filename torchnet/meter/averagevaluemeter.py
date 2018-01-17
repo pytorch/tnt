@@ -19,10 +19,13 @@ class AverageValueMeter(meter.Meter):
             self.mean, self.std = np.nan, np.nan
         elif self.n == 1:
             self.mean, self.std = self.sum, np.inf
+            self.mean_old = self.mean
+            self.m_s = 0.0
         else:
-            self.mean = self.sum / self.n
-            self.std = math.sqrt(
-                (self.var - self.n * self.mean * self.mean) / (self.n - 1.0))
+            self.mean = self.mean_old + (value - self.mean_old) / float(self.n)
+            self.m_s += (value - self.mean_old) * (value - self.mean)
+            self.mean_old = self.mean
+            self.std = math.sqrt(self.m_s / (self.n - 1.0))
 
     def value(self):
         return self.mean, self.std
@@ -33,4 +36,6 @@ class AverageValueMeter(meter.Meter):
         self.var = 0.0
         self.val = 0.0
         self.mean = np.nan
+        self.mean_old = self.mean
+        self.m_s = 0.0
         self.std = np.nan
