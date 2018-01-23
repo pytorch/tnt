@@ -41,7 +41,7 @@ class SplitDataset(Dataset):
             'partition sizes cannot be negative'
         assert max(partitions.values()) > 0, 'all partitions cannot be empty'
 
-        self.partition_names = list(self.partitions.keys())
+        self.partition_names = sorted(list(self.partitions.keys()))
         self.partition_index = {partition: i for i, partition in
                                 enumerate(self.partition_names)}
 
