@@ -22,13 +22,13 @@ class MeterLogger(object):
         self.logger = {'Train': {}, 'Test': {}}
         self.timer = tnt.meter.TimeMeter(None)
 
-    def __ver2Tensor(self, target):
+    def _ver2tensor(self, target):
         target_mat = torch.zeros(target.shape[0], self.nclass)
         for i, j in enumerate(target):
             target_mat[i][j] = 1
         return target_mat
 
-    def __toTensor(self, var):
+    def __to_tensor(self, var):
         if isinstance(var, torch.autograd.Variable):
             var = var.data
         if not torch.is_tensor(var):
@@ -66,25 +66,25 @@ class MeterLogger(object):
             self.meter[meter] = tnt.meter.ConfusionMeter(self.nclass, normalized=True)
             self.__addlogger(meter, 'heatmap')
 
-    def updateMeter(self, output, target, meters={'accuracy'}):
-        output = self.__toTensor(output)
-        target = self.__toTensor(target)
+    def update_meter(self, output, target, meters={'accuracy'}):
+        output = self.__to_tensor(output)
+        target = self.__to_tensor(target)
         for meter in meters:
             if meter not in self.meter.keys():
                 self.__addmeter(meter)
             if meter in ['ap', 'map', 'confusion']:
-                target_th = self.__ver2Tensor(target)
+                target_th = self._ver2tensor(target)
                 self.meter[meter].add(output, target_th)
             else:
                 self.meter[meter].add(output, target)
 
-    def updateLoss(self, loss, meter='loss'):
-        loss = self.__toTensor(loss)
+    def update_loss(self, loss, meter='loss'):
+        loss = self.__to_tensor(loss)
         if meter not in self.meter.keys():
             self.__addloss(meter)
         self.meter[meter].add(loss[0])
 
-    def resetMeter(self, iepoch, mode='Train'):
+    def reset_meter(self, iepoch, mode='Train'):
         self.timer.reset()
         for key in self.meter.keys():
             val = self.meter[key].value()
@@ -95,7 +95,7 @@ class MeterLogger(object):
                 self.logger[mode][key].log(iepoch, val)
             self.meter[key].reset()
 
-    def printMeter(self, mode, iepoch, ibatch=1, totalbatch=1, meterlist=None):
+    def print_meter(self, mode, iepoch, ibatch=1, totalbatch=1, meterlist=None):
         pstr = "%s:\t[%d][%d/%d] \t"
         tval = []
         tval.extend([mode, iepoch, ibatch, totalbatch])

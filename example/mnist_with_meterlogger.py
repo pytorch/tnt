@@ -78,21 +78,21 @@ def main():
         output = state['output']
         target = state['sample'][1]
         # online ploter
-        mlog.updateLoss(loss, meter='loss')
-        mlog.updateMeter(output, target, meters={'accuracy', 'map', 'confusion'})
+        mlog.update_loss(loss, meter='loss')
+        mlog.update_meter(output, target, meters={'accuracy', 'map', 'confusion'})
 
     def on_start_epoch(state):
         mlog.timer.reset()
         state['iterator'] = tqdm(state['iterator'])
 
     def on_end_epoch(state):
-        mlog.printMeter(mode="Train", iepoch=state['epoch'])
-        mlog.resetMeter(mode="Train", iepoch=state['epoch'])
+        mlog.print_meter(mode="Train", iepoch=state['epoch'])
+        mlog.reset_meter(mode="Train", iepoch=state['epoch'])
 
         # do validation at the end of each epoch
         engine.test(h, get_iterator(False))
-        mlog.printMeter(mode="Test", iepoch=state['epoch'])
-        mlog.resetMeter(mode="Test", iepoch=state['epoch'])
+        mlog.print_meter(mode="Test", iepoch=state['epoch'])
+        mlog.reset_meter(mode="Test", iepoch=state['epoch'])
 
     engine.hooks['on_sample'] = on_sample
     engine.hooks['on_forward'] = on_forward
