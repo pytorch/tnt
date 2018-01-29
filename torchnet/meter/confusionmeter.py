@@ -31,9 +31,9 @@ class ConfusionMeter(meter.Meter):
         Args:
             predicted (tensor): Can be an N x K tensor of predicted scores obtained from
                 the model for N examples and K classes or an N-tensor of
-                integer values between 1 and K.
+                integer values between 0 and K-1.
             target (tensor): Can be a N-tensor of integer values assumed to be integer
-                values between 1 and K or N x K tensor, where targets are
+                values between 0 and K-1 or N x K tensor, where targets are
                 assumed to be provided as one-hot vectors
 
         """
@@ -62,7 +62,7 @@ class ConfusionMeter(meter.Meter):
             target = np.argmax(target, 1)
         else:
             assert (predicted.max() < self.k) and (predicted.min() >= 0), \
-                'predicted values are not between 1 and k'
+                'predicted values are not between 0 and k-1'
 
         # hack for bincounting 2 arrays together
         x = predicted + self.k * target
