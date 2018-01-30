@@ -46,6 +46,7 @@ class APMeter(meter.Meter):
             output = torch.from_numpy(output)
         if not torch.is_tensor(target):
             target = torch.from_numpy(target)
+        target = target.float()    
 
         if weight is not None:
             if not torch.is_tensor(weight):
