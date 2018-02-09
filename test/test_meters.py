@@ -18,6 +18,19 @@ class TestMeters(unittest.TestCase):
 
         self.assertTrue(np.isnan(mean))
 
+    def testAverageValueMeter_n(self):
+        """Test the case of adding more than 1 value.
+        """
+        m = meter.AverageValueMeter()
+        for i in range(1, 11):
+            m.add(i * i, n=i)
+        mean, std = m.value()
+        self.assertEqual(mean, 7.0)
+        m.reset()
+        mean, std = m.value()
+
+        self.assertTrue(np.isnan(mean))
+
     def testAverageValueMeter_stable(self):
         """Test the case of near-zero variance.
 
