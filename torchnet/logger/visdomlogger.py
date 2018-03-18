@@ -129,7 +129,7 @@ class VisdomPlotLogger(BaseVisdomLogger):
         self.chart = valid_plot_types[plot_type]
 
     def log(self, *args, **kwargs):
-        if self.win is not None:
+        if self.win is not None and self.viz.win_exists(win=self.win, env=self.env):
             if len(args) != 2:
                 raise ValueError("When logging to {}, must pass in x and y values (and optionally z).".format(
                     type(self)))
