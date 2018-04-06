@@ -104,18 +104,18 @@ class MeterLogger(object):
             for meter in meterlist:
                 if meter in ['confusion', 'histogram', 'image']:
                     continue
-            if meter == 'accuracy':
-                pstr += "Acc@1 %.2f%% \t Acc@" + str(self.topk) + " %.2f%% \t"
-                tval.extend([self.meter[meter].value()[0], self.meter[meter].value()[1]])
-            elif meter == 'map':
-                pstr += "mAP %.3f \t"
-                tval.extend([self.meter[meter].value()])
-            elif meter == 'auc':
-                pstr += "AUC %.3f \t"
-                tval.extend([self.meter[meter].value()])
-            else:
-                pstr += meter + " %.3f (%.3f)\t"
-                tval.extend([self.meter[meter].val, self.meter[meter].mean])
-                pstr += " %.2fs/its\t"
-                tval.extend([self.timer.value()])
-                print(pstr % tuple(tval))
+                if meter == 'accuracy':
+                    pstr += "Acc@1 %.2f%% \t Acc@" + str(self.topk) + " %.2f%% \t"
+                    tval.extend([self.meter[meter].value()[0], self.meter[meter].value()[1]])
+                elif meter == 'map':
+                    pstr += "mAP %.3f \t"
+                    tval.extend([self.meter[meter].value()])
+                elif meter == 'auc':
+                    pstr += "AUC %.3f \t"
+                    tval.extend([self.meter[meter].value()])
+                else:
+                    pstr += meter + " %.3f (%.3f)\t"
+                    tval.extend([self.meter[meter].val, self.meter[meter].mean])
+                    pstr += " %.2fs/its\t"
+                    tval.extend([self.timer.value()])
+        print(pstr % tuple(tval))
