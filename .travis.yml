@@ -7,7 +7,8 @@ env:
         - PYTHONPATH=$PWD:$PYTHONPATH
 
 install:
-    - pip install -e .[test]
+    - pip install -U pip
+    - pip install --progress-bar off -e .[test]
     - pip freeze
 
 jobs:
