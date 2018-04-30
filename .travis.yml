@@ -15,7 +15,7 @@ jobs:
     include:
         - stage: lint
           python: 2.7
-          before_install: pip install --progress-bar off flake8 nbstripout nbformat torch
+          before_install: pip install -U pip; pip install --progress-bar off flake8 nbstripout nbformat torch
           install:
           script: flake8
         - stage: unit test
