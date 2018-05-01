@@ -4,8 +4,17 @@ from   torchnet.logger import VisdomPlotLogger, VisdomLogger
 
 
 class MeterLogger(object):
+    ''' A class to package and visualize meters.
 
-    def __init__(self, server="localhost", env='main', port=8097, nclass=21, title="DNN", plotstylecombined=True):
+    Args:
+        server: The uri of the Visdom server
+        env: Visdom environment to log to.
+        port: Port of the visdom server. 
+        title: The title of the MeterLogger. This will be used as a prefix for all plots. 
+        nclass: If logging for classification problems, the number of classes.
+        plotstylecombined: Whether to plot train/test curves in the same window. 
+    '''
+    def __init__(self, server="localhost", env='main', port=8097, title="DNN", nclass=21, plotstylecombined=True):
         self.nclass = nclass
         self.meter = {}
         self.server = server
@@ -87,6 +96,7 @@ class MeterLogger(object):
         self.meter[meter].add(loss[0])
 
     def peek_meter(self):
+        '''Returns a dict of all meters and their values.'''
         result = {}
         for key in self.meter.keys():
             val = self.meter[key].value()

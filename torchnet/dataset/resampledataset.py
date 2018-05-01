@@ -27,6 +27,7 @@ class ResampleDataset(Dataset):
         size (int, optional): Desired size of the dataset after resampling. By
             default, the new dataset will have the same size as the underlying
             one.
+
     """
 
     def __init__(self, dataset, sampler=lambda ds, idx: idx, size=None):
