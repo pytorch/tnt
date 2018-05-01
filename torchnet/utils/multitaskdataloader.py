@@ -67,7 +67,8 @@ class MultiTaskDataLoader(object):
             return self.min_loader_size
 
 
-def zip_batches(*iterables, use_all=False):
+def zip_batches(*iterables, **kwargs):
+    use_all = kwargs.pop('use_all', False)
     if use_all:
         try:
             from itertools import izip_longest as zip_longest
