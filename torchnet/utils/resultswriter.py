@@ -1,18 +1,19 @@
 import pickle
 
+
 class ResultsWriter(object):
     '''Logs results to a file.
 
     The ResultsWriter provides a convenient interface for periodically writing
     results to a file. It is designed to capture all information for a given
-    experiment, which may have a sequence of distinct tasks. Therefore, it writes 
+    experiment, which may have a sequence of distinct tasks. Therefore, it writes
     results in the format::
-        
+
         {
             'tasks': [...]
             'results': [...]
         }
-    
+
     The ResultsWriter class chooses to use a top-level list instead of a dictionary
     to preserve temporal order of tasks (by default).
 
@@ -44,20 +45,20 @@ class ResultsWriter(object):
     def _add_task(self, task_name):
         assert task_name not in self.tasks, "Task already added! Use a different name."
         self.tasks.add(task_name)
-        
+
     def update(self, task_name, result):
         ''' Update the results file with new information.
 
         Args:
-            task_name (str): Name of the currently running task. A previously unseen 
-                ``task_name`` will create a new entry in both :attr:`tasks` 
+            task_name (str): Name of the currently running task. A previously unseen
+                ``task_name`` will create a new entry in both :attr:`tasks`
                 and :attr:`results`.
             result: This will be appended to the list in :attr:`results` which
                 corresponds to the ``task_name`` in ``task_name``:attr:`tasks`.
 
         '''
         with open(self.filepath, 'rb') as f:
-            existing_results = pickle.load(f)        
+            existing_results = pickle.load(f)
         if task_name not in self.tasks:
             self._add_task(task_name)
             existing_results['tasks'].append(task_name)
@@ -66,5 +67,4 @@ class ResultsWriter(object):
         results = existing_results['results'][task_name_idx]
         results.append(result)
         with open(self.filepath, 'wb') as f:
-            pickle.dump(existing_results, f)  
-                
+            pickle.dump(existing_results, f)

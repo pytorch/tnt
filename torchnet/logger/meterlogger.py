@@ -1,6 +1,6 @@
 import torch
 import torchnet as tnt
-from   torchnet.logger import VisdomPlotLogger, VisdomLogger
+from torchnet.logger import VisdomPlotLogger, VisdomLogger
 
 
 class MeterLogger(object):
@@ -9,10 +9,10 @@ class MeterLogger(object):
     Args:
         server: The uri of the Visdom server
         env: Visdom environment to log to.
-        port: Port of the visdom server. 
-        title: The title of the MeterLogger. This will be used as a prefix for all plots. 
+        port: Port of the visdom server.
+        title: The title of the MeterLogger. This will be used as a prefix for all plots.
         nclass: If logging for classification problems, the number of classes.
-        plotstylecombined: Whether to plot train/test curves in the same window. 
+        plotstylecombined: Whether to plot train/test curves in the same window.
     '''
     def __init__(self, server="localhost", env='main', port=8097, title="DNN", nclass=21, plotstylecombined=True):
         self.nclass = nclass
@@ -44,20 +44,25 @@ class MeterLogger(object):
         if ptype == 'line':
             if self.plotstylecombined:
                 opts = {'title': self.title + ' ' + meter}
-                self.logger['Train'][meter] = VisdomPlotLogger(ptype, env=self.env, server=self.server, port=self.port, opts=opts)
+                self.logger['Train'][meter] = VisdomPlotLogger(ptype, env=self.env, server=self.server,
+                                                               port=self.port, opts=opts)
                 opts = {}
                 self.logger['Test'][meter] = self.logger['Train'][meter]
             else:
                 opts = {'title': self.title + 'Train ' + meter}
-                self.logger['Train'][meter] = VisdomPlotLogger(ptype, env=self.env, server=self.server, port=self.port, opts=opts)
+                self.logger['Train'][meter] = VisdomPlotLogger(ptype, env=self.env, server=self.server,
+                                                               port=self.port, opts=opts)
                 opts = {'title': self.title + 'Test ' + meter}
-                self.logger['Test'][meter] = VisdomPlotLogger(ptype, env=self.env, server=self.server, port=self.port, opts=opts)
+                self.logger['Test'][meter] = VisdomPlotLogger(ptype, env=self.env, server=self.server,
+                                                              port=self.port, opts=opts)
         elif ptype == 'heatmap':
             names = list(range(self.nclass))
             opts = {'title': self.title + ' Train ' + meter, 'columnnames': names, 'rownames': names}
-            self.logger['Train'][meter] = VisdomLogger('heatmap', env=self.env, server=self.server, port=self.port, opts=opts)
+            self.logger['Train'][meter] = VisdomLogger('heatmap', env=self.env, server=self.server,
+                                                       port=self.port, opts=opts)
             opts = {'title': self.title + ' Test ' + meter, 'columnnames': names, 'rownames': names}
-            self.logger['Test'][meter] = VisdomLogger('heatmap', env=self.env, server=self.server, port=self.port, opts=opts)
+            self.logger['Test'][meter] = VisdomLogger('heatmap', env=self.env, server=self.server,
+                                                      port=self.port, opts=opts)
 
     def __addloss(self, meter):
         self.meter[meter] = tnt.meter.AverageValueMeter()
@@ -103,7 +108,7 @@ class MeterLogger(object):
             val = val[0] if isinstance(val, (list, tuple)) else val
             result[key] = val
         return result
-    
+
     def reset_meter(self, iepoch, mode='Train'):
         self.timer.reset()
         for key in self.meter.keys():
