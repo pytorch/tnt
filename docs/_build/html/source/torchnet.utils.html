@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>torchnet.utils &mdash; TNT  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/pytorch_theme.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="torchnet.meter" href="torchnet.meter.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> TNT
+          
+
+          
+            
+            <img src="../_static/pytorch-logo-dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+<div>
+  <!-- <a style="color:#F05732" href=http://pytorch.org/docs/stable/>
+    You are viewing unstable developer preview docs.
+    Click here to view docs for latest stable release.
+  </a> -->
+</div>
+
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pytorch/tnt/tree/master/example"> Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Package Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="torchnet.dataset.html"> torchnet.dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.engine.html"> torchnet.engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.logger.html"> torchnet.logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.meter.html"> torchnet.meter</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"> torchnet.utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#multitaskdataloader">MultiTaskDataLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resultswriter">ResultsWriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-torchnet.utils.table">Table module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TNT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>torchnet.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/source/torchnet.utils.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="torchnet-utils">
+<h1>torchnet.utils<a class="headerlink" href="#torchnet-utils" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="multitaskdataloader">
+<h2>MultiTaskDataLoader<a class="headerlink" href="#multitaskdataloader" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="torchnet.utils.MultiTaskDataLoader">
+<em class="property">class </em><code class="descclassname">torchnet.utils.</code><code class="descname">MultiTaskDataLoader</code><span class="sig-paren">(</span><em>datasets</em>, <em>batch_size=1</em>, <em>use_all=False</em>, <em>**loading_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/utils/multitaskdataloader.html#MultiTaskDataLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.utils.MultiTaskDataLoader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Loads batches simultaneously from multiple datasets.</p>
+<p>The MultiTaskDataLoader is designed to make multi-task learning simpler. It is
+ideal for jointly training a model for multiple tasks or multiple datasets.
+MultiTaskDataLoader is initialzes with an iterable of <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code> objects,
+and provides an iterator which will return one batch that contains an equal number
+of samples from each of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code> s.</p>
+<p>Specifically, it returns batches of  <code class="docutils literal notranslate"><span class="pre">[(B_0,</span> <span class="pre">0),</span> <span class="pre">(B_1,</span> <span class="pre">1),</span> <span class="pre">...,</span> <span class="pre">(B_k,</span> <span class="pre">k)]</span></code>
+from datasets <code class="docutils literal notranslate"><span class="pre">(D_0,</span> <span class="pre">...,</span> <span class="pre">D_k)</span></code>, where each <cite>B_i</cite> has <code class="xref py py-attr docutils literal notranslate"><span class="pre">batch_size</span></code> samples</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>datasets</strong> – A list of <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code> objects to serve batches from</li>
+<li><strong>batch_size</strong> – Each batch from each <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code> will have this many samples</li>
+<li><strong>use_all</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – If True, then the iterator will return batches until all
+datasets are exhausted. If False, then iteration stops as soon as one dataset
+runs out</li>
+<li><strong>loading_kwargs</strong> – These are passed to the children dataloaders</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">train_loader</span> <span class="o">=</span> <span class="n">MultiTaskDataLoader</span><span class="p">([</span><span class="n">dataset1</span><span class="p">,</span> <span class="n">dataset2</span><span class="p">],</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="p">((</span><span class="n">datas1</span><span class="p">,</span> <span class="n">labels1</span><span class="p">),</span> <span class="n">task1</span><span class="p">),</span> <span class="p">(</span><span class="n">datas2</span><span class="p">,</span> <span class="n">labels2</span><span class="p">),</span> <span class="n">task2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">train_loader</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">task1</span><span class="p">,</span> <span class="n">task2</span><span class="p">)</span>
+<span class="go">0 1</span>
+<span class="go">0 1</span>
+<span class="gp">...</span>
+<span class="go">0 1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="resultswriter">
+<h2>ResultsWriter<a class="headerlink" href="#resultswriter" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="torchnet.utils.ResultsWriter">
+<em class="property">class </em><code class="descclassname">torchnet.utils.</code><code class="descname">ResultsWriter</code><span class="sig-paren">(</span><em>filepath</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/utils/resultswriter.html#ResultsWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.utils.ResultsWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Logs results to a file.</p>
+<p>The ResultsWriter provides a convenient interface for periodically writing
+results to a file. It is designed to capture all information for a given
+experiment, which may have a sequence of distinct tasks. Therefore, it writes
+results in the format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;tasks&#39;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+    <span class="s1">&#39;results&#39;</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The ResultsWriter class chooses to use a top-level list instead of a dictionary
+to preserve temporal order of tasks (by default).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Path to write results to</li>
+<li><strong>overwrite</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – whether to clobber a file if it exists</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">result_writer</span> <span class="o">=</span> <span class="n">ResultWriter</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;CIFAR-10&#39;</span><span class="p">,</span> <span class="s1">&#39;SVHN&#39;</span><span class="p">]:</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">train_results</span> <span class="o">=</span> <span class="n">train_model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">test_results</span> <span class="o">=</span> <span class="n">test_model</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">result_writer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Train&#39;</span><span class="p">:</span> <span class="n">train_results</span><span class="p">,</span> <span class="s1">&#39;Test&#39;</span><span class="p">:</span> <span class="n">test_results</span><span class="p">})</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="torchnet.utils.ResultsWriter.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>task_name</em>, <em>result</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/utils/resultswriter.html#ResultsWriter.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.utils.ResultsWriter.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the results file with new information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>task_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Name of the currently running task. A previously unseen
+<code class="docutils literal notranslate"><span class="pre">task_name</span></code> will create a new entry in both <code class="xref py py-attr docutils literal notranslate"><span class="pre">tasks</span></code>
+and <code class="xref py py-attr docutils literal notranslate"><span class="pre">results</span></code>.</li>
+<li><strong>result</strong> – This will be appended to the list in <code class="xref py py-attr docutils literal notranslate"><span class="pre">results</span></code> which
+corresponds to the <code class="docutils literal notranslate"><span class="pre">task_name</span></code> in <code class="docutils literal notranslate"><span class="pre">task_name</span></code><code class="xref py py-attr docutils literal notranslate"><span class="pre">tasks</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-torchnet.utils.table">
+<span id="table-module"></span><h2>Table module<a class="headerlink" href="#module-torchnet.utils.table" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="torchnet.utils.table.canmergetensor">
+<code class="descclassname">torchnet.utils.table.</code><code class="descname">canmergetensor</code><span class="sig-paren">(</span><em>tbl</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/utils/table.html#canmergetensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.utils.table.canmergetensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="torchnet.utils.table.mergetensor">
+<code class="descclassname">torchnet.utils.table.</code><code class="descname">mergetensor</code><span class="sig-paren">(</span><em>tbl</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/utils/table.html#mergetensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.utils.table.mergetensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="torchnet.meter.html" class="btn btn-neutral" title="torchnet.meter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Torch Contributors.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script>
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-90545585-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+</body>
+</html>

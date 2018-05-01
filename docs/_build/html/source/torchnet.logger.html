@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>torchnet.logger &mdash; TNT  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/pytorch_theme.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="torchnet.meter" href="torchnet.meter.html" />
+    <link rel="prev" title="torchnet.engine" href="torchnet.engine.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> TNT
+          
+
+          
+            
+            <img src="../_static/pytorch-logo-dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+<div>
+  <!-- <a style="color:#F05732" href=http://pytorch.org/docs/stable/>
+    You are viewing unstable developer preview docs.
+    Click here to view docs for latest stable release.
+  </a> -->
+</div>
+
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pytorch/tnt/tree/master/example"> Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Package Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="torchnet.dataset.html"> torchnet.dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.engine.html"> torchnet.engine</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"> torchnet.logger</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#meterlogger">MeterLogger</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-torchnet.logger.visdomlogger">VisdomLogger</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.meter.html"> torchnet.meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.utils.html"> torchnet.utils</a></li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TNT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>torchnet.logger</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/source/torchnet.logger.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-torchnet.logger">
+<span id="torchnet-logger"></span><h1>torchnet.logger<a class="headerlink" href="#module-torchnet.logger" title="Permalink to this headline">¶</a></h1>
+<p>Loggers provide a way to monitor your models. For example, the <a class="reference internal" href="#torchnet.logger.MeterLogger" title="torchnet.logger.MeterLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeterLogger</span></code></a> class
+provides easy meter visualizetion with <a class="reference external" href="https://github.com/facebookresearch/visdom">Visdom</a> ,
+as well as the ability to print and save meters with the <code class="xref py py-class docutils literal notranslate"><span class="pre">ResultsWriter</span></code> class.</p>
+<p>For visualization libraries, the current loggers support <code class="docutils literal notranslate"><span class="pre">Visdom</span></code>, although <code class="docutils literal notranslate"><span class="pre">TensorboardX</span></code>
+would also be simple to implement.</p>
+<div class="section" id="meterlogger">
+<h2>MeterLogger<a class="headerlink" href="#meterlogger" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="torchnet.logger.MeterLogger">
+<em class="property">class </em><code class="descclassname">torchnet.logger.</code><code class="descname">MeterLogger</code><span class="sig-paren">(</span><em>server='localhost'</em>, <em>env='main'</em>, <em>port=8097</em>, <em>title='DNN'</em>, <em>nclass=21</em>, <em>plotstylecombined=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/meterlogger.html#MeterLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.MeterLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A class to package and visualize meters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>server</strong> – The uri of the Visdom server</li>
+<li><strong>env</strong> – Visdom environment to log to.</li>
+<li><strong>port</strong> – Port of the visdom server.</li>
+<li><strong>title</strong> – The title of the MeterLogger. This will be used as a prefix for all plots.</li>
+<li><strong>nclass</strong> – If logging for classification problems, the number of classes.</li>
+<li><strong>plotstylecombined</strong> – Whether to plot train/test curves in the same window.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="torchnet.logger.MeterLogger.peek_meter">
+<code class="descname">peek_meter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/meterlogger.html#MeterLogger.peek_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.MeterLogger.peek_meter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dict of all meters and their values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.logger.MeterLogger.print_meter">
+<code class="descname">print_meter</code><span class="sig-paren">(</span><em>mode</em>, <em>iepoch</em>, <em>ibatch=1</em>, <em>totalbatch=1</em>, <em>meterlist=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/meterlogger.html#MeterLogger.print_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.MeterLogger.print_meter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="torchnet.logger.MeterLogger.reset_meter">
+<code class="descname">reset_meter</code><span class="sig-paren">(</span><em>iepoch</em>, <em>mode='Train'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/meterlogger.html#MeterLogger.reset_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.MeterLogger.reset_meter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="torchnet.logger.MeterLogger.update_loss">
+<code class="descname">update_loss</code><span class="sig-paren">(</span><em>loss</em>, <em>meter='loss'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/meterlogger.html#MeterLogger.update_loss"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.MeterLogger.update_loss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="torchnet.logger.MeterLogger.update_meter">
+<code class="descname">update_meter</code><span class="sig-paren">(</span><em>output</em>, <em>target</em>, <em>meters={'accuracy'}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/meterlogger.html#MeterLogger.update_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.MeterLogger.update_meter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-torchnet.logger.visdomlogger">
+<span id="visdomlogger"></span><h2>VisdomLogger<a class="headerlink" href="#module-torchnet.logger.visdomlogger" title="Permalink to this headline">¶</a></h2>
+<p>Logging to Visdom server</p>
+<dl class="class">
+<dt id="torchnet.logger.visdomlogger.BaseVisdomLogger">
+<em class="property">class </em><code class="descclassname">torchnet.logger.visdomlogger.</code><code class="descname">BaseVisdomLogger</code><span class="sig-paren">(</span><em>fields=None</em>, <em>win=None</em>, <em>env=None</em>, <em>opts={}</em>, <em>port=8097</em>, <em>server='localhost'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#BaseVisdomLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.BaseVisdomLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torchnet.logger.logger.Logger</span></code></p>
+<p>The base class for logging output to Visdom.</p>
+<p><strong>*THIS CLASS IS ABSTRACT AND MUST BE SUBCLASSED*</strong></p>
+<p>Note that the Visdom server is designed to also handle a server architecture,
+and therefore the Visdom server must be running at all times. The server can
+be started with
+$ python -m visdom.server
+and you probably want to run it from screen or tmux.</p>
+<dl class="method">
+<dt id="torchnet.logger.visdomlogger.BaseVisdomLogger.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#BaseVisdomLogger.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.BaseVisdomLogger.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="torchnet.logger.visdomlogger.BaseVisdomLogger.log_state">
+<code class="descname">log_state</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#BaseVisdomLogger.log_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.BaseVisdomLogger.log_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gathers the stats from self.trainer.stats and passes them into
+self.log, as a list</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="torchnet.logger.visdomlogger.BaseVisdomLogger.viz">
+<code class="descname">viz</code><a class="headerlink" href="#torchnet.logger.visdomlogger.BaseVisdomLogger.viz" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="torchnet.logger.visdomlogger.VisdomLogger">
+<em class="property">class </em><code class="descclassname">torchnet.logger.visdomlogger.</code><code class="descname">VisdomLogger</code><span class="sig-paren">(</span><em>plot_type</em>, <em>fields=None</em>, <em>win=None</em>, <em>env=None</em>, <em>opts={}</em>, <em>port=8097</em>, <em>server='localhost'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#torchnet.logger.visdomlogger.BaseVisdomLogger" title="torchnet.logger.visdomlogger.BaseVisdomLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchnet.logger.visdomlogger.BaseVisdomLogger</span></code></a></p>
+<p>A generic Visdom class that works with the majority of Visdom plot types.</p>
+<dl class="method">
+<dt id="torchnet.logger.visdomlogger.VisdomLogger.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomLogger.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomLogger.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="torchnet.logger.visdomlogger.VisdomPlotLogger">
+<em class="property">class </em><code class="descclassname">torchnet.logger.visdomlogger.</code><code class="descname">VisdomPlotLogger</code><span class="sig-paren">(</span><em>plot_type</em>, <em>fields=None</em>, <em>win=None</em>, <em>env=None</em>, <em>opts={}</em>, <em>port=8097</em>, <em>server='localhost'</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomPlotLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomPlotLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#torchnet.logger.visdomlogger.BaseVisdomLogger" title="torchnet.logger.visdomlogger.BaseVisdomLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchnet.logger.visdomlogger.BaseVisdomLogger</span></code></a></p>
+<dl class="method">
+<dt id="torchnet.logger.visdomlogger.VisdomPlotLogger.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomPlotLogger.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomPlotLogger.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="torchnet.logger.visdomlogger.VisdomSaver">
+<em class="property">class </em><code class="descclassname">torchnet.logger.visdomlogger.</code><code class="descname">VisdomSaver</code><span class="sig-paren">(</span><em>envs=None</em>, <em>port=8097</em>, <em>server='localhost'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomSaver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomSaver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Serialize the state of the Visdom server to disk.
+Unless you have a fancy schedule, where different are saved with different frequencies,
+you probably only need one of these.</p>
+<dl class="method">
+<dt id="torchnet.logger.visdomlogger.VisdomSaver.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomSaver.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomSaver.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="torchnet.logger.visdomlogger.VisdomTextLogger">
+<em class="property">class </em><code class="descclassname">torchnet.logger.visdomlogger.</code><code class="descname">VisdomTextLogger</code><span class="sig-paren">(</span><em>fields=None</em>, <em>win=None</em>, <em>env=None</em>, <em>opts={}</em>, <em>update_type='REPLACE'</em>, <em>port=8097</em>, <em>server='localhost'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomTextLogger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomTextLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#torchnet.logger.visdomlogger.BaseVisdomLogger" title="torchnet.logger.visdomlogger.BaseVisdomLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchnet.logger.visdomlogger.BaseVisdomLogger</span></code></a></p>
+<p>Creates a text window in visdom and logs output to it.</p>
+<p>The output can be formatted with fancy HTML, and it new output can
+be set to ‘append’ or ‘replace’ mode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fields</strong> – Currently not used</li>
+<li><strong>update_type</strong> – One of {‘REPLACE’, ‘APPEND’}. Default ‘REPLACE’.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>For examples, make sure that your visdom server is running.</p>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">notes_logger</span> <span class="o">=</span> <span class="n">VisdomTextLogger</span><span class="p">(</span><span class="n">update_type</span><span class="o">=</span><span class="s1">&#39;APPEND&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">notes_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Printing: </span><span class="si">{}</span><span class="s2"> of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go"># results will be in Visdom environment (default: http://localhost:8097)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="torchnet.logger.visdomlogger.VisdomTextLogger.log">
+<code class="descname">log</code><span class="sig-paren">(</span><em>msg</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/logger/visdomlogger.html#VisdomTextLogger.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomTextLogger.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="torchnet.logger.visdomlogger.VisdomTextLogger.valid_update_types">
+<code class="descname">valid_update_types</code><em class="property"> = ['REPLACE', 'APPEND']</em><a class="headerlink" href="#torchnet.logger.visdomlogger.VisdomTextLogger.valid_update_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="torchnet.meter.html" class="btn btn-neutral float-right" title="torchnet.meter" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="torchnet.engine.html" class="btn btn-neutral" title="torchnet.engine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Torch Contributors.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script>
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-90545585-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+</body>
+</html>
