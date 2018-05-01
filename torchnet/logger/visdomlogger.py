@@ -158,6 +158,7 @@ class VisdomPlotLogger(BaseVisdomLogger):
             # we can just add the point again, this time on the correct curve.
             self.log(*args, **kwargs)
 
+
 class VisdomTextLogger(BaseVisdomLogger):
     '''Creates a text window in visdom and logs output to it.
 
@@ -171,7 +172,7 @@ class VisdomTextLogger(BaseVisdomLogger):
     For examples, make sure that your visdom server is running.
 
     Example:
-        >>> notes_logger = VisdomTextLogger(update_type='APPEND')     
+        >>> notes_logger = VisdomTextLogger(update_type='APPEND')
         >>> for i in range(10):
         >>>     notes_logger.log("Printing: {} of {}".format(i+1, 10))
         # results will be in Visdom environment (default: http://localhost:8097)
