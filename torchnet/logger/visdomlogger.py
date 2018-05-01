@@ -107,15 +107,17 @@ class VisdomLogger(BaseVisdomLogger):
 
 class VisdomPlotLogger(BaseVisdomLogger):
 
-    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097, server="localhost"):
+    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097, server="localhost", name=None):
         '''
+            Multiple lines can be added to the same plot with the "name" attribute (see example)
             Args:
                 fields: Currently unused
                 plot_type: {scatter, line}
 
             Examples:
                 >>> scatter_logger = VisdomPlotLogger('line')
-                >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0])
+                >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0], name="train")
+                >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0], name="test")
         '''
         super(VisdomPlotLogger, self).__init__(fields, win, env, opts, port, server)
         valid_plot_types = {
@@ -139,7 +141,8 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 Y=np.array([y]),
                 win=self.win,
                 env=self.env,
-                opts=self.opts)
+                opts=self.opts,
+                **kwargs)
         else:
             if self.plot_type == 'scatter':
                 chart_args = {'X': np.array([args])}
@@ -151,7 +154,9 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 env=self.env,
                 opts=self.opts,
                 **chart_args)
-
+            # For some reason, the first point is a different trace. So for now
+            # we can just add the point again, this time on the correct curve.
+            self.log(*args, **kwargs)
 
 class VisdomTextLogger(BaseVisdomLogger):
     '''
