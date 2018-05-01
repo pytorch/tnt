@@ -1,6 +1,6 @@
 import math
 from .dataset import Dataset
-from .. import transform
+from torchnet import transform
 
 
 class BatchDataset(Dataset):
@@ -35,7 +35,7 @@ class BatchDataset(Dataset):
         batchsize (int): Size of the batch.
         perm (function, optional): Function used to shuffle the dataset before
             batching. `perm(idx, size)` should return the shuffled index of
-            `idx`th sample. By default, the function is the identity.
+            `idx` th sample. By default, the function is the identity.
         merge (function, optional): Function to control batching behaviour.
              `transform.makebatch(merge)` is used to make the batch. Default is
              None.

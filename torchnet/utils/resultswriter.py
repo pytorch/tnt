@@ -1,31 +1,35 @@
 import pickle
 
 class ResultsWriter(object):
-    ''' 
-        Logs results to a file.
-        
-        Stores in the format:
-            {
-                'tasks': [...]
-                'results': [...]
-            }
-        We use lists instead of a dictionary to preserve temporal order of tasks (by default)
+    '''Logs results to a file.
 
-        Example:
-            result_writer = ResultWriter(path)
-            for task in ['CIFAR-10', 'SVHN']:
-                train_results = train_model()
-                test_results = test_model()
-                result_writer.update(task, {'Train': train_results, 'Test': test_results})
+    The ResultsWriter provides a convenient interface for periodically writing
+    results to a file. It is designed to capture all information for a given
+    experiment, which may have a sequence of distinct tasks. Therefore, it writes 
+    results in the format::
+        
+        {
+            'tasks': [...]
+            'results': [...]
+        }
+    
+    The ResultsWriter class chooses to use a top-level list instead of a dictionary
+    to preserve temporal order of tasks (by default).
+
+    Args:
+        filepath (str): Path to write results to
+        overwrite (bool): whether to clobber a file if it exists
+
+    Example:
+        >>> result_writer = ResultWriter(path)
+        >>> for task in ['CIFAR-10', 'SVHN']:
+        >>>    train_results = train_model()
+        >>>    test_results = test_model()
+        >>>    result_writer.update(task, {'Train': train_results, 'Test': test_results})
+
     '''
 
     def __init__(self, filepath, overwrite=False):
-        '''
-            Args:
-                filepath: Path to use
-                overwrite: bool, whether to clobber a file if it exists
-
-        '''
         if overwrite:
             with open(filepath, 'wb') as f:
                 pickle.dump({
@@ -42,10 +46,15 @@ class ResultsWriter(object):
         self.tasks.add(task_name)
         
     def update(self, task_name, result):
-        '''
-            Args:
-                task_name: Name of the currently running task/experiment
-                result: Result to append to the currently running experiment 
+        ''' Update the results file with new information.
+
+        Args:
+            task_name (str): Name of the currently running task. A previously unseen 
+                ``task_name`` will create a new entry in both :attr:`tasks` 
+                and :attr:`results`.
+            result: This will be appended to the list in :attr:`results` which
+                corresponds to the ``task_name`` in ``task_name``:attr:`tasks`.
+
         '''
         with open(self.filepath, 'rb') as f:
             existing_results = pickle.load(f)        

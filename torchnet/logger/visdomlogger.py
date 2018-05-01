@@ -159,26 +159,29 @@ class VisdomPlotLogger(BaseVisdomLogger):
             self.log(*args, **kwargs)
 
 class VisdomTextLogger(BaseVisdomLogger):
-    '''
-        Creates a text window in visdom and logs output to it.
-        The output can be formatted with fancy HTML, and it new output can
-            be set to 'append' or 'replace' mode.
+    '''Creates a text window in visdom and logs output to it.
+
+    The output can be formatted with fancy HTML, and it new output can
+    be set to 'append' or 'replace' mode.
+
+    Args:
+        fields: Currently not used
+        update_type: One of {'REPLACE', 'APPEND'}. Default 'REPLACE'.
+
+    For examples, make sure that your visdom server is running.
+
+    Example:
+        >>> notes_logger = VisdomTextLogger(update_type='APPEND')     
+        >>> for i in range(10):
+        >>>     notes_logger.log("Printing: {} of {}".format(i+1, 10))
+        # results will be in Visdom environment (default: http://localhost:8097)
+
     '''
     valid_update_types = ['REPLACE', 'APPEND']
 
     def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0],
                  port=8097, server="localhost"):
-        '''
-            Args:
-                fields: Currently unused
-                update_type: One of {'REPLACE', 'APPEND'}. Default 'REPLACE'.
 
-            Examples:
-                >>> progress_m = ProgressMonitor()
-                >>> logger = VisdomTextLogger(["progress"], [(2, 'iteration')])
-                >>> train.register_plugin(progress_m)
-                >>> train.register_plugin(logger)
-        '''
         super(VisdomTextLogger, self).__init__(fields, win, env, opts, port, server)
         self.text = ''
 

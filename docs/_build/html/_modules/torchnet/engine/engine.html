@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>torchnet.engine.engine &mdash; TNT  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/pytorch_theme.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> TNT
+          
+
+          
+            
+            <img src="../../../_static/pytorch-logo-dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+<div>
+  <!-- <a style="color:#F05732" href=http://pytorch.org/docs/stable/>
+    You are viewing unstable developer preview docs.
+    Click here to view docs for latest stable release.
+  </a> -->
+</div>
+
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pytorch/tnt/tree/master/example"> Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Package Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/torchnet.dataset.html"> torchnet.dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/torchnet.engine.html"> torchnet.engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/torchnet.logger.html"> torchnet.logger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/torchnet.meter.html"> torchnet.meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/torchnet.utils.html"> torchnet.utils</a></li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TNT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>torchnet.engine.engine</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for torchnet.engine.engine</h1><div class="highlight"><pre>
+<div class="viewcode-block" id="Engine"><a class="viewcode-back" href="../../../source/torchnet.engine.html#torchnet.engine.Engine">[docs]</a><span></span><span class="k">class</span> <span class="nc">Engine</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Engine.hook"><a class="viewcode-back" href="../../../source/torchnet.engine.html#torchnet.engine.Engine.hook">[docs]</a>    <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Registers a backward hook.</span>
+
+<span class="sd">        The hook will be called every time a gradient with respect to the</span>
+<span class="sd">        Tensor is computed. The hook should have the following signature::</span>
+
+<span class="sd">            hook (grad) -&gt; Tensor or None</span>
+
+<span class="sd">        The hook should not modify its argument, but it can optionally return</span>
+<span class="sd">        a new gradient which will be used in place of :attr:`grad`.</span>
+<span class="sd">        This function returns a handle with a method ``handle.remove()``</span>
+<span class="sd">        that removes the hook from the module.</span>
+<span class="sd">        </span>
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; v = torch.tensor([0., 0., 0.], requires_grad=True)</span>
+<span class="sd">            &gt;&gt;&gt; h = v.register_hook(lambda grad: grad * 2)  # double the gradient</span>
+<span class="sd">            &gt;&gt;&gt; v.backward(torch.tensor([1., 2., 3.]))</span>
+<span class="sd">            &gt;&gt;&gt; v.grad</span>
+<span class="sd">             2</span>
+<span class="sd">             4</span>
+<span class="sd">             6</span>
+<span class="sd">            [torch.FloatTensor of size (3,)]</span>
+<span class="sd">            &gt;&gt;&gt; h.remove()  # removes the hook</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hooks</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Engine.train"><a class="viewcode-back" href="../../../source/torchnet.engine.html#torchnet.engine.Engine.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">iterator</span><span class="p">,</span> <span class="n">maxepoch</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">):</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="n">network</span><span class="p">,</span>
+            <span class="s1">&#39;iterator&#39;</span><span class="p">:</span> <span class="n">iterator</span><span class="p">,</span>
+            <span class="s1">&#39;maxepoch&#39;</span><span class="p">:</span> <span class="n">maxepoch</span><span class="p">,</span>
+            <span class="s1">&#39;optimizer&#39;</span><span class="p">:</span> <span class="n">optimizer</span><span class="p">,</span>
+            <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;train&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_start&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;maxepoch&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_start_epoch&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;iterator&#39;</span><span class="p">]:</span>
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_sample&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+                <span class="k">def</span> <span class="nf">closure</span><span class="p">():</span>
+                    <span class="n">loss</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;network&#39;</span><span class="p">](</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">])</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span>
+                    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_forward&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                    <span class="c1"># to free memory in save_for_backward</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="n">state</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                    <span class="k">return</span> <span class="n">loss</span>
+
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;optimizer&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;optimizer&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">closure</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_update&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">state</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_end_epoch&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_end&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span></div>
+
+<div class="viewcode-block" id="Engine.test"><a class="viewcode-back" href="../../../source/torchnet.engine.html#torchnet.engine.Engine.test">[docs]</a>    <span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">network</span><span class="p">,</span> <span class="n">iterator</span><span class="p">):</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="n">network</span><span class="p">,</span>
+            <span class="s1">&#39;iterator&#39;</span><span class="p">:</span> <span class="n">iterator</span><span class="p">,</span>
+            <span class="s1">&#39;t&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;train&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_start&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;iterator&#39;</span><span class="p">]:</span>
+            <span class="n">state</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sample</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_sample&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">closure</span><span class="p">():</span>
+                <span class="n">loss</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;network&#39;</span><span class="p">](</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;sample&#39;</span><span class="p">])</span>
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_forward&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+                <span class="c1"># to free memory in save_for_backward</span>
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">state</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">closure</span><span class="p">()</span>
+            <span class="n">state</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="p">(</span><span class="s1">&#39;on_end&#39;</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Torch Contributors.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script>
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-90545585-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,712 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>torchnet.meter &mdash; TNT  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/pytorch_theme.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="torchnet.utils" href="torchnet.utils.html" />
+    <link rel="prev" title="torchnet.logger" href="torchnet.logger.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> TNT
+          
+
+          
+            
+            <img src="../_static/pytorch-logo-dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+<div>
+  <!-- <a style="color:#F05732" href=http://pytorch.org/docs/stable/>
+    You are viewing unstable developer preview docs.
+    Click here to view docs for latest stable release.
+  </a> -->
+</div>
+
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Notes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/pytorch/tnt/tree/master/example"> Examples</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Package Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="torchnet.dataset.html"> torchnet.dataset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.engine.html"> torchnet.engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.logger.html"> torchnet.logger</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"> torchnet.meter</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classification-meters">Classification Meters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#apmeter"><span class="hidden-section">APMeter</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mapmeter"><span class="hidden-section">mAPMeter</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classerrormeter"><span class="hidden-section">ClassErrorMeter</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#confusionmeter"><span class="hidden-section">ConfusionMeter</span></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#regression-loss-meters">Regression/Loss Meters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#averagevaluemeter"><span class="hidden-section">AverageValueMeter</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#aucmeter"><span class="hidden-section">AUCMeter</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#movingaveragevaluemeter"><span class="hidden-section">MovingAverageValueMeter</span></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#msemeter"><span class="hidden-section">MSEMeter</span></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#miscellaneous-meters">Miscellaneous Meters</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#timemeter"><span class="hidden-section">TimeMeter</span></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="torchnet.utils.html"> torchnet.utils</a></li>
+</ul>
+
+            
+          
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">TNT</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>torchnet.meter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/source/torchnet.meter.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-torchnet.meter">
+<span id="torchnet-meter"></span><h1>torchnet.meter<a class="headerlink" href="#module-torchnet.meter" title="Permalink to this headline">¶</a></h1>
+<p>Meters provide a way to keep track of important statistics in an online manner.
+TNT also provides convenient ways to visualize and manage meters via the <a class="reference internal" href="torchnet.logger.html#torchnet.logger.MeterLogger" title="torchnet.logger.MeterLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchnet.logger.MeterLogger</span></code></a> class.</p>
+<dl class="class">
+<dt id="torchnet.meter.meter.Meter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.meter.</code><code class="descname">Meter</code><a class="reference internal" href="../_modules/torchnet/meter/meter.html#Meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.meter.Meter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Meters provide a way to keep track of important statistics in an online manner.</p>
+<p>This class is abstract, but provides a standard interface for all meters to follow.</p>
+<dl class="method">
+<dt id="torchnet.meter.meter.Meter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/meter.html#Meter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.meter.Meter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a new value to the meter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – Next restult to include.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.meter.Meter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/meter.html#Meter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.meter.Meter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.meter.Meter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/meter.html#Meter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.meter.Meter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="classification-meters">
+<h2>Classification Meters<a class="headerlink" href="#classification-meters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="apmeter">
+<h3><span class="hidden-section">APMeter</span><a class="headerlink" href="#apmeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.APMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">APMeter</code><a class="reference internal" href="../_modules/torchnet/meter/apmeter.html#APMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.APMeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The APMeter measures the average precision per class.</p>
+<p>The APMeter is designed to operate on <cite>NxK</cite> Tensors <cite>output</cite> and
+<cite>target</cite>, and optionally a <cite>Nx1</cite> Tensor weight where (1) the <cite>output</cite>
+contains model output scores for <cite>N</cite> examples and <cite>K</cite> classes that ought to
+be higher when the model is more convinced that the example should be
+positively labeled, and smaller when the model believes the example should
+be negatively labeled (for instance, the output of a sigmoid function); (2)
+the <cite>target</cite> contains only values 0 (for negative examples) and 1
+(for positive examples); and (3) the <cite>weight</cite> ( &gt; 0) represents weight for
+each sample.</p>
+<dl class="method">
+<dt id="torchnet.meter.APMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>output</em>, <em>target</em>, <em>weight=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/apmeter.html#APMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.APMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new observation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>output</strong> (<em>Tensor</em>) – NxK tensor that for each of the N examples
+indicates the probability of the example belonging to each of
+the K classes, according to the model. The probabilities should
+sum to one over all classes</li>
+<li><strong>target</strong> (<em>Tensor</em>) – binary NxK tensort that encodes which of the K
+classes are associated with the N-th input
+(eg: a row [0, 1, 0, 1] indicates that the example is
+associated with classes 2 and 4)</li>
+<li><strong>weight</strong> (<em>optional</em><em>, </em><em>Tensor</em>) – Nx1 tensor representing the weight for
+each example (each weight &gt; 0)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.APMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/apmeter.html#APMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.APMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter with empty member variables</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.APMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/apmeter.html#APMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.APMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the model’s average precision for each class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">1xK tensor, with avg precision for each class k</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ap (FloatTensor)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="mapmeter">
+<h3><span class="hidden-section">mAPMeter</span><a class="headerlink" href="#mapmeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.mAPMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">mAPMeter</code><a class="reference internal" href="../_modules/torchnet/meter/mapmeter.html#mAPMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.mAPMeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mAPMeter measures the mean average precision over all classes.</p>
+<p>The mAPMeter is designed to operate on <cite>NxK</cite> Tensors <cite>output</cite> and
+<cite>target</cite>, and optionally a <cite>Nx1</cite> Tensor weight where (1) the <cite>output</cite>
+contains model output scores for <cite>N</cite> examples and <cite>K</cite> classes that ought to
+be higher when the model is more convinced that the example should be
+positively labeled, and smaller when the model believes the example should
+be negatively labeled (for instance, the output of a sigmoid function); (2)
+the <cite>target</cite> contains only values 0 (for negative examples) and 1
+(for positive examples); and (3) the <cite>weight</cite> ( &gt; 0) represents weight for
+each sample.</p>
+<dl class="method">
+<dt id="torchnet.meter.mAPMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>output</em>, <em>target</em>, <em>weight=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/mapmeter.html#mAPMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.mAPMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a new value to the meter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – Next restult to include.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.mAPMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/mapmeter.html#mAPMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.mAPMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.mAPMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/mapmeter.html#mAPMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.mAPMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="classerrormeter">
+<h3><span class="hidden-section">ClassErrorMeter</span><a class="headerlink" href="#classerrormeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.ClassErrorMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">ClassErrorMeter</code><span class="sig-paren">(</span><em>topk=[1], accuracy=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/classerrormeter.html#ClassErrorMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ClassErrorMeter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="torchnet.meter.ClassErrorMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>output</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/classerrormeter.html#ClassErrorMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ClassErrorMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a new value to the meter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – Next restult to include.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.ClassErrorMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/classerrormeter.html#ClassErrorMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ClassErrorMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.ClassErrorMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><em>k=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/classerrormeter.html#ClassErrorMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ClassErrorMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="confusionmeter">
+<h3><span class="hidden-section">ConfusionMeter</span><a class="headerlink" href="#confusionmeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.ConfusionMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">ConfusionMeter</code><span class="sig-paren">(</span><em>k</em>, <em>normalized=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/confusionmeter.html#ConfusionMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ConfusionMeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maintains a confusion matrix for a given calssification problem.</p>
+<p>The ConfusionMeter constructs a confusion matrix for a multi-class
+classification problems. It does not support multi-label, multi-class problems:
+for such problems, please use MultiLabelConfusionMeter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – number of classes in the classification problem</li>
+<li><strong>normalized</strong> (<em>boolean</em>) – Determines whether or not the confusion matrix
+is normalized or not</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="torchnet.meter.ConfusionMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>predicted</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/confusionmeter.html#ConfusionMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ConfusionMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the confusion matrix of K x K size where K is no of classes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>predicted</strong> (<em>tensor</em>) – Can be an N x K tensor of predicted scores obtained from
+the model for N examples and K classes or an N-tensor of
+integer values between 0 and K-1.</li>
+<li><strong>target</strong> (<em>tensor</em>) – Can be a N-tensor of integer values assumed to be integer
+values between 0 and K-1 or N x K tensor, where targets are
+assumed to be provided as one-hot vectors</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.ConfusionMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/confusionmeter.html#ConfusionMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ConfusionMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.ConfusionMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/confusionmeter.html#ConfusionMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.ConfusionMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Confustion matrix of K rows and K columns, where rows corresponds
+to ground-truth targets and columns corresponds to predicted
+targets.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="regression-loss-meters">
+<h2>Regression/Loss Meters<a class="headerlink" href="#regression-loss-meters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="averagevaluemeter">
+<h3><span class="hidden-section">AverageValueMeter</span><a class="headerlink" href="#averagevaluemeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.AverageValueMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">AverageValueMeter</code><a class="reference internal" href="../_modules/torchnet/meter/averagevaluemeter.html#AverageValueMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AverageValueMeter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="torchnet.meter.AverageValueMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>value</em>, <em>n=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/averagevaluemeter.html#AverageValueMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AverageValueMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a new value to the meter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – Next restult to include.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.AverageValueMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/averagevaluemeter.html#AverageValueMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AverageValueMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.AverageValueMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/averagevaluemeter.html#AverageValueMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AverageValueMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="aucmeter">
+<h3><span class="hidden-section">AUCMeter</span><a class="headerlink" href="#aucmeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.AUCMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">AUCMeter</code><a class="reference internal" href="../_modules/torchnet/meter/aucmeter.html#AUCMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AUCMeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>The AUCMeter measures the area under the receiver-operating characteristic
+(ROC) curve for binary classification problems. The area under the curve (AUC)
+can be interpreted as the probability that, given a randomly selected positive
+example and a randomly selected negative example, the positive example is
+assigned a higher score by the classification model than the negative example.</p>
+<p>The AUCMeter is designed to operate on one-dimensional Tensors <cite>output</cite>
+and <cite>target</cite>, where (1) the <cite>output</cite> contains model output scores that ought to
+be higher when the model is more convinced that the example should be positively
+labeled, and smaller when the model believes the example should be negatively
+labeled (for instance, the output of a signoid function); and (2) the <cite>target</cite>
+contains only values 0 (for negative examples) and 1 (for positive examples).</p>
+<dl class="method">
+<dt id="torchnet.meter.AUCMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>output</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/aucmeter.html#AUCMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AUCMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a new value to the meter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – Next restult to include.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.AUCMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/aucmeter.html#AUCMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AUCMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.AUCMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/aucmeter.html#AUCMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.AUCMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="movingaveragevaluemeter">
+<h3><span class="hidden-section">MovingAverageValueMeter</span><a class="headerlink" href="#movingaveragevaluemeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.MovingAverageValueMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">MovingAverageValueMeter</code><span class="sig-paren">(</span><em>windowsize</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/movingaveragevaluemeter.html#MovingAverageValueMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MovingAverageValueMeter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="torchnet.meter.MovingAverageValueMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/movingaveragevaluemeter.html#MovingAverageValueMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MovingAverageValueMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a new value to the meter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – Next restult to include.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.MovingAverageValueMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/movingaveragevaluemeter.html#MovingAverageValueMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MovingAverageValueMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.MovingAverageValueMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/movingaveragevaluemeter.html#MovingAverageValueMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MovingAverageValueMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="msemeter">
+<h3><span class="hidden-section">MSEMeter</span><a class="headerlink" href="#msemeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.MSEMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">MSEMeter</code><span class="sig-paren">(</span><em>root=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/msemeter.html#MSEMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MSEMeter" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="torchnet.meter.MSEMeter.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>output</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/msemeter.html#MSEMeter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MSEMeter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Log a new value to the meter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – Next restult to include.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.MSEMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/msemeter.html#MSEMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MSEMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.MSEMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/msemeter.html#MSEMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.MSEMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="miscellaneous-meters">
+<h2>Miscellaneous Meters<a class="headerlink" href="#miscellaneous-meters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="timemeter">
+<h3><span class="hidden-section">TimeMeter</span><a class="headerlink" href="#timemeter" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="torchnet.meter.TimeMeter">
+<em class="property">class </em><code class="descclassname">torchnet.meter.</code><code class="descname">TimeMeter</code><span class="sig-paren">(</span><em>unit</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/timemeter.html#TimeMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.TimeMeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>&lt;a name=”TimeMeter”&gt;
+#### tnt.TimeMeter(&#64;ARGP)
+&#64;ARGT</p>
+<p>The <cite>tnt.TimeMeter</cite> is designed to measure the time between events and can be
+used to measure, for instance, the average processing time per batch of data.
+It is different from most other meters in terms of the methods it provides:</p>
+<p>The <cite>tnt.TimeMeter</cite> provides the following methods:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>reset()</cite> resets the timer, setting the timer and unit counter to zero.</li>
+<li><cite>value()</cite> returns the time passed since the last <cite>reset()</cite>; divided by the counter value when <cite>unit=true</cite>.</li>
+</ul>
+</div></blockquote>
+<dl class="method">
+<dt id="torchnet.meter.TimeMeter.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/timemeter.html#TimeMeter.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.TimeMeter.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the meter to default settings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="torchnet.meter.TimeMeter.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchnet/meter/timemeter.html#TimeMeter.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#torchnet.meter.TimeMeter.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of the meter in the current state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="torchnet.utils.html" class="btn btn-neutral float-right" title="torchnet.utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="torchnet.logger.html" class="btn btn-neutral" title="torchnet.logger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Torch Contributors.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          
+          SphinxRtdTheme.Navigation.enableSticky();
+          
+      });
+  </script>
+ 
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-90545585-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+</body>
+</html>
