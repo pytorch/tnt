@@ -3,7 +3,7 @@ import numpy as np
 
 
 class ConfusionMeter(meter.Meter):
-    """Maintains a confusion matrix for a given calssification problem. 
+    """Maintains a confusion matrix for a given calssification problem.
 
     The ConfusionMeter constructs a confusion matrix for a multi-class
     classification problems. It does not support multi-label, multi-class problems:

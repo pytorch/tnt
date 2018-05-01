@@ -14,7 +14,7 @@ class Engine(object):
         a new gradient which will be used in place of :attr:`grad`.
         This function returns a handle with a method ``handle.remove()``
         that removes the hook from the module.
-        
+
         Example:
             >>> v = torch.tensor([0., 0., 0.], requires_grad=True)
             >>> h = v.register_hook(lambda grad: grad * 2)  # double the gradient
