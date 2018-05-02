@@ -1,5 +1,7 @@
+.vscode/
 build/
 dist/
+docs/_build/
 torchnet.egg-info/
 */**/__pycache__
 */**/*.pyc
