@@ -10,11 +10,11 @@ long_description = "an abstraction to train neural networks"
 
 setup_info = dict(
     # Metadata
-    name='torchnet-sax',
+    name='torchnet',
     version=VERSION,
-    author='Sergey Zagoruyko',
+    author='PyTorch',
     author_email='sergey.zagoruyko@enpc.fr',
-    url='https://github.com/alexsax/tnt',
+    url='https://github.com/pytorch/tnt/',
     description='an abstraction to train neural networks',
     long_description=long_description,
     license='BSD',
