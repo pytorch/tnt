@@ -17,10 +17,21 @@ import sys
 sys.path.insert(0, os.path.abspath('../torchnet'))
 sys.path.insert(0, os.path.abspath('..'))
 
+from unittest.mock import MagicMock
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+MOCK_MODULES = ['numpy', 'torch', 'torch.utils', 'torch.utils.data', 'visdom']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 import torchnet
-from sphinx.util import logging
-logger = logging.getLogger(__name__)
-logger.info("Loading successful {}".format(torchnet))
+# from sphinx.util import logging
+# logger = logging.getLogger(__name__)
+# logger.info("Loading successful {}".format(torchnet))
 
 
 # -- Project information -----------------------------------------------------
