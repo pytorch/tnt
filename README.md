@@ -8,10 +8,10 @@ or training regimen.
 ![travis](https://travis-ci.org/pytorch/tnt.svg?branch=master) 
 [![Documentation Status](https://readthedocs.org/projects/tnt/badge/?version=latest)](http://tnt.readthedocs.io/en/latest/?badge=latest)
 
-- [About](#About)
-- [Installation](#Installation)
+- [About](#about)
+- [Installation](#installation)
 - [Documentation](http://tnt.readthedocs.io)
-- [Getting Started](#Getting-Started)
+- [Getting Started](#getting-started)
 
 
 ## Installation
