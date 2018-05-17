@@ -136,9 +136,10 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 raise ValueError("When logging to {}, must pass in x and y values (and optionally z).".format(
                     type(self)))
             x, y = args
-            self.viz.updateTrace(
+            self.chart(
                 X=np.array([x]),
                 Y=np.array([y]),
+                update='append',
                 win=self.win,
                 env=self.env,
                 opts=self.opts,
