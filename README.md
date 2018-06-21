@@ -48,7 +48,7 @@ other frameworks.
 
 ## Getting Started
 See some of the examples in https://github.com/pytorch/examples. We would like to include some walkthroughs in the
-[docs](tnt.readthedocs.io) (contributions welcome!).
+[docs](https://tnt.readthedocs.io) (contributions welcome!).
 
 
 ## [LEGACY] Differences with lua version
