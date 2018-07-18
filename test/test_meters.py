@@ -87,7 +87,6 @@ class TestMeters(unittest.TestCase):
         err = mtr.value()
         self.assertEqual(err, [0], "All should be correct")
 
-
     def testConfusionMeter(self):
         mtr = meter.ConfusionMeter(k=3)
 
