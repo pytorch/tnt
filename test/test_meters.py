@@ -78,7 +78,7 @@ class TestMeters(unittest.TestCase):
 
     def testClassErrorMeteri_batch1(self):
         mtr = meter.ClassErrorMeter(topk=[1])
-        output = torch.eye(1)
+        output = torch.ones(3)
         if hasattr(torch, "arange"):
             target = torch.arange(0, 1)
         else:
