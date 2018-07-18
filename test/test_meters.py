@@ -85,7 +85,6 @@ class TestMeters(unittest.TestCase):
             target = torch.range(0, 0)
         mtr.add(output, target)
         err = mtr.value()
-
         self.assertEqual(err, [0], "All should be correct")
 
 
