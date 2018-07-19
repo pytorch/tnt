@@ -18,8 +18,11 @@ class ClassErrorMeter(meter.Meter):
     def add(self, output, target):
         if torch.is_tensor(output):
             output = output.cpu().squeeze().numpy()
-        if torch.is_tensor(target) and len(target.shape) != 1:
-            target = target.cpu().squeeze().numpy()
+        if torch.is_tensor(target):
+            if len(target.shape) != 1:
+                target = target.cpu().squeeze().numpy()
+            else:
+                target = target.cpu().numpy()
         elif isinstance(target, numbers.Number):
             target = np.asarray([target])
         if np.ndim(output) == 1:
