@@ -1,8 +1,8 @@
 TNT
 ==========
 
-**TNT** is a library providing powerful dataloading, logging and visualization utlities for Python.
-It is closely intergrated with [PyTorch](http://pytorch.org) and is designed to enable rapid iteration with any model 
+**TNT** is a library providing powerful dataloading, logging and visualization utilities for Python.
+It is closely integrated with [PyTorch](http://pytorch.org) and is designed to enable rapid iteration with any model 
 or training regimen.
 
 ![travis](https://travis-ci.org/pytorch/tnt.svg?branch=master) 
