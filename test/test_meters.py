@@ -76,6 +76,17 @@ class TestMeters(unittest.TestCase):
         err = mtr.value()
         self.assertEqual(err, [50.0], "Half should be correct")
 
+    def testClassErrorMeteri_batch1(self):
+        mtr = meter.ClassErrorMeter(topk=[1])
+        output = torch.tensor([1, 0, 0])
+        if hasattr(torch, "arange"):
+            target = torch.arange(0, 1)
+        else:
+            target = torch.range(0, 0)
+        mtr.add(output, target)
+        err = mtr.value()
+        self.assertEqual(err, [0], "All should be correct")
+
     def testConfusionMeter(self):
         mtr = meter.ConfusionMeter(k=3)
 
