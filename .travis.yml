@@ -23,8 +23,8 @@ jobs:
     script: "./test/run_test.sh"
   - python: 3.5
     script: "./test/run_test.sh"
-  - stage: PyPI Deploy
-    script: echo "Deploying to PyPI..."
+  - stage: deploy
+    script: echo "Deploying to PyPI and Github Releases..."
     deploy:
       provider: pypi
       user: pytorch
@@ -33,4 +33,4 @@ jobs:
       skip_cleanup: true
       on:
         tags: true
-        branch: deploy-pypi
+        branch: master
