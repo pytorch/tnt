@@ -4,7 +4,7 @@ import shutil
 import sys
 from setuptools import setup, find_packages
 
-VERSION = '0.0.3.1'
+VERSION = '0.0.4'
 
 long_description = "Simple tools for logging and visualizing, loading and training"
 
