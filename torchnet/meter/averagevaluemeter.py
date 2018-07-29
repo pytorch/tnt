@@ -18,7 +18,8 @@ class AverageValueMeter(meter.Meter):
         if self.n == 0:
             self.mean, self.std = np.nan, np.nan
         elif self.n == 1:
-            self.mean, self.std = self.sum, np.inf
+            self.mean = 0.0 + self.sum # This is to force a copy in torch/numpy
+            self.std = np.inf
             self.mean_old = self.mean
             self.m_s = 0.0
         else:
