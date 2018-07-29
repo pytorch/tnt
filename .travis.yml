@@ -24,7 +24,7 @@ jobs:
   - python: 3.5
     script: "./test/run_test.sh"
   - stage: deploy
-    script: echo "Deploying to PyPI and Github Releases..."
+    script: echo "Deploying to PyPI..."
     deploy:
       provider: pypi
       user: pytorch
