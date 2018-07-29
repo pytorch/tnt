@@ -23,7 +23,7 @@ class TestMeters(unittest.TestCase):
         for i in range(1, 10):
             m.add(np.float32([[i, i + 1]]))
         mean, std = m.value()
-        self.assertEqual(np.allclose(mean, [[5.0, 6.0]]))
+        self.assertTrue(np.allclose(mean, [[5.0, 6.0]]))
         self.assertTrue(np.allclose(std, [[2.738613, 2.738613]]))
         m.reset()
         mean, std = m.value()
@@ -35,7 +35,7 @@ class TestMeters(unittest.TestCase):
         for i in range(1, 10):
             m.add(torch.Tensor([[i, i + 1]]))
         mean, std = m.value()
-        self.assertEqual(np.allclose(mean, [[5.0, 6.0]]))
+        self.assertTrue(np.allclose(mean, [[5.0, 6.0]]))
         self.assertTrue(np.allclose(std, [[2.738613, 2.738613]]))
         m.reset()
         mean, std = m.value()
