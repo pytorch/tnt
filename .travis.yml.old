@@ -1,0 +1,35 @@
+# https://travis-ci.org/pytorch/pytorch
+# https://github.com/uber/pyro/blob/dev/.travis.yml
+language: python
+
+env:
+    global:
+        - PYTHONPATH=$PWD:$PYTHONPATH
+
+install:
+    - pip install -U pip
+    - pip install --progress-bar off -e .[test]
+    - pip freeze
+
+jobs:
+    fast_finish: true
+    include:
+        - stage: lint
+          python: 2.7
+          before_install: pip install -U pip; pip install --progress-bar off flake8 nbstripout nbformat torch
+          install:
+          script: flake8
+        - stage: unit test
+          python: 2.7
+          script: ./test/run_test.sh
+        - python: 3.5
+          script: ./test/run_test.sh
+
+deploy:
+  provider: pypi
+  user: pytorch
+  password:
+    secure: QeJIl6HGgRR7UXeEAAmh8bhJR9WHS5HiAPdWskFRsAIWhTaq6gCmwCHKw4uMIuXsQ5ArVG3Ct4CcIIYzjt3cx9ToRWgVLfOI3sgyzqPiMVfbkf5ilF30knp9id+8MA3dwUwelzd0sqoRIgSth4eXPDGfrNd3Ceqz27fU/coT$
+  on:
+    tags: true
+    branch: deploy-pypi
