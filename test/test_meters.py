@@ -21,10 +21,10 @@ class TestMeters(unittest.TestCase):
     def testAverageValueMeter_np_2d(self):
         m = meter.AverageValueMeter()
         for i in range(1, 10):
-            m.add(np.float32[[i]])
+            m.add(np.float32([[i, i+1]]))
         mean, std = m.value()
-        self.assertEqual(np.isclose(mean[0, 0], 5.0))
-        self.assertTrue(np.isclose(std[0, 0], 2.738613))
+        self.assertEqual(np.allclose(mean, [[5.0, 6.0]]))
+        self.assertTrue(np.allclose(std, [[2.738613, 2.738613]]))
         m.reset()
         mean, std = m.value()
 
@@ -33,10 +33,10 @@ class TestMeters(unittest.TestCase):
     def testAverageValueMeter_torch_2d(self):
         m = meter.AverageValueMeter()
         for i in range(1, 10):
-            m.add(torch.Tensor([[i]]))
+            m.add(torch.Tensor([[i, i+1]]))
         mean, std = m.value()
-        self.assertEqual(np.isclose(mean[0, 0], 5.0))
-        self.assertTrue(np.isclose(std[0, 0], 2.738613))
+        self.assertEqual(np.allclose(mean, [[5.0, 6.0]]))
+        self.assertTrue(np.allclose(std, [[2.738613, 2.738613]]))
         m.reset()
         mean, std = m.value()
 
