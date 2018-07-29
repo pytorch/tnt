@@ -4,9 +4,9 @@ import shutil
 import sys
 from setuptools import setup, find_packages
 
-VERSION = '0.0.2'
+VERSION = '0.0.4'
 
-long_description = "an abstraction to train neural networks"
+long_description = "Simple tools for logging and visualizing, loading and training"
 
 setup_info = dict(
     # Metadata
