@@ -23,8 +23,7 @@ jobs:
     script: "./test/run_test.sh"
   - python: 3.5
     script: "./test/run_test.sh"
-  - stage PyPI Deploy: 
-    python: 3.5
+  - stage: PyPI Deploy
     script: echo "Deploying to PyPI..."
     deploy:
       provider: pypi
