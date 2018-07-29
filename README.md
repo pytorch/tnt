@@ -16,13 +16,21 @@ or training regimen.
 
 ## Installation
 
-Make sure you have PyTorch installed, then do:
+TNT can be installed with pip. To do so, run:
+
+```buildoutcfg
+pip install torchnet
+```
+
+If you run into issues, make sure that Pytorch is installed first.
+
+You can also install the latest verstion from master. Just run:
 
 ```buildoutcfg
 pip install git+https://github.com/pytorch/tnt.git@master
 ```
 
-To update:
+To update to the latest version from master:
 
 ```buildoutcfg
 pip install --upgrade git+https://github.com/pytorch/tnt.git@master
