@@ -24,3 +24,12 @@ jobs:
           script: ./test/run_test.sh
         - python: 3.5
           script: ./test/run_test.sh
+
+deploy:
+  provider: pypi
+  user: pytorch
+  password:
+    secure: "IdDSJF7LH18H+N9uPCZrgilrdMcxbIvlA8c15ORlZEAKuE4CFa5udFrfagEwNwJQE1S9plcnYvtZfHQo2b5QJl2ZmSPFuQX/4vfqPMr5yZXsXUHU/bPIaoyE06Vy+K8QyjbLVDxJZnSqbWqzxeqVMjFAW6GRZNmkG+xONviQuexO1x70M0HM7MqAktfB7v3ZBQ3rNCTANjxmKu4mVwM1Vxh4aDKVjj2BVDN9kYNkXmkJnHtSFxoYNLi9BhugbkjNMDbaaeJGx3a5UaDANV7H+btaROaLrBTQTnk48GQF0A9xIkCLbSw9YutSQYgQb/LbCyeRctPYBrwKNJXESa0tDM8jolhfy+NMvVYX5N1FxaJdWGIMpgkOa0h3eYjH4HZUxzvSGJTpKCVy1k3lZCb0Q/kczIy2YFOf9FWxNDYc6A4hYf78fniFx4kVSL+/B/HhJ8lszb+F3wVYtWiRbYRxq9PtgU7NsqWMTeliXlwYTDZjfq6S6sHyZbkNiCx5ALNDuT8UEpx2x+fw/pouOMq2DvyBDtDZ5n8xLoGloPrpfWPcG64NEcqQhMTmxLQGKru1SMuvzM7OhzeTaJ3J+tpG77TpX2GDw2haYBmwCXUb+t1b9HmwocjlB40BXgwpsqDUA9d30se4IrW3dVbnu+X6psXEB7ZBjUBW/J58AHa8Am8="
+  on:
+    tags: true
+    branch: master
