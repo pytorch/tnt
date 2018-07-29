@@ -33,4 +33,4 @@ jobs:
       skip_cleanup: true
       on:
         tags: true
-        branch: master
+        branch: deploy-pypi
