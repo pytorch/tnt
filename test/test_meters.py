@@ -18,6 +18,30 @@ class TestMeters(unittest.TestCase):
 
         self.assertTrue(np.isnan(mean))
 
+    def testAverageValueMeter_np_2d(self):
+        m = meter.AverageValueMeter()
+        for i in range(1, 10):
+            m.add(np.float32[[i]])
+        mean, std = m.value()
+        self.assertEqual(np.isclose(mean[0,0], 5.0))
+        self.assertTrue(np.isclose(std[0,0], 2.738613))
+        m.reset()
+        mean, std = m.value()
+
+        self.assertTrue(np.isnan(mean))
+
+    def testAverageValueMeter_torch_2d(self):
+        m = meter.AverageValueMeter()
+        for i in range(1, 10):
+            m.add(torch.Tensor([[i]]))
+        mean, std = m.value()
+        self.assertEqual(np.isclose(mean[0,0], 5.0))
+        self.assertTrue(np.isclose(std[0,0], 2.738613))
+        m.reset()
+        mean, std = m.value()
+
+        self.assertTrue(np.isnan(mean))
+
     def testAverageValueMeter_n(self):
         """Test the case of adding more than 1 value.
         """
