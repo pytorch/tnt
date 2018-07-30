@@ -107,15 +107,17 @@ class VisdomLogger(BaseVisdomLogger):
 
 class VisdomPlotLogger(BaseVisdomLogger):
 
-    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097, server="localhost"):
+    def __init__(self, plot_type, fields=None, win=None, env=None, opts={}, port=8097, server="localhost", name=None):
         '''
+            Multiple lines can be added to the same plot with the "name" attribute (see example)
             Args:
                 fields: Currently unused
                 plot_type: {scatter, line}
 
             Examples:
                 >>> scatter_logger = VisdomPlotLogger('line')
-                >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0])
+                >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0], name="train")
+                >>> scatter_logger.log(stats['epoch'], loss_meter.value()[0], name="test")
         '''
         super(VisdomPlotLogger, self).__init__(fields, win, env, opts, port, server)
         valid_plot_types = {
@@ -134,12 +136,14 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 raise ValueError("When logging to {}, must pass in x and y values (and optionally z).".format(
                     type(self)))
             x, y = args
-            self.viz.updateTrace(
+            self.chart(
                 X=np.array([x]),
                 Y=np.array([y]),
+                update='append',
                 win=self.win,
                 env=self.env,
-                opts=self.opts)
+                opts=self.opts,
+                **kwargs)
         else:
             if self.plot_type == 'scatter':
                 chart_args = {'X': np.array([args])}
@@ -151,29 +155,35 @@ class VisdomPlotLogger(BaseVisdomLogger):
                 env=self.env,
                 opts=self.opts,
                 **chart_args)
+            # For some reason, the first point is a different trace. So for now
+            # we can just add the point again, this time on the correct curve.
+            self.log(*args, **kwargs)
 
 
 class VisdomTextLogger(BaseVisdomLogger):
-    '''
-        Creates a text window in visdom and logs output to it.
-        The output can be formatted with fancy HTML, and it new output can
-            be set to 'append' or 'replace' mode.
+    '''Creates a text window in visdom and logs output to it.
+
+    The output can be formatted with fancy HTML, and it new output can
+    be set to 'append' or 'replace' mode.
+
+    Args:
+        fields: Currently not used
+        update_type: One of {'REPLACE', 'APPEND'}. Default 'REPLACE'.
+
+    For examples, make sure that your visdom server is running.
+
+    Example:
+        >>> notes_logger = VisdomTextLogger(update_type='APPEND')
+        >>> for i in range(10):
+        >>>     notes_logger.log("Printing: {} of {}".format(i+1, 10))
+        # results will be in Visdom environment (default: http://localhost:8097)
+
     '''
     valid_update_types = ['REPLACE', 'APPEND']
 
     def __init__(self, fields=None, win=None, env=None, opts={}, update_type=valid_update_types[0],
                  port=8097, server="localhost"):
-        '''
-            Args:
-                fields: Currently unused
-                update_type: One of {'REPLACE', 'APPEND'}. Default 'REPLACE'.
 
-            Examples:
-                >>> progress_m = ProgressMonitor()
-                >>> logger = VisdomTextLogger(["progress"], [(2, 'iteration')])
-                >>> train.register_plugin(progress_m)
-                >>> train.register_plugin(logger)
-        '''
         super(VisdomTextLogger, self).__init__(fields, win, env, opts, port, server)
         self.text = ''
 

@@ -16,6 +16,7 @@ class APMeter(meter.Meter):
     the `target` contains only values 0 (for negative examples) and 1
     (for positive examples); and (3) the `weight` ( > 0) represents weight for
     each sample.
+
     """
 
     def __init__(self):
@@ -29,7 +30,8 @@ class APMeter(meter.Meter):
         self.weights = torch.FloatTensor(torch.FloatStorage())
 
     def add(self, output, target, weight=None):
-        """
+        """Add a new observation
+
         Args:
             output (Tensor): NxK tensor that for each of the N examples
                 indicates the probability of the example belonging to each of
@@ -37,10 +39,11 @@ class APMeter(meter.Meter):
                 sum to one over all classes
             target (Tensor): binary NxK tensort that encodes which of the K
                 classes are associated with the N-th input
-                    (eg: a row [0, 1, 0, 1] indicates that the example is
-                         associated with classes 2 and 4)
+                (eg: a row [0, 1, 0, 1] indicates that the example is
+                associated with classes 2 and 4)
             weight (optional, Tensor): Nx1 tensor representing the weight for
                 each example (each weight > 0)
+
         """
         if not torch.is_tensor(output):
             output = torch.from_numpy(output)
@@ -99,6 +102,7 @@ class APMeter(meter.Meter):
 
         Return:
             ap (FloatTensor): 1xK tensor, with avg precision for each class k
+
         """
 
         if self.scores.numel() == 0:
@@ -134,5 +138,5 @@ class APMeter(meter.Meter):
             precision = tp.div(rg)
 
             # compute average precision
-            ap[k] = precision[truth.byte()].sum() / max(truth.sum(), 1)
+            ap[k] = precision[truth.byte()].sum() / max(float(truth.sum()), 1)
         return ap

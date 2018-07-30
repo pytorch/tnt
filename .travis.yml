@@ -1,35 +1,36 @@
 # https://travis-ci.org/pytorch/pytorch
 # https://github.com/uber/pyro/blob/dev/.travis.yml
+
 language: python
-
 env:
-    global:
-        - PYTHONPATH=$PWD:$PYTHONPATH
-
+  global:
+  - PYTHONPATH=$PWD:$PYTHONPATH
 install:
-    # download and install PyTorch wheel
-    - pip install --upgrade awscli
-    - mkdir -p tmp
-    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-        aws s3 --no-sign-request sync s3://pyro-ppl/ci tmp --exclude "*" --include "*-cp27-*";
-      else
-        aws s3 --no-sign-request sync s3://pyro-ppl/ci tmp --exclude "*" --include "*-cp35-*";
-      fi
-    - pip install tmp/*
-    - rm -r tmp
-    - pip install -e .[test]
-    - pip freeze
-
+- pip install -U pip
+- pip install --progress-bar off -e .[test]
+- pip freeze
 jobs:
-    fast_finish: true
-    include:
-        - stage: lint
-          python: 2.7
-          before_install: pip install flake8 nbstripout nbformat
-          install:
-          script: flake8
-        - stage: unit test
-          python: 2.7
-          script: ./test/run_test.sh
-        - python: 3.5
-          script: ./test/run_test.sh
+  fast_finish: true
+  include:
+  - stage: lint
+    python: 2.7
+    before_install: pip install -U pip; pip install --progress-bar off flake8 nbstripout
+      nbformat torch
+    install: 
+    script: flake8
+  - stage: unit test
+    python: 2.7
+    script: "./test/run_test.sh"
+  - python: 3.5
+    script: "./test/run_test.sh"
+  - stage: deploy
+    script: echo "Deploying to PyPI..."
+    deploy:
+      provider: pypi
+      user: pytorch
+      password:
+        secure: C8v2M7QaeN4xsM05N9MonP+/twtFsxTd0QWsLGSFrm59jT/qur63sCxP7IAmpKYm72zd7F8sLiadyBHsRAgzHwz2zVqGSjMNon5+44aEOOZV7SVqqXudWU5Pr74Wrn/ZQ2ezMf99Tg2pcTgTpmOAtEyc+hOz91IT857tzMR6jy13jYVQN1cVGwtcOrxAGngUqlaNegp5s2Ja9+XH9dyzwpDkgTrllg6r7mCiC7Xy4hKViTmrA0RMD13X/5UFq7t+181RosZDbxjtv2elrpTeWt0CCSel+B9DQQZOQeY5XM+GevcoYwM96IxLPt8aoAFGgR3JlYeiy5NJjR+xXbsjPBwdnkcQTyMsmGYb4vrTqWfsijYc033auPSxvPqpnh4ql3wqCciiQ79Rfhxc8q/AZMayoPdxma2JhPEScfsx0AEMxwWOnLlm6NiHyPEkuZQTU7YqlBSuk9sIAiQDoPI/GISGNAZbfjHWb9DBa/8AYPNOfnE7vBAhgeZnFpenedfUD6mIKrY7tA5QIl9Pnm0Lj5iL0739yKXGHaNZbEFOLe5XIcrvA8ueR35kCgr9zdy+hLvpkc+U4cvp9ELqDDhWV64tBiy6VOP4IuQqfZ/VyXBa7SrM2ITPD6b1/sRPp9c/fUvzZ9BQZRkYW+1y0KOyDICgPf0kfnoy+UnAdwsSZPU=
+      skip_cleanup: true
+      on:
+        tags: true
+        branch: master

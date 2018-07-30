@@ -18,6 +18,30 @@ class TestMeters(unittest.TestCase):
 
         self.assertTrue(np.isnan(mean))
 
+    def testAverageValueMeter_np_2d(self):
+        m = meter.AverageValueMeter()
+        for i in range(1, 10):
+            m.add(np.float32([[i, i + 1]]))
+        mean, std = m.value()
+        self.assertTrue(np.allclose(mean, [[5.0, 6.0]]))
+        self.assertTrue(np.allclose(std, [[2.738613, 2.738613]]))
+        m.reset()
+        mean, std = m.value()
+
+        self.assertTrue(np.isnan(mean))
+
+    def testAverageValueMeter_torch_2d(self):
+        m = meter.AverageValueMeter()
+        for i in range(1, 10):
+            m.add(torch.Tensor([[i, i + 1]]))
+        mean, std = m.value()
+        self.assertTrue(np.allclose(mean, [[5.0, 6.0]]))
+        self.assertTrue(np.allclose(std, [[2.738613, 2.738613]]))
+        m.reset()
+        mean, std = m.value()
+
+        self.assertTrue(np.isnan(mean))
+
     def testAverageValueMeter_n(self):
         """Test the case of adding more than 1 value.
         """
@@ -75,6 +99,17 @@ class TestMeters(unittest.TestCase):
         mtr.add(output, target)
         err = mtr.value()
         self.assertEqual(err, [50.0], "Half should be correct")
+
+    def testClassErrorMeteri_batch1(self):
+        mtr = meter.ClassErrorMeter(topk=[1])
+        output = torch.tensor([1, 0, 0])
+        if hasattr(torch, "arange"):
+            target = torch.arange(0, 1)
+        else:
+            target = torch.range(0, 0)
+        mtr.add(output, target)
+        err = mtr.value()
+        self.assertEqual(err, [0], "All should be correct")
 
     def testConfusionMeter(self):
         mtr = meter.ConfusionMeter(k=3)

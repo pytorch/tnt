@@ -19,7 +19,7 @@ class ClassErrorMeter(meter.Meter):
         if torch.is_tensor(output):
             output = output.cpu().squeeze().numpy()
         if torch.is_tensor(target):
-            target = target.cpu().squeeze().numpy()
+            target = np.atleast_1d(target.cpu().squeeze().numpy())
         elif isinstance(target, numbers.Number):
             target = np.asarray([target])
         if np.ndim(output) == 1:
