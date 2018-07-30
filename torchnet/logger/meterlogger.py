@@ -143,4 +143,4 @@ class MeterLogger(object):
                     tval.extend([self.meter[meter].val, self.meter[meter].mean])
                     pstr += " %.2fs/its\t"
                     tval.extend([self.timer.value()])
-                    print(pstr % tuple(tval))
+        print(pstr % tuple(tval))
