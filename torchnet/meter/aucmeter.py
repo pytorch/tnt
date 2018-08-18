@@ -50,7 +50,7 @@ class AUCMeter(meter.Meter):
     def value(self):
         # case when number of elements added are 0
         if self.scores.shape[0] == 0:
-            return 0.5
+            return (0.5, 0.0, 0.0)
 
         # sorting the arrays
         scores, sortind = torch.sort(torch.from_numpy(
