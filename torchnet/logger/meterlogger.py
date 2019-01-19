@@ -98,7 +98,7 @@ class MeterLogger(object):
         loss = self.__to_tensor(loss)
         if meter not in self.meter.keys():
             self.__addloss(meter)
-        self.meter[meter].add(loss[0])
+        self.meter[meter].add(loss.item())
 
     def peek_meter(self):
         '''Returns a dict of all meters and their values.'''
