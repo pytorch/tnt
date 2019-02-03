@@ -62,7 +62,7 @@ def main():
 
     engine = Engine()
 
-    mlog = MeterLogger(server='10.10.30.91', port=9917, nclass=10, title="mnist_meterlogger")
+    mlog = MeterLogger(nclass=10, title="mnist_meterlogger")
 
     def h(sample):
         inputs = Variable(sample[0].float() / 255.0)
