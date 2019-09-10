@@ -181,8 +181,7 @@ class TestMeters(unittest.TestCase):
         mtr = meter.MSEMeter()
         mtr.add(a, b)
         self.assertEqual(1.0, mtr.value())
-        
-        
+
     def testMAEMeter(self):
         a = torch.ones(7)
         b = torch.zeros(7)
@@ -190,10 +189,10 @@ class TestMeters(unittest.TestCase):
         mtr = meter.MAEMeter()
         mtr.add(a, b)
         self.assertEqual(1.0, mtr.value())
-        
+
         mtr.reset()
         self.assertEqual(0.0, mtr.value())
-        
+
         a = torch.arange(1, 4).double()
         b = torch.zeros(3).double()
         mtr.add(a, b)
