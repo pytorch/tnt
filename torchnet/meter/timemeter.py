@@ -23,9 +23,15 @@ class TimeMeter(meter.Meter):
         self.unit = unit
         self.reset()
 
+    def add(self, n=1):
+        self.n += n
+        
     def reset(self):
         self.n = 0
         self.time = time.time()
 
     def value(self):
-        return time.time() - self.time
+        if self.unit:
+            return (time.time() - self.time) / self.n
+        else:
+            return time.time() - self.time
