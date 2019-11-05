@@ -31,7 +31,9 @@ class TimeMeter(meter.Meter):
         self.time = time.time()
 
     def value(self):
-        if self.unit:
+        if self.unit and self.n == 0:
+            raise ValueError("Trying to divide by zero in TimeMeter")
+        elif self.unit:
             return (time.time() - self.time) / self.n
         else:
             return time.time() - self.time
