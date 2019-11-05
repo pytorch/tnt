@@ -47,7 +47,7 @@ class TestMeters(unittest.TestCase):
         """
         m = meter.AverageValueMeter()
         for i in range(1, 11):
-            m.add(i * i, n=i)
+            m.add(i, n=i)
         mean, std = m.value()
         self.assertEqual(mean, 7.0)
         m.reset()
