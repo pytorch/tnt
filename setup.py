@@ -8,7 +8,7 @@ VERSION = '0.0.5'
 
 long_description = "Simple tools for logging and visualizing, loading and training"
 
-with open('requirements.txt','r') as req_file:
+with open('requirements.txt', 'r') as req_file:
     install_reqs = [line.strip() for line in req_file.readlines()]
 
 setup_info = dict(
