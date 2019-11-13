@@ -1,2 +1,4 @@
 numpy
 visdom
+torch
+six
