@@ -1,5 +1,6 @@
-from . import meter
 import numpy as np
+
+from . import meter
 
 
 class ConfusionMeter(meter.Meter):
@@ -15,10 +16,9 @@ class ConfusionMeter(meter.Meter):
             is normalized or not
 
     """
-
     def __init__(self, k, normalized=False):
         super(ConfusionMeter, self).__init__()
-        self.conf = np.ndarray((k, k), dtype=np.int32)
+        self.conf = np.ndarray((k, k), dtype=np.int64)
         self.normalized = normalized
         self.k = k
         self.reset()
@@ -67,9 +67,8 @@ class ConfusionMeter(meter.Meter):
 
         # hack for bincounting 2 arrays together
         x = predicted + self.k * target
-        bincount_2d = np.bincount(x.astype(np.int32),
-                                  minlength=self.k ** 2)
-        assert bincount_2d.size == self.k ** 2
+        bincount_2d = np.bincount(x.astype(np.int64), minlength=self.k**2)
+        assert bincount_2d.size == self.k**2
         conf = bincount_2d.reshape((self.k, self.k))
 
         self.conf += conf
