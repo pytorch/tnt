@@ -1,0 +1,10 @@
+name: Deploy
+on: release
+jobs:
+  deploy:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Deploy to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.1
+        with:
+          user: pytorch
