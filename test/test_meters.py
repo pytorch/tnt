@@ -174,6 +174,68 @@ class TestMeters(unittest.TestCase):
             self.assertEqual(row.sum(), 1,
                              "Row no " + str(i) + " fails to sum to one in normalized mode")
 
+    def testMultiLabelConfusionMeter(self):
+        output = torch.Tensor([[1, 1, 0], [0, 1, 0], [1, 0, 1], [1, 1, 1]])
+        target = torch.Tensor([[0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 0, 1]])
+
+        mtr = meter.MultiLabelConfusionMeter(k=3, normalized=False)
+        mtr.add(output, target)
+
+        conf_mtrx = mtr.value()
+        correct_conf_mtrx = np.array([[[1, 1],
+                                       [0, 2]],
+
+                                      [[1, 2],
+                                       [0, 1]],
+
+                                      [[1, 0],
+                                       [1, 2]]])
+
+        self.assertEqual(conf_mtrx[0, 0, 0], correct_conf_mtrx[0, 0, 0], 'incorrect true negatives for class 0')
+        self.assertEqual(conf_mtrx[1, 0, 0], correct_conf_mtrx[1, 0, 0], 'incorrect true negatives for class 1')
+        self.assertEqual(conf_mtrx[2, 0, 0], correct_conf_mtrx[2, 0, 0], 'incorrect true negatives for class 2')
+
+        self.assertEqual(conf_mtrx[0, 0, 1], correct_conf_mtrx[0, 0, 1], 'incorrect false positives for class 0')
+        self.assertEqual(conf_mtrx[1, 0, 1], correct_conf_mtrx[1, 0, 1], 'incorrect false positives for class 1')
+        self.assertEqual(conf_mtrx[2, 0, 1], correct_conf_mtrx[2, 0, 1], 'incorrect false positives for class 2')
+
+        self.assertEqual(conf_mtrx[0, 1, 0], correct_conf_mtrx[0, 1, 0], 'incorrect false negatives for class 0')
+        self.assertEqual(conf_mtrx[1, 1, 0], correct_conf_mtrx[1, 1, 0], 'incorrect false negatives for class 1')
+        self.assertEqual(conf_mtrx[2, 1, 0], correct_conf_mtrx[2, 1, 0], 'incorrect false negatives for class 2')
+
+        self.assertEqual(conf_mtrx[0, 1, 1], correct_conf_mtrx[0, 1, 1], 'incorrect true positives for class 0')
+        self.assertEqual(conf_mtrx[1, 1, 1], correct_conf_mtrx[1, 1, 1], 'incorrect true positives for class 1')
+        self.assertEqual(conf_mtrx[2, 1, 1], correct_conf_mtrx[2, 1, 1], 'incorrect true positives for class 2')
+
+        mtr = meter.MultiLabelConfusionMeter(k=3, normalized=True)
+        mtr.add(output, target)
+
+        conf_mtrx_normalized = mtr.value()
+        correct_conf_mtrx_normalized = np.array([[[0.25, 0.25],
+                                                  [0,    0.5]],
+
+                                                 [[0.25, 0.5],
+                                                  [0,    0.25]],
+
+                                                 [[0.25, 0],
+                                                  [0.25, 0.5]]])
+
+        self.assertAlmostEqual(conf_mtrx_normalized[0, 0, 0], correct_conf_mtrx_normalized[0, 0, 0], 'incorrect normalized true negatives for class 0')
+        self.assertAlmostEqual(conf_mtrx_normalized[1, 0, 0], correct_conf_mtrx_normalized[1, 0, 0], 'incorrect normalized true negatives for class 1')
+        self.assertAlmostEqual(conf_mtrx_normalized[2, 0, 0], correct_conf_mtrx_normalized[2, 0, 0], 'incorrect normalized true negatives for class 2')
+
+        self.assertAlmostEqual(conf_mtrx_normalized[0, 0, 1], correct_conf_mtrx_normalized[0, 0, 1], 'incorrect normalized false positives for class 0')
+        self.assertAlmostEqual(conf_mtrx_normalized[1, 0, 1], correct_conf_mtrx_normalized[1, 0, 1], 'incorrect normalized false positives for class 1')
+        self.assertAlmostEqual(conf_mtrx_normalized[2, 0, 1], correct_conf_mtrx_normalized[2, 0, 1], 'incorrect normalized false positives for class 2')
+
+        self.assertAlmostEqual(conf_mtrx_normalized[0, 1, 0], correct_conf_mtrx_normalized[0, 1, 0], 'incorrect normalized false negatives for class 0')
+        self.assertAlmostEqual(conf_mtrx_normalized[1, 1, 0], correct_conf_mtrx_normalized[1, 1, 0], 'incorrect normalized false negatives for class 1')
+        self.assertAlmostEqual(conf_mtrx_normalized[2, 1, 0], correct_conf_mtrx_normalized[2, 1, 0], 'incorrect normalized false negatives for class 2')
+
+        self.assertAlmostEqual(conf_mtrx_normalized[0, 1, 1], correct_conf_mtrx_normalized[0, 1, 1], 'incorrect normalized true positives for class 0')
+        self.assertAlmostEqual(conf_mtrx_normalized[1, 1, 1], correct_conf_mtrx_normalized[1, 1, 1], 'incorrect normalized true positives for class 1')
+        self.assertAlmostEqual(conf_mtrx_normalized[2, 1, 1], correct_conf_mtrx_normalized[2, 1, 1], 'incorrect normalized true positives for class 2')
+
     def testMSEMeter(self):
         a = torch.ones(7)
         b = torch.zeros(7)
