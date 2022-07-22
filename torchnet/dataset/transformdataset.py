@@ -29,11 +29,12 @@ class TransformDataset(Dataset):
     def __init__(self, dataset, transforms):
         super(TransformDataset, self).__init__()
 
-        assert isinstance(transforms, dict) or callable(transforms), \
-            'expected a dict of transforms or a function'
+        assert isinstance(transforms, dict) or callable(
+            transforms
+        ), "expected a dict of transforms or a function"
         if isinstance(transforms, dict):
             for k, v in transforms.items():
-                assert callable(v), str(k) + ' is not a function'
+                assert callable(v), str(k) + " is not a function"
 
         self.dataset = dataset
         self.transforms = transforms

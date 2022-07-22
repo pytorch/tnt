@@ -1,6 +1,8 @@
 import math
-from . import meter
+
 import torch
+
+from . import meter
 
 
 class MovingAverageValueMeter(meter.Meter):
@@ -17,7 +19,7 @@ class MovingAverageValueMeter(meter.Meter):
         self.valuequeue.fill_(0)
 
     def add(self, value):
-        queueid = (self.n % self.windowsize)
+        queueid = self.n % self.windowsize
         oldvalue = self.valuequeue[queueid]
         self.sum += value - oldvalue
         self.var += value * value - oldvalue * oldvalue

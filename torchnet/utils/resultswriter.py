@@ -3,7 +3,7 @@ import pickle
 
 
 class ResultsWriter(object):
-    '''Logs results to a file.
+    """Logs results to a file.
 
     The ResultsWriter provides a convenient interface for periodically writing
     results to a file. It is designed to capture all information for a given
@@ -29,17 +29,16 @@ class ResultsWriter(object):
         >>>    test_results = test_model()
         >>>    result_writer.update(task, {'Train': train_results, 'Test': test_results})
 
-    '''
+    """
 
     def __init__(self, filepath, overwrite=False):
         if overwrite:
-            with open(filepath, 'wb') as f:
-                pickle.dump({
-                    'tasks': [],
-                    'results': []
-                }, f)
+            with open(filepath, "wb") as f:
+                pickle.dump({"tasks": [], "results": []}, f)
         else:
-            assert not os.path.exists(filepath), 'Cannot write results to "{}". Already exists!'.format(filepath)
+            assert not os.path.exists(
+                filepath
+            ), 'Cannot write results to "{}". Already exists!'.format(filepath)
         self.filepath = filepath
         self.tasks = set()
 
@@ -48,7 +47,7 @@ class ResultsWriter(object):
         self.tasks.add(task_name)
 
     def update(self, task_name, result):
-        ''' Update the results file with new information.
+        """Update the results file with new information.
 
         Args:
             task_name (str): Name of the currently running task. A previously unseen
@@ -57,15 +56,15 @@ class ResultsWriter(object):
             result: This will be appended to the list in :attr:`results` which
                 corresponds to the ``task_name`` in ``task_name``:attr:`tasks`.
 
-        '''
-        with open(self.filepath, 'rb') as f:
+        """
+        with open(self.filepath, "rb") as f:
             existing_results = pickle.load(f)
         if task_name not in self.tasks:
             self._add_task(task_name)
-            existing_results['tasks'].append(task_name)
-            existing_results['results'].append([])
-        task_name_idx = existing_results['tasks'].index(task_name)
-        results = existing_results['results'][task_name_idx]
+            existing_results["tasks"].append(task_name)
+            existing_results["results"].append([])
+        task_name_idx = existing_results["tasks"].index(task_name)
+        results = existing_results["results"][task_name_idx]
         results.append(result)
-        with open(self.filepath, 'wb') as f:
+        with open(self.filepath, "wb") as f:
             pickle.dump(existing_results, f)

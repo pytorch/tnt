@@ -34,7 +34,7 @@ class ListDataset(Dataset):
 
         if isinstance(elem_list, str):
             with open(elem_list) as f:
-                self.list = [line.replace('\n', '') for line in f]
+                self.list = [line.replace("\n", "") for line in f]
         else:
             # just assume iterable
             self.list = elem_list

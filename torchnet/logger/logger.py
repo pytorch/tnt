@@ -14,7 +14,7 @@ class Logger(object):
         self._fields
 
     def __init__(self, fields=None):
-        """ Automatically logs the variables in 'fields' """
+        """Automatically logs the variables in 'fields'"""
         self.fields = fields
 
     def log(self, *args, **kwargs):

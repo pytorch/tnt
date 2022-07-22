@@ -1,2 +1,2 @@
-from .resultswriter import ResultsWriter
 from .multitaskdataloader import MultiTaskDataLoader
+from .resultswriter import ResultsWriter

@@ -1,6 +1,8 @@
 import math
-from . import meter
+
 import torch
+
+from . import meter
 
 
 class MSEMeter(meter.Meter):

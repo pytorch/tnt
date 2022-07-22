@@ -44,6 +44,6 @@ class ResampleDataset(Dataset):
         idx = self.sampler(self.dataset, idx)
 
         if idx < 0 or idx >= len(self.dataset):
-            raise IndexError('out of range')
+            raise IndexError("out of range")
 
         return self.dataset[idx]

@@ -1,9 +1,10 @@
-import unittest
-import torch
-import torchnet.dataset as dataset
-import numpy as np
 import os
 import tempfile
+import unittest
+
+import numpy as np
+import torch
+import torchnet.dataset as dataset
 
 
 class TestDatasets(unittest.TestCase):
@@ -25,19 +26,19 @@ class TestDatasets(unittest.TestCase):
 
     def testListDataset_path(self):
         tbl = [0, 1, 2]
-        d = dataset.ListDataset(tbl, 'bar/{}'.format, 'foo')
+        d = dataset.ListDataset(tbl, "bar/{}".format, "foo")
         self.assertEqual(len(d), 3)
-        self.assertEqual(d[2], 'bar/foo/2')
+        self.assertEqual(d[2], "bar/foo/2")
 
     def testListDataset_file(self):
         _, filename = tempfile.mkstemp()
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             for i in range(0, 50):
-                f.write(str(i) + '\n')
+                f.write(str(i) + "\n")
 
-        d = dataset.ListDataset(filename, lambda x: x, 'foo')
+        d = dataset.ListDataset(filename, lambda x: x, "foo")
         self.assertEqual(len(d), 50)
-        self.assertEqual(d[15], 'foo/15')
+        self.assertEqual(d[15], "foo/15")
 
         os.remove(filename)
 
@@ -45,12 +46,12 @@ class TestDatasets(unittest.TestCase):
         # dict input
         data = {
             # 'input': torch.arange(0,8),
-            'input': np.arange(0, 8),
-            'target': np.arange(0, 8),
+            "input": np.arange(0, 8),
+            "target": np.arange(0, 8),
         }
         d = dataset.TensorDataset(data)
         self.assertEqual(len(d), 8)
-        self.assertEqual(d[2], {'input': 2, 'target': 2})
+        self.assertEqual(d[2], {"input": 2, "target": 2})
 
         # tensor input
         a = torch.randn(8)
@@ -69,9 +70,9 @@ class TestDatasets(unittest.TestCase):
         else:
             t = torch.range(0, 15).long()
         batchsize = 8
-        d = dataset.ListDataset(t, lambda x: {'input': x})
+        d = dataset.ListDataset(t, lambda x: {"input": x})
         d = dataset.BatchDataset(d, batchsize)
-        ex = d[0]['input']
+        ex = d[0]["input"]
         self.assertEqual(len(ex), batchsize)
         self.assertEqual(ex[-1], batchsize - 1)
 
@@ -94,34 +95,32 @@ class TestDatasets(unittest.TestCase):
     def testSplitDataset(self):
         h = [0, 1, 2, 3]
         listdataset = dataset.ListDataset(elem_list=h)
-        splitdataset = dataset.SplitDataset(
-            listdataset, {'train': 3, 'val': 1})
+        splitdataset = dataset.SplitDataset(listdataset, {"train": 3, "val": 1})
 
-        splitdataset.select('train')
+        splitdataset.select("train")
         self.assertEqual(len(splitdataset), 3)
         self.assertEqual(splitdataset[2], 2)
 
-        splitdataset.select('val')
+        splitdataset.select("val")
         self.assertEqual(len(splitdataset), 1)
         self.assertEqual(splitdataset[0], 3)
 
         # test fluent api
-        splitdataset = listdataset.split({'train': 3, 'val': 1})
-        splitdataset.select('train')
+        splitdataset = listdataset.split({"train": 3, "val": 1})
+        splitdataset.select("train")
         self.assertEqual(len(splitdataset), 3)
         self.assertEqual(splitdataset[2], 2)
 
     def testSplitDataset_fractions(self):
         h = [0, 1, 2, 3]
         listdataset = dataset.ListDataset(elem_list=h)
-        splitdataset = dataset.SplitDataset(listdataset, {'train': 0.75,
-                                                          'val': 0.25})
+        splitdataset = dataset.SplitDataset(listdataset, {"train": 0.75, "val": 0.25})
 
-        splitdataset.select('train')
+        splitdataset.select("train")
         self.assertEqual(len(splitdataset), 3)
         self.assertEqual(splitdataset[2], 2)
 
-        splitdataset.select('val')
+        splitdataset.select("val")
         self.assertEqual(len(splitdataset), 1)
         self.assertEqual(splitdataset[0], 3)
 
@@ -137,5 +136,5 @@ class TestDatasets(unittest.TestCase):
         self.assertEqual(concatdataset[6], 13)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

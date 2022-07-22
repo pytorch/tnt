@@ -1,5 +1,6 @@
-from .dataset import Dataset
 import numpy as np
+
+from .dataset import Dataset
 
 
 class SplitDataset(Dataset):
@@ -34,27 +35,29 @@ class SplitDataset(Dataset):
         self.partitions = partitions
 
         # A few assertions
-        assert isinstance(partitions, dict), 'partitions must be a dict'
-        assert len(partitions) >= 2, \
-            'SplitDataset should have at least two partitions'
-        assert min(partitions.values()) >= 0, \
-            'partition sizes cannot be negative'
-        assert max(partitions.values()) > 0, 'all partitions cannot be empty'
+        assert isinstance(partitions, dict), "partitions must be a dict"
+        assert len(partitions) >= 2, "SplitDataset should have at least two partitions"
+        assert min(partitions.values()) >= 0, "partition sizes cannot be negative"
+        assert max(partitions.values()) > 0, "all partitions cannot be empty"
 
         self.partition_names = sorted(list(self.partitions.keys()))
-        self.partition_index = {partition: i for i, partition in
-                                enumerate(self.partition_names)}
+        self.partition_index = {
+            partition: i for i, partition in enumerate(self.partition_names)
+        }
 
-        self.partition_sizes = [self.partitions[parition] for parition in
-                                self.partition_names]
+        self.partition_sizes = [
+            self.partitions[parition] for parition in self.partition_names
+        ]
         # if partition sizes are fractions, convert to sizes:
         if sum(self.partition_sizes) <= 1:
-            self.partition_sizes = [round(x * len(dataset)) for x in
-                                    self.partition_sizes]
+            self.partition_sizes = [
+                round(x * len(dataset)) for x in self.partition_sizes
+            ]
         else:
             for x in self.partition_sizes:
-                assert x == int(x), ('partition sizes should be integer'
-                                     ' numbers, or sum up to <= 1 ')
+                assert x == int(x), (
+                    "partition sizes should be integer" " numbers, or sum up to <= 1 "
+                )
 
         self.partition_cum_sizes = np.cumsum(self.partition_sizes)
 

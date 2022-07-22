@@ -1,6 +1,7 @@
-from .dataset import Dataset
-import torch
 import numpy as np
+import torch
+
+from .dataset import Dataset
 
 
 class TensorDataset(Dataset):

@@ -1,12 +1,12 @@
-import unittest
 import math
+import unittest
+
+import numpy as np
 import torch
 import torchnet.meter as meter
-import numpy as np
 
 
 class TestMeters(unittest.TestCase):
-
     def testAverageValueMeter(self):
         m = meter.AverageValueMeter()
         for i in range(1, 10):
@@ -43,8 +43,7 @@ class TestMeters(unittest.TestCase):
         self.assertTrue(np.isnan(mean))
 
     def testAverageValueMeter_n(self):
-        """Test the case of adding more than 1 value.
-        """
+        """Test the case of adding more than 1 value."""
         m = meter.AverageValueMeter()
         for i in range(1, 11):
             m.add(i, n=i)
@@ -63,6 +62,7 @@ class TestMeters(unittest.TestCase):
         the results, which are due to slightly different arithmetic
         operations and order.
         """
+
         def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
             return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
@@ -75,11 +75,13 @@ class TestMeters(unittest.TestCase):
             mean, std = m.value()
             self.assertTrue(isclose(truth.mean(), mean))
             self.assertTrue(
-                (math.isnan(std) and math.isnan(truth.std(ddof=1))) or
+                (math.isnan(std) and math.isnan(truth.std(ddof=1)))
+                or
                 # When there is one sample in the dataset, numpy returns NaN and
                 # AverageValueMeter returns Inf.  We forgive AverageValueMeter :-)
-                (math.isinf(std) and math.isnan(truth.std(ddof=1))) or
-                isclose(std, truth.std(ddof=1), abs_tol=1e-07))
+                (math.isinf(std) and math.isnan(truth.std(ddof=1)))
+                or isclose(std, truth.std(ddof=1), abs_tol=1e-07)
+            )
 
     def testClassErrorMeter(self):
         mtr = meter.ClassErrorMeter(topk=[1])
@@ -114,7 +116,7 @@ class TestMeters(unittest.TestCase):
     def testConfusionMeter(self):
         mtr = meter.ConfusionMeter(k=3)
 
-        output = torch.Tensor([[.8, 0.1, 0.1], [10, 11, 10], [0.2, 0.2, .3]])
+        output = torch.Tensor([[0.8, 0.1, 0.1], [10, 11, 10], [0.2, 0.2, 0.3]])
         if hasattr(torch, "arange"):
             target = torch.arange(0, 3)
         else:
@@ -123,43 +125,45 @@ class TestMeters(unittest.TestCase):
 
         conf_mtrx = mtr.value()
         self.assertEqual(conf_mtrx.sum(), 3, "All should be correct")
-        self.assertEqual(conf_mtrx.diagonal().sum(),
-                         3, "All should be correct")
+        self.assertEqual(conf_mtrx.diagonal().sum(), 3, "All should be correct")
 
         target = torch.Tensor([1, 0, 0])
         mtr.add(output, target)
 
-        self.assertEqual(conf_mtrx.sum(), 6,
-                         "Six tests should give six values")
-        self.assertEqual(conf_mtrx.diagonal().sum(), 3,
-                         "Shouldn't have changed since all new values were false")
-        self.assertEqual(conf_mtrx[0].sum(), 3,
-                         "All top have gotten one guess")
-        self.assertEqual(conf_mtrx[1].sum(), 2,
-                         "Two first at the 2nd row have a guess")
-        self.assertEqual(conf_mtrx[1][2], 0,
-                         "The last one should be empty")
-        self.assertEqual(conf_mtrx[2].sum(), 1,
-                         "Bottom row has only the first test correct")
-        self.assertEqual(conf_mtrx[2][2], 1,
-                         "Bottom row has only the first test correct")
+        self.assertEqual(conf_mtrx.sum(), 6, "Six tests should give six values")
+        self.assertEqual(
+            conf_mtrx.diagonal().sum(),
+            3,
+            "Shouldn't have changed since all new values were false",
+        )
+        self.assertEqual(conf_mtrx[0].sum(), 3, "All top have gotten one guess")
+        self.assertEqual(conf_mtrx[1].sum(), 2, "Two first at the 2nd row have a guess")
+        self.assertEqual(conf_mtrx[1][2], 0, "The last one should be empty")
+        self.assertEqual(
+            conf_mtrx[2].sum(), 1, "Bottom row has only the first test correct"
+        )
+        self.assertEqual(
+            conf_mtrx[2][2], 1, "Bottom row has only the first test correct"
+        )
 
         mtr = meter.ConfusionMeter(k=4, normalized=True)
-        output = torch.Tensor([
-            [.8, 0.1, 0.1, 0],
-            [10, 11, 10, 0],
-            [0.2, 0.2, .3, 0],
-            [0, 0, 0, 1],
-        ])
+        output = torch.Tensor(
+            [
+                [0.8, 0.1, 0.1, 0],
+                [10, 11, 10, 0],
+                [0.2, 0.2, 0.3, 0],
+                [0, 0, 0, 1],
+            ]
+        )
 
         target = torch.Tensor([0, 1, 2, 3])
         mtr.add(output, target)
         conf_mtrx = mtr.value()
 
-        self.assertEqual(conf_mtrx.sum(), output.size(1),
-                         "All should be correct")
-        self.assertEqual(conf_mtrx.diagonal().sum(), output.size(1),
-                         "All should be correct")
+        self.assertEqual(conf_mtrx.sum(), output.size(1), "All should be correct")
+        self.assertEqual(
+            conf_mtrx.diagonal().sum(), output.size(1), "All should be correct"
+        )
 
         target[0] = 1
         target[1] = 0
@@ -168,11 +172,17 @@ class TestMeters(unittest.TestCase):
         mtr.add(output, target)
         conf_mtrx = mtr.value()
 
-        self.assertEqual(conf_mtrx.sum(), output.size(1),
-                         "The normalization should sum all values to 1")
+        self.assertEqual(
+            conf_mtrx.sum(),
+            output.size(1),
+            "The normalization should sum all values to 1",
+        )
         for i, row in enumerate(conf_mtrx):
-            self.assertEqual(row.sum(), 1,
-                             "Row no " + str(i) + " fails to sum to one in normalized mode")
+            self.assertEqual(
+                row.sum(),
+                1,
+                "Row no " + str(i) + " fails to sum to one in normalized mode",
+            )
 
     def testMSEMeter(self):
         a = torch.ones(7)
@@ -226,8 +236,7 @@ class TestMeters(unittest.TestCase):
         mtr.add(torch.Tensor(test_size).fill_(0.2), torch.zeros(test_size))
         mtr.add(torch.Tensor(test_size).fill_(0.3), torch.zeros(test_size))
         mtr.add(torch.Tensor(test_size).fill_(0.4), torch.zeros(test_size))
-        mtr.add(torch.Tensor(test_size).fill_(1),
-                torch.Tensor(test_size).fill_(1))
+        mtr.add(torch.Tensor(test_size).fill_(1), torch.Tensor(test_size).fill_(1))
         val, tpr, fpr = mtr.value()
 
         self.assertEqual(val, 1.0, msg="AUC Meter fails")
@@ -242,18 +251,13 @@ class TestMeters(unittest.TestCase):
 
         ap = mtr.value()
         val = (1 * 0.1 / 0.1 + 0 * 2.0 / 2.1 + 1.1 * 1 / 3.1 + 0 * 1 / 4) / 2.0
-        self.assertTrue(
-            math.fabs(ap[0] - val) < 0.01,
-            msg='ap test1 failed'
-        )
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test1 failed")
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
-        val = (1 * 1.0 / 1.0 + 0 * 1.0 / 2.0 +
-               2 * 1.0 / 3.0 + 0 * 1.0 / 4.0) / 2.0
-        self.assertTrue(
-            math.fabs(ap[0] - val) < 0.01, msg='ap test2 failed')
+        val = (1 * 1.0 / 1.0 + 0 * 1.0 / 2.0 + 2 * 1.0 / 3.0 + 0 * 1.0 / 4.0) / 2.0
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test2 failed")
 
         target = torch.Tensor([0, 1, 0, 1])
         output = torch.Tensor([4, 3, 2, 1])
@@ -262,15 +266,14 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
-        val = (0 * 1.0 / 1.0 + 1.0 * 2.0 / 3.0 +
-               2.0 * 0 / 6.0 + 6.0 * 1.0 / 10.0) / 2.0
-        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg='ap test3 failed')
+        val = (0 * 1.0 / 1.0 + 1.0 * 2.0 / 3.0 + 2.0 * 0 / 6.0 + 6.0 * 1.0 / 10.0) / 2.0
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test3 failed")
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
         val = (0 * 1.0 + 1 * 1.0 / 2.0 + 0 * 1.0 / 3.0 + 2 * 1.0 / 4.0) / 2.0
-        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg='ap test4 failed')
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test4 failed")
 
         target = torch.Tensor([0, 1, 0, 1])
         output = torch.Tensor([1, 4, 2, 3])
@@ -278,15 +281,14 @@ class TestMeters(unittest.TestCase):
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
-        val = (4 * 1.0 / 4.0 + 6 * 1.0 / 6.0 + 0 *
-               6.0 / 9.0 + 0 * 6.0 / 10.0) / 2.0
-        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg='ap test5 failed')
+        val = (4 * 1.0 / 4.0 + 6 * 1.0 / 6.0 + 0 * 6.0 / 9.0 + 0 * 6.0 / 10.0) / 2.0
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test5 failed")
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
         val = (1 * 1.0 + 2 * 1.0 / 2.0 + 0 * 1.0 / 3.0 + 0 * 1.0 / 4.0) / 2.0
-        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg='ap test6 failed')
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test6 failed")
 
         target = torch.Tensor([0, 0, 0, 0])
         output = torch.Tensor([1, 4, 2, 3])
@@ -295,12 +297,12 @@ class TestMeters(unittest.TestCase):
         mtr.add(output, target, weight)
 
         ap = mtr.value()
-        self.assertEqual(ap[0], 0.)
+        self.assertEqual(ap[0], 0.0)
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
-        self.assertEqual(ap[0], 0.)
+        self.assertEqual(ap[0], 0.0)
 
         target = torch.Tensor([1, 1, 0])
         output = torch.Tensor([3, 1, 2])
@@ -309,41 +311,54 @@ class TestMeters(unittest.TestCase):
         mtr.add(output, target, weight)
         ap = mtr.value()
         val = (1 * 1.0 / 1.0 + 1 * 0.0 / 4.0 + 1.1 / 4.1) / 2.0
-        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg='ap test7 failed')
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test7 failed")
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
         val = (1 * 1.0 + 0 * 1.0 / 2.0 + 2 * 1.0 / 3.0) / 2.0
-        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg='ap test8 failed')
+        self.assertTrue(math.fabs(ap[0] - val) < 0.01, msg="ap test8 failed")
 
         # Test multiple K's
         target = torch.Tensor([[0, 1, 0, 1], [0, 1, 0, 1]]).transpose(0, 1)
-        output = torch.Tensor([[.1, .2, .3, 4], [4, 3, 2, 1]]).transpose(0, 1)
+        output = torch.Tensor([[0.1, 0.2, 0.3, 4], [4, 3, 2, 1]]).transpose(0, 1)
         weight = torch.Tensor([[1.0, 0.5, 2.0, 3.0]]).transpose(0, 1)
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
         self.assertTrue(
-            math.fabs(ap.sum() -
-                      torch.Tensor([
-                          (1 * 3.0 / 3.0 + 0 * 3.0 / 5.0 +
-                           3.5 * 1 / 5.5 + 0 * 3.5 / 6.5) / 2.0,
-                          (0 * 1.0 / 1.0 + 1 * 0.5 / 1.5 +
-                              0 * 0.5 / 3.5 + 1 * 3.5 / 6.5) / 2.0
-                      ]).sum()) < 0.01, msg='ap test9 failed')
+            math.fabs(
+                ap.sum()
+                - torch.Tensor(
+                    [
+                        (1 * 3.0 / 3.0 + 0 * 3.0 / 5.0 + 3.5 * 1 / 5.5 + 0 * 3.5 / 6.5)
+                        / 2.0,
+                        (0 * 1.0 / 1.0 + 1 * 0.5 / 1.5 + 0 * 0.5 / 3.5 + 1 * 3.5 / 6.5)
+                        / 2.0,
+                    ]
+                ).sum()
+            )
+            < 0.01,
+            msg="ap test9 failed",
+        )
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
         self.assertTrue(
-            math.fabs(ap.sum() -
-                      torch.Tensor([
-                          (1 * 1.0 + 0 * 1.0 / 2.0 + 2 *
-                           1.0 / 3 + 0 * 1.0 / 4.0) / 2.0,
-                          (0 * 1.0 + 1 * 1.0 / 2.0 + 0 *
-                              1.0 / 3.0 + 2.0 * 1.0 / 4.0) / 2.0
-                      ]).sum()) < 0.01, msg='ap test10 failed')
+            math.fabs(
+                ap.sum()
+                - torch.Tensor(
+                    [
+                        (1 * 1.0 + 0 * 1.0 / 2.0 + 2 * 1.0 / 3 + 0 * 1.0 / 4.0) / 2.0,
+                        (0 * 1.0 + 1 * 1.0 / 2.0 + 0 * 1.0 / 3.0 + 2.0 * 1.0 / 4.0)
+                        / 2.0,
+                    ]
+                ).sum()
+            )
+            < 0.01,
+            msg="ap test10 failed",
+        )
 
         mtr.reset()
         output = torch.Tensor(5, 4).fill_(0.25)
@@ -352,7 +367,7 @@ class TestMeters(unittest.TestCase):
         output = torch.Tensor(1, 4).fill_(0.25)
         target = torch.ones(1, 4)
         mtr.add(output, target)
-        self.assertEqual(mtr.value().size(0), 4, msg='ap test11 failed')
+        self.assertEqual(mtr.value().size(0), 4, msg="ap test11 failed")
 
     def testmAPMeter(self):
         mtr = meter.mAPMeter()
@@ -362,49 +377,55 @@ class TestMeters(unittest.TestCase):
         mtr.add(output, target)
 
         ap = mtr.value()
-        val = (1 * 1.0 / 1.0 + 0 * 1.0 / 2.0 +
-               2.0 * 1.0 / 3.0 + 0 * 1.0 / 4.0) / 2.0
-        self.assertTrue(
-            math.fabs(ap - val) < 0.01,
-            msg='mAP test1 failed'
-        )
+        val = (1 * 1.0 / 1.0 + 0 * 1.0 / 2.0 + 2.0 * 1.0 / 3.0 + 0 * 1.0 / 4.0) / 2.0
+        self.assertTrue(math.fabs(ap - val) < 0.01, msg="mAP test1 failed")
 
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
-        val = (1 * 0.1 / 0.1 + 0 * 2.0 / 2.1 +
-               1.1 * 1 / 3.1 + 0 * 1.0 / 4.0) / 2.0
-        self.assertTrue(
-            math.fabs(ap - val) < 0.01, msg='mAP test2 failed')
+        val = (1 * 0.1 / 0.1 + 0 * 2.0 / 2.1 + 1.1 * 1 / 3.1 + 0 * 1.0 / 4.0) / 2.0
+        self.assertTrue(math.fabs(ap - val) < 0.01, msg="mAP test2 failed")
 
         # Test multiple K's
         target = torch.Tensor([[0, 1, 0, 1], [0, 1, 0, 1]]).transpose(0, 1)
-        output = torch.Tensor([[.1, .2, .3, 4], [4, 3, 2, 1]]).transpose(0, 1)
+        output = torch.Tensor([[0.1, 0.2, 0.3, 4], [4, 3, 2, 1]]).transpose(0, 1)
         weight = torch.Tensor([[1.0, 0.5, 2.0, 3.0]]).transpose(0, 1)
         mtr.reset()
         mtr.add(output, target, weight)
         ap = mtr.value()
         self.assertTrue(
-            math.fabs(ap -
-                      torch.Tensor([
-                          (1 * 3.0 / 3.0 + 0 * 3.0 / 5.0 +
-                           3.5 * 1 / 5.5 + 0 * 3.5 / 6.5) / 2.0,
-                          (0 * 1.0 / 1.0 + 1 * 0.5 / 1.5 +
-                              0 * 0.5 / 3.5 + 1 * 3.5 / 6.5) / 2.0
-                      ]).mean()) < 0.01, msg='mAP test3 failed')
+            math.fabs(
+                ap
+                - torch.Tensor(
+                    [
+                        (1 * 3.0 / 3.0 + 0 * 3.0 / 5.0 + 3.5 * 1 / 5.5 + 0 * 3.5 / 6.5)
+                        / 2.0,
+                        (0 * 1.0 / 1.0 + 1 * 0.5 / 1.5 + 0 * 0.5 / 3.5 + 1 * 3.5 / 6.5)
+                        / 2.0,
+                    ]
+                ).mean()
+            )
+            < 0.01,
+            msg="mAP test3 failed",
+        )
 
         mtr.reset()
         mtr.add(output, target)
         ap = mtr.value()
         self.assertTrue(
-            math.fabs(ap -
-                      torch.Tensor([
-                          (1 * 1.0 + 0 * 1.0 / 2.0 + 2 *
-                           1.0 / 3.0 + 0 * 1.0 / 4.0) / 2.0,
-                          (0 * 1.0 + 1 * 1.0 / 2.0 + 0 *
-                              1.0 / 3.0 + 2 * 1.0 / 4.0) / 2.0
-                      ]).mean()) < 0.01, msg='mAP test4 failed')
+            math.fabs(
+                ap
+                - torch.Tensor(
+                    [
+                        (1 * 1.0 + 0 * 1.0 / 2.0 + 2 * 1.0 / 3.0 + 0 * 1.0 / 4.0) / 2.0,
+                        (0 * 1.0 + 1 * 1.0 / 2.0 + 0 * 1.0 / 3.0 + 2 * 1.0 / 4.0) / 2.0,
+                    ]
+                ).mean()
+            )
+            < 0.01,
+            msg="mAP test4 failed",
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

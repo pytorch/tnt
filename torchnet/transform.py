@@ -1,17 +1,18 @@
 from six import iteritems
-from .utils.table import canmergetensor as canmerge
-from .utils.table import mergetensor as mergetensor
+
+from .utils.table import canmergetensor as canmerge, mergetensor as mergetensor
 
 
 def compose(transforms):
     assert isinstance(transforms, list)
     for tr in transforms:
-        assert callable(tr), 'list of functions expected'
+        assert callable(tr), "list of functions expected"
 
     def composition(z):
         for tr in transforms:
             z = tr(z)
         return z
+
     return composition
 
 
@@ -31,6 +32,7 @@ def tablemergekeys():
                         mergetbl[key] = []
                     mergetbl[key].append(value)
         return mergetbl
+
     return mergekeys
 
 
@@ -42,10 +44,13 @@ def makebatch(merge=None):
     if merge:
         makebatch = compose([tablemergekeys(), merge])
     else:
-        makebatch = compose([
-            tablemergekeys(),
-            tableapply(lambda field: mergetensor(field)
-                       if canmerge(field) else field)
-        ])
+        makebatch = compose(
+            [
+                tablemergekeys(),
+                tableapply(
+                    lambda field: mergetensor(field) if canmerge(field) else field
+                ),
+            ]
+        )
 
     return lambda samples: makebatch(samples)

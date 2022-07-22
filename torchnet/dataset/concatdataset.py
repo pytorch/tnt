@@ -1,5 +1,6 @@
-from .dataset import Dataset
 import numpy as np
+
+from .dataset import Dataset
 
 
 class ConcatDataset(Dataset):
@@ -18,7 +19,7 @@ class ConcatDataset(Dataset):
         super(ConcatDataset, self).__init__()
 
         self.datasets = list(datasets)
-        assert len(datasets) > 0, 'datasets should not be an empty iterable'
+        assert len(datasets) > 0, "datasets should not be an empty iterable"
         self.cum_sizes = np.cumsum([len(x) for x in self.datasets])
 
     def __len__(self):
@@ -26,7 +27,7 @@ class ConcatDataset(Dataset):
 
     def __getitem__(self, idx):
         super(ConcatDataset, self).__getitem__(idx)
-        dataset_index = self.cum_sizes.searchsorted(idx, 'right')
+        dataset_index = self.cum_sizes.searchsorted(idx, "right")
 
         if dataset_index == 0:
             dataset_idx = idx

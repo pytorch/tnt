@@ -1,6 +1,8 @@
 import math
-from . import meter
+
 import numpy as np
+
+from . import meter
 
 
 class AverageValueMeter(meter.Meter):
@@ -24,7 +26,7 @@ class AverageValueMeter(meter.Meter):
             self.m_s += n * (value - self.mean_old) * (value - self.mean)
             self.mean_old = self.mean
             self.std = np.sqrt(self.m_s / (self.n + n - 1.0))
-        self.var = self.std ** 2
+        self.var = self.std**2
 
         self.n += n
 
