@@ -46,6 +46,6 @@ mlog = MeterLogger(server="Server's IP", nclass=10, title="mnist")
 ```
 
 
-## Figure
+## Figure 
 
 ![visdom.png](meterlogger.png)
