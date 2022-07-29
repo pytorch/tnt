@@ -13,6 +13,7 @@ from dataclasses import fields, is_dataclass
 from typing import Any, Mapping, Protocol, runtime_checkable, TypedDict, TypeVar
 
 import torch
+from torchtnt.utils.version import is_torch_version_geq_1_12
 
 
 def get_device_from_env() -> torch.device:
@@ -35,8 +36,11 @@ def get_device_from_env() -> torch.device:
             )
         device = torch.device(f"cuda:{local_rank}")
         torch.cuda.set_device(device)
-    # TODO(ananthsub) Add torch version checks
-    elif torch.backends.mps.is_built() and torch.backends.mps.is_available():
+    elif (
+        is_torch_version_geq_1_12()
+        and torch.backends.mps.is_built()
+        and torch.backends.mps.is_available()
+    ):
         device = torch.device("mps")
     else:
         device = torch.device("cpu")
