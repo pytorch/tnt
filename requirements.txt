@@ -1,3 +1,5 @@
 numpy
-visdom
+packaging
 psutil
+setuptools
+visdom
