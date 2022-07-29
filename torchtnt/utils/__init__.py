@@ -9,6 +9,7 @@ from .device import (
     get_psutil_cpu_stats,
     GPUStats,
 )
+from .early_stop_checker import EarlyStopChecker
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
 from .version import (
     get_python_version,
@@ -26,6 +27,7 @@ __all__ = [
     "CudaDataPrefetcher",
     "copy_data_to_device",
     "CPUStats",
+    "EarlyStopChecker",
     "get_device_from_env",
     "get_nvidia_smi_gpu_stats",
     "get_psutil_cpu_stats",
