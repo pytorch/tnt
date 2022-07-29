@@ -9,6 +9,7 @@ from .device import (
     get_psutil_cpu_stats,
     GPUStats,
 )
+from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
 from .version import (
     get_python_version,
     get_torch_version,
@@ -29,6 +30,9 @@ __all__ = [
     "get_nvidia_smi_gpu_stats",
     "get_psutil_cpu_stats",
     "GPUStats",
+    "is_out_of_cpu_memory",
+    "is_out_of_cuda_memory",
+    "is_out_of_memory_error",
     "get_python_version",
     "get_torch_version",
     "is_torch_version_geq_1_10",
