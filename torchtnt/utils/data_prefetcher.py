@@ -12,6 +12,7 @@ from torchtnt.utils.device import copy_data_to_device
 Batch = TypeVar("Batch")
 
 
+# pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
 class CudaDataPrefetcher(Iterator):
     r"""An iterator that prefetches batches and moves them to the device.
 
@@ -39,6 +40,7 @@ class CudaDataPrefetcher(Iterator):
 
     def __init__(
         self,
+        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
         data_iterable: Iterable,
         device: torch.device,
         num_prefetch_batches: int = 1,
@@ -60,6 +62,7 @@ class CudaDataPrefetcher(Iterator):
 
     def _reset(self) -> None:
         self._prefetched: bool = False
+        # pyre-fixme[34]: `Variable[Batch]` isn't present in the function's parameters.
         self._batches: List[Batch] = []
         self._events: List[torch.cuda.Event] = []
         self._prefetch_stream = torch.cuda.Stream()
@@ -72,6 +75,7 @@ class CudaDataPrefetcher(Iterator):
             except StopIteration:
                 return
 
+    # pyre-fixme[24]: Generic type `Iterator` expects 1 type parameter.
     def _fetch_next_batch(self, data_iter: Iterator) -> None:
         try:
             next_batch = next(data_iter)
@@ -90,6 +94,7 @@ class CudaDataPrefetcher(Iterator):
         self._reset()
         return self
 
+    # pyre-fixme[34]: `Variable[Batch]` isn't present in the function's parameters.
     def __next__(self) -> Batch:
         if not self._prefetched:
             self._prefetch()
