@@ -9,6 +9,13 @@ from .device import (
     get_psutil_cpu_stats,
     GPUStats,
 )
+
+from .distributed import (
+    all_gather_tensors,
+    get_global_rank,
+    get_process_group_backend_from_device,
+    PGWrapper,
+)
 from .early_stop_checker import EarlyStopChecker
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
 from .seed import seed
@@ -24,7 +31,6 @@ from .version import (
     is_windows,
 )
 
-
 __all__ = [
     "CudaDataPrefetcher",
     "copy_data_to_device",
@@ -34,6 +40,10 @@ __all__ = [
     "get_psutil_cpu_stats",
     "GPUStats",
     "EarlyStopChecker",
+    "all_gather_tensors",
+    "get_global_rank",
+    "get_process_group_backend_from_device",
+    "PGWrapper",
     "is_out_of_cpu_memory",
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",

@@ -14,7 +14,7 @@ from typing import Any, Dict
 from unittest import mock
 
 import torch
-from torchtnt.utils import (
+from torchtnt.utils.device import (
     copy_data_to_device,
     get_device_from_env,
     get_nvidia_smi_gpu_stats,
