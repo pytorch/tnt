@@ -19,6 +19,7 @@ from .distributed import (
 from .early_stop_checker import EarlyStopChecker
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
 from .seed import seed
+from .test_utils import get_pet_launch_config
 from .timer import Timer
 from .version import (
     get_python_version,
@@ -48,6 +49,7 @@ __all__ = [
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
     "seed",
+    "get_pet_launch_config",
     "Timer",
     "get_python_version",
     "get_torch_version",
