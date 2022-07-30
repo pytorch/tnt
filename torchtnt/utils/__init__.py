@@ -9,7 +9,6 @@ from .device import (
     get_psutil_cpu_stats,
     GPUStats,
 )
-
 from .distributed import (
     all_gather_tensors,
     get_global_rank,
@@ -17,6 +16,7 @@ from .distributed import (
     PGWrapper,
 )
 from .early_stop_checker import EarlyStopChecker
+from .env import init_from_env
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
 from .seed import seed
 from .test_utils import get_pet_launch_config
@@ -40,11 +40,12 @@ __all__ = [
     "get_nvidia_smi_gpu_stats",
     "get_psutil_cpu_stats",
     "GPUStats",
-    "EarlyStopChecker",
     "all_gather_tensors",
     "get_global_rank",
     "get_process_group_backend_from_device",
     "PGWrapper",
+    "EarlyStopChecker",
+    "init_from_env",
     "is_out_of_cpu_memory",
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
