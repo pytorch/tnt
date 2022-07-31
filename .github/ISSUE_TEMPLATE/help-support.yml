@@ -1,0 +1,15 @@
+name: 📚 Help Support
+description: Do you need help/support? Send us your questions.
+
+body:
+  - type: textarea
+    attributes:
+      label: 📚 Question
+      description: >
+        Description of your question or what you need support with.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for contributing 🎉!
