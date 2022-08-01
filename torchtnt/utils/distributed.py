@@ -197,7 +197,7 @@ def rank_zero_fn(fn: Callable[..., TReturn]) -> Callable[..., Optional[TReturn]]
 
     Example:
 
-        >>> from torchtlc.utilities.distributed import rank_zero_fn
+        >>> from torchtnt.utilities.distributed import rank_zero_fn
         >>> @rank_zero_fn
         ... def foo():
         ...     return 1
