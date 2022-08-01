@@ -229,8 +229,7 @@ class _BatchNormXd(torch.nn.modules.batchnorm._BatchNorm):
     When using :function:`revert_sync_batchnorm` this sanity check is lost.
     """
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def _check_input_dim(self, input):
+    def _check_input_dim(self, input) -> None:
         return
 
 
