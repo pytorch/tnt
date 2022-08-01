@@ -1,5 +1,2 @@
-numpy
-packaging
-psutil
+torch
 setuptools
-visdom
