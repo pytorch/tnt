@@ -18,6 +18,15 @@ from .distributed import (
 from .early_stop_checker import EarlyStopChecker
 from .env import init_from_env
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
+
+from .rank_zero_log import (
+    rank_zero_critical,
+    rank_zero_debug,
+    rank_zero_error,
+    rank_zero_info,
+    rank_zero_print,
+    rank_zero_warn,
+)
 from .seed import seed
 from .test_utils import get_pet_launch_config
 from .timer import Timer
@@ -49,6 +58,12 @@ __all__ = [
     "is_out_of_cpu_memory",
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
+    "rank_zero_critical",
+    "rank_zero_debug",
+    "rank_zero_error",
+    "rank_zero_info",
+    "rank_zero_print",
+    "rank_zero_warn",
     "seed",
     "get_pet_launch_config",
     "Timer",
