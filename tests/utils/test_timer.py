@@ -16,7 +16,7 @@ from torchtnt.utils.timer import Timer
 class TimerTest(unittest.TestCase):
     def assert_within_tolerance(
         self, expected: float, actual: float, percent_tolerance: float = 10
-    ):
+    ) -> None:
         """Assert that a value is correct within a percent tolerance"""
         error = abs(expected - actual)
         tolerance = expected * (percent_tolerance / 100)
