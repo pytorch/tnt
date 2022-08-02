@@ -24,7 +24,7 @@ NUM_MP_TESTS = 2  # number of tests needing multiprocessing sockets
 
 
 class DistributedTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         """
         Preparation: Pre-aggregate all free socket ports
         """
@@ -100,7 +100,7 @@ class DistributedTest(unittest.TestCase):
             assert val.shape == (idx + 1, 4 - idx)
             assert (val == torch.ones_like(val)).all()
 
-    def test_rank_zero_fn_rank_zero(self):
+    def test_rank_zero_fn_rank_zero(self) -> None:
         @rank_zero_fn
         def foo():
             return 1
