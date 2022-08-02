@@ -5,10 +5,11 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, Protocol, Union
+from typing import Dict, Union
 
 from numpy import ndarray
 from torch import Tensor
+from typing_extensions import Protocol
 
 Scalar = Union[Tensor, ndarray, int, float]
 

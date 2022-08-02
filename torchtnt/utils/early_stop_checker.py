@@ -6,9 +6,10 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Any, Callable, Dict, final, Literal, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import torch
+from typing_extensions import final, Literal
 
 _log: logging.Logger = logging.getLogger(__name__)
 

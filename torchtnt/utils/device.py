@@ -10,10 +10,11 @@ import shutil
 import subprocess
 from collections import defaultdict
 from dataclasses import fields, is_dataclass
-from typing import Any, Mapping, Protocol, runtime_checkable, TypedDict, TypeVar
+from typing import Any, Mapping, TypeVar
 
 import torch
 from torchtnt.utils.version import is_torch_version_geq_1_12
+from typing_extensions import Protocol, runtime_checkable, TypedDict
 
 
 def get_device_from_env() -> torch.device:
