@@ -1,5 +1,7 @@
+torch
 numpy
-packaging
+fsspec
+tensorboard
 psutil
+typing_extensions
 setuptools
-visdom
