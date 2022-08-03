@@ -7,10 +7,14 @@
 
 import time
 import unittest
+from datetime import timedelta
 from random import random
 
 import torch
-from torchtnt.utils.timer import Timer
+import torch.distributed as dist
+import torch.distributed.launcher as launcher
+from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.timer import FullSyncPeriodicTimer, Timer
 
 
 class TimerTest(unittest.TestCase):
@@ -208,3 +212,63 @@ class TimerTest(unittest.TestCase):
         self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
         self.assert_within_tolerance(timer.total_time_seconds, 0.5)
         self.assert_within_tolerance(timer.total_time_seconds, elapsed_time_ms / 1000)
+
+
+class FullSyncPeriodicTimerTest(unittest.TestCase):
+    @classmethod
+    def _full_sync_worker_without_timeout(cls):
+        dist.init_process_group("gloo")
+        process_group = dist.group.WORLD
+        interval_threshold = timedelta(seconds=5)
+        fsp_timer = FullSyncPeriodicTimer(interval_threshold, process_group)
+        return fsp_timer.check()
+
+    @classmethod
+    def _full_sync_worker_with_timeout(cls, timeout: int):
+        dist.init_process_group("gloo")
+        process_group = dist.group.WORLD
+        interval_threshold = timedelta(seconds=5)
+        fsp_timer = FullSyncPeriodicTimer(interval_threshold, process_group)
+        time.sleep(timeout)
+        fsp_timer.check()  # self._prev_work is assigned, next time the check is called, it will be executed
+        return fsp_timer.check()  # Since 8>5, we will see flag set to True
+
+    def test_full_sync_pt_multi_process_check_false(self) -> None:
+        config = get_pet_launch_config(2)
+        # Launch 2 worker processes. Each will check if time diff > interval threshold
+        result = launcher.elastic_launch(
+            config, entrypoint=self._full_sync_worker_without_timeout
+        )()
+        # Both processes should return False
+        self.assertFalse(result[0])
+        self.assertFalse(result[1])
+
+    def test_full_sync_pt_multi_process_check_true(self) -> None:
+        config = get_pet_launch_config(2)
+        # Launch 2 worker processes. Each will check time diff > interval threshold
+        result = launcher.elastic_launch(
+            config, entrypoint=self._full_sync_worker_with_timeout
+        )(8)
+        # Both processes should return True
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+    def test_full_sync_pt_multi_process_edgecase(self) -> None:
+        config = get_pet_launch_config(2)
+        # Launch 2 worker processes. Each will check time diff >= interval threshold
+        result = launcher.elastic_launch(
+            config, entrypoint=self._full_sync_worker_with_timeout
+        )(5)
+
+        # Both processes should return True
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+        # Launch 2 worker processes. Each will check time diff >= interval threshold
+        result = launcher.elastic_launch(
+            config, entrypoint=self._full_sync_worker_with_timeout
+        )(4)
+
+        # Both processes should return False
+        self.assertFalse(result[0])
+        self.assertFalse(result[1])
