@@ -25,7 +25,7 @@ def rank_zero_debug(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.debug(*args, **kwargs)
+    logger.debug(*args, stacklevel=2, **kwargs)
 
 
 def rank_zero_info(
@@ -34,7 +34,7 @@ def rank_zero_info(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.info(*args, **kwargs)
+    logger.info(*args, stacklevel=2, **kwargs)
 
 
 def rank_zero_warn(
@@ -43,7 +43,7 @@ def rank_zero_warn(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.warn(*args, **kwargs)
+    logger.warn(*args, stacklevel=2, **kwargs)
 
 
 def rank_zero_error(
@@ -52,7 +52,7 @@ def rank_zero_error(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.error(*args, **kwargs)
+    logger.error(*args, stacklevel=2, **kwargs)
 
 
 def rank_zero_critical(
@@ -61,4 +61,4 @@ def rank_zero_critical(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.critical(*args, **kwargs)
+    logger.critical(*args, stacklevel=2, **kwargs)

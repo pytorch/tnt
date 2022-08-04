@@ -24,19 +24,19 @@ class RankZeroLogTest(unittest.TestCase):
         logger = MagicMock()
 
         rank_zero_debug("foo", logger=logger)
-        logger.debug.assert_called_once_with("foo")
+        logger.debug.assert_called_once_with("foo", stacklevel=2)
 
         rank_zero_info("foo", logger=logger)
-        logger.info.assert_called_once_with("foo")
+        logger.info.assert_called_once_with("foo", stacklevel=2)
 
         rank_zero_warn("foo", logger=logger)
-        logger.warn.assert_called_once_with("foo")
+        logger.warn.assert_called_once_with("foo", stacklevel=2)
 
         rank_zero_error("foo", logger=logger)
-        logger.error.assert_called_once_with("foo")
+        logger.error.assert_called_once_with("foo", stacklevel=2)
 
         rank_zero_critical("foo", logger=logger)
-        logger.critical.assert_called_once_with("foo")
+        logger.critical.assert_called_once_with("foo", stacklevel=2)
 
     @patch.dict("os.environ", {"RANK": "1"}, clear=True)
     def test_rank_zero_fn_rank_non_zero(self) -> None:
