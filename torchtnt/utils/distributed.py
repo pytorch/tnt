@@ -5,8 +5,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# pyre-ignore-all-errors[2]
-
 import os
 from functools import wraps
 from typing import Any, Callable, List, Optional, TypeVar, Union
@@ -48,11 +46,13 @@ class PGWrapper:
             return
         dist.barrier(group=self.pg)
 
+    # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
     def broadcast_object_list(self, obj_list: List[Any], src: int = 0) -> None:
         if self.pg is None:
             return
         dist.broadcast_object_list(obj_list, src=src, group=self.pg)
 
+    # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
     def all_gather_object(self, obj_list: List[Any], obj: Any) -> None:
         if self.pg is None:
             obj_list[0] = obj
@@ -61,7 +61,9 @@ class PGWrapper:
 
     def scatter_object_list(
         self,
+        # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
         output_list: List[Any],
+        # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
         input_list: Optional[List[Any]],
         src: int = 0,
     ) -> None:
@@ -229,7 +231,7 @@ class _BatchNormXd(torch.nn.modules.batchnorm._BatchNorm):
     When using :function:`revert_sync_batchnorm` this sanity check is lost.
     """
 
-    def _check_input_dim(self, input) -> None:
+    def _check_input_dim(self, input: Tensor) -> None:
         return
 
 
