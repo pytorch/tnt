@@ -18,7 +18,7 @@ body:
         ```python
         # All necessary imports at the beginning
         import torch
-        import torchsnapshot
+        import torchtnt
 
         # A succinct reproducing example trimmed down to the essential parts
 
@@ -43,7 +43,7 @@ body:
     attributes:
       label: Versions
       description: |
-        Please run the following and paste the output below. Make sure the version numbers of all relevant packages (e.g. torch, torchsnapshot, other domain packages) are included.
+        Please run the following and paste the output below. Make sure the version numbers of all relevant packages (e.g. torch, torchtnt, other domain packages) are included.
         ```sh
         wget https://raw.githubusercontent.com/pytorch/pytorch/master/torch/utils/collect_env.py
         # For security purposes, please check the contents of collect_env.py before running it.
