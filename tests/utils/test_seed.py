@@ -49,7 +49,7 @@ class SeedTest(unittest.TestCase):
                 seed(42, deterministic=deterministic)
                 self.assertFalse(torch.backends.cudnn.deterministic)
                 self.assertTrue(torch.backends.cudnn.benchmark)
-                self.assertEquals(0, torch.get_deterministic_debug_mode())
+                self.assertEqual(0, torch.get_deterministic_debug_mode())
                 self.assertFalse(torch.are_deterministic_algorithms_enabled())
                 self.assertFalse(torch.is_deterministic_algorithms_warn_only_enabled())
 

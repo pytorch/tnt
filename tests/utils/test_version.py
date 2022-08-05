@@ -29,21 +29,21 @@ class TestVersion(unittest.TestCase):
     @patch("platform.python_version")
     def test_get_python_version(self, mock_python_version: MagicMock) -> None:
         mock_python_version.return_value = "3.8.0"
-        self.assertEquals(version.get_python_version(), Version("3.8.0"))
-        self.assertNotEquals(version.get_python_version(), Version("3.10.5"))
+        self.assertEqual(version.get_python_version(), Version("3.8.0"))
+        self.assertNotEqual(version.get_python_version(), Version("3.10.5"))
 
         mock_python_version.return_value = "3.10.5"
-        self.assertNotEquals(version.get_python_version(), Version("3.8.0"))
-        self.assertEquals(version.get_python_version(), Version("3.10.5"))
+        self.assertNotEqual(version.get_python_version(), Version("3.8.0"))
+        self.assertEqual(version.get_python_version(), Version("3.10.5"))
 
     def test_get_torch_version(self) -> None:
         with patch.object(torch, "__version__", "1.8.3"):
-            self.assertEquals(version.get_torch_version(), Version("1.8.3"))
-            self.assertNotEquals(version.get_torch_version(), Version("1.12.0"))
+            self.assertEqual(version.get_torch_version(), Version("1.8.3"))
+            self.assertNotEqual(version.get_torch_version(), Version("1.12.0"))
 
         with patch.object(torch, "__version__", "1.12.0"):
-            self.assertNotEquals(version.get_torch_version(), Version("1.8.3"))
-            self.assertEquals(version.get_torch_version(), Version("1.12.0"))
+            self.assertNotEqual(version.get_torch_version(), Version("1.8.3"))
+            self.assertEqual(version.get_torch_version(), Version("1.12.0"))
 
     def test_torch_version_comparators(self) -> None:
         with patch.object(torch, "__version__", "1.7.0"):

@@ -34,8 +34,8 @@ class TensorBoardLoggerTest(unittest.TestCase):
             acc = EventAccumulator(log_dir)
             acc.Reload()
             for i, event in enumerate(acc.Tensors("test_log")):
-                self.assertAlmostEquals(event.tensor_proto.float_val[0], float(i) ** 2)
-                self.assertEquals(event.step, i)
+                self.assertAlmostEqual(event.tensor_proto.float_val[0], float(i) ** 2)
+                self.assertEqual(event.step, i)
 
     def test_log_dict(self) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
@@ -48,16 +48,16 @@ class TensorBoardLoggerTest(unittest.TestCase):
             acc.Reload()
             for i in range(5):
                 tensor_tag = acc.Tensors(f"log_dict_{i}")[0]
-                self.assertAlmostEquals(
+                self.assertAlmostEqual(
                     tensor_tag.tensor_proto.float_val[0], float(i) ** 2
                 )
-                self.assertEquals(tensor_tag.step, 1)
+                self.assertEqual(tensor_tag.step, 1)
 
     def test_log_rank_zero(self) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             with patch.dict("os.environ", {"RANK": "1"}):
                 logger = TensorBoardLogger(path=log_dir)
-                self.assertEquals(logger.writer, None)
+                self.assertEqual(logger.writer, None)
 
     @staticmethod
     def _setup_worker(rank: int, world_size: int, free_port: int) -> None:
