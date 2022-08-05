@@ -5,13 +5,18 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import time
 import unittest
 from collections import deque, namedtuple
 from dataclasses import dataclass
 from typing import Deque
 
 import torch
-from torchtnt.utils.memory import get_tensor_size_bytes_map
+from torchtnt.utils.memory import (
+    get_tensor_size_bytes_map,
+    measure_rss_deltas,
+    RSSProfiler,
+)
 
 
 class MemoryTest(unittest.TestCase):
@@ -213,3 +218,17 @@ class MemoryTest(unittest.TestCase):
                 z = metric.window_buffer.buffers.popleft()
                 self.assertTrue(z in tensor_map)
                 self.assertEqual(tensor_map[z], z.size().numel() * z.element_size())
+
+    def test_rss_measure_func(self) -> None:
+        rss_deltas = []
+        with measure_rss_deltas(rss_deltas=rss_deltas):
+            torch.randn(5000, 5000)
+            time.sleep(2)
+        self.assertTrue(len(rss_deltas) > 0)
+
+    def test_rss_profiler(self) -> None:
+        rss_profiler = RSSProfiler()
+        with rss_profiler.profile("foo"):
+            torch.randn(5000, 5000)
+            time.sleep(2)
+        self.assertTrue(len(rss_profiler.rss_deltas_bytes["foo"]) > 0)
