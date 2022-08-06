@@ -21,6 +21,7 @@ from .distributed import (
 )
 from .early_stop_checker import EarlyStopChecker
 from .env import init_from_env
+from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
 
 from .rank_zero_log import (
@@ -59,6 +60,9 @@ __all__ = [
     "PGWrapper",
     "EarlyStopChecker",
     "init_from_env",
+    "get_tensor_size_bytes_map",
+    "measure_rss_deltas",
+    "RSSProfiler",
     "is_out_of_cpu_memory",
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
