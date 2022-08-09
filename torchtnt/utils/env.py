@@ -36,13 +36,17 @@ def init_from_env(
     pg_backend: T.Optional[str] = None,
     pg_timeout: timedelta = default_pg_timeout,
 ) -> torch.device:
-    """
-    Utility function that initializes the device and process group, if applicable.
-    The global process group is initialized only if:
+    """Utility function that initializes the device and process group, if applicable.
+
+    The global process group is initialized only if
+
         - torch distributed is not already initialized
         - the program has been launched on multiple processes
+
     This is intended as a convenience to include at the beginning of scripts that follow
     a SPMD-style execution model.
+
+
     Args:
         device_type (str, optional): Device type to initialize. If None, device will be initialized
                                   based on environment

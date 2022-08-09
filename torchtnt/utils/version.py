@@ -23,9 +23,11 @@ def get_python_version() -> Version:
     """
     Get the current runtime Python version as a Version.
 
-    * if running in Python 3.8.0 *
-    >>> get_python_version()
-    '3.8.0'
+    Example::
+
+        # if running in Python 3.8.0
+        >>> get_python_version()
+        '3.8.0'
     """
     return Version(platform.python_version())
 
@@ -34,9 +36,11 @@ def get_torch_version() -> Version:
     """
     Get the PyTorch version for the current runtime environment as a Version.
 
-    * if running PyTorch 1.12.0 *
-    >>> get_torch_version()
-    '1.12.0'
+    Example::
+
+        # if running PyTorch 1.12.0
+        >>> get_torch_version()
+        '1.12.0'
     """
     try:
         if hasattr(torch, "__version__"):

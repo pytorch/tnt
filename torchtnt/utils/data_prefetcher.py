@@ -19,15 +19,18 @@ class CudaDataPrefetcher(Iterator):
     This class can be used to interleave data loading, host-to-device copies, and computation more effectively.
 
     Args:
+
         data_iterable: an Iterable containing the data to use for CudaDataPrefetcher construction
         device: the device to which data should be moved
         num_prefetch_batches: number of batches to prefetch
 
     Note:
+
         We recommend users leverage memory pinning when constructing their dataloader:
         https://pytorch.org/docs/stable/data.html#memory-pinning.
 
-    Examples::
+    Example::
+
         dataloader = ...
         device = torch.device("cuda")
         num_prefetch_batches = 2
@@ -35,7 +38,6 @@ class CudaDataPrefetcher(Iterator):
         for batch in data_prefetcher:
             # batch is already on device
             # operate on batch
-
     """
 
     def __init__(
