@@ -95,11 +95,9 @@ class TensorBoardLogger(MetricLogger):
             step (int, Optional): step value to record
         """
 
-        if not self._writer:
-            return
-
-        for k, v in payload.items():
-            self.log(k, v, step)
+        if self._writer:
+            for k, v in payload.items():
+                self.log(k, v, step)
 
     def log(self, name: str, data: Scalar, step: int) -> None:
         """Add scalar data to TensorBoard.
@@ -110,10 +108,20 @@ class TensorBoardLogger(MetricLogger):
             step (int, optional): step value to record
         """
 
-        if not self._writer:
-            return
+        if self._writer:
+            self._writer.add_scalar(name, data, global_step=step, new_style=True)
 
-        self._writer.add_scalar(name, data, global_step=step, new_style=True)
+    def log_text(self, name: str, data: str, step: int) -> None:
+        """Add text data to summary.
+
+        Args:
+            name (string): tag name used to identify data
+            data (string): string to save
+            step (int): step value to record
+        """
+
+        if self._writer:
+            self._writer.add_text(name, data, global_step=step)
 
     def log_hparams(
         self, hparams: Dict[str, Scalar], metrics: Dict[str, Scalar]
@@ -125,26 +133,20 @@ class TensorBoardLogger(MetricLogger):
             metrics (dict): dictionary of name of metric and corersponding values
         """
 
-        if not self._writer:
-            return
-
-        self._writer.add_hparams(hparams, metrics)
+        if self._writer:
+            self._writer.add_hparams(hparams, metrics)
 
     def flush(self) -> None:
         """Writes pending logs to disk."""
 
-        if not self._writer:
-            return
-
-        self._writer.flush()
+        if self._writer:
+            self._writer.flush()
 
     def close(self) -> None:
         """Close writer, flushing pending logs to disk.
         Logs cannot be written after `close` is called.
         """
 
-        if not self._writer:
-            return
-
-        self._writer.close()
-        self._writer = None
+        if self._writer:
+            self._writer.close()
+            self._writer = None

@@ -53,6 +53,22 @@ class TensorBoardLoggerTest(unittest.TestCase):
                 )
                 self.assertEqual(tensor_tag.step, 1)
 
+    def test_log_text(self) -> None:
+        with tempfile.TemporaryDirectory() as log_dir:
+            logger = TensorBoardLogger(path=log_dir)
+            for i in range(5):
+                logger.log_text("test_text", f"iter:{i}", i)
+            logger.close()
+
+            acc = EventAccumulator(log_dir)
+            acc.Reload()
+            for i, test_text_event in enumerate(acc.Tensors("test_text/text_summary")):
+                self.assertEqual(
+                    test_text_event.tensor_proto.string_val[0].decode("ASCII"),
+                    f"iter:{i}",
+                )
+                self.assertEqual(test_text_event.step, i)
+
     def test_log_rank_zero(self) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             with patch.dict("os.environ", {"RANK": "1"}):
