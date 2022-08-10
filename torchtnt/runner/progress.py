@@ -13,8 +13,8 @@ class Progress:
     """Use a dataclass for typed access to fields and to add state_dict/load_state_dict for convenience for checkpointing."""
 
     num_epochs_completed: int = 0
-    num_batches_completed: int = 0
-    num_batches_completed_in_epoch: int = 0
+    num_steps_completed: int = 0
+    num_steps_completed_in_epoch: int = 0
 
     def state_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -24,5 +24,5 @@ class Progress:
 
     def reset(self) -> None:
         self.num_epochs_completed = 0
-        self.num_batches_completed = 0
-        self.num_batches_completed_in_epoch = 0
+        self.num_steps_completed = 0
+        self.num_steps_completed_in_epoch = 0
