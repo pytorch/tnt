@@ -18,7 +18,7 @@ from torchtnt.utils.test_utils import get_pet_launch_config
 
 class FullSyncEarlyStopCheckerTest(unittest.TestCase):
     @classmethod
-    def _full_sync_worker(cls, coherence_mode: Optional[str]):
+    def _full_sync_worker(cls, coherence_mode: Optional[str]) -> bool:
         dist.init_process_group("gloo")
         full_sync_es = FullSyncEarlyStopChecker(
             EarlyStopChecker("min", 3), coherence_mode=coherence_mode
