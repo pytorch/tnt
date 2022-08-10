@@ -6,24 +6,19 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
-import socket
 import tempfile
 import unittest
 from unittest.mock import patch
 
-import torch
+import torch.distributed.launcher as launcher
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-from torch import distributed as dist, multiprocessing as mp
+from torch import distributed as dist
 
 from torchtnt.loggers.tensorboard import TensorBoardLogger
+from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class TensorBoardLoggerTest(unittest.TestCase):
-    def setUp(self) -> None:
-        sock = socket.socket()
-        sock.bind(("localhost", 0))
-        self._free_port = str(sock.getsockname()[1])
-
     def test_log(self) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             logger = TensorBoardLogger(path=log_dir)
@@ -76,20 +71,9 @@ class TensorBoardLoggerTest(unittest.TestCase):
                 self.assertEqual(logger.writer, None)
 
     @staticmethod
-    def _setup_worker(rank: int, world_size: int, free_port: int) -> None:
-        os.environ["MASTER_ADDR"] = "localhost"
-        os.environ["MASTER_PORT"] = free_port
-
-        dist.init_process_group(
-            "gloo" if not torch.cuda.is_available() else "nccl",
-            rank=rank,
-            world_size=world_size,
-        )
-
-    @staticmethod
-    def _test_distributed(rank: int, world_size: int, free_port: int) -> None:
-        TensorBoardLoggerTest._setup_worker(rank, world_size, free_port)
-
+    def _test_distributed() -> None:
+        dist.init_process_group("gloo")
+        rank = dist.get_rank()
         with tempfile.TemporaryDirectory() as log_dir:
             test_path = "correct"
             invalid_path = "invalid"
@@ -105,9 +89,5 @@ class TensorBoardLoggerTest(unittest.TestCase):
         dist.is_available(), reason="Torch distributed is needed to run"
     )
     def test_multiple_workers(self) -> None:
-        world_size = 4
-        mp.spawn(
-            self._test_distributed,
-            args=(world_size, self._free_port),
-            nprocs=world_size,
-        )
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_distributed)()
