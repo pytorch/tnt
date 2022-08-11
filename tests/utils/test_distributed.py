@@ -17,6 +17,7 @@ from torchtnt.utils.distributed import (
     get_process_group_backend_from_device,
     rank_zero_fn,
     revert_sync_batchnorm,
+    sync_bool,
 )
 from torchtnt.utils.test_utils import get_pet_launch_config
 
@@ -116,3 +117,57 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(
             torch.equal(batch_norm.running_var, original_batchnorm.running_var)
         )
+
+    @classmethod
+    def _full_sync_worker(cls, coherence_mode: Optional[str]):
+        dist.init_process_group("gloo")
+        if dist.get_rank() == 0:
+            val = True
+        else:
+            val = False
+        return sync_bool(val, coherence_mode=coherence_mode)
+
+    def test_full_sync_early_stop_single_process(self) -> None:
+        val = True
+        new_val = sync_bool(val)
+        # these should be the same in a single process case
+        self.assertEqual(val, new_val)
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_full_sync_early_stop_multi_process_coherence_mode_rank_zero(self) -> None:
+        config = get_pet_launch_config(2)
+        # Launch 2 worker processes. Each will check for early stopping
+        result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
+            "rank_zero"
+        )
+        # Both processes should return True using full sync checker with 'zero' coherence_mode
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_full_sync_early_stop_multi_process_coherence_mode_any(self) -> None:
+        config = get_pet_launch_config(2)
+        # Launch 2 worker processes. Each will check for early stopping
+        result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
+            "any"
+        )
+        # Both processes should return True using full sync checker with 'any' coherence_mode
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_full_sync_early_stop_multi_process_coherence_mode_all(self) -> None:
+        config = get_pet_launch_config(2)
+        # Launch 2 worker processes. Each will check for early stopping
+        result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
+            "all"
+        )
+        # Both processes should return False using full sync checker with 'all' coherence_mode
+        self.assertFalse(result[0])
+        self.assertFalse(result[1])

@@ -18,12 +18,12 @@ from .distributed import (
     get_global_rank,
     get_process_group_backend_from_device,
     PGWrapper,
+    sync_bool,
 )
 from .early_stop_checker import EarlyStopChecker
 from .env import init_from_env
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
-
 from .rank_zero_log import (
     rank_zero_critical,
     rank_zero_debug,
@@ -58,6 +58,7 @@ __all__ = [
     "get_global_rank",
     "get_process_group_backend_from_device",
     "PGWrapper",
+    "sync_bool",
     "EarlyStopChecker",
     "init_from_env",
     "get_tensor_size_bytes_map",

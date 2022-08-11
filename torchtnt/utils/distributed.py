@@ -14,6 +14,8 @@ import torch.distributed as dist
 import torch.nn.functional as F
 from torch import Tensor
 
+from typing_extensions import Literal
+
 
 class PGWrapper:
     """
@@ -288,3 +290,65 @@ def revert_sync_batchnorm(
         module_output.add_module(name, revert_sync_batchnorm(child, device))
     del module
     return module_output
+
+
+def sync_bool(
+    val: bool,
+    pg: Optional[dist.ProcessGroup] = None,
+    coherence_mode: Literal["any", "all", "rank_zero"] = "any",
+) -> bool:
+    """Utility to synchronize a boolean value across members of a provided process group.
+
+    In the case ``torch.distributed`` is not available or initialized, the input ``val`` is returned.
+
+    Args:
+        val (bool): boolean value to synchronize
+        pg: process group to use for synchronization. If not specified, the default process group is used.
+        coherence_mode (str): the manner in which the boolean value should be synchronized. 3 options are currently supported:
+            1. any (default): If any rank provides a True value, all ranks should receive True.
+            2. all: Only if all ranks provide a True value should all ranks receive True.
+            3. rank_zero: Makes rank 0 process's value the source of truth and broadcasts the result to all other processes.
+
+    Returns:
+        The synchronized boolean value.
+
+    Example::
+
+        >>> val = True
+        >>> # synced_val is True iff all ranks provide a True value to the function
+        >>> synced_val = sync_bool(val, coherence_mode="all")
+        >>> if synced_val:
+        >>>     print("success")
+
+    """
+    if not dist.is_available() or not dist.is_initialized():
+        return val
+
+    pg = pg or dist.group.WORLD
+    device = torch.device(
+        torch.cuda.current_device() if dist.get_backend(pg) == "nccl" else "cpu"
+    )
+    pg_wrapper = PGWrapper(pg)
+
+    dtype = torch.uint8
+    if pg_wrapper.get_world_size() > 256:
+        dtype = torch.int
+
+    indicator = (
+        torch.ones(1, device=device, dtype=dtype)
+        if val
+        else torch.zeros(1, device=device, dtype=dtype)
+    )
+
+    if coherence_mode == "rank_zero":
+        # Broadcast from rank 0 to all other ranks
+        dist.broadcast(indicator, src=0, group=pg)
+        return bool(indicator[0].item())
+    elif coherence_mode == "any":
+        # sum up the indicators across all the ranks.
+        dist.all_reduce(indicator, op=dist.ReduceOp.SUM)
+        return indicator.item() > 0
+    else:
+        # assume "all" coherence mode
+        dist.all_reduce(indicator, op=dist.ReduceOp.SUM)
+        return indicator.item() == pg_wrapper.get_world_size()
