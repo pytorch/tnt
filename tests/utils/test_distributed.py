@@ -5,35 +5,23 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import os
-import socket
 import unittest
 from typing import Optional
 from unittest.mock import patch
 
 import torch
+import torch.distributed as dist
+import torch.distributed.launcher as launcher
 from torchtnt.utils.distributed import (
     all_gather_tensors,
     get_process_group_backend_from_device,
     rank_zero_fn,
     revert_sync_batchnorm,
 )
-
-
-NUM_MP_TESTS = 2  # number of tests needing multiprocessing sockets
+from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class DistributedTest(unittest.TestCase):
-    def setUp(self) -> None:
-        """
-        Preparation: Pre-aggregate all free socket ports
-        """
-        self._free_ports = []
-        for _ in range(NUM_MP_TESTS):
-            sock = socket.socket()
-            sock.bind(("localhost", 0))
-            self._free_ports.append(str(sock.getsockname()[1]))
-
     def test_get_process_group_backend_cpu(self) -> None:
         device = torch.device("cpu")
         pg_backend = get_process_group_backend_from_device(device)
@@ -48,54 +36,42 @@ class DistributedTest(unittest.TestCase):
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
     def test_gather_uneven(self, world_size: Optional[int] = 4) -> None:
-        torch.multiprocessing.spawn(
-            self._test_ddp_gather_uneven_tensors,
-            args=(world_size, self._free_ports[0]),
-            nprocs=world_size,
-        )
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(
+            config, entrypoint=self._test_ddp_gather_uneven_tensors
+        )()
+
+    @staticmethod
+    def _test_ddp_gather_uneven_tensors() -> None:
+        dist.init_process_group("gloo")
+        rank = dist.get_rank()
+        world_size = dist.get_world_size()
+
+        tensor = torch.ones(rank)
+        result = all_gather_tensors(tensor)
+        assert len(result) == world_size
+        for idx in range(world_size):
+            assert len(result[idx]) == idx
+            assert (result[idx] == torch.ones_like(result[idx])).all()
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
-    def test_gather_uneven_multidim(self, world_size: Optional[int] = 4) -> None:
-        torch.multiprocessing.spawn(
-            self._test_ddp_gather_uneven_tensors_multidim,
-            args=(world_size, self._free_ports[1]),
-            nprocs=world_size,
-        )
+    def test_gather_uneven_multidim(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(
+            config, entrypoint=self._test_ddp_gather_uneven_tensors_multidim
+        )()
 
     @staticmethod
-    def _setup_ddp(rank: int, world_size: int, free_port: str) -> None:
-        os.environ["MASTER_ADDR"] = "localhost"
-        os.environ["MASTER_PORT"] = free_port
-
-        torch.distributed.init_process_group(
-            "gloo" if not torch.cuda.is_available() else "nccl",
-            rank=rank,
-            world_size=world_size,
-        )
-
-    @staticmethod
-    def _test_ddp_gather_uneven_tensors(
-        rank: int, worldsize: int, free_port: str
-    ) -> None:
-        DistributedTest._setup_ddp(rank, worldsize, free_port)
-        tensor = torch.ones(rank)
-        result = all_gather_tensors(tensor)
-        assert len(result) == worldsize
-        for idx in range(worldsize):
-            assert len(result[idx]) == idx
-            assert (result[idx] == torch.ones_like(result[idx])).all()
-
-    @staticmethod
-    def _test_ddp_gather_uneven_tensors_multidim(
-        rank: int, worldsize: int, free_port: str
-    ) -> None:
-        DistributedTest._setup_ddp(rank, worldsize, free_port)
+    def _test_ddp_gather_uneven_tensors_multidim() -> None:
+        dist.init_process_group("gloo")
+        rank = dist.get_rank()
+        world_size = dist.get_world_size()
         tensor = torch.ones(rank + 1, 4 - rank)
         result = all_gather_tensors(tensor)
-        assert len(result) == worldsize
-        for idx in range(worldsize):
+        assert len(result) == world_size
+        for idx in range(world_size):
             val = result[idx]
             assert val.shape == (idx + 1, 4 - idx)
             assert (val == torch.ones_like(val)).all()
