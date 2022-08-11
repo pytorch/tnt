@@ -22,7 +22,7 @@ def get_device_from_env() -> torch.device:
 
     This currently supports only CPU and GPU devices. If CUDA is available, this function also sets the CUDA device.
 
-    Within a distributed context, this function relies on the ``LOCAL_RANK` environment variable
+    Within a distributed context, this function relies on the ``LOCAL_RANK`` environment variable
     to be made available by the program launcher for setting the appropriate device index.
 
     Raises:
@@ -140,7 +140,8 @@ def get_nvidia_smi_gpu_stats(device: torch.device) -> GPUStats:  # pragma: no-co
          device: A GPU torch.device to get stats from.
 
     Returns:
-        A Dict[str, float] that maps gpu stats to their values.
+        dict (str, float): a dict that maps gpu stats to their values.
+
         Keys:
             - 'utilization_gpu_percent'
             - 'utilization_memory_percent'
@@ -219,12 +220,13 @@ class CPUStats(TypedDict):
 
 
 def get_psutil_cpu_stats() -> CPUStats:
-    """
-    Get CPU process stats using psutil.
+    """Get CPU process stats using psutil.
 
     Returns:
-        A Dict[str, float] that maps cpu stats to their values.
+        Dict[str, float]: a dict that maps cpu stats to their values.
+
         Keys:
+
             - 'cpu_vm_percent'
             - 'cpu_percent'
             - 'cpu_swap_percent'
