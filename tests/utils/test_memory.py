@@ -83,7 +83,7 @@ class MemoryTest(unittest.TestCase):
         """Test behavior with an input that has __dict__ attributes"""
 
         class Object:
-            def __init__(self, x, y):
+            def __init__(self, x: torch.Tensor, y: torch.Tensor) -> None:
                 self.x = x
                 self.y = y
                 self.z = 1
