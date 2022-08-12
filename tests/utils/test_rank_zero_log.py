@@ -19,7 +19,7 @@ from torchtnt.utils.rank_zero_log import (
 
 class RankZeroLogTest(unittest.TestCase):
     @patch.dict("os.environ", {"RANK": "0"}, clear=True)
-    def test_rank_zero_fn_rank_zero(self):
+    def test_rank_zero_fn_rank_zero(self) -> None:
 
         logger = MagicMock()
 
