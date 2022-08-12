@@ -4,8 +4,9 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+from abc import ABC, abstractmethod
 from collections import OrderedDict
-from typing import Any, Dict
+from typing import Any, Dict, TypeVar
 
 import torch
 import torch.nn as nn
@@ -165,4 +166,30 @@ class _AppStateMixin:
 
 class _OnExceptionMixin:
     def on_exception(self, state: State, exc: BaseException) -> None:
+        pass
+
+
+TTrainData = TypeVar("TTrainData")
+
+
+class TrainUnit(_AppStateMixin, _OnExceptionMixin, ABC):
+    """
+    Base interface for training.
+    """
+
+    def on_train_start(self, state: State) -> None:
+        pass
+
+    def on_train_epoch_start(self, state: State) -> None:
+        pass
+
+    @abstractmethod
+    # pyre-ignore: Missing return annotation [3]
+    def train_step(self, state: State, data: TTrainData) -> Any:
+        ...
+
+    def on_train_epoch_end(self, state: State) -> None:
+        pass
+
+    def on_train_end(self, state: State) -> None:
         pass
