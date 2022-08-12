@@ -170,6 +170,7 @@ class _OnExceptionMixin:
 
 
 TTrainData = TypeVar("TTrainData")
+TEvalData = TypeVar("TEvalData")
 
 
 class TrainUnit(_AppStateMixin, _OnExceptionMixin, ABC):
@@ -192,4 +193,23 @@ class TrainUnit(_AppStateMixin, _OnExceptionMixin, ABC):
         pass
 
     def on_train_end(self, state: State) -> None:
+        pass
+
+
+class EvalUnit(_AppStateMixin, _OnExceptionMixin, ABC):
+    def on_eval_start(self, state: State) -> None:
+        pass
+
+    def on_eval_epoch_start(self, state: State) -> None:
+        pass
+
+    @abstractmethod
+    # pyre-ignore: Missing return annotation [3]
+    def eval_step(self, state: State, data: TEvalData) -> Any:
+        ...
+
+    def on_eval_epoch_end(self, state: State) -> None:
+        pass
+
+    def on_eval_end(self, state: State) -> None:
         pass
