@@ -163,6 +163,33 @@ class _AppStateMixin:
         else:
             super().__delattr__(name)
 
+
 class _OnExceptionMixin:
     def on_exception(self, state: State, exc: BaseException) -> None:
+        pass
+
+
+TTrainData = TypeVar("TTrainData")
+
+
+class TrainUnit(_AppStateMixin, _OnExceptionMixin, ABC):
+    """
+    Base interface for training.
+    """
+
+    def on_train_start(self, state: State) -> None:
+        pass
+
+    def on_train_epoch_start(self, state: State) -> None:
+        pass
+
+    @abstractmethod
+    # pyre-ignore: Missing return annotation [3]
+    def train_step(self, state: State, data: TTrainData) -> Any:
+        ...
+
+    def on_train_epoch_end(self, state: State) -> None:
+        pass
+
+    def on_train_end(self, state: State) -> None:
         pass
