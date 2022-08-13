@@ -21,8 +21,3 @@ class Progress:
 
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         self.__dict__.update(state_dict)
-
-    def reset(self) -> None:
-        self.num_epochs_completed = 0
-        self.num_steps_completed = 0
-        self.num_steps_completed_in_epoch = 0
