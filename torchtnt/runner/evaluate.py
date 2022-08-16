@@ -29,6 +29,7 @@ def evaluate(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """Makes a single pass through the evaluation dataloader."""
+    torch._C._log_api_usage_once("torchtnt.runner.evaluate")
     state = State(
         entry_point=EntryPoint.EVALUATE,
         eval_state=PhaseState(

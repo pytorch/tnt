@@ -7,6 +7,8 @@
 import logging
 from typing import Iterable, Optional
 
+import torch
+
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.train import _train_epoch_impl
@@ -29,6 +31,7 @@ def fit(
     evaluate_every_n_epochs: Optional[int] = 1,
 ) -> State:
     """Function that interleaves training & evaluation."""
+    torch._C._log_api_usage_once("torchtnt.runner.fit")
     state = State(
         entry_point=EntryPoint.FIT,
         train_state=PhaseState(

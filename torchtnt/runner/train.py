@@ -34,6 +34,7 @@ def train(
     max_epochs: Optional[int],
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
+    torch._C._log_api_usage_once("torchtnt.runner.train")
     state = State(
         entry_point=EntryPoint.TRAIN,
         train_state=PhaseState(
@@ -93,6 +94,7 @@ def train_epoch(
     *,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
+    torch._C._log_api_usage_once("torchtnt.runner.train_epoch")
     _check_loop_condition("max_steps_per_epoch", max_steps_per_epoch)
     train_state = PhaseState(
         dataloader=dataloader,

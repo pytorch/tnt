@@ -29,6 +29,7 @@ def predict(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """Makes a single pass through the predict dataloader."""
+    torch._C._log_api_usage_once("torchtnt.runner.predict")
     state = State(
         entry_point=EntryPoint.PREDICT,
         predict_state=PhaseState(
