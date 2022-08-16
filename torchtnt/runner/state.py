@@ -6,10 +6,17 @@
 
 
 from dataclasses import dataclass
+from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
 from torchtnt.runner.progress import Progress
-from typing_extensions import Literal
+
+
+class EntryPoint(Enum):
+    FIT = auto()
+    TRAIN = auto()
+    EVALUATE = auto()
+    PREDICT = auto()
 
 
 @dataclass
@@ -38,7 +45,7 @@ class State:
     A new State class is created (and the previous one erased) each time an entry point is called.
     """
 
-    entry_point: Literal["fit", "train", "evaluate", "predict"]
+    entry_point: EntryPoint
 
     train_state: Optional[PhaseState] = None
     eval_state: Optional[PhaseState] = None
