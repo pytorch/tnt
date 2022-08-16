@@ -7,7 +7,7 @@
 from .engine import _Engine
 from .progress import Progress
 from .state import PhaseState, State
-from .unit import EvalUnit, TrainUnit
+from .unit import EvalUnit, PredictUnit, TrainUnit
 
 __all__ = [
     "_Engine",
@@ -15,5 +15,6 @@ __all__ = [
     "PhaseState",
     "State",
     "EvalUnit",
+    "PredictUnit",
     "TrainUnit",
 ]
