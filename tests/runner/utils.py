@@ -11,7 +11,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from torchtnt.runner.state import State
-from torchtnt.runner.unit import EvalUnit
+from torchtnt.runner.unit import EvalUnit, PredictUnit
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
@@ -31,6 +31,19 @@ class DummyEvalUnit(EvalUnit):
         outputs = self.module(inputs)
         loss = self.loss_fn(outputs, targets)
         return loss, outputs
+
+
+class DummyPredictUnit(PredictUnit):
+    def __init__(self, input_dim: int):
+        super().__init__()
+        # initialize module
+        self.module = nn.Linear(input_dim, 2)
+
+    def predict_step(self, state: State, batch: Batch) -> torch.Tensor:
+        inputs, targets = batch
+
+        outputs = self.module(inputs)
+        return outputs
 
 
 def generate_random_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
