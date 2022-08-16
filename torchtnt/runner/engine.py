@@ -5,11 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Tuple, TypeVar
+from typing import Any, Tuple, TypeVar
 
 import torch
 
-from torchtnt.runner.progress import Progress
+from torchtnt.runner.state import State
 
 TBatch = TypeVar("TBatch")
 TOutput = TypeVar("TOutput")
@@ -32,15 +32,7 @@ class _Engine(ABC):
     # pyre-fixme: Missing return annotation [3]
     def step(
         self,
+        state: State,
         batch: TBatch,
-        progress: Progress,
     ) -> Tuple[torch.Tensor, Any]:
         """Runs either train step or eval step depending on the mode of the module"""
-
-    @abstractmethod
-    def state_dict(self) -> Dict[str, Any]:
-        """Returns state_dict for _Engine"""
-
-    @abstractmethod
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
-        """Loads state_dict for _Engine"""

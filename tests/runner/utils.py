@@ -10,7 +10,8 @@ from typing import Tuple
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, TensorDataset
-from torchtnt.runner.state import State
+from torchtnt.runner.progress import Progress
+from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.unit import EvalUnit, PredictUnit, TrainUnit
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -82,4 +83,21 @@ def generate_random_dataloader(
     return DataLoader(
         generate_random_dataset(num_samples, input_dim),
         batch_size=batch_size,
+    )
+
+
+def get_dummy_fit_state() -> State:
+    return State(
+        entry_point=EntryPoint.FIT,
+        train_state=PhaseState(
+            progress=Progress(),
+            dataloader=[1, 2, 3, 4, 5],
+            max_epochs=2,
+            max_steps_per_epoch=10,
+        ),
+        eval_state=PhaseState(
+            progress=Progress(),
+            dataloader=[1, 2, 3],
+            max_steps_per_epoch=5,
+        ),
     )

@@ -6,12 +6,14 @@
 
 from .engine import _Engine
 from .progress import Progress
+from .sgd import SGDEngine
 from .state import PhaseState, State
 from .unit import EvalUnit, PredictUnit, TrainUnit
 
 __all__ = [
     "_Engine",
     "Progress",
+    "SGDEngine",
     "PhaseState",
     "State",
     "EvalUnit",
