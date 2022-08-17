@@ -127,7 +127,7 @@ class DistributedTest(unittest.TestCase):
             val = False
         return sync_bool(val, coherence_mode=coherence_mode)
 
-    def test_full_sync_early_stop_single_process(self) -> None:
+    def test_sync_bool_single_process(self) -> None:
         val = True
         new_val = sync_bool(val)
         # these should be the same in a single process case
@@ -136,38 +136,69 @@ class DistributedTest(unittest.TestCase):
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
-    def test_full_sync_early_stop_multi_process_coherence_mode_rank_zero(self) -> None:
+    def test_sync_bool_multi_process_coherence_mode_rank_zero(self) -> None:
         config = get_pet_launch_config(2)
-        # Launch 2 worker processes. Each will check for early stopping
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
             "rank_zero"
         )
-        # Both processes should return True using full sync checker with 'zero' coherence_mode
+        # Both processes should return True since rank 0 inputs True
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
-    def test_full_sync_early_stop_multi_process_coherence_mode_any(self) -> None:
+    def test_sync_bool_multi_process_coherence_mode_any(self) -> None:
         config = get_pet_launch_config(2)
-        # Launch 2 worker processes. Each will check for early stopping
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
             "any"
         )
-        # Both processes should return True using full sync checker with 'any' coherence_mode
+        # Both processes should return True since one of the processes inputs True
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
-    def test_full_sync_early_stop_multi_process_coherence_mode_all(self) -> None:
+    def test_sync_bool_multi_process_coherence_mode_all(self) -> None:
         config = get_pet_launch_config(2)
-        # Launch 2 worker processes. Each will check for early stopping
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
             "all"
         )
-        # Both processes should return False using full sync checker with 'all' coherence_mode
+        # Both processes should return False since not all processes input False
+        self.assertFalse(result[0])
+        self.assertFalse(result[1])
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_sync_bool_multi_process_coherence_mode_int_false(self) -> None:
+        config = get_pet_launch_config(2)
+        result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(2)
+        # Both processes should return False since 2 processes don't input True
+        self.assertFalse(result[0])
+        self.assertFalse(result[1])
+
+    def test_sync_bool_multi_process_coherence_mode_int_true(self) -> None:
+        config = get_pet_launch_config(2)
+        result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(1)
+        # Both processes should return True since 1 processes inputs True
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_sync_bool_multi_process_coherence_mode_float_true(self) -> None:
+        config = get_pet_launch_config(2)
+        result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(0.4)
+        # Both processes should return True since 40% or one of the process inputs True
+        self.assertTrue(result[0])
+        self.assertTrue(result[1])
+
+    def test_sync_bool_multi_process_coherence_mode_float_false(self) -> None:
+        config = get_pet_launch_config(2)
+        result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(1.0)
+        # Both processes should return False since 100% of processes don't input True
         self.assertFalse(result[0])
         self.assertFalse(result[1])
