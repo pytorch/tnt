@@ -17,16 +17,14 @@ Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
 class DummyEvalUnit(EvalUnit):
-    def __init__(self, input_dim: int):
+    def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module & loss_fn
         self.module = nn.Linear(input_dim, 2)
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def eval_step(
-        self, state: State, batch: Batch
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        inputs, targets = batch
+    def eval_step(self, state: State, data: Batch) -> Tuple[torch.Tensor, torch.Tensor]:
+        inputs, targets = data
 
         outputs = self.module(inputs)
         loss = self.loss_fn(outputs, targets)
@@ -34,13 +32,13 @@ class DummyEvalUnit(EvalUnit):
 
 
 class DummyPredictUnit(PredictUnit):
-    def __init__(self, input_dim: int):
+    def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module
         self.module = nn.Linear(input_dim, 2)
 
-    def predict_step(self, state: State, batch: Batch) -> torch.Tensor:
-        inputs, targets = batch
+    def predict_step(self, state: State, data: Batch) -> torch.Tensor:
+        inputs, targets = data
 
         outputs = self.module(inputs)
         return outputs
