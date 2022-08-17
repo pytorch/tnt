@@ -7,9 +7,9 @@
 
 import unittest
 
-from torchtnt.runner.evaluate import evaluate
+from torchtnt.runner._test_utils import DummyEvalUnit, generate_random_dataloader
 
-from torchtnt.tests.runner.utils import DummyEvalUnit, generate_random_dataloader
+from torchtnt.runner.evaluate import evaluate
 
 
 class EvaluateTest(unittest.TestCase):

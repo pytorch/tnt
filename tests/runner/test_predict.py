@@ -7,9 +7,9 @@
 
 import unittest
 
-from torchtnt.runner.predict import predict
+from torchtnt.runner._test_utils import DummyPredictUnit, generate_random_dataloader
 
-from torchtnt.tests.runner.utils import DummyPredictUnit, generate_random_dataloader
+from torchtnt.runner.predict import predict
 
 
 class PredictTest(unittest.TestCase):

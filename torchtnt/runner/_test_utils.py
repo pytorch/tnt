@@ -17,7 +17,7 @@ Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
 class DummyEvalUnit(EvalUnit):
-    def __init__(self, input_dim: int):
+    def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module & loss_fn
         self.module = nn.Linear(input_dim, 2)
@@ -34,7 +34,7 @@ class DummyEvalUnit(EvalUnit):
 
 
 class DummyPredictUnit(PredictUnit):
-    def __init__(self, input_dim: int):
+    def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module
         self.module = nn.Linear(input_dim, 2)

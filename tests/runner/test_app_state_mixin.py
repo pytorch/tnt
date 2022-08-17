@@ -12,7 +12,7 @@ from torch import nn
 from torchtnt.runner.unit import _AppStateMixin
 
 
-class TestUnit(_AppStateMixin):
+class Dummy(_AppStateMixin):
     def __init__(self):
         super().__init__()
         self.module_a = nn.Linear(1, 1)
@@ -29,7 +29,7 @@ class AppStateMixinTest(unittest.TestCase):
         Test setting, getting, and deleting tracked_modules
         """
 
-        my_unit = TestUnit()
+        my_unit = Dummy()
 
         # assert that the attributes are stored in tracked_modules
         self.assertEqual(my_unit.tracked_modules()["module_a"], my_unit.module_a)
@@ -47,7 +47,7 @@ class AppStateMixinTest(unittest.TestCase):
         """
         Test setting, getting, and deleting tracked_optimizers
         """
-        my_unit = TestUnit()
+        my_unit = Dummy()
 
         # assert that the attribute is stored in tracked_optimizers
         self.assertEqual(
@@ -65,7 +65,7 @@ class AppStateMixinTest(unittest.TestCase):
         Test setting, getting, and deleting tracked_lr_schedulers
         """
 
-        my_unit = TestUnit()
+        my_unit = Dummy()
 
         # assert that the attribute is stored in tracked_lr_schedulers
         self.assertEqual(
@@ -83,7 +83,7 @@ class AppStateMixinTest(unittest.TestCase):
         Test the app_state method
         """
 
-        my_unit = TestUnit()
+        my_unit = Dummy()
 
         # the attributes should be in app_state
         for key in ("module_a", "loss_fn_b", "optimizer_c", "lr_scheduler_d"):
@@ -104,7 +104,7 @@ class AppStateMixinTest(unittest.TestCase):
         Test reassigning attributes to a different type
         """
 
-        my_unit = TestUnit()
+        my_unit = Dummy()
 
         # create new objects
         module_e = nn.Linear(1, 1)
