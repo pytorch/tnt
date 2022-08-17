@@ -7,7 +7,6 @@
 # pyre-ignore-all-errors[2]
 
 from abc import ABC, abstractmethod
-from collections import OrderedDict
 from typing import Any, Dict, TypeVar
 
 import torch
@@ -33,11 +32,9 @@ class _AppStateMixin:
     """
 
     def __init__(self) -> None:
-        self._modules: "OrderedDict[str, torch.nn.Module]" = OrderedDict()
-        self._optimizers: "OrderedDict[str, torch.optim.Optimizer]" = OrderedDict()
-        self._lr_schedulers: "OrderedDict[str, torch.optim.lr_scheduler._LRScheduler]" = (
-            OrderedDict()
-        )
+        self._modules: Dict[str, torch.nn.Module] = {}
+        self._optimizers: Dict[str, torch.optim.Optimizer] = {}
+        self._lr_schedulers: Dict[str, torch.optim.lr_scheduler._LRScheduler] = {}
         # TODO: include other known statefuls
         # TODO: include catch-all for miscellaneous statefuls
 
@@ -50,15 +47,15 @@ class _AppStateMixin:
         app_state = {**self._modules, **self._optimizers, **self._lr_schedulers}
         return app_state
 
-    def tracked_modules(self) -> "OrderedDict[str, torch.nn.Module]":
+    def tracked_modules(self) -> Dict[str, torch.nn.Module]:
         return self._modules
 
-    def tracked_optimizers(self) -> "OrderedDict[str, torch.optim.Optimizer]":
+    def tracked_optimizers(self) -> Dict[str, torch.optim.Optimizer]:
         return self._optimizers
 
     def tracked_lr_schedulers(
         self,
-    ) -> "OrderedDict[str, torch.optim.lr_scheduler._LRScheduler]":
+    ) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
         return self._lr_schedulers
 
     # pyre-ignore: Missing return annotation [3]
@@ -82,7 +79,7 @@ class _AppStateMixin:
         self,
         name: str,
         value: Any,
-        tracked_objects: "OrderedDict[str, Any]",
+        tracked_objects: Dict[str, Any],
     ) -> None:
         if tracked_objects is None:
             raise AttributeError(
@@ -108,16 +105,15 @@ class _AppStateMixin:
                 value,
                 self.__dict__.get("_lr_schedulers"),
             )
-        elif value is None:
-            _remove_from_dicts(
-                name,
-                self.__dict__,
-                self._modules,
-                self._optimizers,
-                self._lr_schedulers,
-            )
-            super().__setattr__(name, value)
         else:
+            if value is None:
+                _remove_from_dicts(
+                    name,
+                    self.__dict__,
+                    self._modules,
+                    self._optimizers,
+                    self._lr_schedulers,
+                )
             super().__setattr__(name, value)
 
     def __delattr__(self, name: str) -> None:
