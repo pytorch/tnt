@@ -295,7 +295,7 @@ def revert_sync_batchnorm(
 def sync_bool(
     val: bool,
     pg: Optional[dist.ProcessGroup] = None,
-    coherence_mode: Literal["any", "all", "rank_zero"] = "any",
+    coherence_mode: Union[Literal["any", "all", "rank_zero"], int, float] = "any",
 ) -> bool:
     """Utility to synchronize a boolean value across members of a provided process group.
 
@@ -304,10 +304,12 @@ def sync_bool(
     Args:
         val (bool): boolean value to synchronize
         pg: process group to use for synchronization. If not specified, the default process group is used.
-        coherence_mode (str): the manner in which the boolean value should be synchronized. 3 options are currently supported:
+        coherence_mode Union[str, int, float]: the manner in which the boolean value should be synchronized. 5 options are currently supported:
             1. any (default): If any rank provides a True value, all ranks should receive True.
             2. all: Only if all ranks provide a True value should all ranks receive True.
             3. rank_zero: Makes rank 0 process's value the source of truth and broadcasts the result to all other processes.
+            4. If an integer N is provided, return True only if at least N processes provide a True value.
+            5. If a float F is provided, return True only if at least this ratio of processes provide a True value. The ratio provided should be in the range [0, 1].
 
     Returns:
         The synchronized boolean value.
@@ -348,7 +350,17 @@ def sync_bool(
         # sum up the indicators across all the ranks.
         dist.all_reduce(indicator, op=dist.ReduceOp.SUM)
         return indicator.item() > 0
-    else:
-        # assume "all" coherence mode
+    elif coherence_mode == "all":
         dist.all_reduce(indicator, op=dist.ReduceOp.SUM)
         return indicator.item() == pg_wrapper.get_world_size()
+    elif isinstance(coherence_mode, int):
+        # if >= int(coherence_mode) processes signal to stop, all processes stop
+        dist.all_reduce(indicator, op=dist.ReduceOp.SUM)
+        return indicator.item() >= coherence_mode
+    elif isinstance(coherence_mode, float):
+        dist.all_reduce(indicator, op=dist.ReduceOp.SUM)
+        return (indicator.item() / pg_wrapper.get_world_size()) >= coherence_mode
+    else:
+        raise TypeError(
+            f'Invalid value for `coherence_mode` provided: Expected type int, float, or one of ("any", "all", "rank_zero"), but received {coherence_mode}.'
+        )
