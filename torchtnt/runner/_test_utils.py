@@ -23,6 +23,7 @@ class DummyEvalUnit(EvalUnit):
         self.module = nn.Linear(input_dim, 2)
         self.loss_fn = nn.CrossEntropyLoss()
 
+    # pyre-fixme[14]: `eval_step` overrides method defined in `EvalUnit` inconsistently.
     def eval_step(self, state: State, data: Batch) -> Tuple[torch.Tensor, torch.Tensor]:
         inputs, targets = data
 
@@ -37,6 +38,8 @@ class DummyPredictUnit(PredictUnit):
         # initialize module
         self.module = nn.Linear(input_dim, 2)
 
+    # pyre-fixme[14]: `predict_step` overrides method defined in `PredictUnit`
+    #  inconsistently.
     def predict_step(self, state: State, data: Batch) -> torch.Tensor:
         inputs, targets = data
 
