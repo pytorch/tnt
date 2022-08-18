@@ -23,7 +23,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def evaluate(
-    eval_unit: EvalUnit,
+    eval_unit: EvalUnit[TEvalData],
     dataloader: Iterable[TEvalData],
     *,
     max_steps_per_epoch: Optional[int] = None,
@@ -55,7 +55,7 @@ def evaluate(
 @torch.inference_mode()
 def _evaluate_impl(
     state: State,
-    eval_unit: EvalUnit,
+    eval_unit: EvalUnit[TEvalData],
 ) -> None:
     # Set all modules to eval mode
     # access modules made available through _AppStateMixin
