@@ -16,14 +16,13 @@ from torchtnt.runner.unit import EvalUnit, PredictUnit
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
-class DummyEvalUnit(EvalUnit):
+class DummyEvalUnit(EvalUnit[Batch]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module & loss_fn
         self.module = nn.Linear(input_dim, 2)
         self.loss_fn = nn.CrossEntropyLoss()
 
-    # pyre-fixme[14]: `eval_step` overrides method defined in `EvalUnit` inconsistently.
     def eval_step(self, state: State, data: Batch) -> Tuple[torch.Tensor, torch.Tensor]:
         inputs, targets = data
 
@@ -32,14 +31,12 @@ class DummyEvalUnit(EvalUnit):
         return loss, outputs
 
 
-class DummyPredictUnit(PredictUnit):
+class DummyPredictUnit(PredictUnit[Batch]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module
         self.module = nn.Linear(input_dim, 2)
 
-    # pyre-fixme[14]: `predict_step` overrides method defined in `PredictUnit`
-    #  inconsistently.
     def predict_step(self, state: State, data: Batch) -> torch.Tensor:
         inputs, targets = data
 

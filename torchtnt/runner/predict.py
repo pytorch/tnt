@@ -23,7 +23,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def predict(
-    predict_unit: PredictUnit,
+    predict_unit: PredictUnit[TPredictData],
     dataloader: Iterable[TPredictData],
     *,
     max_steps_per_epoch: Optional[int] = None,
@@ -53,7 +53,7 @@ def predict(
 @torch.inference_mode()
 def _predict_impl(
     state: State,
-    predict_unit: PredictUnit,
+    predict_unit: PredictUnit[TPredictData],
 ) -> None:
     # Set all modules to eval mode
     # access modules made available through _AppStateMixin

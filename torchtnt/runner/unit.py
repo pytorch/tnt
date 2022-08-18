@@ -7,7 +7,7 @@
 # pyre-ignore-all-errors[2]
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict, Generic, TypeVar
 
 import torch
 
@@ -137,7 +137,7 @@ TEvalData = TypeVar("TEvalData")
 TPredictData = TypeVar("TPredictData")
 
 
-class TrainUnit(_AppStateMixin, _OnExceptionMixin, ABC):
+class TrainUnit(_AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
     """
     Base interface for training.
     """
@@ -160,7 +160,7 @@ class TrainUnit(_AppStateMixin, _OnExceptionMixin, ABC):
         pass
 
 
-class EvalUnit(_AppStateMixin, _OnExceptionMixin, ABC):
+class EvalUnit(_AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
     def on_eval_start(self, state: State) -> None:
         pass
 
@@ -179,7 +179,7 @@ class EvalUnit(_AppStateMixin, _OnExceptionMixin, ABC):
         pass
 
 
-class PredictUnit(_AppStateMixin, _OnExceptionMixin, ABC):
+class PredictUnit(_AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC):
     def on_predict_start(self, state: State) -> None:
         pass
 
