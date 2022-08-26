@@ -87,9 +87,6 @@ def _fit_impl(
 
     unit.on_train_start(state)
 
-    train_state = state.train_state
-    assert train_state is not None
-
     while not _is_done(train_state.progress, train_state.max_epochs):
         _train_epoch_impl(state, unit)
 
