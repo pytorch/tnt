@@ -11,7 +11,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 from torchtnt.runner.state import State
-from torchtnt.runner.unit import EvalUnit, PredictUnit
+from torchtnt.runner.unit import EvalUnit, PredictUnit, TrainUnit
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
@@ -42,6 +42,29 @@ class DummyPredictUnit(PredictUnit[Batch]):
 
         outputs = self.module(inputs)
         return outputs
+
+
+class DummyTrainUnit(TrainUnit[Batch]):
+    def __init__(self, input_dim: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
+
+    def train_step(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        loss.backward()
+
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+
+        return loss, outputs
 
 
 def generate_random_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
