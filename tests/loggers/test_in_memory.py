@@ -49,7 +49,7 @@ class InMemoryLoggerTest(unittest.TestCase):
 
 
 @contextmanager
-def captured_output():
+def captured_output() -> None:
     new_out, new_err = StringIO(), StringIO()
     old_out, old_err = sys.stdout, sys.stderr
     try:
