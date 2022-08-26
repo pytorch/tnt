@@ -8,6 +8,7 @@ import logging
 from typing import Iterable, Optional
 
 import torch
+from torchtnt.runner.evaluate import _evaluate_impl
 
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
@@ -134,6 +135,13 @@ def _train_epoch_impl(state: State, train_unit: TrainUnit[TTrainData]) -> None:
     train_state = state.train_state
     assert train_state is not None
 
+    evaluate_every_n_steps = None
+    evaluate_every_n_epochs = None
+    if state.eval_state and state.eval_state.evaluate_every_n_steps:
+        evaluate_every_n_steps = state.eval_state.evaluate_every_n_steps
+    if state.eval_state and state.eval_state.evaluate_every_n_epochs:
+        evaluate_every_n_epochs = state.eval_state.evaluate_every_n_epochs
+
     # Check the progress to conditionally run this
     # to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
@@ -152,6 +160,18 @@ def _train_epoch_impl(state: State, train_unit: TrainUnit[TTrainData]) -> None:
             train_state.progress.num_steps_completed_in_epoch += 1
             train_state.progress.num_steps_completed += 1
 
+            if (
+                evaluate_every_n_steps
+                and train_state.progress.num_steps_completed_in_epoch
+                % evaluate_every_n_steps
+                == 0
+            ):
+                _evaluate_impl(
+                    state,
+                    # pyre-ignore: Incompatible parameter type [6]
+                    train_unit,
+                )
+
         except StopIteration:
             break
     train_unit.on_train_epoch_end(state)
@@ -159,6 +179,16 @@ def _train_epoch_impl(state: State, train_unit: TrainUnit[TTrainData]) -> None:
     # set progress counters for the next epoch
     train_state.progress.num_epochs_completed += 1
     train_state.progress.num_steps_completed_in_epoch = 0
+
+    if (
+        evaluate_every_n_epochs
+        and train_state.progress.num_epochs_completed % evaluate_every_n_epochs == 0
+    ):
+        _evaluate_impl(
+            state,
+            # pyre-ignore: Incompatible parameter type [6]
+            train_unit,
+        )
 
     # Reset training mode for modules at the end of the epoch
     # This ensures that side-effects made by the loop are reset before
