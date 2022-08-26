@@ -38,10 +38,6 @@ def evaluate(
         ),
     )
     try:
-        _check_loop_condition("max_steps_per_epoch", max_steps_per_epoch)
-        logger.info(
-            f"Started evaluation with max_steps_per_epoch={max_steps_per_epoch}"
-        )
         _evaluate_impl(state, eval_unit)
         logger.info("Finished evaluation")
         return state
@@ -57,15 +53,20 @@ def _evaluate_impl(
     state: State,
     eval_unit: EvalUnit[TEvalData],
 ) -> None:
+    # input validation
+    eval_state = state.eval_state
+    if not eval_state:
+        raise RuntimeError("Expected eval_state to be initialized!")
+    max_steps_per_epoch = eval_state.max_steps_per_epoch
+    _check_loop_condition("max_steps_per_epoch", max_steps_per_epoch)
+    logger.info(f"Started evaluate with max_steps_per_epoch={max_steps_per_epoch}")
+
     # Set all modules to eval mode
     # access modules made available through _AppStateMixin
     tracked_modules = eval_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
     eval_unit.on_eval_start(state)
-
-    eval_state = state.eval_state
-    assert eval_state is not None
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch

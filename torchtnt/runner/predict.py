@@ -38,8 +38,6 @@ def predict(
         ),
     )
     try:
-        _check_loop_condition("max_steps_per_epoch", max_steps_per_epoch)
-        logger.info(f"Started predict with max_steps_per_epoch={max_steps_per_epoch}")
         _predict_impl(state, predict_unit)
         logger.info("Finished predict")
         return state
@@ -55,15 +53,20 @@ def _predict_impl(
     state: State,
     predict_unit: PredictUnit[TPredictData],
 ) -> None:
+    # input validation
+    predict_state = state.predict_state
+    if not predict_state:
+        raise RuntimeError("Expected predict_state to be initialized!")
+    max_steps_per_epoch = predict_state.max_steps_per_epoch
+    _check_loop_condition("max_steps_per_epoch", max_steps_per_epoch)
+    logger.info(f"Started predict with max_steps_per_epoch={max_steps_per_epoch}")
+
     # Set all modules to eval mode
     # access modules made available through _AppStateMixin
     tracked_modules = predict_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
     predict_unit.on_predict_start(state)
-
-    predict_state = state.predict_state
-    assert predict_state is not None
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
