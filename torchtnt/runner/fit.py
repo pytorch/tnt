@@ -11,7 +11,7 @@ from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.train import _train_epoch_impl
 from torchtnt.runner.unit import EvalUnit, TEvalData, TrainUnit, TTrainData
-from torchtnt.runner.utils import _check_loop_condition, _is_done
+from torchtnt.runner.utils import _check_loop_condition, _is_done, log_api_usage
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -28,6 +28,7 @@ def fit(
     evaluate_every_n_epochs: Optional[int] = 1,
 ) -> State:
     """Function that interleaves training & evaluation."""
+    log_api_usage("fit")
     state = State(
         entry_point=EntryPoint.FIT,
         train_state=PhaseState(

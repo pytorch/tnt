@@ -19,6 +19,7 @@ from torchtnt.runner.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
     _set_module_training_mode,
+    log_api_usage,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ def train(
     max_epochs: Optional[int],
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
+    log_api_usage("train")
     state = State(
         entry_point=EntryPoint.TRAIN,
         train_state=PhaseState(
