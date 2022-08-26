@@ -6,6 +6,8 @@
 
 from typing import Dict, Optional
 
+import torch
+
 import torch.nn as nn
 
 from torchtnt.runner.progress import Progress
@@ -54,3 +56,7 @@ def _reset_module_training_mode(
     for name, module in modules.items():
         if name in prior_modes:
             module.train(prior_modes[name])
+
+
+def log_api_usage(entry_point: str) -> None:
+    torch._C._log_api_usage_once(f"torchtnt.runner.{entry_point}")

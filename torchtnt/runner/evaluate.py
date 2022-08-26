@@ -17,6 +17,7 @@ from torchtnt.runner.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
     _set_module_training_mode,
+    log_api_usage,
 )
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ def evaluate(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """Makes a single pass through the evaluation dataloader."""
+    log_api_usage("evaluate")
     state = State(
         entry_point=EntryPoint.EVALUATE,
         eval_state=PhaseState(
