@@ -67,6 +67,36 @@ class DummyTrainUnit(TrainUnit[Batch]):
         return loss, outputs
 
 
+class DummyFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
+    def __init__(self, input_dim: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
+
+    def train_step(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        loss.backward()
+
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+
+        return loss, outputs
+
+    def eval_step(self, state: State, data: Batch) -> Tuple[torch.Tensor, torch.Tensor]:
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        return loss, outputs
+
+
 def generate_random_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
     """Returns a dataset of random inputs and labels for binary classification."""
     data = torch.randn(num_samples, input_dim)
