@@ -28,7 +28,7 @@ jobs:
           conda install pytorch cpuonly -c pytorch-nightly
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
-          pip install -e .
+          pip install  --no-build-isolation -e .
       - name: Run unit tests with coverage
         shell: bash -l {0}
         run: |
