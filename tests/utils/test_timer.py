@@ -216,7 +216,7 @@ class TimerTest(unittest.TestCase):
 
 class FullSyncPeriodicTimerTest(unittest.TestCase):
     @classmethod
-    def _full_sync_worker_without_timeout(cls):
+    def _full_sync_worker_without_timeout(cls) -> bool:
         dist.init_process_group("gloo")
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
@@ -224,7 +224,7 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
         return fsp_timer.check()
 
     @classmethod
-    def _full_sync_worker_with_timeout(cls, timeout: int):
+    def _full_sync_worker_with_timeout(cls, timeout: int) -> bool:
         dist.init_process_group("gloo")
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
