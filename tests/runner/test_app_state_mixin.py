@@ -13,7 +13,7 @@ from torchtnt.runner.unit import _AppStateMixin
 
 
 class Dummy(_AppStateMixin):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.module_a = nn.Linear(1, 1)
         self.loss_fn_b = nn.CrossEntropyLoss()
