@@ -63,6 +63,11 @@ def init_from_env(
         )
 
     if _check_dist_env():
+        if not torch.distributed.is_available():
+            _log.warning(
+                "torch.distributed is not available. Skipping initializing the process group."
+            )
+            return device
         if torch.distributed.is_initialized():
             _log.warning(
                 "torch.distributed is already initialized. Skipping initializing the process group."
