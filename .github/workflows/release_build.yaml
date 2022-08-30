@@ -55,7 +55,7 @@ jobs:
           conda install pytorch cpuonly -c pytorch-nightly
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
-          pip install -e ".[dev]"
+          pip install  --no-build-isolation -e ".[dev]"
       - name: Upload to PyPI
         shell: bash -l {0}
         env:
