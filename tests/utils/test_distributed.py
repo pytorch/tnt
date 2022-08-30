@@ -79,7 +79,7 @@ class DistributedTest(unittest.TestCase):
 
     def test_rank_zero_fn_rank_zero(self) -> None:
         @rank_zero_fn
-        def foo():
+        def foo() -> int:
             return 1
 
         x = foo()
@@ -90,7 +90,7 @@ class DistributedTest(unittest.TestCase):
         get_global_rank.return_value = 1
 
         @rank_zero_fn
-        def foo():
+        def foo() -> int:
             return 1
 
         x = foo()
@@ -119,7 +119,7 @@ class DistributedTest(unittest.TestCase):
         )
 
     @classmethod
-    def _full_sync_worker(cls, coherence_mode: Optional[str]):
+    def _full_sync_worker(cls, coherence_mode: Optional[str]) -> bool:
         dist.init_process_group("gloo")
         if dist.get_rank() == 0:
             val = True
