@@ -180,7 +180,7 @@ class MemoryTest(unittest.TestCase):
                 return self._buffers
 
         class RandomModule(torch.nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.window_buffer = WindowBuffer(2000, 1000)
                 self.window_buffer.aggregate_state(
@@ -190,7 +190,7 @@ class MemoryTest(unittest.TestCase):
                 self.y = [torch.rand(4, 5), torch.rand(9, 10)]
 
         class RandomModuleList(torch.nn.Module):
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__()
                 self.metric_list = torch.nn.ModuleList([RandomModule(), RandomModule()])
 
