@@ -40,7 +40,11 @@ class EnvTest(unittest.TestCase):
                 f"Expected different device: received {device}, expected {device_from_env}"
             )
         pg_backend = torch.distributed.get_backend()
-        expected_pg_backend = get_process_group_backend_from_device(device)
+        expected_pg_backend = (
+            get_process_group_backend_from_device(device)
+            if not init_pg_explicit
+            else "gloo"
+        )
         if pg_backend != expected_pg_backend:
             raise AssertionError(
                 f"Expected different process group backend: received {pg_backend}, expected {expected_pg_backend}"
