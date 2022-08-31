@@ -5,6 +5,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-ignore-all-errors[2]: Parameter must have a type that does not contain `Any`
+
 import os
 from functools import wraps
 from typing import Any, Callable, List, Optional, TypeVar, Union
@@ -48,13 +50,11 @@ class PGWrapper:
             return
         dist.barrier(group=self.pg)
 
-    # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
     def broadcast_object_list(self, obj_list: List[Any], src: int = 0) -> None:
         if self.pg is None:
             return
         dist.broadcast_object_list(obj_list, src=src, group=self.pg)
 
-    # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
     def all_gather_object(self, obj_list: List[Any], obj: Any) -> None:
         if self.pg is None:
             obj_list[0] = obj
@@ -63,9 +63,7 @@ class PGWrapper:
 
     def scatter_object_list(
         self,
-        # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
         output_list: List[Any],
-        # pyre-ignore[2]: Parameter must have a type that does not contain `Any`
         input_list: Optional[List[Any]],
         src: int = 0,
     ) -> None:
@@ -118,15 +116,15 @@ def get_process_group_backend_from_device(device: torch.device) -> str:
 
 
 def _simple_all_gather_tensors(
-    result: Tensor, group: torch.distributed.group, world_size: int
+    result: Tensor, group: Optional[dist.ProcessGroup], world_size: int
 ) -> List[Tensor]:
     gathered_result = [torch.zeros_like(result) for _ in range(world_size)]
-    torch.distributed.all_gather(gathered_result, result, group)
+    dist.all_gather(gathered_result, result, group)
     return gathered_result
 
 
 def all_gather_tensors(
-    result: Tensor, group: Optional[torch.distributed.group] = None
+    result: Tensor, group: Optional[dist.ProcessGroup] = None
 ) -> List[Tensor]:
     """Function to gather tensors from several distributed processes onto a list that is broadcasted to all processes.
     Works on tensors that have the same number of dimensions, but where each dimension may differ. In this case
@@ -142,39 +140,35 @@ def all_gather_tensors(
     """
     # if torch.distributed is not available or not initialized
     # return single-item list containing the result
-    if not torch.distributed.is_available() or not torch.distributed.is_initialized():
+    if not dist.is_available() or not dist.is_initialized():
         return [result]
-
-    # if group is None, fallback to the default process group
-    if group is None:
-        group = torch.distributed.group.WORLD
 
     # convert tensors to contiguous format
     result = result.contiguous()
-
-    world_size = torch.distributed.get_world_size(group)
-    torch.distributed.barrier(group=group)
+    world_size = dist.get_world_size(group)
 
     # if the tensor is scalar, things are easy
     if result.ndim == 0:
-        # pyre-fixme[6]: For 2nd param expected `group` but got `Union[None, group,
-        #  ProcessGroup]`.
         return _simple_all_gather_tensors(result, group, world_size)
 
-    # 1. Gather sizes of all tensors
+    # gather sizes of all tensors
     local_size = torch.tensor(result.shape, device=result.device)
     local_sizes = [torch.zeros_like(local_size) for _ in range(world_size)]
-    torch.distributed.all_gather(local_sizes, local_size, group=group)
+    dist.all_gather(local_sizes, local_size, group=group)
+
+    # if the backend is NCCL, we can gather the differently sized tensors without padding
+    if dist.get_backend(group) == "nccl":
+        gathered_result = [result.new_empty(size.tolist()) for size in local_sizes]
+        dist.all_gather(gathered_result, result, group)
+        return gathered_result
+
+    # if shapes are all the same, then do a simple gather:
     max_size = torch.stack(local_sizes).max(dim=0).values
     all_sizes_equal = all(all(ls == max_size) for ls in local_sizes)
-
-    # 2. If shapes are all the same, then do a simple gather:
     if all_sizes_equal:
-        # pyre-fixme[6]: For 2nd param expected `group` but got `Union[None, group,
-        #  ProcessGroup]`.
         return _simple_all_gather_tensors(result, group, world_size)
 
-    # 3. If not, we need to pad each local tensor to maximum size, gather and then truncate
+    # if not, we need to pad each local tensor to maximum size, gather and then truncate
     pad_dims = []
     pad_by = (max_size - local_size).detach().cpu()
     for val in reversed(pad_by):
@@ -182,7 +176,7 @@ def all_gather_tensors(
         pad_dims.append(val.item())
     result_padded = F.pad(result, pad_dims)
     gathered_result = [torch.zeros_like(result_padded) for _ in range(world_size)]
-    torch.distributed.all_gather(gathered_result, result_padded, group)
+    dist.all_gather(gathered_result, result_padded, group)
     for idx, item_size in enumerate(local_sizes):
         slice_param = [slice(dim_size) for dim_size in item_size]
         gathered_result[idx] = gathered_result[idx][slice_param]
