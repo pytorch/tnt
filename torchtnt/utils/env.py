@@ -38,9 +38,8 @@ def init_from_env(
 ) -> torch.device:
     """Utility function that initializes the device and process group, if applicable.
 
-    The global process group is initialized only if
-
-        - torch distributed is not already initialized
+    The global process group is initialized only if:
+        - torch.distributed is available is not already initialized
         - the program has been launched on multiple processes
 
     This is intended as a convenience to include at the beginning of scripts that follow
@@ -63,6 +62,11 @@ def init_from_env(
         )
 
     if _check_dist_env():
+        if not torch.distributed.is_available():
+            _log.warning(
+                "torch.distributed is not available. Skipping initializing the process group."
+            )
+            return device
         if torch.distributed.is_initialized():
             _log.warning(
                 "torch.distributed is already initialized. Skipping initializing the process group."
