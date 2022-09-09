@@ -5,8 +5,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# pyre-strict
-
 import argparse
 import logging
 import os
@@ -47,7 +45,7 @@ def prepare_module(
     Instantiate a nn.Module which will define the architecture of your model. If using a data parallel technique, wrap the module in DDP or FSDP.
     See https://pytorch.org/docs/stable/generated/torch.nn.Module.html for docs.
     """
-    module = nn.Linear(input_dim, 2)
+    module = nn.Linear(input_dim, 1)
     # move module to device
     module = module.to(device)
 
@@ -113,7 +111,6 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
             self.optimizer, gamma=0.9
         )
-        self.loss_fn = torch.nn.BCEWithLogitsLoss()
 
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = BinaryAccuracy(device=device)
@@ -124,7 +121,10 @@ class MyTrainUnit(TrainUnit[Batch]):
 
     def train_step(self, state: State, data: Batch) -> None:
         inputs, targets = data
+        # convert targets to float Tensor for binary_cross_entropy_with_logits
+        targets = targets.float()
         outputs = self.module(inputs)
+        outputs = torch.squeeze(outputs)
         loss = torch.nn.functional.binary_cross_entropy_with_logits(outputs, targets)
         loss.backward()
 
@@ -135,7 +135,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.train_accuracy.update(outputs, targets)
         progress = state.train_state.progress
         if (progress.num_steps_completed + 1) % self.log_frequency_steps == 0:
-            acc = self.metric.compute()
+            acc = self.train_accuracy.compute()
             self.tb_logger.log("loss", loss, progress.num_steps_completed)
             self.tb_logger.log("accuracy", acc, progress.num_steps_completed)
 
