@@ -12,6 +12,7 @@ from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.train import _train_epoch_impl
 from torchtnt.runner.unit import EvalUnit, TEvalData, TrainUnit, TTrainData
 from torchtnt.runner.utils import _check_loop_condition, _is_done, log_api_usage
+from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ def fit(
     log_api_usage("fit")
     state = State(
         entry_point=EntryPoint.FIT,
+        timer=Timer(),
         train_state=PhaseState(
             progress=Progress(),
             dataloader=train_dataloader,
@@ -47,6 +49,7 @@ def fit(
     )
     try:
         _fit_impl(state, unit)
+        logger.debug(get_timer_summary(state.timer))
         return state
     except Exception as e:
         # TODO: log for diagnostics
@@ -85,9 +88,11 @@ def _fit_impl(
         f"evaluate_every_n_epochs={eval_state.evaluate_every_n_epochs}"
     )
 
-    unit.on_train_start(state)
+    with state.timer.time(f"train.{unit.__class__.__name__}.on_train_start"):
+        unit.on_train_start(state)
 
     while not _is_done(train_state.progress, train_state.max_epochs):
         _train_epoch_impl(state, unit)
 
-    unit.on_train_end(state)
+    with state.timer.time(f"train.{unit.__class__.__name__}.on_train_end"):
+        unit.on_train_end(state)

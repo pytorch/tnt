@@ -10,6 +10,7 @@ from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
 from torchtnt.runner.progress import Progress
+from torchtnt.utils.timer import Timer
 
 
 class EntryPoint(Enum):
@@ -46,6 +47,7 @@ class State:
     """
 
     entry_point: EntryPoint
+    timer: Timer
 
     train_state: Optional[PhaseState] = None
     eval_state: Optional[PhaseState] = None

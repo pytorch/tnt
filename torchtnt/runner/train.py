@@ -21,6 +21,7 @@ from torchtnt.runner.utils import (
     _set_module_training_mode,
     log_api_usage,
 )
+from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ def train(
     log_api_usage("train")
     state = State(
         entry_point=EntryPoint.TRAIN,
+        timer=Timer(),
         train_state=PhaseState(
             dataloader=dataloader,
             max_epochs=max_epochs,
@@ -48,6 +50,7 @@ def train(
     try:
         _train_impl(state, train_unit)
         logger.info("Finished train")
+        logger.debug(get_timer_summary(state.timer))
         return state
     except Exception as e:
         # TODO: log for diagnostics
@@ -79,11 +82,14 @@ def _train_impl(
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
-    train_unit.on_train_start(state)
+    with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_start"):
+        train_unit.on_train_start(state)
+
     while not _is_done(train_state.progress, train_state.max_epochs):
         _train_epoch_impl(state, train_unit)
 
-    train_unit.on_train_end(state)
+    with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_end"):
+        train_unit.on_train_end(state)
 
     # Reset training mode for modules at the end of the epoch
     # This ensures that side-effects made by the loop are reset before
@@ -100,6 +106,7 @@ def train_epoch(
 ) -> State:
     state = State(
         entry_point=EntryPoint.TRAIN,
+        timer=Timer(),
         train_state=PhaseState(
             dataloader=dataloader,
             max_epochs=1,
@@ -118,6 +125,7 @@ def train_epoch(
             train_unit,
         )
         logger.info("Finished train")
+        logger.debug(get_timer_summary(state.timer))
         return state
     except Exception as e:
         # TODO: log for diagnostics
@@ -148,15 +156,20 @@ def _train_epoch_impl(state: State, train_unit: TrainUnit[TTrainData]) -> None:
     # to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if train_state.progress.num_steps_completed_in_epoch == 0:
-        train_unit.on_train_epoch_start(state)
+        with state.timer.time(
+            f"train.{train_unit.__class__.__name__}.on_train_epoch_start"
+        ):
+            train_unit.on_train_epoch_start(state)
 
     data_iter = iter(train_state.dataloader)
 
     while not _is_epoch_done(train_state.progress, train_state.max_steps_per_epoch):
         try:
             # TODO: conditionally expose data iterator for use cases that require access during the step
-            batch = next(data_iter)
-            train_state.step_output = train_unit.train_step(state, batch)
+            with state.timer.time("train.data_iter_next"):
+                batch = next(data_iter)
+            with state.timer.time(f"train.{train_unit.__class__.__name__}.train_step"):
+                train_state.step_output = train_unit.train_step(state, batch)
             # clear step_output to avoid retaining extra memory
             train_state.step_output = None
             train_state.progress.num_steps_completed_in_epoch += 1
@@ -176,7 +189,8 @@ def _train_epoch_impl(state: State, train_unit: TrainUnit[TTrainData]) -> None:
 
         except StopIteration:
             break
-    train_unit.on_train_epoch_end(state)
+    with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_epoch_end"):
+        train_unit.on_train_epoch_end(state)
 
     # set progress counters for the next epoch
     train_state.progress.num_epochs_completed += 1
