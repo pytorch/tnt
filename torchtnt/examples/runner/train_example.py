@@ -23,11 +23,12 @@ from torch.distributed.fsdp import (
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
+from torchtnt.data import CudaDataPrefetcher
 from torchtnt.loggers.tensorboard import TensorBoardLogger
 from torchtnt.runner.state import State
 from torchtnt.runner.train import train
 from torchtnt.runner.unit import TrainUnit
-from torchtnt.utils import CudaDataPrefetcher, init_from_env, seed, Timer
+from torchtnt.utils import init_from_env, seed, Timer
 
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
