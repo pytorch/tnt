@@ -6,15 +6,23 @@
 # LICENSE file in the root directory of this source tree.
 
 import datetime
+import os
 import warnings
+from collections import defaultdict
 from contextlib import contextmanager
 from time import perf_counter
-from typing import Dict, Generator, Optional, TypeVar
+from typing import Dict, Generator, List, Optional, Tuple, TypeVar
+
+import numpy as np
 
 import torch
 import torch.distributed as dist
 
 AsyncOperator = TypeVar("AsyncOperator")
+
+
+_TABLE_ROW = Tuple[str, float, int, float, float]
+_TABLE_DATA = List[_TABLE_ROW]
 
 
 class Timer:
@@ -23,6 +31,7 @@ class Timer:
     """
 
     def __init__(self) -> None:
+        self.recorded_durations: Dict[str, List[float]] = defaultdict(list)
         self.reset()
 
     def reset(self) -> None:
@@ -52,6 +61,20 @@ class Timer:
         self._interval_stop_time = perf_counter()
         self._paused = True
         self._total_time_seconds += self.interval_time_seconds
+
+    @contextmanager
+    def time(self, action_name: str) -> Generator[None, None, None]:
+        """Yields a context manager to encapsulate the scope of a timed action.
+
+        Args:
+        action_name: the name under which to store the timing of what is enclosed in the context manager
+        """
+        try:
+            self.start()
+            yield
+        finally:
+            self.stop()
+        self.recorded_durations[action_name].append(self.interval_time_seconds)
 
     @property
     def paused(self) -> bool:
@@ -98,14 +121,84 @@ class Timer:
         self._interval_stop_time = state_dict["interval_stop_time"]
         self._total_time_seconds = state_dict["total_time_seconds"]
 
-    @contextmanager
-    def time(self) -> Generator[None, None, None]:
-        """Yields a context manager to encapsulate the scope of a timed action."""
-        try:
-            self.start()
-            yield
-        finally:
-            self.stop()
+
+def _make_report(timer: Timer) -> Tuple[_TABLE_DATA, float, float]:
+    report = [
+        (
+            a,
+            np.mean(d),
+            len(d),
+            np.sum(d),
+            100.0 * np.sum(d) / timer._total_time_seconds,
+        )
+        for a, d in timer.recorded_durations.items()
+    ]
+    report.sort(key=lambda x: x[4], reverse=True)
+    total_calls = sum(x[2] for x in report)
+    return report, total_calls, timer._total_time_seconds
+
+
+def get_timer_summary(timer: Timer) -> str:
+    """Given a Timer, generate a summary of all the recorded actions.
+
+    Args:
+        timer: the Timer object for which to generate a summary
+
+    Raises:
+        ValueError
+            If the input Timer has no recorded actions
+    """
+    sep: str = os.linesep
+    output_string = f"Timer Report{sep}"
+
+    if len(timer.recorded_durations) == 0:
+        return output_string
+
+    max_key = max(len(k) for k in timer.recorded_durations.keys())
+
+    def log_row(action: str, mean: str, num_calls: str, total: str, per: str) -> str:
+        row = f"{sep}|  {action:<{max_key}s}\t|  {mean:<15}\t|"
+        row += f"  {num_calls:<15}\t|  {total:<15}\t|  {per:<15}\t|"
+        return row
+
+    header_string = log_row(
+        "Action",
+        "Mean duration (s)",
+        "Num calls",
+        "Total time (s)",
+        "Percentage %",
+    )
+    output_string_len = len(header_string.expandtabs()) - 1
+    sep_lines = f"{sep}{'-' * output_string_len}"
+    output_string += sep_lines + header_string + sep_lines
+    report: _TABLE_DATA
+    (
+        report,
+        total_calls,
+        total_duration,
+    ) = _make_report(timer)
+    output_string += log_row(
+        "Total", "-", f"{total_calls:}", f"{total_duration:.5}", "100 %"
+    )
+    output_string += sep_lines
+    for (
+        action,
+        mean_duration,
+        num_calls,
+        total_duration,
+        duration_per,
+    ) in report:
+        output_string += log_row(
+            action,
+            f"{mean_duration:.5}",
+            f"{num_calls}",
+            f"{total_duration:.5}",
+            f"{duration_per:.5}",
+        )
+    output_string += sep_lines
+
+    output_string += sep
+    return output_string
 
 
 class FullSyncPeriodicTimer:

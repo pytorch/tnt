@@ -5,6 +5,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import time
 import unittest
 from datetime import timedelta
@@ -14,7 +15,7 @@ import torch
 import torch.distributed as dist
 import torch.distributed.launcher as launcher
 from torchtnt.utils.test_utils import get_pet_launch_config
-from torchtnt.utils.timer import FullSyncPeriodicTimer, Timer
+from torchtnt.utils.timer import FullSyncPeriodicTimer, get_timer_summary, Timer
 
 
 class TimerTest(unittest.TestCase):
@@ -161,7 +162,7 @@ class TimerTest(unittest.TestCase):
 
         # Basic test of context manager
         timer = Timer()
-        with timer.time():
+        with timer.time("action_1"):
             time.sleep(intervals[0])
         self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
         self.assert_within_tolerance(timer.total_time_seconds, intervals[0])
@@ -169,7 +170,7 @@ class TimerTest(unittest.TestCase):
         total = timer.total_time_seconds
 
         # Ensure total accumulates with multiple context managers
-        with timer.time():
+        with timer.time("action_2"):
             time.sleep(intervals[1])
         self.assertLess(timer.interval_time_seconds, timer.total_time_seconds)
         self.assert_within_tolerance(timer.interval_time_seconds, intervals[1])
@@ -179,8 +180,8 @@ class TimerTest(unittest.TestCase):
 
         # Make sure nested context managers work properly
         with self.assertWarns(Warning):
-            with timer.time():
-                with timer.time():
+            with timer.time("action_3"):
+                with timer.time("action_4"):
                     time.sleep(intervals[2])
         self.assertLess(timer.interval_time_seconds, timer.total_time_seconds)
         self.assert_within_tolerance(timer.interval_time_seconds, intervals[2])
@@ -212,6 +213,18 @@ class TimerTest(unittest.TestCase):
         self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
         self.assert_within_tolerance(timer.total_time_seconds, 0.5)
         self.assert_within_tolerance(timer.total_time_seconds, elapsed_time_ms / 1000)
+
+    def test_get_timer_summary(self) -> None:
+        """Test the get_timer_summary function"""
+
+        timer = Timer()
+        summary = get_timer_summary(timer)
+        self.assertEqual(summary, f"Timer Report{os.linesep}")
+
+        with timer.time("action_1"):
+            time.sleep(0.5)
+        summary = get_timer_summary(timer)
+        self.assertTrue("action_1" in summary)
 
 
 class FullSyncPeriodicTimerTest(unittest.TestCase):
