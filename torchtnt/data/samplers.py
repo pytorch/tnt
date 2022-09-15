@@ -1,13 +1,21 @@
-import torch
-from torchtnt.utils import distributed as dist_utils
-from torch.utils.data import Sampler, Dataset
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
 from typing import Optional
+
+import torch
+from torch.utils.data import Dataset, Sampler
+from torchtnt.utils import distributed as dist_utils
+
 
 class StatefulDistributedSampler(Sampler):
     """
-    StatefulDistributedSampler is a sampler whose state can be saved and loaded. 
+    StatefulDistributedSampler is a sampler whose state can be saved and loaded.
     It is expected to be used with ``torchtnt.data.dataloaders.StatefulDataLoader``.
-    
+
     It can be used in a single or multi-process setup.
 
     Args:
@@ -22,17 +30,17 @@ class StatefulDistributedSampler(Sampler):
     def __init__(
         self,
         dataset: Dataset,
-        seed: Optional[int]=None,
-        rank: Optional[int]=None,
-        world_size: Optional[int]=None,
-        shuffle: bool=True,
-        drop_last: bool=True,
-        replacement: bool=False,
+        seed: Optional[int] = None,
+        rank: Optional[int] = None,
+        world_size: Optional[int] = None,
+        shuffle: bool = True,
+        drop_last: bool = True,
+        replacement: bool = False,
     ):
         self._dataset = dataset
 
         if seed is None:
-            seed = torch.randint(0, 2 ** 32, (1,), dtype=torch.int64).item()
+            seed = torch.randint(0, 2**32, (1,), dtype=torch.int64).item()
         self._seed = seed
 
         if rank is None:
@@ -53,7 +61,7 @@ class StatefulDistributedSampler(Sampler):
     @property
     def epoch(self):
         return self._epoch
-    
+
     @property
     def world_size(self):
         return self._world_size

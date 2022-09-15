@@ -109,6 +109,7 @@ def get_global_rank() -> int:
 
     return 0
 
+
 def get_world_size() -> int:
     """
     Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.
@@ -116,7 +117,7 @@ def get_world_size() -> int:
     """
     if dist.is_initialized():
         return dist.get_world_size()
-    
+
     world_size = os.environ.get("WORLD_SIZE", "")
     if world_size.isdecimal():
         return int(world_size)

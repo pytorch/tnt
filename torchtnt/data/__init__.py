@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from .data_prefetcher import CudaDataPrefetcher
+from .dataloaders import MultiDataLoader, StatefulDataLoader
 from .iterators import (
     AllDatasetBatchesIterator,
     DataIterationStrategy,
@@ -14,7 +15,6 @@ from .iterators import (
     RandomizedBatchSamplerIterator,
     RoundRobinIterator,
 )
-from .dataloaders import MultiDataLoader, StatefulDataLoader
 from .samplers import StatefulDistributedSampler
 
 __all__ = [
@@ -27,4 +27,6 @@ __all__ = [
     "MultiIterator",
     "RandomizedBatchSamplerIterator",
     "RoundRobinIterator",
+    "StatefulDistributedSampler",
+    "StatefulDataLoader",
 ]

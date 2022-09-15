@@ -8,7 +8,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Iterable, Iterator, Optional, Type, TYPE_CHECKING, Union
+from typing import Any, Dict, Iterable, Iterator, Optional, Type, Union
+
+from torch.utils.data import DataLoader, Dataset
 
 from torchtnt.data.iterators import (
     DataIterationStrategy,
@@ -16,8 +18,6 @@ from torchtnt.data.iterators import (
     MultiIterator,
 )
 from torchtnt.data.samplers import StatefulDistributedSampler
-
-from torch.utils.data import DataLoader, Dataset
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -90,6 +90,8 @@ class StatefulDataLoader(DataLoader):
     Note::
         StatefulDataLoader expects all ranks to have the same number of batches per epoch and data to be read in lockstep.
 
+
+    Example::
 
     Args:
         dataset (Dataset): dataset to load data from

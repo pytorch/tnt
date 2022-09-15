@@ -1,14 +1,19 @@
-import unittest
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
+import os
+import tempfile
+from uuid import uuid4
+
+import pytest
+import torch
 
 from torch.utils.data import Dataset
 from torchtnt.data.dataloaders import StatefulDataLoader
 from torchtnt.data.samplers import StatefulDistributedSampler
-from uuid import uuid4
-import tempfile
-import torch
-import os
-import pytest
-import torch.distributed.launcher as pet
 
 
 class SimpleDataset(Dataset):
@@ -20,14 +25,6 @@ class SimpleDataset(Dataset):
 
     def __getitem__(self, index):
         return self.items[index]
-
-
-# class TestStatefulDataLoader(unittest.TestCase):
-#     def setUp(self) -> None:
-#         self.temp_dir = tempfile.TemporaryDirectory()
-
-#     def tearDown(self) -> None:
-#         self.temp_dir.cleanup()
 
 
 @pytest.fixture
@@ -59,17 +56,21 @@ def test_single_rank(
 
     items = list((i, i * 10) for i in range(100))
     dataset = SimpleDataset(items)
-    create_sampler = lambda: StatefulDistributedSampler(
-        dataset, shuffle=shuffle, seed=1, rank=0, world_size=1
-    )
-    create_loader = lambda: StatefulDataLoader(
-        dataset,
-        sampler=sampler,
-        batch_size=batch_size,
-        num_workers=num_workers,
-        prefetch_factor=prefetch_factor,
-        persistent_workers=persistent_workers,
-    )
+
+    def create_sampler():
+        return StatefulDistributedSampler(
+            dataset, shuffle=shuffle, seed=1, rank=0, world_size=1
+        )
+
+    def create_loader():
+        return StatefulDataLoader(
+            dataset,
+            sampler=sampler,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            prefetch_factor=prefetch_factor,
+            persistent_workers=persistent_workers,
+        )
 
     sampler = create_sampler()
     loader = create_loader()
@@ -122,17 +123,21 @@ def test_distributed(
 
     dataset = SimpleDataset(items)
     save_file = os.path.join(temp_dir, str(uuid4()))
-    create_sampler = lambda rank: StatefulDistributedSampler(
-        dataset, shuffle=True, seed=1, rank=rank, world_size=world_size
-    )
-    create_loader = lambda sampler: StatefulDataLoader(
-        dataset,
-        sampler=sampler,
-        batch_size=batch_size,
-        num_workers=num_workers,
-        prefetch_factor=prefetch_factor,
-        persistent_workers=persistent_workers,
-    )
+
+    def create_sampler(rank):
+        StatefulDistributedSampler(
+            dataset, shuffle=True, seed=1, rank=rank, world_size=world_size
+        )
+
+    def create_loader(sampler):
+        return StatefulDataLoader(
+            dataset,
+            sampler=sampler,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            prefetch_factor=prefetch_factor,
+            persistent_workers=persistent_workers,
+        )
 
     loaders = []
     for i in range(world_size):
