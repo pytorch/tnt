@@ -97,7 +97,7 @@ class PGWrapper:
 
 def get_global_rank() -> int:
     """
-    Get rank using torch.distributed if available. Otherwise, the RANK env var instead if initialized.
+    Get rank using torch.distributed if available. Otherwise, the RANK env var is used instead if initialized.
     Returns 0 if neither condition is met.
     """
     if dist.is_initialized():
@@ -105,9 +105,23 @@ def get_global_rank() -> int:
 
     environ_rank = os.environ.get("RANK", "")
     if environ_rank.isdecimal():
-        return int(os.environ["RANK"])
+        return int(environ_rank)
 
     return 0
+
+def get_world_size() -> int:
+    """
+    Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.
+    Returns 1 if neither condition is met.
+    """
+    if dist.is_initialized():
+        return dist.get_world_size()
+    
+    world_size = os.environ.get("WORLD_SIZE", "")
+    if world_size.isdecimal():
+        return int(world_size)
+
+    return 1
 
 
 def get_process_group_backend_from_device(device: torch.device) -> str:

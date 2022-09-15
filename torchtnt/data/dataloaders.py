@@ -15,15 +15,15 @@ from torchtnt.data.iterators import (
     DataIterationStrategyRegistry,
     MultiIterator,
 )
+from torchtnt.data.samplers import StatefulDistributedSampler
 
-if TYPE_CHECKING:
-    from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class MultiDataloader:
-    """MultiDataloader cycles through individual dataloaders passed to it.
+class MultiDataLoader:
+    """MultiDataLoader cycles through individual dataloaders passed to it.
 
     Attributes:
         individual_dataloaders (Dict[str, Union[DataLoader, Iterable]]): A dictionary of DataLoaders or Iterables with dataloader name as key
@@ -56,10 +56,10 @@ class MultiDataloader:
                 next(iter(self.individual_dataloaders[name]))
             except StopIteration:
                 if not ignore_empty_data:
-                    raise ValueError(f"Dataloader '{name}' contains no data.")
+                    raise ValueError(f"DataLoader '{name}' contains no data.")
                 else:
                     logger.warning(
-                        f"Dataloader '{name}' which contains no data. "
+                        f"DataLoader '{name}' which contains no data. "
                         "You might have empty dataloaders in the input dict."
                     )
 
@@ -73,10 +73,48 @@ class MultiDataloader:
         iterator_cls = self.iterator_cls
         if iterator_cls is None:
             iterator_cls = DataIterationStrategyRegistry.get(self.iteration_strategy)
-        # pyre-fixme[16]: `MultiDataloader` has no attribute `iterator`.
+        # pyre-fixme[16]: `MultiDataLoader` has no attribute `iterator`.
         # pyre-fixme[45]: Cannot instantiate abstract class `MultiIterator`.
         self.iterator = iterator_cls(
             individual_dataloaders=self.individual_dataloaders,
             iteration_strategy=self.iteration_strategy,
         )
         return self.iterator
+
+
+class StatefulDataLoader(DataLoader):
+    """
+    StatefulDataLoader is a wrapper around PyTorch DataLoader that supports saving and loading
+    state. This is useful for checkpointing and resuming training.
+
+    Note::
+        StatefulDataLoader expects all ranks to have the same number of batches per epoch and data to be read in lockstep.
+
+
+    Args:
+        dataset (Dataset): dataset to load data from
+        sampler (StatefulDistributedSampler): sampler to use for loading data. Currently only StatefulDistributedSampler is supported.
+        *args: args to pass to DataLoader
+        **kwargs: kwargs to pass to DataLoader
+    """
+
+    def __init__(
+        self, dataset: Dataset, sampler: StatefulDistributedSampler, *args, **kwargs
+    ):
+        super().__init__(dataset, sampler=sampler, *args, **kwargs)
+
+    def __iter__(self):
+        self._iter = super().__iter__()
+        return self._iter
+
+    def state_dict(self):
+        return {
+            "sampler": self.sampler.state_dict(),
+            "start_index": self._iter._num_yielded
+            * self.batch_size
+            * self.sampler.world_size,
+        }
+
+    def load_state_dict(self, state_dict):
+        state_dict["sampler"].update({"start_index": state_dict["start_index"]})
+        self.sampler.load_state_dict(state_dict["sampler"])
