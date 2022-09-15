@@ -5,12 +5,15 @@
 # LICENSE file in the root directory of this source tree.
 
 
+import logging
 from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
 from torchtnt.runner.progress import Progress
 from torchtnt.utils.timer import Timer
+
+_logger: logging.Logger = logging.getLogger(__name__)
 
 
 class EntryPoint(Enum):
@@ -52,3 +55,15 @@ class State:
     train_state: Optional[PhaseState] = None
     eval_state: Optional[PhaseState] = None
     predict_state: Optional[PhaseState] = None
+
+    _should_stop: bool = False
+
+    def stop(self) -> None:
+        """Signal to the loop to end after the current step completes."""
+        _logger.warn("Received signal to stop")
+        self._should_stop = True
+
+    @property
+    def should_stop(self) -> bool:
+        """Read-only property for whether to terminate the loop after the current step completes."""
+        return self._should_stop
