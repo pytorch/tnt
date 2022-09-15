@@ -84,7 +84,10 @@ def _evaluate_impl(
 
     data_iter = iter(eval_state.dataloader)
 
-    while not _is_epoch_done(eval_state.progress, eval_state.max_steps_per_epoch):
+    while not (
+        state.should_stop
+        or _is_epoch_done(eval_state.progress, eval_state.max_steps_per_epoch)
+    ):
         try:
             # TODO: conditionally expose data iterator for use cases that require access during the step
             with state.timer.time("eval.data_iter_next"):

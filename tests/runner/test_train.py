@@ -6,9 +6,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+from typing import Tuple
+
+import torch
+from torch import nn
 
 from torchtnt.runner._test_utils import DummyTrainUnit, generate_random_dataloader
+from torchtnt.runner.state import State
 from torchtnt.runner.train import train, train_epoch
+from torchtnt.runner.unit import TrainUnit
 
 
 class TrainTest(unittest.TestCase):
@@ -102,3 +108,65 @@ class TrainTest(unittest.TestCase):
         self.assertEqual(state.train_state.step_output, None)
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
+
+    def test_train_stop(self) -> None:
+        """
+        Test train entry point with setting state's `stop()` flag
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 3
+        max_steps_per_epoch = 4
+        steps_before_stopping = 2
+
+        my_unit = StopTrainUnit(
+            input_dim=input_dim, steps_before_stopping=steps_before_stopping
+        )
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = train(
+            my_unit,
+            dataloader,
+            max_epochs=max_epochs,
+            max_steps_per_epoch=max_steps_per_epoch,
+        )
+
+        self.assertEqual(state.train_state.progress.num_epochs_completed, 1)
+        self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(
+            my_unit.steps_processed, state.train_state.progress.num_steps_completed
+        )
+        self.assertEqual(my_unit.steps_processed, steps_before_stopping)
+
+
+class StopTrainUnit(TrainUnit[Tuple[torch.Tensor, torch.Tensor]]):
+    def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
+        self.steps_processed = 0
+        self.steps_before_stopping = steps_before_stopping
+
+    def train_step(
+        self, state: State, data: Tuple[torch.Tensor, torch.Tensor]
+    ) -> torch.Tensor:
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        loss.backward()
+
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+
+        assert state.train_state
+        if (
+            state.train_state.progress.num_steps_completed_in_epoch + 1
+            == self.steps_before_stopping
+        ):
+            state.stop()
+
+        self.steps_processed += 1
+        return loss, outputs

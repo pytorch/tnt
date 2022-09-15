@@ -85,7 +85,9 @@ def _train_impl(
     with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_start"):
         train_unit.on_train_start(state)
 
-    while not _is_done(train_state.progress, train_state.max_epochs):
+    while not (
+        state.should_stop or _is_done(train_state.progress, train_state.max_epochs)
+    ):
         _train_epoch_impl(state, train_unit)
 
     with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_end"):
@@ -163,7 +165,10 @@ def _train_epoch_impl(state: State, train_unit: TrainUnit[TTrainData]) -> None:
 
     data_iter = iter(train_state.dataloader)
 
-    while not _is_epoch_done(train_state.progress, train_state.max_steps_per_epoch):
+    while not (
+        state.should_stop
+        or _is_epoch_done(train_state.progress, train_state.max_steps_per_epoch)
+    ):
         try:
             # TODO: conditionally expose data iterator for use cases that require access during the step
             with state.timer.time("train.data_iter_next"):

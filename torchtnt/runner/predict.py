@@ -86,7 +86,10 @@ def _predict_impl(
 
     data_iter = iter(predict_state.dataloader)
 
-    while not _is_epoch_done(predict_state.progress, predict_state.max_steps_per_epoch):
+    while not (
+        state.should_stop
+        or _is_epoch_done(predict_state.progress, predict_state.max_steps_per_epoch)
+    ):
         try:
             # TODO: conditionally expose data iterator for use cases that require access during the step
             with state.timer.time("predict.data_iter_next"):
