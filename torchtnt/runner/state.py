@@ -60,7 +60,7 @@ class State:
 
     def stop(self) -> None:
         """Signal to the loop to end after the current step completes."""
-        _logger.warn("Received signal to stop")
+        _logger.warning("Received signal to stop")
         self._should_stop = True
 
     @property
