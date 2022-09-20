@@ -78,7 +78,7 @@ def _evaluate_impl(
     # in the case of resuming from a checkpoint mid-epoch
     if eval_state.progress.num_steps_completed_in_epoch == 0:
         with state.timer.time(
-            f"[EvalUnit]{eval_unit.__class__.__name__}.on_eval_epoch_start"
+            f"eval.{eval_unit.__class__.__name__}.on_eval_epoch_start"
         ):
             eval_unit.on_eval_epoch_start(state)
 
