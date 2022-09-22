@@ -14,7 +14,9 @@ TorchTNT API
    :maxdepth: 2
    :caption: Contents:
 
+   torchtnt.data.rst
    torchtnt.loggers.rst
+   torchtnt.runner.rst
    torchtnt.utils.rst
 
 Indices and tables
