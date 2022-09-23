@@ -6,10 +6,25 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+from typing import Union
+from unittest.mock import MagicMock
 
 from torch import nn
-
-from torchtnt.runner.utils import _reset_module_training_mode, _set_module_training_mode
+from torchtnt.runner.callback import TrainCallback
+from torchtnt.runner.state import State
+from torchtnt.runner.unit import (
+    EvalUnit,
+    PredictUnit,
+    TEvalData,
+    TPredictData,
+    TrainUnit,
+    TTrainData,
+)
+from torchtnt.runner.utils import (
+    _reset_module_training_mode,
+    _run_callback_fn,
+    _set_module_training_mode,
+)
 
 
 class UtilsTest(unittest.TestCase):
@@ -60,3 +75,99 @@ class UtilsTest(unittest.TestCase):
 
         self.assertTrue(module.training)
         self.assertTrue(loss_fn.training)
+
+    def test_run_callback_fn_hooks(self) -> None:
+        """
+        Test _run_callback_fn with all of the hooks on TrainCallback
+        """
+        callback = DummyTrainCallback("train")
+        train_unit = MagicMock()
+        dummy_train_state = MagicMock()
+
+        self.assertEqual(callback.dummy_data, "train")
+        _run_callback_fn(
+            [callback],
+            "on_exception",
+            dummy_train_state,
+            train_unit,
+            ValueError("test"),
+        )
+        self.assertEqual(callback.dummy_data, "on_exception")
+
+        _run_callback_fn([callback], "on_train_start", dummy_train_state, train_unit)
+        self.assertEqual(callback.dummy_data, "on_train_start")
+
+        _run_callback_fn(
+            [callback], "on_train_epoch_start", dummy_train_state, train_unit
+        )
+        self.assertEqual(callback.dummy_data, "on_train_epoch_start")
+
+        _run_callback_fn(
+            [callback], "on_train_step_start", dummy_train_state, train_unit
+        )
+        self.assertEqual(callback.dummy_data, "on_train_step_start")
+
+        _run_callback_fn([callback], "on_train_step_end", dummy_train_state, train_unit)
+        self.assertEqual(callback.dummy_data, "on_train_step_end")
+
+        _run_callback_fn(
+            [callback], "on_train_epoch_end", dummy_train_state, train_unit
+        )
+        self.assertEqual(callback.dummy_data, "on_train_epoch_end")
+
+        _run_callback_fn([callback], "on_train_end", dummy_train_state, train_unit)
+        self.assertEqual(callback.dummy_data, "on_train_end")
+
+    def test_run_callback_fn_exception(self) -> None:
+        """
+        Test _run_callback_fn exception handling
+        """
+        callback = DummyTrainCallback("train")
+        train_unit = MagicMock()
+        dummy_train_state = MagicMock()
+
+        with self.assertRaisesRegex(
+            ValueError, "Invalid callback method name provided"
+        ):
+            _run_callback_fn([callback], "dummy_attr", dummy_train_state, train_unit)
+
+        with self.assertRaisesRegex(
+            AttributeError, "object has no attribute 'on_train_finish'"
+        ):
+            _run_callback_fn(
+                [callback], "on_train_finish", dummy_train_state, train_unit
+            )
+
+
+class DummyTrainCallback(TrainCallback):
+    def __init__(self, dummy_data: str) -> None:
+        self.dummy_data = dummy_data
+        self.dummy_attr = 1
+
+    def on_exception(
+        self,
+        state: State,
+        unit: Union[
+            TrainUnit[TTrainData], EvalUnit[TEvalData], PredictUnit[TPredictData]
+        ],
+        exc: BaseException,
+    ):
+        self.dummy_data = "on_exception"
+
+    def on_train_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+        self.dummy_data = "on_train_start"
+
+    def on_train_epoch_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+        self.dummy_data = "on_train_epoch_start"
+
+    def on_train_step_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+        self.dummy_data = "on_train_step_start"
+
+    def on_train_step_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+        self.dummy_data = "on_train_step_end"
+
+    def on_train_epoch_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+        self.dummy_data = "on_train_epoch_end"
+
+    def on_train_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+        self.dummy_data = "on_train_end"
