@@ -28,7 +28,7 @@ from torchtnt.loggers.tensorboard import TensorBoardLogger
 from torchtnt.runner.state import State
 from torchtnt.runner.train import train
 from torchtnt.runner.unit import TrainUnit
-from torchtnt.utils import init_from_env, seed, Timer
+from torchtnt.utils import get_timer_summary, init_from_env, seed
 
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -188,13 +188,8 @@ def main(argv: List[str]) -> None:
         num_samples, args.input_dim, args.batch_size, device
     )
 
-    t = Timer()
-    t.start()
-
-    train(my_unit, train_dataloader, max_epochs=args.max_epochs)
-
-    t.stop()
-    print(f"Total time for training {args.max_epochs} epochs: {t.total_time_seconds}")
+    state = train(my_unit, train_dataloader, max_epochs=args.max_epochs)
+    print(get_timer_summary(state.timer))
 
 
 class ValidateAccumGradBatchesAction(argparse.Action):
