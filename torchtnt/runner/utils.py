@@ -4,13 +4,14 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import torch
-
 import torch.nn as nn
 
+from torchtnt.runner.callback import Callback
 from torchtnt.runner.progress import Progress
+from torchtnt.runner.state import State
 
 # Helper functions common across the loops
 
@@ -56,6 +57,23 @@ def _reset_module_training_mode(
     for name, module in modules.items():
         if name in prior_modes:
             module.train(prior_modes[name])
+
+
+def _run_callback_fn(
+    callbacks: Optional[List[Callback]],
+    fn_name: str,
+    state: State,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    if not callbacks:
+        return
+    for cb in callbacks:
+        fn = getattr(cb, fn_name)
+        if not callable(fn):
+            raise ValueError(f"Invalid callback method name provided: {fn_name}")
+        with state.timer.time(f"callback.{cb.name}.{fn_name}"):
+            fn(state, *args, **kwargs)
 
 
 def log_api_usage(entry_point: str) -> None:
