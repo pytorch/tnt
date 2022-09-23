@@ -33,7 +33,7 @@ from .rank_zero_log import (
 )
 from .seed import seed
 from .test_utils import get_pet_launch_config
-from .timer import FullSyncPeriodicTimer, Timer
+from .timer import FullSyncPeriodicTimer, get_timer_summary, Timer
 from .version import (
     get_python_version,
     get_torch_version,
@@ -74,6 +74,7 @@ __all__ = [
     "seed",
     "get_pet_launch_config",
     "FullSyncPeriodicTimer",
+    "get_timer_summary",
     "Timer",
     "get_python_version",
     "get_torch_version",
