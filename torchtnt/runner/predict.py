@@ -17,6 +17,7 @@ from torchtnt.runner.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
     _set_module_training_mode,
+    _step_requires_iterator,
     log_api_usage,
 )
 from torchtnt.utils.timer import get_timer_summary, Timer
@@ -85,19 +86,24 @@ def _predict_impl(
             predict_unit.on_predict_epoch_start(state)
 
     data_iter = iter(predict_state.dataloader)
+    step_input = data_iter
+
+    # pyre-ignore[6]: Incompatible parameter type
+    pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
 
     while not (
         state.should_stop
         or _is_epoch_done(predict_state.progress, predict_state.max_steps_per_epoch)
     ):
         try:
-            # TODO: conditionally expose data iterator for use cases that require access during the step
-            with state.timer.time("predict.data_iter_next"):
-                batch = next(data_iter)
+            if not pass_data_iter_to_step:
+                # get the next batch from the data iterator
+                with state.timer.time("eval.data_iter_next"):
+                    step_input = next(data_iter)
             with state.timer.time(
                 f"predict.{predict_unit.__class__.__name__}.predict_step"
             ):
-                predict_state.step_output = predict_unit.predict_step(state, batch)
+                predict_state.step_output = predict_unit.predict_step(state, step_input)
             # clear step_output to avoid retaining extra memory
             predict_state.step_output = None
             predict_state.progress.num_steps_completed_in_epoch += 1
