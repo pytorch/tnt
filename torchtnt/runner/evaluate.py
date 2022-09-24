@@ -17,6 +17,7 @@ from torchtnt.runner.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
     _set_module_training_mode,
+    _step_requires_iterator,
     log_api_usage,
 )
 from torchtnt.utils.timer import get_timer_summary, Timer
@@ -83,17 +84,25 @@ def _evaluate_impl(
             eval_unit.on_eval_epoch_start(state)
 
     data_iter = iter(eval_state.dataloader)
+    step_input = data_iter
+
+    # pyre-ignore[6]: Incompatible parameter type
+    pass_data_iter_to_step = _step_requires_iterator(eval_unit.eval_step)
 
     while not (
         state.should_stop
         or _is_epoch_done(eval_state.progress, eval_state.max_steps_per_epoch)
     ):
         try:
-            # TODO: conditionally expose data iterator for use cases that require access during the step
-            with state.timer.time("eval.data_iter_next"):
-                batch = next(data_iter)
+
+            if not pass_data_iter_to_step:
+                # get the next batch from the data iterator
+                with state.timer.time("eval.data_iter_next"):
+                    step_input = next(data_iter)
+
             with state.timer.time(f"eval.{eval_unit.__class__.__name__}.eval_step"):
-                eval_state.step_output = eval_unit.eval_step(state, batch)
+                eval_state.step_output = eval_unit.eval_step(state, step_input)
+
             # clear step_output to avoid retaining extra memory
             eval_state.step_output = None
             eval_state.progress.num_steps_completed_in_epoch += 1
