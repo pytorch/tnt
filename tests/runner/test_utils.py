@@ -6,10 +6,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+from typing import Iterator
 
 from torch import nn
 
-from torchtnt.runner.utils import _reset_module_training_mode, _set_module_training_mode
+from torchtnt.runner.utils import (
+    _reset_module_training_mode,
+    _set_module_training_mode,
+    _step_requires_iterator,
+)
 
 
 class UtilsTest(unittest.TestCase):
@@ -60,3 +65,20 @@ class UtilsTest(unittest.TestCase):
 
         self.assertTrue(module.training)
         self.assertTrue(loss_fn.training)
+
+    def test_step_func_requires_iterator(self) -> None:
+        class Foo:
+            def bar(self) -> None:
+                pass
+
+            def baz(self, data: Iterator[int], b: int, c: str) -> int:
+                return b
+
+        def dummy(a: int, b: str, data: Iterator[str]) -> None:
+            pass
+
+        foo = Foo()
+
+        self.assertFalse(_step_requires_iterator(foo.bar))
+        self.assertTrue(_step_requires_iterator(foo.baz))
+        self.assertTrue(_step_requires_iterator(dummy))
