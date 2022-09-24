@@ -7,6 +7,7 @@
 
 import unittest
 from typing import Tuple
+from unittest.mock import MagicMock
 
 import torch
 from torch import nn
@@ -95,6 +96,36 @@ class PredictTest(unittest.TestCase):
             my_unit.steps_processed, state.predict_state.progress.num_steps_completed
         )
         self.assertEqual(my_unit.steps_processed, steps_before_stopping)
+
+    def test_predict_with_callback(self) -> None:
+        """
+        Test predict entry point with a callback
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 6
+        expected_num_steps = dataset_len / batch_size
+
+        my_unit = MagicMock()
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        callback_mock = MagicMock()
+        _ = predict(
+            my_unit,
+            dataloader,
+            [callback_mock],
+            max_steps_per_epoch=max_steps_per_epoch,
+        )
+        self.assertEqual(callback_mock.on_predict_start.call_count, 1)
+        self.assertEqual(callback_mock.on_predict_epoch_start.call_count, 1)
+        self.assertEqual(
+            callback_mock.on_predict_step_start.call_count, expected_num_steps
+        )
+        self.assertEqual(
+            callback_mock.on_predict_step_end.call_count, expected_num_steps
+        )
+        self.assertEqual(callback_mock.on_predict_epoch_end.call_count, 1)
+        self.assertEqual(callback_mock.on_predict_end.call_count, 1)
 
 
 class StopPredictUnit(PredictUnit[Tuple[torch.Tensor, torch.Tensor]]):

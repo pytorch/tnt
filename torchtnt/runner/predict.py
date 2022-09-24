@@ -5,9 +5,10 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 import torch
+from torchtnt.runner.callback import PredictCallback
 
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
@@ -16,6 +17,7 @@ from torchtnt.runner.utils import (
     _check_loop_condition,
     _is_epoch_done,
     _reset_module_training_mode,
+    _run_callback_fn,
     _set_module_training_mode,
     log_api_usage,
 )
@@ -27,11 +29,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 def predict(
     predict_unit: PredictUnit[TPredictData],
     dataloader: Iterable[TPredictData],
+    callbacks: Optional[List[PredictCallback]] = None,
     *,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """Makes a single pass through the predict dataloader."""
     log_api_usage("predict")
+    callbacks = callbacks or []
     state = State(
         entry_point=EntryPoint.PREDICT,
         timer=Timer(),
@@ -42,7 +46,7 @@ def predict(
         ),
     )
     try:
-        _predict_impl(state, predict_unit)
+        _predict_impl(state, predict_unit, callbacks)
         logger.info("Finished predict")
         logger.debug(get_timer_summary(state.timer))
         return state
@@ -50,6 +54,7 @@ def predict(
         # TODO: log for diagnostics
         logger.info(e)
         predict_unit.on_exception(state, e)
+        _run_callback_fn(callbacks, "on_exception", state, predict_unit, e)
         raise e
 
 
@@ -57,6 +62,7 @@ def predict(
 def _predict_impl(
     state: State,
     predict_unit: PredictUnit[TPredictData],
+    callbacks: List[PredictCallback],
 ) -> None:
     # input validation
     predict_state = state.predict_state
@@ -75,6 +81,7 @@ def _predict_impl(
         f"predict.{predict_unit.__class__.__name__}.on_predict_start"
     ):
         predict_unit.on_predict_start(state)
+    _run_callback_fn(callbacks, "on_predict_start", state, predict_unit)
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
@@ -83,6 +90,7 @@ def _predict_impl(
             f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_start"
         ):
             predict_unit.on_predict_epoch_start(state)
+        _run_callback_fn(callbacks, "on_predict_epoch_start", state, predict_unit)
 
     data_iter = iter(predict_state.dataloader)
 
@@ -94,10 +102,12 @@ def _predict_impl(
             # TODO: conditionally expose data iterator for use cases that require access during the step
             with state.timer.time("predict.data_iter_next"):
                 batch = next(data_iter)
+            _run_callback_fn(callbacks, "on_predict_step_start", state, predict_unit)
             with state.timer.time(
                 f"predict.{predict_unit.__class__.__name__}.predict_step"
             ):
                 predict_state.step_output = predict_unit.predict_step(state, batch)
+            _run_callback_fn(callbacks, "on_predict_step_end", state, predict_unit)
             # clear step_output to avoid retaining extra memory
             predict_state.step_output = None
             predict_state.progress.num_steps_completed_in_epoch += 1
@@ -108,6 +118,7 @@ def _predict_impl(
         f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_end"
     ):
         predict_unit.on_predict_epoch_end(state)
+    _run_callback_fn(callbacks, "on_predict_epoch_end", state, predict_unit)
 
     # set progress counters for the next epoch
     predict_state.progress.num_epochs_completed += 1
@@ -115,6 +126,7 @@ def _predict_impl(
 
     with state.timer.time(f"predict.{predict_unit.__class__.__name__}.on_predict_end"):
         predict_unit.on_predict_end(state)
+    _run_callback_fn(callbacks, "on_predict_end", state, predict_unit)
 
     # Reset training mode for modules at the end of the epoch
     # This ensures that side-effects made by the loop are reset before
