@@ -4,13 +4,19 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, Optional
+import collections
+import inspect
+import logging
+from typing import Callable, Dict, Optional
 
 import torch
-
 import torch.nn as nn
-
+import typing_extensions
 from torchtnt.runner.progress import Progress
+from torchtnt.runner.state import State
+
+_logger: logging.Logger = logging.getLogger(__name__)
+
 
 # Helper functions common across the loops
 
@@ -60,3 +66,21 @@ def _reset_module_training_mode(
 
 def log_api_usage(entry_point: str) -> None:
     torch._C._log_api_usage_once(f"torchtnt.runner.{entry_point}")
+
+
+def _step_requires_iterator(step_func: Callable[[State, object], object]) -> bool:
+    """
+    Helper function to evaluate whether the loops should pass the data iterator ot the `_step`
+    functions, or whether the loop should call `next(data_iter)` and pass a single batch to process.
+
+    This is closely tied ot the *Unit's corresponding step function signature.
+    """
+    argspec = inspect.getfullargspec(step_func)
+    annotations = argspec.annotations
+    if "data" not in annotations:
+        _logger.warn(
+            f"Expected step function to have an annotated argument named ``data``. Found {annotations}."
+        )
+        return False
+    annotated_type = annotations["data"]
+    return typing_extensions.get_origin(annotated_type) is collections.abc.Iterator
