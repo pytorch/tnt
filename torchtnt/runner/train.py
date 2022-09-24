@@ -204,6 +204,8 @@ def _train_epoch_impl(
                     state,
                     # pyre-ignore: Incompatible parameter type [6]
                     train_unit,
+                    # pyre-ignore: Incompatible parameter type [6]
+                    callbacks,
                 )
 
         except StopIteration:
@@ -224,6 +226,8 @@ def _train_epoch_impl(
             state,
             # pyre-ignore: Incompatible parameter type [6]
             train_unit,
+            # pyre-ignore: Incompatible parameter type [6]
+            callbacks,
         )
 
     # Reset training mode for modules at the end of the epoch
