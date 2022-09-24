@@ -7,6 +7,7 @@
 
 import unittest
 from typing import Tuple
+from unittest.mock import MagicMock
 
 import torch
 from torch import nn
@@ -137,6 +138,38 @@ class TrainTest(unittest.TestCase):
             my_unit.steps_processed, state.train_state.progress.num_steps_completed
         )
         self.assertEqual(my_unit.steps_processed, steps_before_stopping)
+
+    def test_train_with_callback(self) -> None:
+        """
+        Test train entry point with a callback
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 6
+        max_epochs = 3
+        expected_num_total_steps = dataset_len / batch_size * max_epochs
+
+        my_unit = MagicMock()
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        callback_mock = MagicMock()
+        _ = train(
+            my_unit,
+            dataloader,
+            [callback_mock],
+            max_epochs=max_epochs,
+            max_steps_per_epoch=max_steps_per_epoch,
+        )
+        self.assertEqual(callback_mock.on_train_start.call_count, 1)
+        self.assertEqual(callback_mock.on_train_epoch_start.call_count, max_epochs)
+        self.assertEqual(
+            callback_mock.on_train_step_start.call_count, expected_num_total_steps
+        )
+        self.assertEqual(
+            callback_mock.on_train_step_end.call_count, expected_num_total_steps
+        )
+        self.assertEqual(callback_mock.on_train_epoch_end.call_count, max_epochs)
+        self.assertEqual(callback_mock.on_train_end.call_count, 1)
 
 
 class StopTrainUnit(TrainUnit[Tuple[torch.Tensor, torch.Tensor]]):
