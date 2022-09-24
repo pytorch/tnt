@@ -25,6 +25,7 @@ from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.data import CudaDataPrefetcher
 from torchtnt.loggers.tensorboard import TensorBoardLogger
+from torchtnt.runner.callbacks import ProfilingCallback
 from torchtnt.runner.state import State
 from torchtnt.runner.train import train
 from torchtnt.runner.unit import TrainUnit
@@ -104,6 +105,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         precision: Optional[torch.dtype],
         lr: float,
         log_frequency_steps: int,
+        path: str,
     ):
         super().__init__()
         # initialize module & optimizer
@@ -117,7 +119,6 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.train_accuracy = BinaryAccuracy(device=device)
         self.log_frequency_steps = log_frequency_steps
 
-        path = tempfile.mkdtemp()
         self.tb_logger = TensorBoardLogger(path)
 
     def train_step(self, state: State, data: Batch) -> None:
@@ -174,6 +175,7 @@ def main(argv: List[str]) -> None:
         f"WORLD_SIZE: {os.environ.get('WORLD_SIZE', '0')}"
     )
 
+    path = tempfile.mkdtemp()
     my_unit = MyTrainUnit(
         args.input_dim,
         device,
@@ -181,14 +183,17 @@ def main(argv: List[str]) -> None:
         precision,
         args.lr,
         args.log_frequency_steps,
+        path,
     )
+
+    prof_cb = ProfilingCallback(path)
 
     num_samples = 10240
     train_dataloader = prepare_dataloader(
         num_samples, args.input_dim, args.batch_size, device
     )
 
-    state = train(my_unit, train_dataloader, max_epochs=args.max_epochs)
+    state = train(my_unit, train_dataloader, [prof_cb], max_epochs=args.max_epochs)
     print(get_timer_summary(state.timer))
 
 
