@@ -6,6 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+from unittest.mock import MagicMock
 
 from torchtnt.runner._test_utils import DummyFitUnit, generate_random_dataloader
 from torchtnt.runner.fit import fit
@@ -121,3 +122,55 @@ class FitTest(unittest.TestCase):
         # step_output should be reset to None
         self.assertEqual(state.eval_state.step_output, None)
         self.assertEqual(state.train_state.step_output, None)
+
+    def test_fit_with_callback(self) -> None:
+        """
+        Test fit entry point with a callback
+        """
+        input_dim = 2
+        train_dataset_len = 10
+        eval_dataset_len = 6
+        batch_size = 2
+        max_epochs = 4
+        expected_num_total_train_steps = train_dataset_len / batch_size * max_epochs
+        expected_num_total_eval_steps = eval_dataset_len / batch_size * max_epochs
+
+        my_unit = MagicMock(spec=DummyFitUnit)
+        train_dataloader = generate_random_dataloader(
+            train_dataset_len, input_dim, batch_size
+        )
+        eval_dataloader = generate_random_dataloader(
+            eval_dataset_len, input_dim, batch_size
+        )
+
+        callback_mock = MagicMock()
+
+        _ = fit(
+            my_unit,
+            train_dataloader,
+            eval_dataloader,
+            [callback_mock],
+            max_epochs=max_epochs,
+        )
+
+        self.assertEqual(callback_mock.on_train_start.call_count, 1)
+        self.assertEqual(callback_mock.on_train_epoch_start.call_count, max_epochs)
+        self.assertEqual(
+            callback_mock.on_train_step_start.call_count, expected_num_total_train_steps
+        )
+        self.assertEqual(
+            callback_mock.on_train_step_end.call_count, expected_num_total_train_steps
+        )
+        self.assertEqual(callback_mock.on_train_epoch_end.call_count, max_epochs)
+        self.assertEqual(callback_mock.on_train_end.call_count, 1)
+
+        self.assertEqual(callback_mock.on_eval_start.call_count, max_epochs)
+        self.assertEqual(callback_mock.on_eval_epoch_start.call_count, max_epochs)
+        self.assertEqual(
+            callback_mock.on_eval_step_start.call_count, expected_num_total_eval_steps
+        )
+        self.assertEqual(
+            callback_mock.on_eval_step_end.call_count, expected_num_total_eval_steps
+        )
+        self.assertEqual(callback_mock.on_eval_epoch_end.call_count, max_epochs)
+        self.assertEqual(callback_mock.on_eval_end.call_count, max_epochs)
