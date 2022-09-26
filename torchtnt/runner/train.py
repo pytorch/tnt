@@ -20,6 +20,7 @@ from torchtnt.runner.utils import (
     _reset_module_training_mode,
     _run_callback_fn,
     _set_module_training_mode,
+    _step_requires_iterator,
     log_api_usage,
 )
 from torchtnt.utils.timer import get_timer_summary, Timer
@@ -176,19 +177,26 @@ def _train_epoch_impl(
         _run_callback_fn(callbacks, "on_train_epoch_start", state, train_unit)
 
     data_iter = iter(train_state.dataloader)
+    step_input = data_iter
+
+    # pyre-ignore[6]: Incompatible parameter type
+    pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
 
     while not (
         state.should_stop
         or _is_epoch_done(train_state.progress, train_state.max_steps_per_epoch)
     ):
         try:
-            # TODO: conditionally expose data iterator for use cases that require access during the step
-            with state.timer.time("train.data_iter_next"):
-                batch = next(data_iter)
+            if not pass_data_iter_to_step:
+                # get the next batch from the data iterator
+                with state.timer.time("train.data_iter_next"):
+                    step_input = next(data_iter)
+
             _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
             with state.timer.time(f"train.{train_unit.__class__.__name__}.train_step"):
-                train_state.step_output = train_unit.train_step(state, batch)
+                train_state.step_output = train_unit.train_step(state, step_input)
             _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
+
             # clear step_output to avoid retaining extra memory
             train_state.step_output = None
             train_state.progress.num_steps_completed_in_epoch += 1
