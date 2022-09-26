@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Union
+from typing import Iterator, Union
 from unittest.mock import MagicMock
 
 from torch import nn
@@ -24,6 +24,7 @@ from torchtnt.runner.utils import (
     _reset_module_training_mode,
     _run_callback_fn,
     _set_module_training_mode,
+    _step_requires_iterator,
 )
 from torchtnt.utils import Timer
 
@@ -205,3 +206,20 @@ class DummyTrainCallback(TrainCallback):
 
     def on_train_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
         self.dummy_data = "on_train_end"
+
+    def test_step_func_requires_iterator(self) -> None:
+        class Foo:
+            def bar(self) -> None:
+                pass
+
+            def baz(self, data: Iterator[int], b: int, c: str) -> int:
+                return b
+
+        def dummy(a: int, b: str, data: Iterator[str]) -> None:
+            pass
+
+        foo = Foo()
+
+        self.assertFalse(_step_requires_iterator(foo.bar))
+        self.assertTrue(_step_requires_iterator(foo.baz))
+        self.assertTrue(_step_requires_iterator(dummy))
