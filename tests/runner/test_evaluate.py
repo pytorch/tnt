@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Tuple
+from typing import Iterator, Tuple
 
 import torch
 from torch import nn
@@ -91,6 +91,44 @@ class EvaluateTest(unittest.TestCase):
             my_unit.steps_processed, state.eval_state.progress.num_steps_completed
         )
         self.assertEqual(my_unit.steps_processed, steps_before_stopping)
+
+    def test_evaluate_data_iter_step(self) -> None:
+        class EvalIteratorUnit(EvalUnit[Iterator[Tuple[torch.Tensor, torch.Tensor]]]):
+            def __init__(self, input_dim: int) -> None:
+                super().__init__()
+                self.module = nn.Linear(input_dim, 2)
+                self.loss_fn = nn.CrossEntropyLoss()
+
+            def eval_step(
+                self, state: State, data: Iterator[Tuple[torch.Tensor, torch.Tensor]]
+            ) -> Tuple[torch.Tensor, torch.Tensor]:
+                batch = next(data)
+                inputs, targets = batch
+
+                outputs = self.module(inputs)
+                loss = self.loss_fn(outputs, targets)
+                return loss, outputs
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        expected_steps = dataset_len / batch_size
+
+        my_unit = EvalIteratorUnit(input_dim=input_dim)
+        initial_training_mode = my_unit.module.training
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        state = evaluate(my_unit, dataloader)
+
+        self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
+        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(state.eval_state.progress.num_steps_completed, expected_steps)
+
+        # step_output should be reset to None
+        self.assertEqual(state.eval_state.step_output, None)
+
+        self.assertEqual(my_unit.module.training, initial_training_mode)
 
 
 class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
