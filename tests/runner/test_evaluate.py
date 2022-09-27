@@ -7,6 +7,7 @@
 
 import unittest
 from typing import Iterator, Tuple
+from unittest.mock import MagicMock
 
 import torch
 from torch import nn
@@ -129,6 +130,34 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(state.eval_state.step_output, None)
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
+
+    def test_evaluate_with_callback(self) -> None:
+        """
+        Test evaluate entry point with a callback
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 6
+        expected_num_steps = dataset_len / batch_size
+
+        my_unit = MagicMock()
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        callback_mock = MagicMock()
+        _ = evaluate(
+            my_unit,
+            dataloader,
+            [callback_mock],
+            max_steps_per_epoch=max_steps_per_epoch,
+        )
+        self.assertEqual(callback_mock.on_eval_start.call_count, 1)
+        self.assertEqual(callback_mock.on_eval_epoch_start.call_count, 1)
+        self.assertEqual(
+            callback_mock.on_eval_step_start.call_count, expected_num_steps
+        )
+        self.assertEqual(callback_mock.on_eval_step_end.call_count, expected_num_steps)
+        self.assertEqual(callback_mock.on_eval_epoch_end.call_count, 1)
+        self.assertEqual(callback_mock.on_eval_end.call_count, 1)
 
 
 class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):

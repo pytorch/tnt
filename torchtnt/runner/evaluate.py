@@ -5,9 +5,10 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 import torch
+from torchtnt.runner.callback import EvalCallback
 
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
@@ -16,6 +17,7 @@ from torchtnt.runner.utils import (
     _check_loop_condition,
     _is_epoch_done,
     _reset_module_training_mode,
+    _run_callback_fn,
     _set_module_training_mode,
     _step_requires_iterator,
     log_api_usage,
@@ -28,11 +30,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 def evaluate(
     eval_unit: EvalUnit[TEvalData],
     dataloader: Iterable[TEvalData],
+    callbacks: Optional[List[EvalCallback]] = None,
     *,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """Makes a single pass through the evaluation dataloader."""
     log_api_usage("evaluate")
+    callbacks = callbacks or []
     state = State(
         entry_point=EntryPoint.EVALUATE,
         timer=Timer(),
@@ -43,7 +47,7 @@ def evaluate(
         ),
     )
     try:
-        _evaluate_impl(state, eval_unit)
+        _evaluate_impl(state, eval_unit, callbacks)
         logger.info("Finished evaluation")
         logger.debug(get_timer_summary(state.timer))
         return state
@@ -51,6 +55,7 @@ def evaluate(
         # TODO: log for diagnostics
         logger.info(e)
         eval_unit.on_exception(state, e)
+        _run_callback_fn(callbacks, "on_exception", state, eval_unit, e)
         raise e
 
 
@@ -58,6 +63,7 @@ def evaluate(
 def _evaluate_impl(
     state: State,
     eval_unit: EvalUnit[TEvalData],
+    callbacks: List[EvalCallback],
 ) -> None:
     # input validation
     eval_state = state.eval_state
@@ -74,6 +80,7 @@ def _evaluate_impl(
 
     with state.timer.time(f"eval.{eval_unit.__class__.__name__}.on_eval_start"):
         eval_unit.on_eval_start(state)
+    _run_callback_fn(callbacks, "on_eval_start", state, eval_unit)
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
@@ -82,6 +89,7 @@ def _evaluate_impl(
             f"eval.{eval_unit.__class__.__name__}.on_eval_epoch_start"
         ):
             eval_unit.on_eval_epoch_start(state)
+        _run_callback_fn(callbacks, "on_eval_epoch_start", state, eval_unit)
 
     data_iter = iter(eval_state.dataloader)
     step_input = data_iter
@@ -94,15 +102,14 @@ def _evaluate_impl(
         or _is_epoch_done(eval_state.progress, eval_state.max_steps_per_epoch)
     ):
         try:
-
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
                 with state.timer.time("eval.data_iter_next"):
                     step_input = next(data_iter)
-
+            _run_callback_fn(callbacks, "on_eval_step_start", state, eval_unit)
             with state.timer.time(f"eval.{eval_unit.__class__.__name__}.eval_step"):
                 eval_state.step_output = eval_unit.eval_step(state, step_input)
-
+            _run_callback_fn(callbacks, "on_eval_step_end", state, eval_unit)
             # clear step_output to avoid retaining extra memory
             eval_state.step_output = None
             eval_state.progress.num_steps_completed_in_epoch += 1
@@ -111,6 +118,7 @@ def _evaluate_impl(
             break
     with state.timer.time(f"eval.{eval_unit.__class__.__name__}.on_eval_epoch_end"):
         eval_unit.on_eval_epoch_end(state)
+    _run_callback_fn(callbacks, "on_eval_epoch_end", state, eval_unit)
 
     # set progress counters for the next epoch
     eval_state.progress.num_epochs_completed += 1
@@ -118,6 +126,7 @@ def _evaluate_impl(
 
     with state.timer.time(f"eval.{eval_unit.__class__.__name__}.on_eval_end"):
         eval_unit.on_eval_end(state)
+    _run_callback_fn(callbacks, "on_eval_end", state, eval_unit)
 
     # Reset training mode for modules at the end of the epoch
     # This ensures that side-effects made by the loop are reset before
