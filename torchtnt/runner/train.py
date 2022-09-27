@@ -89,7 +89,8 @@ def _train_impl(
     _run_callback_fn(callbacks, "on_train_start", state, train_unit)
 
     while not (
-        state.should_stop or _is_done(train_state.progress, train_state.max_epochs)
+        state.should_stop
+        or _is_done(train_state.progress, train_state.max_epochs, None)
     ):
         _train_epoch_impl(state, train_unit, callbacks)
 
@@ -184,7 +185,7 @@ def _train_epoch_impl(
 
     while not (
         state.should_stop
-        or _is_epoch_done(train_state.progress, train_state.max_steps_per_epoch)
+        or _is_epoch_done(train_state.progress, train_state.max_steps_per_epoch, None)
     ):
         try:
             if not pass_data_iter_to_step:
