@@ -31,18 +31,21 @@ def _check_loop_condition(name: str, val: Optional[int]) -> None:
         )
 
 
-def _is_done(progress: Progress, max_epochs: Optional[int]) -> bool:
-    if max_epochs is None:
-        # infinite training
-        return False
-    return progress.num_epochs_completed >= max_epochs
+def _is_done(
+    progress: Progress, max_epochs: Optional[int], max_steps: Optional[int]
+) -> bool:
+    return (max_steps is not None and progress.num_steps_completed >= max_steps) or (
+        max_epochs is not None and progress.num_epochs_completed >= max_epochs
+    )
 
 
-def _is_epoch_done(progress: Progress, max_steps_per_epoch: Optional[int]) -> bool:
-    # No limit specified, so continue until the data iterator is exhausted
-    if max_steps_per_epoch is None:
-        return False
-    return progress.num_steps_completed_in_epoch >= max_steps_per_epoch
+def _is_epoch_done(
+    progress: Progress, max_steps_per_epoch: Optional[int], max_steps: Optional[int]
+) -> bool:
+    return (max_steps is not None and progress.num_steps_completed >= max_steps) or (
+        max_steps_per_epoch is not None
+        and progress.num_steps_completed_in_epoch >= max_steps_per_epoch
+    )
 
 
 def _set_module_training_mode(

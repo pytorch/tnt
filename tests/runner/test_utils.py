@@ -11,6 +11,7 @@ from unittest.mock import MagicMock
 
 from torch import nn
 from torchtnt.runner.callback import TrainCallback
+from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.unit import (
     EvalUnit,
@@ -21,6 +22,8 @@ from torchtnt.runner.unit import (
     TTrainData,
 )
 from torchtnt.runner.utils import (
+    _is_done,
+    _is_epoch_done,
     _reset_module_training_mode,
     _run_callback_fn,
     _set_module_training_mode,
@@ -173,6 +176,57 @@ class UtilsTest(unittest.TestCase):
                 [callback], "on_train_finish", dummy_train_state, train_unit
             )
 
+    def test_step_func_requires_iterator(self) -> None:
+        class Foo:
+            def bar(self) -> None:
+                pass
+
+            def baz(self, data: Iterator[int], b: int, c: str) -> int:
+                return b
+
+        def dummy(a: int, b: str, data: Iterator[str]) -> None:
+            pass
+
+        foo = Foo()
+
+        self.assertFalse(_step_requires_iterator(foo.bar))
+        self.assertTrue(_step_requires_iterator(foo.baz))
+        self.assertTrue(_step_requires_iterator(dummy))
+
+    def test_is_done(self) -> None:
+        p = Progress(
+            num_epochs_completed=2,
+            num_steps_completed=100,
+            num_steps_completed_in_epoch=5,
+        )
+
+        self.assertTrue(_is_done(p, max_epochs=2, max_steps=200))
+        self.assertTrue(_is_done(p, max_epochs=2, max_steps=None))
+        self.assertTrue(_is_done(p, max_epochs=3, max_steps=100))
+        self.assertTrue(_is_done(p, max_epochs=None, max_steps=100))
+
+        self.assertFalse(_is_done(p, max_epochs=3, max_steps=200))
+        self.assertFalse(_is_done(p, max_epochs=None, max_steps=200))
+        self.assertFalse(_is_done(p, max_epochs=3, max_steps=None))
+        self.assertFalse(_is_done(p, max_epochs=None, max_steps=None))
+
+    def test_is_epoch_done(self) -> None:
+        p = Progress(
+            num_epochs_completed=2,
+            num_steps_completed=100,
+            num_steps_completed_in_epoch=5,
+        )
+
+        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=5, max_steps=200))
+        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=5, max_steps=None))
+        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=100, max_steps=100))
+        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=100))
+
+        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=200))
+        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=200))
+        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=None))
+        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=None))
+
 
 class DummyTrainCallback(TrainCallback):
     def __init__(self, dummy_data: str) -> None:
@@ -206,20 +260,3 @@ class DummyTrainCallback(TrainCallback):
 
     def on_train_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
         self.dummy_data = "on_train_end"
-
-    def test_step_func_requires_iterator(self) -> None:
-        class Foo:
-            def bar(self) -> None:
-                pass
-
-            def baz(self, data: Iterator[int], b: int, c: str) -> int:
-                return b
-
-        def dummy(a: int, b: str, data: Iterator[str]) -> None:
-            pass
-
-        foo = Foo()
-
-        self.assertFalse(_step_requires_iterator(foo.bar))
-        self.assertTrue(_step_requires_iterator(foo.baz))
-        self.assertTrue(_step_requires_iterator(dummy))

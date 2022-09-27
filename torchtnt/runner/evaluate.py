@@ -99,7 +99,7 @@ def _evaluate_impl(
 
     while not (
         state.should_stop
-        or _is_epoch_done(eval_state.progress, eval_state.max_steps_per_epoch)
+        or _is_epoch_done(eval_state.progress, eval_state.max_steps_per_epoch, None)
     ):
         try:
             if not pass_data_iter_to_step:
