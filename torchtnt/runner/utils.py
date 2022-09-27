@@ -114,8 +114,6 @@ def _run_callback_fn(
     *args: Any,
     **kwargs: Any,
 ) -> None:
-    if not callbacks:
-        return
     for cb in callbacks:
         fn = getattr(cb, fn_name)
         if not callable(fn):
