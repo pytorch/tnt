@@ -91,7 +91,10 @@ def _fit_impl(
     with state.timer.time(f"train.{unit.__class__.__name__}.on_train_start"):
         unit.on_train_start(state)
 
-    while not _is_done(train_state.progress, train_state.max_epochs, None):
+    while not (
+        state.should_stop
+        or _is_done(train_state.progress, train_state.max_epochs, None)
+    ):
         _train_epoch_impl(state, unit, [])
 
     with state.timer.time(f"train.{unit.__class__.__name__}.on_train_end"):
