@@ -209,6 +209,35 @@ class TrainTest(unittest.TestCase):
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
+    def test_train_max_steps(self) -> None:
+        max_steps = 3
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+        max_epochs = 3
+        expected_steps_per_epoch = dataset_len / batch_size
+
+        my_unit = MagicMock()
+        my_unit.modules = MagicMock(return_value={})
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = train(my_unit, dataloader, max_epochs=None, max_steps=max_steps)
+        self.assertEqual(state.train_state.progress.num_steps_completed, max_steps)
+        self.assertEqual(my_unit.train_step.call_count, max_steps)
+
+        # hit max epoch condition before max steps
+        my_unit = MagicMock()
+        my_unit.modules = MagicMock(return_value={})
+        state = train(my_unit, dataloader, max_epochs=max_epochs, max_steps=100000)
+        self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
+        self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(
+            state.train_state.progress.num_steps_completed,
+            max_epochs * expected_steps_per_epoch,
+        )
+        self.assertEqual(
+            my_unit.train_step.call_count, max_epochs * expected_steps_per_epoch
+        )
+
 
 class StopTrainUnit(TrainUnit[Tuple[torch.Tensor, torch.Tensor]]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:

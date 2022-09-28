@@ -35,6 +35,7 @@ def train(
     callbacks: Optional[List[TrainCallback]] = None,
     *,
     max_epochs: Optional[int],
+    max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     log_api_usage("train")
@@ -45,6 +46,7 @@ def train(
         train_state=PhaseState(
             dataloader=dataloader,
             max_epochs=max_epochs,
+            max_steps=max_steps,
             max_steps_per_epoch=max_steps_per_epoch,
             progress=Progress(),
         ),
@@ -75,8 +77,11 @@ def _train_impl(
     _check_loop_condition("max_steps_per_epoch", train_state.max_steps_per_epoch)
     max_epochs = train_state.max_epochs
     _check_loop_condition("max_epochs", train_state.max_epochs)
+    max_steps = train_state.max_steps
+    _check_loop_condition("max_steps", train_state.max_steps)
+
     logger.info(
-        f"Started train with max_epochs={max_epochs} and max_steps_per_epoch={max_steps_per_epoch}"
+        f"Started train with max_epochs={max_epochs}, max_steps={max_steps}, max_steps_per_epoch={max_steps_per_epoch}"
     )
 
     # Set all modules to train() mode
@@ -90,7 +95,7 @@ def _train_impl(
 
     while not (
         state.should_stop
-        or _is_done(train_state.progress, train_state.max_epochs, None)
+        or _is_done(train_state.progress, train_state.max_epochs, train_state.max_steps)
     ):
         _train_epoch_impl(state, train_unit, callbacks)
 
@@ -119,6 +124,7 @@ def train_epoch(
         train_state=PhaseState(
             dataloader=dataloader,
             max_epochs=1,
+            max_steps=max_steps_per_epoch,
             max_steps_per_epoch=max_steps_per_epoch,
             progress=Progress(),
         ),
@@ -185,7 +191,9 @@ def _train_epoch_impl(
 
     while not (
         state.should_stop
-        or _is_epoch_done(train_state.progress, train_state.max_steps_per_epoch, None)
+        or _is_epoch_done(
+            train_state.progress, train_state.max_steps_per_epoch, train_state.max_steps
+        )
     ):
         try:
             if not pass_data_iter_to_step:
