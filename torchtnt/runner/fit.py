@@ -23,6 +23,7 @@ def fit(
     eval_dataloader: Iterable[TEvalData],
     *,
     max_epochs: Optional[int],
+    max_steps: Optional[int] = None,
     max_train_steps_per_epoch: Optional[int] = None,
     max_eval_steps_per_epoch: Optional[int] = None,
     evaluate_every_n_steps: Optional[int] = None,
@@ -37,6 +38,7 @@ def fit(
             progress=Progress(),
             dataloader=train_dataloader,
             max_epochs=max_epochs,
+            max_steps=max_steps,
             max_steps_per_epoch=max_train_steps_per_epoch,
         ),
         eval_state=PhaseState(
@@ -76,12 +78,14 @@ def _fit_impl(
         raise RuntimeError("Expected eval_state to be initialized")
 
     _check_loop_condition("max_epochs", train_state.max_epochs)
+    _check_loop_condition("max_steps", train_state.max_steps)
     _check_loop_condition("max_train_steps_per_epoch", train_state.max_steps_per_epoch)
     _check_loop_condition("max_eval_steps_per_epoch", eval_state.max_steps_per_epoch)
     _check_loop_condition("evaluate_every_n_steps", eval_state.evaluate_every_n_steps)
     _check_loop_condition("evaluate_every_n_epochs", eval_state.evaluate_every_n_epochs)
     logger.info(
         f"Started fit with max_epochs={train_state.max_epochs}"
+        f"max_steps={train_state.max_steps}"
         f"max_train_steps_per_epoch={train_state.max_steps_per_epoch}"
         f"max_eval_steps_per_epoch={eval_state.max_steps_per_epoch}"
         f"evaluate_every_n_steps={eval_state.evaluate_every_n_steps}"
@@ -93,7 +97,7 @@ def _fit_impl(
 
     while not (
         state.should_stop
-        or _is_done(train_state.progress, train_state.max_epochs, None)
+        or _is_done(train_state.progress, train_state.max_epochs, train_state.max_steps)
     ):
         _train_epoch_impl(state, unit, [])
 

@@ -102,7 +102,9 @@ def _predict_impl(
     while not (
         state.should_stop
         or _is_epoch_done(
-            predict_state.progress, predict_state.max_steps_per_epoch, None
+            predict_state.progress,
+            predict_state.max_steps_per_epoch,
+            predict_state.max_steps,
         )
     ):
         try:

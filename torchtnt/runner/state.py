@@ -33,6 +33,7 @@ class PhaseState:
     # pyre-ignore: Invalid type variable [34]
     dataloader: Iterable[Any]
     max_epochs: Optional[int] = None  # used only for train
+    max_steps: Optional[int] = None  # used only for train
     max_steps_per_epoch: Optional[int] = None
     evaluate_every_n_steps: Optional[int] = None  # used only for evaluate
     evaluate_every_n_epochs: Optional[int] = None  # used only for evaluate

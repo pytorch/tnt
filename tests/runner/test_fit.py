@@ -7,10 +7,10 @@
 
 import unittest
 from typing import Tuple
+from unittest.mock import MagicMock
 
 import torch
 from torch import nn
-
 from torchtnt.runner._test_utils import DummyFitUnit, generate_random_dataloader
 from torchtnt.runner.fit import fit
 from torchtnt.runner.state import State
@@ -200,3 +200,22 @@ class FitTest(unittest.TestCase):
         self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.eval_state.progress.num_steps_completed, 0)
         self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
+
+    def test_fit_max_steps(self) -> None:
+        max_steps = 3
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+        expected_eval_steps_per_epoch = dataset_len / batch_size
+
+        my_unit = MagicMock(spec=DummyFitUnit)
+        my_unit.modules = MagicMock(return_value={})
+        train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = fit(my_unit, train_dl, eval_dl, max_epochs=None, max_steps=max_steps)
+        self.assertEqual(state.train_state.progress.num_steps_completed, max_steps)
+        self.assertEqual(my_unit.train_step.call_count, max_steps)
+        self.assertEqual(
+            state.eval_state.progress.num_steps_completed, expected_eval_steps_per_epoch
+        )
+        self.assertEqual(my_unit.eval_step.call_count, expected_eval_steps_per_epoch)
