@@ -14,7 +14,12 @@ import torch
 import torch.nn as nn
 import typing_extensions
 
-from torchtnt.runner.callback import EvalCallback, PredictCallback, TrainCallback
+from torchtnt.runner.callback import (
+    Callback,
+    EvalCallback,
+    PredictCallback,
+    TrainCallback,
+)
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import State
 
@@ -103,11 +108,23 @@ def _run_callback_fn(
     ...
 
 
+@typing.overload
+def _run_callback_fn(
+    callbacks: List[Callback],
+    fn_name: str,
+    state: State,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    ...
+
+
 def _run_callback_fn(
     callbacks: Union[
         List[TrainCallback],
         List[EvalCallback],
         List[PredictCallback],
+        List[Callback],
     ],
     fn_name: str,
     state: State,
