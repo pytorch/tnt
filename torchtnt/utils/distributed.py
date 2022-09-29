@@ -31,8 +31,6 @@ class PGWrapper:
 
     def __init__(self, pg: Optional[dist.ProcessGroup]) -> None:
         if pg is None and dist.is_initialized():
-            # pyre-fixme[8]: Attribute has type `Optional[dist.ProcessGroup]`; used
-            #  as `Optional[_distributed_c10d.ProcessGroup]`.
             self.pg: Optional[dist.ProcessGroup] = dist.group.WORLD
         else:
             self.pg: Optional[dist.ProcessGroup] = pg
@@ -334,16 +332,9 @@ def sync_bool(
     if not dist.is_available() or not dist.is_initialized():
         return val
 
-    # pyre-fixme[9]: pg has type `Optional[dist.ProcessGroup]`; used as `Union[None,
-    #  dist.ProcessGroup, _distributed_c10d.ProcessGroup]`.
     pg = pg or dist.group.WORLD
     device = torch.device(
-        torch.cuda.current_device()
-        # pyre-fixme[6]: For 1st param expected
-        #  `Optional[_distributed_c10d.ProcessGroup]` but got
-        #  `Optional[dist.ProcessGroup]`.
-        if dist.get_backend(pg) == "nccl"
-        else "cpu"
+        torch.cuda.current_device() if dist.get_backend(pg) == "nccl" else "cpu"
     )
     pg_wrapper = PGWrapper(pg)
 
