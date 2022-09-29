@@ -24,7 +24,8 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.data import CudaDataPrefetcher
-from torchtnt.loggers.tensorboard import TensorBoardLogger
+from torchtnt.loggers import TensorBoardLogger
+from torchtnt.runner.callbacks import PyTorchProfiler
 from torchtnt.runner.state import State
 from torchtnt.runner.train import train
 from torchtnt.runner.unit import TrainUnit
@@ -103,6 +104,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         strategy: str,
         precision: Optional[torch.dtype],
         lr: float,
+        tb_logger: TensorBoardLogger,
         log_frequency_steps: int,
     ):
         super().__init__()
@@ -117,8 +119,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.train_accuracy = BinaryAccuracy(device=device)
         self.log_frequency_steps = log_frequency_steps
 
-        path = tempfile.mkdtemp()
-        self.tb_logger = TensorBoardLogger(path)
+        self.tb_logger = tb_logger
 
     def train_step(self, state: State, data: Batch) -> None:
         inputs, targets = data
@@ -174,13 +175,25 @@ def main(argv: List[str]) -> None:
         f"WORLD_SIZE: {os.environ.get('WORLD_SIZE', '0')}"
     )
 
+    path = tempfile.mkdtemp()
+    tb_logger = TensorBoardLogger(path)
+
     my_unit = MyTrainUnit(
         args.input_dim,
         device,
         args.strategy,
         precision,
         args.lr,
+        tb_logger,
         args.log_frequency_steps,
+    )
+
+    profiler = PyTorchProfiler(
+        profiler=torch.profiler.profile(
+            schedule=torch.profiler.schedule(wait=2, warmup=2, active=6, repeat=1),
+            on_trace_ready=torch.profiler.tensorboard_trace_handler(dir_name=path),
+            with_stack=True,
+        )
     )
 
     num_samples = 10240
@@ -188,7 +201,7 @@ def main(argv: List[str]) -> None:
         num_samples, args.input_dim, args.batch_size, device
     )
 
-    state = train(my_unit, train_dataloader, max_epochs=args.max_epochs)
+    state = train(my_unit, train_dataloader, [profiler], max_epochs=args.max_epochs)
     print(get_timer_summary(state.timer))
 
 
