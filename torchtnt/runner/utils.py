@@ -93,7 +93,7 @@ def _step_requires_iterator(step_func: Callable[[State, object], object]) -> boo
     Helper function to evaluate whether the loops should pass the data iterator to the `_step`
     functions, or whether the loop should call `next(data_iter)` and pass a single batch to process.
 
-    This is closely tied ot the Unit's corresponding step function signature.
+    This is closely tied to the Unit's corresponding step function signature.
     """
     argspec = inspect.getfullargspec(step_func)
     annotations = argspec.annotations

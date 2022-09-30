@@ -132,7 +132,7 @@ class TensorBoardLogger(MetricLogger):
 
         Args:
             hparams (dict): dictionary of hyperparameter names and corresponding values
-            metrics (dict): dictionary of name of metric and corersponding values
+            metrics (dict): dictionary of name of metric and corresponding values
         """
 
         if self._writer:

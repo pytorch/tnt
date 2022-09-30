@@ -129,8 +129,8 @@ class GPUStats(TypedDict):
     fan_speed_percent: float
     memory_used_mb: int
     memory_free_mb: int
-    temperature_gpu_celcius: float
-    temperature_memory_celcius: float
+    temperature_gpu_celsius: float
+    temperature_memory_celsius: float
 
 
 def get_nvidia_smi_gpu_stats(device: torch.device) -> GPUStats:  # pragma: no-cover
@@ -148,8 +148,8 @@ def get_nvidia_smi_gpu_stats(device: torch.device) -> GPUStats:  # pragma: no-co
             - 'fan_speed_percent'
             - 'memory_used_mb'
             - 'memory_free_mb'
-            - 'temperature_gpu_celcius'
-            - 'temperature_memory_celcius'
+            - 'temperature_gpu_celsius'
+            - 'temperature_memory_celsius'
 
     Raises:
         FileNotFoundError:
@@ -167,8 +167,8 @@ def get_nvidia_smi_gpu_stats(device: torch.device) -> GPUStats:  # pragma: no-co
         "fan_speed_percent",
         "memory_used_mb",
         "memory_free_mb",
-        "temperature_gpu_celcius",
-        "temperature_memory_celcius",
+        "temperature_gpu_celsius",
+        "temperature_memory_celsius",
     ]
 
     # Format as "utilization.gpu,utilization.memory,fan.speed,etc"
@@ -207,8 +207,8 @@ def get_nvidia_smi_gpu_stats(device: torch.device) -> GPUStats:  # pragma: no-co
         "fan_speed_percent": stats[2],
         "memory_used_mb": stats[3],
         "memory_free_mb": stats[4],
-        "temperature_gpu_celcius": stats[5],
-        "temperature_memory_celcius": stats[6],
+        "temperature_gpu_celsius": stats[5],
+        "temperature_memory_celsius": stats[6],
     }
     return gpu_stats
 
