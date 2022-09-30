@@ -39,7 +39,7 @@ class _NameMixin:
         return self.__class__.__qualname__
 
 
-class TrainCallback(_OnExceptionMixin, _NameMixin):
+class _TrainCallback:
     def on_train_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
         pass
 
@@ -59,7 +59,7 @@ class TrainCallback(_OnExceptionMixin, _NameMixin):
         pass
 
 
-class EvalCallback(_OnExceptionMixin, _NameMixin):
+class _EvalCallback:
     def on_eval_start(self, state: State, unit: EvalUnit[TEvalData]) -> None:
         pass
 
@@ -79,7 +79,7 @@ class EvalCallback(_OnExceptionMixin, _NameMixin):
         pass
 
 
-class PredictCallback(_OnExceptionMixin, _NameMixin):
+class _PredictCallback:
     def on_predict_start(self, state: State, unit: PredictUnit[TPredictData]) -> None:
         pass
 
@@ -107,5 +107,7 @@ class PredictCallback(_OnExceptionMixin, _NameMixin):
         pass
 
 
-class Callback(TrainCallback, EvalCallback, PredictCallback):
+class Callback(
+    _TrainCallback, _EvalCallback, _PredictCallback, _OnExceptionMixin, _NameMixin
+):
     pass

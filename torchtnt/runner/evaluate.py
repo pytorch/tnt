@@ -8,7 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 import torch
-from torchtnt.runner.callback import EvalCallback
+from torchtnt.runner.callback import Callback
 
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
@@ -30,7 +30,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def evaluate(
     eval_unit: EvalUnit[TEvalData],
     dataloader: Iterable[TEvalData],
-    callbacks: Optional[List[EvalCallback]] = None,
+    callbacks: Optional[List[Callback]] = None,
     *,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
@@ -63,7 +63,7 @@ def evaluate(
 def _evaluate_impl(
     state: State,
     eval_unit: EvalUnit[TEvalData],
-    callbacks: List[EvalCallback],
+    callbacks: List[Callback],
 ) -> None:
     # input validation
     eval_state = state.eval_state

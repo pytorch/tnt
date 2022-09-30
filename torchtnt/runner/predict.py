@@ -8,7 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 import torch
-from torchtnt.runner.callback import PredictCallback
+from torchtnt.runner.callback import Callback
 
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
@@ -30,7 +30,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def predict(
     predict_unit: PredictUnit[TPredictData],
     dataloader: Iterable[TPredictData],
-    callbacks: Optional[List[PredictCallback]] = None,
+    callbacks: Optional[List[Callback]] = None,
     *,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
@@ -63,7 +63,7 @@ def predict(
 def _predict_impl(
     state: State,
     predict_unit: PredictUnit[TPredictData],
-    callbacks: List[PredictCallback],
+    callbacks: List[Callback],
 ) -> None:
     # input validation
     predict_state = state.predict_state

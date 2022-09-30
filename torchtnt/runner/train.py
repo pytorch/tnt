@@ -8,7 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 import torch
-from torchtnt.runner.callback import TrainCallback
+from torchtnt.runner.callback import Callback
 from torchtnt.runner.evaluate import _evaluate_impl
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
@@ -32,7 +32,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def train(
     train_unit: TrainUnit[TTrainData],
     dataloader: Iterable[TTrainData],
-    callbacks: Optional[List[TrainCallback]] = None,
+    callbacks: Optional[List[Callback]] = None,
     *,
     max_epochs: Optional[int],
     max_steps: Optional[int] = None,
@@ -67,7 +67,7 @@ def train(
 def _train_impl(
     state: State,
     train_unit: TrainUnit[TTrainData],
-    callbacks: List[TrainCallback],
+    callbacks: List[Callback],
 ) -> None:
     train_state = state.train_state
     if not train_state:
@@ -113,7 +113,7 @@ def _train_impl(
 def train_epoch(
     train_unit: TrainUnit[TTrainData],
     dataloader: Iterable[TTrainData],
-    callbacks: Optional[List[TrainCallback]] = None,
+    callbacks: Optional[List[Callback]] = None,
     *,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
@@ -154,7 +154,7 @@ def train_epoch(
 def _train_epoch_impl(
     state: State,
     train_unit: TrainUnit[TTrainData],
-    callbacks: List[TrainCallback],
+    callbacks: List[Callback],
 ) -> None:
     logger.info("Started train epoch")
 
@@ -221,7 +221,6 @@ def _train_epoch_impl(
                     state,
                     # pyre-ignore: Incompatible parameter type [6]
                     train_unit,
-                    # pyre-ignore: Incompatible parameter type [6]
                     callbacks,
                 )
 
@@ -243,7 +242,6 @@ def _train_epoch_impl(
             state,
             # pyre-ignore: Incompatible parameter type [6]
             train_unit,
-            # pyre-ignore: Incompatible parameter type [6]
             callbacks,
         )
 
