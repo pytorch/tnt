@@ -22,7 +22,7 @@ from torchtnt.data.iterators import (
     RoundRobin,
     StoppingMechanism,
 )
-from torchtnt.data.multi_dataloader import MultiDataloader
+from torchtnt.data.multi_dataloader import MultiDataLoader
 
 
 class RandomDataset(Dataset[torch.Tensor]):
@@ -71,7 +71,7 @@ class CustomRandomIterator(MultiIterator):
             return self.__next__()
 
 
-class TestMultiDataloader(unittest.TestCase):
+class TestMultiDataLoader(unittest.TestCase):
     def test_round_robin_smallest_dataset_exhausted(self) -> None:
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
@@ -82,7 +82,7 @@ class TestMultiDataloader(unittest.TestCase):
             stopping_mechanism=StoppingMechanism.SMALLEST_DATASET_EXHAUSTED
         )
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 round_robin,
             )
@@ -110,7 +110,7 @@ class TestMultiDataloader(unittest.TestCase):
 
         round_robin = RoundRobin(iteration_order=["2", "1"])
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 round_robin,
             )
@@ -138,7 +138,7 @@ class TestMultiDataloader(unittest.TestCase):
         all_dataset_batches = AllDatasetBatches()
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 all_dataset_batches,
             )
@@ -169,7 +169,7 @@ class TestMultiDataloader(unittest.TestCase):
         )
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 all_dataset_batches,
             )
@@ -199,7 +199,7 @@ class TestMultiDataloader(unittest.TestCase):
             StoppingMechanism.SMALLEST_DATASET_EXHAUSTED
         )
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 all_dataset_batches,
             )
@@ -221,7 +221,7 @@ class TestMultiDataloader(unittest.TestCase):
         individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders, DataIterationStrategy(), CustomRandomIterator
             )
         )
@@ -242,7 +242,7 @@ class TestMultiDataloader(unittest.TestCase):
         individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 RandomizedBatchSampler(
                     weights={"1": 1, "2": 100},
@@ -264,7 +264,7 @@ class TestMultiDataloader(unittest.TestCase):
         individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 RandomizedBatchSampler(
                     weights={"1": 1, "2": 100},
@@ -284,7 +284,7 @@ class TestMultiDataloader(unittest.TestCase):
         # Now ensure that, without the `ignore_empty_data` flag, an exception is raised.
         with self.assertRaises(ValueError):
             individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 RandomizedBatchSampler(weights={"1": 1, "2": 100}),
             )
@@ -295,7 +295,7 @@ class TestMultiDataloader(unittest.TestCase):
 
         individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
 
-        multi_dataloader = MultiDataloader(
+        multi_dataloader = MultiDataLoader(
             individual_dataloaders,
             RandomizedBatchSampler(
                 weights={"1": 1, "2": 100},
@@ -321,7 +321,7 @@ class TestMultiDataloader(unittest.TestCase):
 
         individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
 
-        multi_dataloader = MultiDataloader(
+        multi_dataloader = MultiDataLoader(
             individual_dataloaders,
             RandomizedBatchSampler(
                 weights={"1": 1, "2": 100},
@@ -347,7 +347,7 @@ class TestMultiDataloader(unittest.TestCase):
         individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 RandomizedBatchSampler(
                     weights={"1": 100, "2": 1},
@@ -373,7 +373,7 @@ class TestMultiDataloader(unittest.TestCase):
         in_order = InOrder()
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 in_order,
             )
@@ -401,7 +401,7 @@ class TestMultiDataloader(unittest.TestCase):
         in_order = InOrder(iteration_order=["2", "1", "2"])
 
         multi_dataloader = iter(
-            MultiDataloader(
+            MultiDataLoader(
                 individual_dataloaders,
                 in_order,
             )

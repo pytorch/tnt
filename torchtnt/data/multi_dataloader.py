@@ -22,8 +22,8 @@ if TYPE_CHECKING:
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class MultiDataloader:
-    """MultiDataloader cycles through individual dataloaders passed to it.
+class MultiDataLoader:
+    """MultiDataLoader cycles through individual dataloaders passed to it.
 
     Attributes:
         individual_dataloaders (Dict[str, Union[DataLoader, Iterable]]): A dictionary of DataLoaders or Iterables with dataloader name as key
@@ -73,7 +73,7 @@ class MultiDataloader:
         iterator_cls = self.iterator_cls
         if iterator_cls is None:
             iterator_cls = DataIterationStrategyRegistry.get(self.iteration_strategy)
-        # pyre-fixme[16]: `MultiDataloader` has no attribute `iterator`.
+        # pyre-fixme[16]: `MultiDataLoader` has no attribute `iterator`.
         # pyre-fixme[45]: Cannot instantiate abstract class `MultiIterator`.
         self.iterator = iterator_cls(
             individual_dataloaders=self.individual_dataloaders,
