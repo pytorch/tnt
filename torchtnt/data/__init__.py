@@ -14,7 +14,7 @@ from .iterators import (
     RandomizedBatchSamplerIterator,
     RoundRobinIterator,
 )
-from .multi_dataloader import MultiDataloader
+from .multi_dataloader import MultiDataLoader
 
 __all__ = [
     "AllDatasetBatchesIterator",
@@ -22,7 +22,7 @@ __all__ = [
     "DataIterationStrategy",
     "DataIterationStrategyRegistry",
     "InOrderIterator",
-    "MultiDataloader",
+    "MultiDataLoader",
     "MultiIterator",
     "RandomizedBatchSamplerIterator",
     "RoundRobinIterator",
