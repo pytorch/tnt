@@ -123,8 +123,7 @@ def _predict_impl(
 
             # clear step_output to avoid retaining extra memory
             predict_state.step_output = None
-            predict_state.progress.num_steps_completed_in_epoch += 1
-            predict_state.progress.num_steps_completed += 1
+            predict_state.progress.increment_step()
         except StopIteration:
             break
 
@@ -143,8 +142,7 @@ def _predict_impl(
     _run_callback_fn(callbacks, "on_predict_epoch_end", state, predict_unit)
 
     # set progress counters for the next epoch
-    predict_state.progress.num_epochs_completed += 1
-    predict_state.progress.num_steps_completed_in_epoch = 0
+    predict_state.progress.increment_epoch()
 
     with state.timer.time(f"predict.{predict_unit.__class__.__name__}.on_predict_end"):
         predict_unit.on_predict_end(state)
