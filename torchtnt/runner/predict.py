@@ -98,6 +98,7 @@ def _predict_impl(
 
     # pyre-ignore[6]: Incompatible parameter type
     pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
+    prev_steps_in_epoch = predict_state.progress.num_steps_completed_in_epoch
 
     while not (
         state.should_stop
@@ -126,6 +127,15 @@ def _predict_impl(
             predict_state.progress.num_steps_completed += 1
         except StopIteration:
             break
+
+    # Possibly warn about an empty dataloader
+    any_steps_completed = (
+        abs(predict_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch)
+        == 0
+    )
+    if not any_steps_completed:
+        logger.warning("No steps completed during predict epoch!")
+
     with state.timer.time(
         f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_end"
     ):

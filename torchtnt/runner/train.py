@@ -188,6 +188,7 @@ def _train_epoch_impl(
 
     # pyre-ignore[6]: Incompatible parameter type
     pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
+    prev_steps_in_epoch = train_state.progress.num_steps_completed_in_epoch
 
     while not (
         state.should_stop
@@ -226,6 +227,15 @@ def _train_epoch_impl(
 
         except StopIteration:
             break
+
+    # Possibly warn about an empty dataloader
+    any_steps_completed = (
+        abs(train_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch)
+        == 0
+    )
+    if not any_steps_completed:
+        logger.warning("No steps completed during train epoch!")
+
     with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_epoch_end"):
         train_unit.on_train_epoch_end(state)
     _run_callback_fn(callbacks, "on_train_epoch_end", state, train_unit)

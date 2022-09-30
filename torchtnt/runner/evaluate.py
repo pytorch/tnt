@@ -96,6 +96,7 @@ def _evaluate_impl(
 
     # pyre-ignore[6]: Incompatible parameter type
     pass_data_iter_to_step = _step_requires_iterator(eval_unit.eval_step)
+    prev_steps_in_epoch = eval_state.progress.num_steps_completed_in_epoch
 
     while not (
         state.should_stop
@@ -118,6 +119,14 @@ def _evaluate_impl(
             eval_state.progress.num_steps_completed += 1
         except StopIteration:
             break
+
+    # Possibly warn about an empty dataloader
+    any_steps_completed = (
+        abs(eval_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch) == 0
+    )
+    if not any_steps_completed:
+        logger.warning("No steps completed during evaluate epoch!")
+
     with state.timer.time(f"eval.{eval_unit.__class__.__name__}.on_eval_epoch_end"):
         eval_unit.on_eval_epoch_end(state)
     _run_callback_fn(callbacks, "on_eval_epoch_end", state, eval_unit)
