@@ -7,19 +7,13 @@
 import collections
 import inspect
 import logging
-import typing
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 
 import torch
 import torch.nn as nn
 import typing_extensions
 
-from torchtnt.runner.callback import (
-    Callback,
-    EvalCallback,
-    PredictCallback,
-    TrainCallback,
-)
+from torchtnt.runner.callback import Callback
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import State
 
@@ -75,57 +69,8 @@ def _reset_module_training_mode(
             module.train(prior_modes[name])
 
 
-@typing.overload
-def _run_callback_fn(
-    callbacks: List[TrainCallback],
-    fn_name: str,
-    state: State,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    ...
-
-
-@typing.overload
-def _run_callback_fn(
-    callbacks: List[EvalCallback],
-    fn_name: str,
-    state: State,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    ...
-
-
-@typing.overload
-def _run_callback_fn(
-    callbacks: List[PredictCallback],
-    fn_name: str,
-    state: State,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    ...
-
-
-@typing.overload
 def _run_callback_fn(
     callbacks: List[Callback],
-    fn_name: str,
-    state: State,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    ...
-
-
-def _run_callback_fn(
-    callbacks: Union[
-        List[TrainCallback],
-        List[EvalCallback],
-        List[PredictCallback],
-        List[Callback],
-    ],
     fn_name: str,
     state: State,
     *args: Any,
