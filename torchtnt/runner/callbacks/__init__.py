@@ -5,7 +5,9 @@
 # LICENSE file in the root directory of this source tree.
 
 from .pytorch_profiler import PyTorchProfiler
+from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
 
 __all__ = [
     "PyTorchProfiler",
+    "TensorBoardParameterMonitor",
 ]
