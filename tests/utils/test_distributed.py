@@ -15,12 +15,12 @@ import torch.distributed.launcher as launcher
 from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.distributed import (
     all_gather_tensors,
+    get_global_rank,
     get_process_group_backend_from_device,
+    get_world_size,
     rank_zero_fn,
     revert_sync_batchnorm,
     sync_bool,
-    get_world_size,
-    get_global_rank,
 )
 from torchtnt.utils.test_utils import get_pet_launch_config
 
@@ -36,18 +36,19 @@ class DistributedTest(unittest.TestCase):
         pg_backend = get_process_group_backend_from_device(device)
         self.assertEqual(pg_backend, "nccl")
 
-
     def test_get_world_size_single(self) -> None:
         self.assertEqual(get_world_size(), 1)
-    
+
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
-    )    
+    )
     def test_get_world_size(self) -> None:
         world_size = 4
         config = get_pet_launch_config(world_size)
-        launcher.elastic_launch(config, entrypoint=self._test_get_world_size)(world_size)
-    
+        launcher.elastic_launch(config, entrypoint=self._test_get_world_size)(
+            world_size
+        )
+
     @staticmethod
     def _test_get_world_size(world_size: int) -> None:
         assert get_world_size() == world_size
@@ -57,11 +58,11 @@ class DistributedTest(unittest.TestCase):
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
-    )    
+    )
     def test_get_global_rank(self) -> None:
         config = get_pet_launch_config(4)
         launcher.elastic_launch(config, entrypoint=self._test_get_global_rank)()
-    
+
     @staticmethod
     def _test_get_global_rank() -> None:
         dist.init_process_group("gloo")
