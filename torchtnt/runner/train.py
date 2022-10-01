@@ -209,8 +209,7 @@ def _train_epoch_impl(
 
             # clear step_output to avoid retaining extra memory
             train_state.step_output = None
-            train_state.progress.num_steps_completed_in_epoch += 1
-            train_state.progress.num_steps_completed += 1
+            train_state.progress.increment_step()
 
             if (
                 evaluate_every_n_steps
@@ -241,8 +240,7 @@ def _train_epoch_impl(
     _run_callback_fn(callbacks, "on_train_epoch_end", state, train_unit)
 
     # set progress counters for the next epoch
-    train_state.progress.num_epochs_completed += 1
-    train_state.progress.num_steps_completed_in_epoch = 0
+    train_state.progress.increment_epoch()
 
     if (
         evaluate_every_n_epochs
