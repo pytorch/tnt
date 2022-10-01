@@ -50,7 +50,7 @@ def init_from_env(
         device_type (str, optional): Device type to initialize. If None, device will be initialized
                                   based on environment
         pg_backend (str, optional): The process group backend to use. If None, it will use the
-                                    defaut process group backend from the device
+                                    default process group backend from the device
         pg_timeout (timedelta, optional): Timeout for operations executed against the process
                                           group. Default value equals 30 minutes
     """

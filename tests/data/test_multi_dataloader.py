@@ -129,7 +129,7 @@ class TestMultiDataLoader(unittest.TestCase):
         with self.assertRaises(StopIteration):
             batch = next(multi_dataloader)
 
-    def test_all_dataset_batches_all_datsets_exhausted(self) -> None:
+    def test_all_dataset_batches_all_datasets_exhausted(self) -> None:
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 

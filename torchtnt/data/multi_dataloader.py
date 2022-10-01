@@ -34,7 +34,7 @@ class MultiDataLoader:
 
     Note:
         TorchData (https://pytorch.org/data/beta/index.html) also has generic
-        multi-data sources reading support to achieve the same functionability
+        multi-data sources reading support to achieve the same functionality
         provided by MultiIterator.
         For example, `mux`, `mux_longest`, `cycle`, `zip` etc. Please refer
         to the documentation for more details.

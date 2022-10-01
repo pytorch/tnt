@@ -119,7 +119,7 @@ def get_global_rank() -> int:
 
 
 def get_process_group_backend_from_device(device: torch.device) -> str:
-    """Function that gets the defaut process group backend from the device."""
+    """Function that gets the default process group backend from the device."""
     return "nccl" if device.type == "cuda" else "gloo"
 
 

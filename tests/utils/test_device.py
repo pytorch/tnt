@@ -291,5 +291,5 @@ class DeviceTest(unittest.TestCase):
         # Check that values are greater than zero
         self.assertGreaterEqual(gpu_stats["memory_used_mb"], 0)
         self.assertGreaterEqual(gpu_stats["memory_free_mb"], 0)
-        self.assertGreaterEqual(gpu_stats["temperature_gpu_celcius"], 0)
-        self.assertGreaterEqual(gpu_stats["temperature_memory_celcius"], 0)
+        self.assertGreaterEqual(gpu_stats["temperature_gpu_celsius"], 0)
+        self.assertGreaterEqual(gpu_stats["temperature_memory_celsius"], 0)

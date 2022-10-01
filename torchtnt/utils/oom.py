@@ -28,5 +28,5 @@ def is_out_of_cuda_memory(exception: BaseException) -> bool:
 
 
 def is_out_of_memory_error(exception: BaseException) -> bool:
-    """Returns Ture if an exception is due to an OOM based on error message"""
+    """Returns True if an exception is due to an OOM based on error message"""
     return is_out_of_cpu_memory(exception) or is_out_of_cuda_memory(exception)
