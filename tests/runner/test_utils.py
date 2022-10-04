@@ -9,7 +9,14 @@ import unittest
 from typing import Iterator, Union
 from unittest.mock import MagicMock
 
+import torch.distributed as dist
+
 from torch import nn
+
+from torch.utils.data import DataLoader
+
+from torch.utils.data.distributed import DistributedSampler
+from torchtnt.runner._test_utils import generate_random_dataset
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, State
@@ -24,15 +31,43 @@ from torchtnt.runner.unit import (
 from torchtnt.runner.utils import (
     _is_done,
     _is_epoch_done,
+    _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _run_callback_fn,
     _set_module_training_mode,
     _step_requires_iterator,
 )
 from torchtnt.utils import Timer
+from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class UtilsTest(unittest.TestCase):
+    def test_maybe_set_distributed_sampler_epoch(self) -> None:
+        config = get_pet_launch_config(3)
+        result = dist.launcher.elastic_launch(
+            config, entrypoint=self._test_maybe_set_distributed_sampler_epoch
+        )()
+        self.assertEqual(result[0], True)
+        self.assertEqual(result[1], True)
+
+    @staticmethod
+    def _test_maybe_set_distributed_sampler_epoch() -> bool:
+        """
+        Test _maybe_set_distributed_sampler_epoch util function
+        """
+        dist.init_process_group("gloo")
+        _maybe_set_distributed_sampler_epoch(None, 10)
+
+        random_dataset = generate_random_dataset(10, 3)
+        dummy_dataloader_with_distributed_sampler = DataLoader(
+            random_dataset, sampler=DistributedSampler(random_dataset)
+        )
+
+        _maybe_set_distributed_sampler_epoch(
+            dummy_dataloader_with_distributed_sampler, 20
+        )
+        return dummy_dataloader_with_distributed_sampler.sampler.epoch == 20
+
     def test_set_module_training_mode(self) -> None:
         """
         Test _set_module_training_mode

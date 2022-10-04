@@ -7,7 +7,7 @@
 import collections
 import inspect
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import torch
 import torch.nn as nn
@@ -45,6 +45,22 @@ def _is_epoch_done(
         max_steps_per_epoch is not None
         and progress.num_steps_completed_in_epoch >= max_steps_per_epoch
     )
+
+
+def _maybe_set_distributed_sampler_epoch(
+    # pyre-ignore: Missing parameter annotation [2]
+    dataloader: Iterable[Any],
+    current_epoch: int,
+) -> None:
+    """Set epoch of distributed sampler in dataloader, if applicable.
+    See: https://pytorch.org/docs/stable/data.html#torch.utils.data.distributed.DistributedSampler
+    """
+    # Set current training epoch for any DistributedSampler in dataloader
+    if isinstance(dataloader, torch.utils.data.DataLoader) and isinstance(
+        dataloader.sampler,
+        torch.utils.data.distributed.DistributedSampler,
+    ):
+        dataloader.sampler.set_epoch(current_epoch)
 
 
 def _set_module_training_mode(

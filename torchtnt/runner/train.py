@@ -17,6 +17,7 @@ from torchtnt.runner.utils import (
     _check_loop_condition,
     _is_done,
     _is_epoch_done,
+    _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _run_callback_fn,
     _set_module_training_mode,
@@ -182,6 +183,10 @@ def _train_epoch_impl(
         ):
             train_unit.on_train_epoch_start(state)
         _run_callback_fn(callbacks, "on_train_epoch_start", state, train_unit)
+
+    _maybe_set_distributed_sampler_epoch(
+        train_state.dataloader, train_state.progress.num_epochs_completed
+    )
 
     data_iter = iter(train_state.dataloader)
     step_input = data_iter
