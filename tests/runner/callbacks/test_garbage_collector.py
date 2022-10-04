@@ -15,14 +15,14 @@ from torchtnt.runner._test_utils import (
     DummyTrainUnit,
     generate_random_dataloader,
 )
-from torchtnt.runner.callbacks.garbage_collection import GarbageCollector
+from torchtnt.runner.callbacks.garbage_collector import GarbageCollector
 from torchtnt.runner.evaluate import evaluate
 from torchtnt.runner.predict import predict
 from torchtnt.runner.train import train
 
 
 class GarbageCollectorTest(unittest.TestCase):
-    def test_garbage_collection_call_count_train(self) -> None:
+    def test_garbage_collector_call_count_train(self) -> None:
         """
         Test GarbageCollector callback was called correct number of times (with train entry point)
         """
@@ -44,7 +44,7 @@ class GarbageCollectorTest(unittest.TestCase):
         )
         self.assertEqual(gc_callback_mock.on_train_end.call_count, 1)
 
-    def test_garbage_collection_enabled_train(self) -> None:
+    def test_garbage_collector_enabled_train(self) -> None:
         """
         Test garbage collection is enabled after runs are finished (with train entry point)
         """
@@ -62,7 +62,7 @@ class GarbageCollectorTest(unittest.TestCase):
         train(my_unit, dataloader, [gc_callback], max_epochs=max_epochs)
         self.assertTrue(gc.isenabled())
 
-    def test_garbage_collection_call_count_evaluate(self) -> None:
+    def test_garbage_collector_call_count_evaluate(self) -> None:
         """
         Test GarbageCollector callback was called correct number of times (with evaluate entry point)
         """
@@ -83,7 +83,7 @@ class GarbageCollectorTest(unittest.TestCase):
         )
         self.assertEqual(gc_callback_mock.on_eval_end.call_count, 1)
 
-    def test_garbage_collection_enabled_evaluate(self):
+    def test_garbage_collector_enabled_evaluate(self):
         """
         Test garbage collection is enabled after runs are finished (with evaluate entry point)
         """
@@ -100,7 +100,7 @@ class GarbageCollectorTest(unittest.TestCase):
         evaluate(my_unit, dataloader, [gc_callback])
         self.assertTrue(gc.isenabled())
 
-    def test_garbage_collection_call_count_predict(self) -> None:
+    def test_garbage_collector_call_count_predict(self) -> None:
         """
         Test GarbageCollector callback was called correct number of times (with predict entry point)
         """
@@ -121,7 +121,7 @@ class GarbageCollectorTest(unittest.TestCase):
         )
         self.assertEqual(gc_callback_mock.on_predict_end.call_count, 1)
 
-    def test_garbage_collection_enabled_predict(self):
+    def test_garbage_collector_enabled_predict(self):
         """
         Test garbage collection is enabled after runs are finished (with predict entry point)
         """
