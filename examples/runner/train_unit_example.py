@@ -99,24 +99,20 @@ def prepare_dataloader(
 class MyTrainUnit(TrainUnit[Batch]):
     def __init__(
         self,
-        input_dim: int,
-        device: torch.device,
-        strategy: str,
-        precision: Optional[torch.dtype],
-        lr: float,
+        module: torch.nn.Module,
+        optimizer: torch.optim.Optimizer,
+        lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
+        train_accuracy: BinaryAccuracy,
         tb_logger: TensorBoardLogger,
         log_frequency_steps: int,
     ):
         super().__init__()
-        # initialize module & optimizer
-        self.module = prepare_module(input_dim, device, strategy, precision)
-        self.optimizer = torch.optim.SGD(self.module.parameters(), lr=lr)
-        self.lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            self.optimizer, gamma=0.9
-        )
+        self.module = module
+        self.optimizer = optimizer
+        self.lr_scheduler = lr_scheduler
 
         # create an accuracy Metric to compute the accuracy of training
-        self.train_accuracy = BinaryAccuracy(device=device)
+        self.train_accuracy = train_accuracy
         self.log_frequency_steps = log_frequency_steps
 
         self.tb_logger = tb_logger
@@ -178,12 +174,16 @@ def main(argv: List[str]) -> None:
     path = tempfile.mkdtemp()
     tb_logger = TensorBoardLogger(path)
 
+    module = prepare_module(args.input_dim, device, args.strategy, precision)
+    optimizer = torch.optim.SGD(module.parameters(), lr=args.lr)
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+    train_accuracy = BinaryAccuracy(device=device)
+
     my_unit = MyTrainUnit(
-        args.input_dim,
-        device,
-        args.strategy,
-        precision,
-        args.lr,
+        module,
+        optimizer,
+        lr_scheduler,
+        train_accuracy,
         tb_logger,
         args.log_frequency_steps,
     )
