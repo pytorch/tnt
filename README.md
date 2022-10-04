@@ -3,13 +3,18 @@ TNT
 
 **TNT** is a library for PyTorch **t**rai**n**ing **t**ools and utilities.
 
-
-![travis](https://travis-ci.org/pytorch/tnt.svg?branch=master)
-[![Documentation Status](https://readthedocs.org/projects/tnt/badge/?version=latest)](http://tnt.readthedocs.io/en/latest/?badge=latest)
+<p align="center">
+<a href="https://github.com/pytorch/tnt/actions?query=branch%3Amain"><img src="https://img.shields.io/github/workflow/status/pytorch/tnt/unit%20test/main" alt="build status"></a>
+<a href="https://pypi.org/project/torchtnt"><img src="https://img.shields.io/pypi/v/torchtnt" alt="pypi version"></a>
+<a href="https://pypi.org/project/torchtnt-nightly"><img src="https://img.shields.io/pypi/v/torchtnt-nightly?label=nightly" alt="pypi nightly version"></a>
+<a href="https://codecov.io/gh/pytorch/tnt"><img src="https://codecov.io/gh/pytorch/tnt/branch/main/graph/badge.svg?token=DR67Q6T7YF" alt="codecov"></a>
+<a href="https://github.com/pytorch/tnt/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/tnt" alt="bsd license"></a>
+[![Documentation Status](https://readthedocs.org/projects/tnt/badge/?version=latest)](https://pytorch.org/tnt/)
+</div>
 
 - [About](#about)
 - [Installation](#installation)
-- [Documentation](http://tnt.readthedocs.io)
+- [Documentation](https://pytorch.org/tnt/)
 - [Getting Started](#getting-started)
 
 
