@@ -25,7 +25,7 @@ from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.data import CudaDataPrefetcher
 from torchtnt.loggers import TensorBoardLogger
-from torchtnt.runner.callbacks import PyTorchProfiler
+from torchtnt.runner.callbacks import PyTorchProfiler, TensorBoardParameterMonitor
 from torchtnt.runner.state import State
 from torchtnt.runner.train import train
 from torchtnt.runner.unit import TrainUnit
@@ -131,13 +131,18 @@ class MyTrainUnit(TrainUnit[Batch]):
 
         # update metrics & logs
         self.train_accuracy.update(outputs, targets)
-        progress = state.train_state.progress
-        if (progress.num_steps_completed + 1) % self.log_frequency_steps == 0:
+        step_count = state.train_state.progress.num_steps_completed
+        if (step_count + 1) % self.log_frequency_steps == 0:
             acc = self.train_accuracy.compute()
-            self.tb_logger.log("loss", loss, progress.num_steps_completed)
-            self.tb_logger.log("accuracy", acc, progress.num_steps_completed)
+            self.tb_logger.log("loss", loss, step_count)
+            self.tb_logger.log("accuracy", acc, step_count)
 
     def on_train_epoch_end(self, state: State) -> None:
+        # compute and log the metric at the end of the epoch
+        step_count = state.train_state.progress.num_steps_completed
+        acc = self.train_accuracy.compute()
+        self.tb_logger.log("accuracy_epoch", acc, step_count)
+
         # reset the metric every epoch
         self.train_accuracy.reset()
 
@@ -195,13 +200,19 @@ def main(argv: List[str]) -> None:
             with_stack=True,
         )
     )
+    parameter_monitor = TensorBoardParameterMonitor(tb_logger)
 
     num_samples = 10240
     train_dataloader = prepare_dataloader(
         num_samples, args.input_dim, args.batch_size, device
     )
 
-    state = train(my_unit, train_dataloader, [profiler], max_epochs=args.max_epochs)
+    state = train(
+        my_unit,
+        train_dataloader,
+        callbacks=[parameter_monitor, profiler],
+        max_epochs=args.max_epochs,
+    )
     print(get_timer_summary(state.timer))
 
 

@@ -98,7 +98,7 @@ def _step_requires_iterator(step_func: Callable[[State, object], object]) -> boo
     argspec = inspect.getfullargspec(step_func)
     annotations = argspec.annotations
     if "data" not in annotations:
-        _logger.warn(
+        _logger.warning(
             f"Expected step function to have an annotated argument named ``data``. Found {annotations}."
         )
         return False

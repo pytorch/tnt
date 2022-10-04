@@ -6,5 +6,10 @@
 
 from .garbage_collector import GarbageCollector
 from .pytorch_profiler import PyTorchProfiler
+from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
 
-__all__ = ["GarbageCollector", "PyTorchProfiler"]
+__all__ = [
+    "GarbageCollector",
+    "PyTorchProfiler",
+    "TensorBoardParameterMonitor",
+]
