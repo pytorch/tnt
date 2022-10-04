@@ -8,14 +8,9 @@ TNT
 <a href="https://pypi.org/project/torchtnt"><img src="https://img.shields.io/pypi/v/torchtnt" alt="pypi version"></a>
 <a href="https://pypi.org/project/torchtnt-nightly"><img src="https://img.shields.io/pypi/v/torchtnt-nightly?label=nightly" alt="pypi nightly version"></a>
 <a href="https://codecov.io/gh/pytorch/tnt"><img src="https://codecov.io/gh/pytorch/tnt/branch/master/graph/badge.svg?token=DR67Q6T7YF" alt="codecov"></a>
-<a href="https://github.com/pytorch/tnt/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/tnt" alt="bsd license"></a>
-[![Documentation Status](https://readthedocs.org/projects/tnt/badge/?version=latest)](https://pytorch.org/tnt/)
+<a href="https://github.com/pytorch/tnt/blob/master/LICENSE"><img src="https://img.shields.io/pypi/l/torchtnt" alt="bsd license"></a>
+<a href="https://pytorch.org/tnt/"><img src="https://img.shields.io/badge/dynamic/json.svg?label=docs&url=https%3A%2F%2Fpypi.org%2Fpypi%2Ftorchtnt%2Fjson&query=%24.info.version&colorB=brightgreen&prefix=v" alt="documentation status"></a>
 </div>
-
-- [About](#about)
-- [Installation](#installation)
-- [Documentation](https://pytorch.org/tnt/)
-- [Getting Started](#getting-started)
 
 
 ## Installation
