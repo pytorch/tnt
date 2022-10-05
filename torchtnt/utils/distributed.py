@@ -118,6 +118,21 @@ def get_global_rank() -> int:
     return 0
 
 
+def get_world_size() -> int:
+    """
+    Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.
+    Returns 1 if neither condition is met.
+    """
+    if dist.is_initialized():
+        return dist.get_world_size()
+
+    world_size = os.environ.get("WORLD_SIZE", "")
+    if world_size.isdecimal():
+        return int(world_size)
+
+    return 1
+
+
 def get_process_group_backend_from_device(device: torch.device) -> str:
     """Function that gets the default process group backend from the device."""
     return "nccl" if device.type == "cuda" else "gloo"
