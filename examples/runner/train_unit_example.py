@@ -25,10 +25,8 @@ from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.data import CudaDataPrefetcher
 from torchtnt.loggers import TensorBoardLogger
+from torchtnt.runner import State, train, TrainUnit
 from torchtnt.runner.callbacks import PyTorchProfiler, TensorBoardParameterMonitor
-from torchtnt.runner.state import State
-from torchtnt.runner.train import train
-from torchtnt.runner.unit import TrainUnit
 from torchtnt.utils import get_timer_summary, init_from_env, seed
 
 _logger: logging.Logger = logging.getLogger(__name__)
