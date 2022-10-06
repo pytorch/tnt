@@ -10,7 +10,6 @@ from typing import Iterable, List, Optional
 import torch
 from torchtnt.runner.callback import Callback
 
-from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.unit import EvalUnit, TEvalData
 from torchtnt.runner.utils import (
@@ -21,7 +20,7 @@ from torchtnt.runner.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import get_timer_summary
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -38,11 +37,9 @@ def evaluate(
     callbacks = callbacks or []
     state = State(
         entry_point=EntryPoint.EVALUATE,
-        timer=Timer(),
         eval_state=PhaseState(
             dataloader=dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
-            progress=Progress(),
         ),
     )
     try:
