@@ -14,7 +14,6 @@ from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.unit import PredictUnit, TPredictData
 from torchtnt.runner.utils import (
-    _check_loop_condition,
     _is_epoch_done,
     _reset_module_training_mode,
     _run_callback_fn,
@@ -69,9 +68,9 @@ def _predict_impl(
     predict_state = state.predict_state
     if not predict_state:
         raise RuntimeError("Expected predict_state to be initialized!")
-    max_steps_per_epoch = predict_state.max_steps_per_epoch
-    _check_loop_condition("max_steps_per_epoch", max_steps_per_epoch)
-    logger.info(f"Started predict with max_steps_per_epoch={max_steps_per_epoch}")
+    logger.info(
+        f"Started predict with max_steps_per_epoch={predict_state.max_steps_per_epoch}"
+    )
 
     # Set all modules to eval mode
     # access modules made available through _AppStateMixin
