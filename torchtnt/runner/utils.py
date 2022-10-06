@@ -21,15 +21,6 @@ _logger: logging.Logger = logging.getLogger(__name__)
 
 
 # Helper functions common across the loops
-
-
-def _check_loop_condition(name: str, val: Optional[int]) -> None:
-    if val is not None and val < 0:
-        raise ValueError(
-            f"Invalid value provided for {name}. Expected a non-negative integer or None, but received {val}."
-        )
-
-
 def _is_done(
     progress: Progress, max_epochs: Optional[int], max_steps: Optional[int]
 ) -> bool:
