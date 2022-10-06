@@ -13,12 +13,7 @@ from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.train import _train_epoch_impl
 from torchtnt.runner.unit import EvalUnit, TEvalData, TrainUnit, TTrainData
-from torchtnt.runner.utils import (
-    _check_loop_condition,
-    _is_done,
-    _run_callback_fn,
-    log_api_usage,
-)
+from torchtnt.runner.utils import _is_done, _run_callback_fn, log_api_usage
 from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -88,12 +83,6 @@ def _fit_impl(
     if not eval_state:
         raise RuntimeError("Expected eval_state to be initialized")
 
-    _check_loop_condition("max_epochs", train_state.max_epochs)
-    _check_loop_condition("max_steps", train_state.max_steps)
-    _check_loop_condition("max_train_steps_per_epoch", train_state.max_steps_per_epoch)
-    _check_loop_condition("max_eval_steps_per_epoch", eval_state.max_steps_per_epoch)
-    _check_loop_condition("evaluate_every_n_steps", eval_state.evaluate_every_n_steps)
-    _check_loop_condition("evaluate_every_n_epochs", eval_state.evaluate_every_n_epochs)
     logger.info(
         f"Started fit with max_epochs={train_state.max_epochs}"
         f"max_steps={train_state.max_steps}"

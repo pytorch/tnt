@@ -14,7 +14,6 @@ from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.unit import TrainUnit, TTrainData
 from torchtnt.runner.utils import (
-    _check_loop_condition,
     _is_done,
     _is_epoch_done,
     _maybe_set_distributed_sampler_epoch,
@@ -74,15 +73,8 @@ def _train_impl(
     if not train_state:
         raise RuntimeError("Expected train_state to be initialized!")
 
-    max_steps_per_epoch = train_state.max_steps_per_epoch
-    _check_loop_condition("max_steps_per_epoch", train_state.max_steps_per_epoch)
-    max_epochs = train_state.max_epochs
-    _check_loop_condition("max_epochs", train_state.max_epochs)
-    max_steps = train_state.max_steps
-    _check_loop_condition("max_steps", train_state.max_steps)
-
     logger.info(
-        f"Started train with max_epochs={max_epochs}, max_steps={max_steps}, max_steps_per_epoch={max_steps_per_epoch}"
+        f"Started train with max_epochs={train_state.max_epochs}, max_steps={train_state.max_steps}, max_steps_per_epoch={train_state.max_steps_per_epoch}"
     )
 
     # Set all modules to train() mode
@@ -132,7 +124,6 @@ def train_epoch(
     )
 
     try:
-        _check_loop_condition("max_steps_per_epoch", max_steps_per_epoch)
         logger.info(
             f"Started train_epoch with max_steps_per_epoch={max_steps_per_epoch}"
         )
