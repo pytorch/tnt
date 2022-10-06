@@ -6,7 +6,7 @@
 
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
@@ -34,10 +34,10 @@ class EntryPoint(Enum):
 class PhaseState:
     """State for each phase (train, eval, predict)"""
 
-    progress: Progress
-
     # pyre-ignore: Invalid type variable [34]
     dataloader: Iterable[Any]
+
+    progress: Progress = field(default_factory=Progress)
 
     # Stopping conditions
     max_epochs: Optional[int] = None  # used only for train
@@ -67,7 +67,7 @@ class State:
     """
 
     entry_point: EntryPoint
-    timer: Timer
+    timer: Timer = field(default_factory=Timer)
 
     train_state: Optional[PhaseState] = None
     eval_state: Optional[PhaseState] = None

@@ -10,7 +10,6 @@ from typing import Iterable, List, Optional
 import torch
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.evaluate import _evaluate_impl
-from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.unit import TrainUnit, TTrainData
 from torchtnt.runner.utils import (
@@ -23,7 +22,7 @@ from torchtnt.runner.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import get_timer_summary
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -42,13 +41,11 @@ def train(
     callbacks = callbacks or []
     state = State(
         entry_point=EntryPoint.TRAIN,
-        timer=Timer(),
         train_state=PhaseState(
             dataloader=dataloader,
             max_epochs=max_epochs,
             max_steps=max_steps,
             max_steps_per_epoch=max_steps_per_epoch,
-            progress=Progress(),
         ),
     )
     try:
@@ -113,13 +110,11 @@ def train_epoch(
     callbacks = callbacks or []
     state = State(
         entry_point=EntryPoint.TRAIN,
-        timer=Timer(),
         train_state=PhaseState(
             dataloader=dataloader,
             max_epochs=1,
             max_steps=max_steps_per_epoch,
             max_steps_per_epoch=max_steps_per_epoch,
-            progress=Progress(),
         ),
     )
 
@@ -160,10 +155,11 @@ def _train_epoch_impl(
 
     evaluate_every_n_steps = None
     evaluate_every_n_epochs = None
-    if state.eval_state and state.eval_state.evaluate_every_n_steps:
-        evaluate_every_n_steps = state.eval_state.evaluate_every_n_steps
-    if state.eval_state and state.eval_state.evaluate_every_n_epochs:
-        evaluate_every_n_epochs = state.eval_state.evaluate_every_n_epochs
+    if state.eval_state:
+        if state.eval_state.evaluate_every_n_steps:
+            evaluate_every_n_steps = state.eval_state.evaluate_every_n_steps
+        if state.eval_state.evaluate_every_n_epochs:
+            evaluate_every_n_epochs = state.eval_state.evaluate_every_n_epochs
 
     # Check the progress to conditionally run this
     # to avoid running this multiple times

@@ -9,12 +9,11 @@ from typing import Iterable, List, Optional
 
 from torchtnt.runner.callback import Callback
 
-from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.train import _train_epoch_impl
 from torchtnt.runner.unit import EvalUnit, TEvalData, TrainUnit, TTrainData
 from torchtnt.runner.utils import _is_done, _run_callback_fn, log_api_usage
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import get_timer_summary
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -37,16 +36,13 @@ def fit(
     callbacks = callbacks or []
     state = State(
         entry_point=EntryPoint.FIT,
-        timer=Timer(),
         train_state=PhaseState(
-            progress=Progress(),
             dataloader=train_dataloader,
             max_epochs=max_epochs,
             max_steps=max_steps,
             max_steps_per_epoch=max_train_steps_per_epoch,
         ),
         eval_state=PhaseState(
-            progress=Progress(),
             dataloader=eval_dataloader,
             max_steps_per_epoch=max_eval_steps_per_epoch,
             evaluate_every_n_steps=evaluate_every_n_steps,
