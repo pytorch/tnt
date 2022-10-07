@@ -31,6 +31,8 @@ class PGWrapper:
 
     def __init__(self, pg: Optional[dist.ProcessGroup]) -> None:
         if pg is None and dist.is_initialized():
+            # pyre-fixme[8]: Attribute has type `Optional[dist.ProcessGroup]`; used
+            #  as `Optional[_distributed_c10d.ProcessGroup]`.
             self.pg: Optional[dist.ProcessGroup] = dist.group.WORLD
         else:
             self.pg: Optional[dist.ProcessGroup] = pg
@@ -38,11 +40,15 @@ class PGWrapper:
     def get_rank(self) -> int:
         if self.pg is None:
             return 0
+        # pyre-fixme[6]: For 1st param expected
+        #  `Optional[_distributed_c10d.ProcessGroup]` but got `ProcessGroup`.
         return dist.get_rank(group=self.pg)
 
     def get_world_size(self) -> int:
         if self.pg is None:
             return 1
+        # pyre-fixme[6]: For 1st param expected
+        #  `Optional[_distributed_c10d.ProcessGroup]` but got `ProcessGroup`.
         return dist.get_world_size(group=self.pg)
 
     def barrier(self) -> None:
@@ -87,6 +93,8 @@ class PGWrapper:
             return
 
         # scatter_object_list does not yet support NCCL backend
+        # pyre-fixme[6]: For 1st param expected
+        #  `Optional[_distributed_c10d.ProcessGroup]` but got `ProcessGroup`.
         if dist.get_backend(self.pg) == "nccl":
             self.broadcast_object_list(obj_list=input_list, src=src)
             output_list[0] = input_list[rank]
@@ -160,6 +168,9 @@ def all_gather_tensors(
 
     # convert tensors to contiguous format
     result = result.contiguous()
+    # pyre-fixme[6]: For 1st param expected
+    #  `Optional[_distributed_c10d.ProcessGroup]` but got
+    #  `Optional[dist.ProcessGroup]`.
     world_size = dist.get_world_size(group)
 
     # if the tensor is scalar, things are easy
@@ -172,6 +183,9 @@ def all_gather_tensors(
     dist.all_gather(local_sizes, local_size, group=group)
 
     # if the backend is NCCL, we can gather the differently sized tensors without padding
+    # pyre-fixme[6]: For 1st param expected
+    #  `Optional[_distributed_c10d.ProcessGroup]` but got
+    #  `Optional[dist.ProcessGroup]`.
     if dist.get_backend(group) == "nccl":
         gathered_result = [result.new_empty(size.tolist()) for size in local_sizes]
         dist.all_gather(gathered_result, result, group)
@@ -335,9 +349,16 @@ def sync_bool(
     if not dist.is_available() or not dist.is_initialized():
         return val
 
+    # pyre-fixme[9]: pg has type `Optional[dist.ProcessGroup]`; used as `Union[None,
+    #  dist.ProcessGroup, _distributed_c10d.ProcessGroup]`.
     pg = pg or dist.group.WORLD
     device = torch.device(
-        torch.cuda.current_device() if dist.get_backend(pg) == "nccl" else "cpu"
+        torch.cuda.current_device()
+        # pyre-fixme[6]: For 1st param expected
+        #  `Optional[_distributed_c10d.ProcessGroup]` but got
+        #  `Optional[dist.ProcessGroup]`.
+        if dist.get_backend(pg) == "nccl"
+        else "cpu"
     )
     pg_wrapper = PGWrapper(pg)
 

@@ -68,6 +68,8 @@ class TensorBoardLogger(MetricLogger):
             self._path: str = path
             return
 
+        # pyre-fixme[6]: For 1st param expected `Optional[dist.ProcessGroup]` but
+        #  got `Optional[_distributed_c10d.ProcessGroup]`.
         pg = PGWrapper(dist.group.WORLD)
         path_container: List[str] = [path] if self._rank == 0 else [""]
         pg.broadcast_object_list(path_container, 0)
