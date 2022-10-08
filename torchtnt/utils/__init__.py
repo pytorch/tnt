@@ -21,6 +21,7 @@ from .distributed import (
 )
 from .early_stop_checker import EarlyStopChecker
 from .env import init_from_env
+from .fsspec import get_filesystem
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
 from .misc import days_to_secs
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
@@ -60,6 +61,7 @@ __all__ = [
     "sync_bool",
     "EarlyStopChecker",
     "init_from_env",
+    "get_filesystem",
     "get_tensor_size_bytes_map",
     "measure_rss_deltas",
     "RSSProfiler",
