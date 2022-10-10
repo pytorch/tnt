@@ -72,8 +72,9 @@ class _AppStateMixin:
             _lr_schedulers = self.__dict__["_lr_schedulers"]
             if name in _lr_schedulers:
                 return _lr_schedulers[name]
-        # pyre-ignore: Undefined attribute [16]
-        return super().__getattr__(name)
+
+        return self.__getattribute__(name)
+
 
     def _update_attr(
         self,
