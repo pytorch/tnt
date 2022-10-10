@@ -126,7 +126,7 @@ def _predict_impl(
     # Possibly warn about an empty dataloader
     any_steps_completed = (
         abs(predict_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch)
-        == 0
+        > 0
     )
     if not any_steps_completed:
         logger.warning("No steps completed during predict epoch!")
