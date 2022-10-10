@@ -33,9 +33,6 @@ class FsTest(unittest.TestCase):
         """
         filepath = os.path.join(directory, filename)
 
-        fs.mkdir(directory, create_parents=True, **kwargs)
-        self.assertTrue(fs.isdir(directory))
-
         with fs.open(filepath, mode="w", **kwargs) as f:
             f.write("blob")
         self.assertTrue(fs.exists(filepath))
