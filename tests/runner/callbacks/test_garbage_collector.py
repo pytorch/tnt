@@ -37,7 +37,7 @@ class GarbageCollectorTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        train(my_unit, dataloader, [gc_callback_mock], max_epochs=max_epochs)
+        train(my_unit, dataloader, callbacks=[gc_callback_mock], max_epochs=max_epochs)
         self.assertEqual(gc_callback_mock.on_train_start.call_count, 1)
         self.assertEqual(
             gc_callback_mock.on_train_step_end.call_count, expected_num_total_steps
@@ -59,7 +59,7 @@ class GarbageCollectorTest(unittest.TestCase):
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
         self.assertTrue(gc.isenabled())
-        train(my_unit, dataloader, [gc_callback], max_epochs=max_epochs)
+        train(my_unit, dataloader, callbacks=[gc_callback], max_epochs=max_epochs)
         self.assertTrue(gc.isenabled())
 
     def test_garbage_collector_call_count_evaluate(self) -> None:
@@ -76,7 +76,7 @@ class GarbageCollectorTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        evaluate(my_unit, dataloader, [gc_callback_mock])
+        evaluate(my_unit, dataloader, callbacks=[gc_callback_mock])
         self.assertEqual(gc_callback_mock.on_eval_start.call_count, 1)
         self.assertEqual(
             gc_callback_mock.on_eval_step_end.call_count, expected_num_total_steps
@@ -97,7 +97,7 @@ class GarbageCollectorTest(unittest.TestCase):
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
         self.assertTrue(gc.isenabled())
-        evaluate(my_unit, dataloader, [gc_callback])
+        evaluate(my_unit, dataloader, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())
 
     def test_garbage_collector_call_count_predict(self) -> None:
@@ -114,7 +114,7 @@ class GarbageCollectorTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        predict(my_unit, dataloader, [gc_callback_mock])
+        predict(my_unit, dataloader, callbacks=[gc_callback_mock])
         self.assertEqual(gc_callback_mock.on_predict_start.call_count, 1)
         self.assertEqual(
             gc_callback_mock.on_predict_step_end.call_count, expected_num_total_steps
@@ -135,5 +135,5 @@ class GarbageCollectorTest(unittest.TestCase):
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
         self.assertTrue(gc.isenabled())
-        predict(my_unit, dataloader, [gc_callback])
+        predict(my_unit, dataloader, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())

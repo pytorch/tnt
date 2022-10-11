@@ -39,7 +39,7 @@ class PyTorchProfilerTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        train(my_unit, dataloader, [profiler], max_epochs=max_epochs)
+        train(my_unit, dataloader, callbacks=[profiler], max_epochs=max_epochs)
         self.assertEqual(profiler_mock.start.call_count, 1)
         self.assertEqual(profiler_mock.step.call_count, expected_num_total_steps)
         self.assertEqual(profiler_mock.stop.call_count, 1)
@@ -60,7 +60,7 @@ class PyTorchProfilerTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        evaluate(my_unit, dataloader, [profiler])
+        evaluate(my_unit, dataloader, callbacks=[profiler])
         self.assertEqual(profiler_mock.start.call_count, 1)
         self.assertEqual(profiler_mock.step.call_count, expected_num_total_steps)
         self.assertEqual(profiler_mock.stop.call_count, 1)
@@ -81,7 +81,7 @@ class PyTorchProfilerTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        predict(my_unit, dataloader, [profiler])
+        predict(my_unit, dataloader, callbacks=[profiler])
         self.assertEqual(profiler_mock.start.call_count, 1)
         self.assertEqual(profiler_mock.step.call_count, expected_num_total_steps)
         self.assertEqual(profiler_mock.stop.call_count, 1)

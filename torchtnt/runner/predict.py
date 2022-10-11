@@ -28,8 +28,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 def predict(
     predict_unit: PredictUnit[TPredictData],
     dataloader: Iterable[TPredictData],
-    callbacks: Optional[List[Callback]] = None,
     *,
+    callbacks: Optional[List[Callback]] = None,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """Makes a single pass through the predict dataloader."""
