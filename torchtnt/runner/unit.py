@@ -4,7 +4,9 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# Disable `Any` type errors
 # pyre-ignore-all-errors[2]
+# pyre-ignore-all-errors[3]
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, TypeVar
@@ -74,7 +76,6 @@ class _AppStateMixin:
     ) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
         return self._lr_schedulers
 
-    # pyre-ignore: Missing return annotation [3]
     def __getattr__(self, name: str) -> Any:
         if "_modules" in self.__dict__:
             _modules = self.__dict__["_modules"]
@@ -176,7 +177,6 @@ class TrainUnit(_AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         pass
 
     @abstractmethod
-    # pyre-ignore: Missing return annotation [3]
     def train_step(self, state: State, data: TTrainData) -> Any:
         ...
 
@@ -195,8 +195,10 @@ class EvalUnit(_AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         pass
 
     @abstractmethod
-    # pyre-ignore: Missing return annotation [3]
     def eval_step(self, state: State, data: TEvalData) -> Any:
+        """
+        Optionally can be decorated with ``@torch.inference_mode()`` for improved peformance.
+        """
         ...
 
     def on_eval_epoch_end(self, state: State) -> None:
@@ -214,8 +216,10 @@ class PredictUnit(_AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC)
         pass
 
     @abstractmethod
-    # pyre-ignore: Missing return annotation [3]
     def predict_step(self, state: State, data: TPredictData) -> Any:
+        """
+        Optionally can be decorated with ``@torch.inference_mode()`` for improved peformance.
+        """
         ...
 
     def on_predict_epoch_end(self, state: State) -> None:
