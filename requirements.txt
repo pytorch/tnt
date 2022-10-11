@@ -5,3 +5,4 @@ tensorboard
 psutil
 typing_extensions
 setuptools
+tqdm
