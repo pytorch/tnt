@@ -55,7 +55,7 @@ def evaluate(
         raise e
 
 
-@torch.inference_mode()
+@torch.no_grad()
 def _evaluate_impl(
     state: State,
     eval_unit: EvalUnit[TEvalData],

@@ -55,7 +55,7 @@ def predict(
         raise e
 
 
-@torch.inference_mode()
+@torch.no_grad()
 def _predict_impl(
     state: State,
     predict_unit: PredictUnit[TPredictData],
