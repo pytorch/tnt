@@ -92,8 +92,8 @@ class _AppStateMixin:
             _misc_statefuls = self.__dict__["_misc_statefuls"]
             if name in _misc_statefuls:
                 return _misc_statefuls[name]
-        # pyre-ignore: Undefined attribute [16]
-        return super().__getattr__(name)
+
+        return self.__getattribute__(name)
 
     def _update_attr(
         self,
