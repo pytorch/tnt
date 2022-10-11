@@ -12,10 +12,20 @@ from typing import Any, Dict, Generic, TypeVar
 import torch
 
 from torchtnt.runner.state import State
+from typing_extensions import Protocol, runtime_checkable
 
 """
 This file defines mixins and interfaces for users to customize hooks in training, evaluation, and prediction loops.
 """
+
+
+@runtime_checkable
+class _Stateful(Protocol):
+    def state_dict(self) -> Dict[str, Any]:
+        ...
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        ...
 
 
 def _remove_from_dicts(name_to_remove: str, *dicts: Dict[str, Any]) -> None:
@@ -35,8 +45,9 @@ class _AppStateMixin:
         self._modules: Dict[str, torch.nn.Module] = {}
         self._optimizers: Dict[str, torch.optim.Optimizer] = {}
         self._lr_schedulers: Dict[str, torch.optim.lr_scheduler._LRScheduler] = {}
+        # catch-all for miscellaneous statefuls
+        self._misc_statefuls: Dict[str, Any] = {}
         # TODO: include other known statefuls
-        # TODO: include catch-all for miscellaneous statefuls
 
     def app_state(self) -> Dict[str, Any]:
         """Join together all of the tracked stateful entities to simplify registration of snapshottable states"""
@@ -44,7 +55,12 @@ class _AppStateMixin:
         # TODO: Should we split this into app_state_to_load and app_state_to_save
         # in order to let users customize the saving & loading paths independently?
         # or should we assume this is done outside of the loop framework entirely?
-        app_state = {**self._modules, **self._optimizers, **self._lr_schedulers}
+        app_state = {
+            **self._modules,
+            **self._optimizers,
+            **self._lr_schedulers,
+            **self._misc_statefuls,
+        }
         return app_state
 
     def tracked_modules(self) -> Dict[str, torch.nn.Module]:
@@ -72,6 +88,10 @@ class _AppStateMixin:
             _lr_schedulers = self.__dict__["_lr_schedulers"]
             if name in _lr_schedulers:
                 return _lr_schedulers[name]
+        if "_misc_statefuls" in self.__dict__:
+            _misc_statefuls = self.__dict__["_misc_statefuls"]
+            if name in _misc_statefuls:
+                return _misc_statefuls[name]
         # pyre-ignore: Undefined attribute [16]
         return super().__getattr__(name)
 
@@ -105,6 +125,12 @@ class _AppStateMixin:
                 value,
                 self.__dict__.get("_lr_schedulers"),
             )
+        elif isinstance(value, _Stateful):
+            self._update_attr(
+                name,
+                value,
+                self.__dict__.get("_misc_statefuls"),
+            )
         else:
             if value is None:
                 _remove_from_dicts(
@@ -113,6 +139,7 @@ class _AppStateMixin:
                     self._modules,
                     self._optimizers,
                     self._lr_schedulers,
+                    self._misc_statefuls,
                 )
             super().__setattr__(name, value)
 

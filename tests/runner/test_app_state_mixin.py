@@ -21,6 +21,7 @@ class Dummy(_AppStateMixin):
         self.lr_scheduler_d = torch.optim.lr_scheduler.StepLR(
             self.optimizer_c, step_size=30, gamma=0.1
         )
+        self.grad_scaler_e = torch.cuda.amp.GradScaler()
 
 
 class AppStateMixinTest(unittest.TestCase):
@@ -78,6 +79,16 @@ class AppStateMixinTest(unittest.TestCase):
         # the attribute should be removed from tracked_lr_schedulers
         self.assertFalse("lr_scheduler_d" in my_unit.tracked_lr_schedulers())
 
+    def test_miscellaneous_stateful(self) -> None:
+        """
+        Test setting and getting miscellaneous stateful objects
+        """
+
+        my_unit = Dummy()
+
+        # assert that the grad scaler is stored in the app_state
+        self.assertEqual(my_unit.app_state()["grad_scaler_e"], my_unit.grad_scaler_e)
+
     def test_app_state(self) -> None:
         """
         Test the app_state method
@@ -86,7 +97,13 @@ class AppStateMixinTest(unittest.TestCase):
         my_unit = Dummy()
 
         # the attributes should be in app_state
-        for key in ("module_a", "loss_fn_b", "optimizer_c", "lr_scheduler_d"):
+        for key in (
+            "module_a",
+            "loss_fn_b",
+            "optimizer_c",
+            "lr_scheduler_d",
+            "grad_scaler_e",
+        ):
             self.assertTrue(key in my_unit.app_state())
 
         # delete the attributes
@@ -94,9 +111,16 @@ class AppStateMixinTest(unittest.TestCase):
         my_unit.loss_fn_b = None
         my_unit.optimizer_c = None
         my_unit.lr_scheduler_d = None
+        my_unit.grad_scaler_e = None
 
         # the attributes should no longer be in app_state
-        for key in ("module_a", "loss_fn_b", "optimizer_c", "lr_scheduler_d"):
+        for key in (
+            "module_a",
+            "loss_fn_b",
+            "optimizer_c",
+            "lr_scheduler_d",
+            "grad_scaler_e",
+        ):
             self.assertFalse(key in my_unit.app_state())
 
     def test_reassigning_attributes(self) -> None:
