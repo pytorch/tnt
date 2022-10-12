@@ -6,13 +6,14 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+from typing import Any, Dict
 
 import torch
 from torch import nn
-from torchtnt.runner.unit import _AppStateMixin
+from torchtnt.runner.unit import AppStateMixin
 
 
-class Dummy(_AppStateMixin):
+class Dummy(AppStateMixin):
     def __init__(self) -> None:
         super().__init__()
         self.module_a = nn.Linear(1, 1)
@@ -166,3 +167,54 @@ class AppStateMixinTest(unittest.TestCase):
         my_unit.grad_scaler_e = loss_fn_f
         self.assertTrue("grad_scaler_e" not in my_unit.tracked_misc_statefuls())
         self.assertTrue("grad_scaler_e" in my_unit.tracked_modules())
+
+    def test_app_state_overload(self) -> None:
+        class Override(AppStateMixin):
+            def __init__(self) -> None:
+                super().__init__()
+                self.module_a = nn.Linear(1, 1)
+                self.loss_fn_b = nn.CrossEntropyLoss()
+                self.optimizer_c = torch.optim.SGD(self.module_a.parameters(), lr=0.1)
+                self.optimizer_placeholder = torch.optim.SGD(
+                    self.module_a.parameters(), lr=0.2
+                )
+                self.lr_scheduler_d = torch.optim.lr_scheduler.StepLR(
+                    self.optimizer_c, step_size=30, gamma=0.1
+                )
+                self.lr_2 = torch.optim.lr_scheduler.StepLR(
+                    self.optimizer_placeholder, step_size=50, gamma=0.3
+                )
+                self.grad_scaler_e = torch.cuda.amp.GradScaler()
+
+            def tracked_modules(self) -> Dict[str, nn.Module]:
+                ret = super().tracked_modules()
+                ret["another_module"] = nn.Linear(1, 1)
+                return ret
+
+            def tracked_optimizers(self) -> Dict[str, torch.optim.Optimizer]:
+                return {"optimizer_c": self.optimizer_c}
+
+            def tracked_lr_schedulers(
+                self,
+            ) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
+                return {"lr_2": self.lr_2}
+
+            def tracked_misc_statefuls(self) -> Dict[str, Any]:
+                ret = super().tracked_misc_statefuls()
+                ret["another_scaler"] = torch.cuda.amp.GradScaler()
+                return ret
+
+        o = Override()
+        app_state = o.app_state()
+        self.assertIn("module_a", app_state)
+        self.assertIn("loss_fn_b", app_state)
+        # from overridden tracked_modules
+        self.assertIn("another_module", app_state)
+
+        self.assertIn("optimizer_c", app_state)
+        self.assertNotIn("optimizer_placeholder", app_state)
+
+        self.assertIn("lr_2", app_state)
+        self.assertNotIn("lr_scheduler_d", app_state)
+        self.assertIn("grad_scaler_e", app_state)
+        self.assertIn("another_scaler", app_state)
