@@ -114,11 +114,13 @@ def _predict_impl(
             with state.timer.time(
                 f"predict.{predict_unit.__class__.__name__}.predict_step"
             ):
-                predict_state.step_output = predict_unit.predict_step(state, step_input)
+                predict_state._step_output = predict_unit.predict_step(
+                    state, step_input
+                )
             _run_callback_fn(callbacks, "on_predict_step_end", state, predict_unit)
 
             # clear step_output to avoid retaining extra memory
-            predict_state.step_output = None
+            predict_state._step_output = None
             predict_state.progress.increment_step()
         except StopIteration:
             break

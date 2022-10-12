@@ -196,11 +196,11 @@ def _train_epoch_impl(
 
             _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
             with state.timer.time(f"train.{train_unit.__class__.__name__}.train_step"):
-                train_state.step_output = train_unit.train_step(state, step_input)
+                train_state._step_output = train_unit.train_step(state, step_input)
             _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
 
             # clear step_output to avoid retaining extra memory
-            train_state.step_output = None
+            train_state._step_output = None
             train_state.progress.increment_step()
 
             if (

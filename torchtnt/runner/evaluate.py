@@ -107,10 +107,10 @@ def _evaluate_impl(
                     step_input = next(data_iter)
             _run_callback_fn(callbacks, "on_eval_step_start", state, eval_unit)
             with state.timer.time(f"eval.{eval_unit.__class__.__name__}.eval_step"):
-                eval_state.step_output = eval_unit.eval_step(state, step_input)
+                eval_state._step_output = eval_unit.eval_step(state, step_input)
             _run_callback_fn(callbacks, "on_eval_step_end", state, eval_unit)
             # clear step_output to avoid retaining extra memory
-            eval_state.step_output = None
+            eval_state._step_output = None
             eval_state.progress.increment_step()
         except StopIteration:
             break
