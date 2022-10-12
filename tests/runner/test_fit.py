@@ -247,7 +247,7 @@ class FitTest(unittest.TestCase):
             my_unit,
             train_dataloader,
             eval_dataloader,
-            [callback_mock],
+            callbacks=[callback_mock],
             max_epochs=max_epochs,
         )
 

@@ -31,8 +31,8 @@ logger: logging.Logger = logging.getLogger(__name__)
 def train(
     train_unit: TrainUnit[TTrainData],
     dataloader: Iterable[TTrainData],
-    callbacks: Optional[List[Callback]] = None,
     *,
+    callbacks: Optional[List[Callback]] = None,
     max_epochs: Optional[int],
     max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
@@ -103,8 +103,8 @@ def _train_impl(
 def train_epoch(
     train_unit: TrainUnit[TTrainData],
     dataloader: Iterable[TTrainData],
-    callbacks: Optional[List[Callback]] = None,
     *,
+    callbacks: Optional[List[Callback]] = None,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     callbacks = callbacks or []

@@ -56,7 +56,7 @@ class BaseCSVWriterTest(unittest.TestCase):
             csv_callback = CustomCSVWriter(
                 header_row=_HEADER_ROW, dir_path=temp_dir, filename=_FILENAME
             )
-            predict(my_unit, dataloader, [csv_callback])
+            predict(my_unit, dataloader, callbacks=[csv_callback])
 
             # Check file exists and is successfully opened
             csv_file = f"{temp_dir}/{_FILENAME}"
@@ -78,7 +78,7 @@ class BaseCSVWriterTest(unittest.TestCase):
             csv_callback = CustomCSVWriterSingleRow(
                 header_row=_HEADER_ROW, dir_path=temp_dir, filename=_FILENAME
             )
-            predict(my_unit, dataloader, [csv_callback])
+            predict(my_unit, dataloader, callbacks=[csv_callback])
 
             # Check file exists and is successfully opened
             csv_file = f"{temp_dir}/{_FILENAME}"
@@ -101,4 +101,4 @@ class BaseCSVWriterTest(unittest.TestCase):
             csv_callback = BaseCSVWriter(
                 header_row=_HEADER_ROW, dir_path="", filename=_FILENAME
             )
-            predict(my_unit, dataloader, [csv_callback])
+            predict(my_unit, dataloader, callbacks=[csv_callback])

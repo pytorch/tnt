@@ -156,7 +156,7 @@ class TrainTest(unittest.TestCase):
         _ = train(
             my_unit,
             dataloader,
-            [callback_mock],
+            callbacks=[callback_mock],
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
         )

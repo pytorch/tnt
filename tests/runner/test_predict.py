@@ -113,7 +113,7 @@ class PredictTest(unittest.TestCase):
         _ = predict(
             my_unit,
             dataloader,
-            [callback_mock],
+            callbacks=[callback_mock],
             max_steps_per_epoch=max_steps_per_epoch,
         )
         self.assertEqual(callback_mock.on_predict_start.call_count, 1)
