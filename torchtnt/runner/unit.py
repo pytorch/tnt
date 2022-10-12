@@ -227,3 +227,8 @@ class PredictUnit(_AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC)
 
     def on_predict_end(self, state: State) -> None:
         pass
+
+
+TTrainUnit = TrainUnit[TTrainData]
+TEvalUnit = EvalUnit[TEvalData]
+TPredictUnit = PredictUnit[TPredictData]
