@@ -89,6 +89,12 @@ class AppStateMixinTest(unittest.TestCase):
         # assert that the grad scaler is stored in the app_state
         self.assertEqual(my_unit.app_state()["grad_scaler_e"], my_unit.grad_scaler_e)
 
+        # delete the attribute
+        my_unit.grad_scaler_e = None
+
+        # the attribute should be removed from tracked_misc_statefuls
+        self.assertFalse("grad_scaler_e" in my_unit.tracked_misc_statefuls())
+
     def test_app_state(self) -> None:
         """
         Test the app_state method
@@ -155,3 +161,8 @@ class AppStateMixinTest(unittest.TestCase):
         my_unit.lr_scheduler_d = loss_fn_f
         self.assertTrue("lr_scheduler_d" not in my_unit.tracked_lr_schedulers())
         self.assertTrue("lr_scheduler_d" in my_unit.tracked_modules())
+
+        self.assertTrue("grad_scaler_e" in my_unit.tracked_misc_statefuls())
+        my_unit.grad_scaler_e = loss_fn_f
+        self.assertTrue("grad_scaler_e" not in my_unit.tracked_misc_statefuls())
+        self.assertTrue("grad_scaler_e" in my_unit.tracked_modules())
