@@ -9,14 +9,7 @@ from typing import Iterable, Optional
 
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import State
-from torchtnt.runner.unit import (
-    EvalUnit,
-    PredictUnit,
-    TEvalData,
-    TPredictData,
-    TrainUnit,
-    TTrainData,
-)
+from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils.distributed import get_global_rank
 from tqdm.auto import tqdm
 
@@ -37,7 +30,7 @@ class TQDMProgressBar(Callback):
         self._eval_progress_bar: Optional[tqdm] = None
         self._predict_progress_bar: Optional[tqdm] = None
 
-    def on_train_epoch_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
         if state.train_state:
             self._train_progress_bar = _create_progress_bar(
                 state.train_state.dataloader,
@@ -48,7 +41,7 @@ class TQDMProgressBar(Callback):
                 max_steps_per_epoch=state.train_state.max_steps_per_epoch,
             )
 
-    def on_train_step_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         if self._train_progress_bar and state.train_state:
             _update_progress_bar(
                 self._train_progress_bar,
@@ -56,7 +49,7 @@ class TQDMProgressBar(Callback):
                 self._refresh_rate,
             )
 
-    def on_train_epoch_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         if self._train_progress_bar and state.train_state:
             _close_progress_bar(
                 self._train_progress_bar,
@@ -64,7 +57,7 @@ class TQDMProgressBar(Callback):
                 self._refresh_rate,
             )
 
-    def on_eval_epoch_start(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_epoch_start(self, state: State, unit: TEvalUnit) -> None:
         if state.eval_state:
             self._eval_progress_bar = _create_progress_bar(
                 state.eval_state.dataloader,
@@ -75,7 +68,7 @@ class TQDMProgressBar(Callback):
                 max_steps_per_epoch=state.eval_state.max_steps_per_epoch,
             )
 
-    def on_eval_step_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         if self._eval_progress_bar and state.eval_state:
             _update_progress_bar(
                 self._eval_progress_bar,
@@ -83,7 +76,7 @@ class TQDMProgressBar(Callback):
                 self._refresh_rate,
             )
 
-    def on_eval_epoch_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_epoch_end(self, state: State, unit: TEvalUnit) -> None:
         if self._eval_progress_bar and state.eval_state:
             _close_progress_bar(
                 self._eval_progress_bar,
@@ -91,9 +84,7 @@ class TQDMProgressBar(Callback):
                 self._refresh_rate,
             )
 
-    def on_predict_epoch_start(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
         if state.predict_state:
             self._predict_progress_bar = _create_progress_bar(
                 state.predict_state.dataloader,
@@ -104,9 +95,7 @@ class TQDMProgressBar(Callback):
                 max_steps_per_epoch=state.predict_state.max_steps_per_epoch,
             )
 
-    def on_predict_step_end(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         if self._predict_progress_bar and state.predict_state:
             _update_progress_bar(
                 self._predict_progress_bar,
@@ -114,9 +103,7 @@ class TQDMProgressBar(Callback):
                 self._refresh_rate,
             )
 
-    def on_predict_epoch_end(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_epoch_end(self, state: State, unit: TPredictUnit) -> None:
         if self._predict_progress_bar and state.predict_state:
             _close_progress_bar(
                 self._predict_progress_bar,

@@ -11,7 +11,7 @@ import torch
 from torchtnt.runner.callback import Callback
 
 from torchtnt.runner.state import EntryPoint, PhaseState, State
-from torchtnt.runner.unit import PredictUnit, TPredictData
+from torchtnt.runner.unit import TPredictData, TPredictUnit
 from torchtnt.runner.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
@@ -26,7 +26,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def predict(
-    predict_unit: PredictUnit[TPredictData],
+    predict_unit: TPredictUnit,
     dataloader: Iterable[TPredictData],
     *,
     callbacks: Optional[List[Callback]] = None,
@@ -58,7 +58,7 @@ def predict(
 @torch.no_grad()
 def _predict_impl(
     state: State,
-    predict_unit: PredictUnit[TPredictData],
+    predict_unit: TPredictUnit,
     callbacks: List[Callback],
 ) -> None:
     # input validation
@@ -92,7 +92,6 @@ def _predict_impl(
     data_iter = iter(predict_state.dataloader)
     step_input = data_iter
 
-    # pyre-ignore[6]: Incompatible parameter type
     pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
     prev_steps_in_epoch = predict_state.progress.num_steps_completed_in_epoch
 

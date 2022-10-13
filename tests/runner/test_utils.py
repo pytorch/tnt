@@ -20,14 +20,7 @@ from torchtnt.runner._test_utils import generate_random_dataset
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.progress import Progress
 from torchtnt.runner.state import EntryPoint, State
-from torchtnt.runner.unit import (
-    EvalUnit,
-    PredictUnit,
-    TEvalData,
-    TPredictData,
-    TrainUnit,
-    TTrainData,
-)
+from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.runner.utils import (
     _is_done,
     _is_epoch_done,
@@ -268,27 +261,25 @@ class DummyCallback(Callback):
     def on_exception(
         self,
         state: State,
-        unit: Union[
-            TrainUnit[TTrainData], EvalUnit[TEvalData], PredictUnit[TPredictData]
-        ],
+        unit: Union[TTrainUnit, TEvalUnit, TPredictUnit],
         exc: BaseException,
     ):
         self.dummy_data = "on_exception"
 
-    def on_train_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         self.dummy_data = "on_train_start"
 
-    def on_train_epoch_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
         self.dummy_data = "on_train_epoch_start"
 
-    def on_train_step_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
         self.dummy_data = "on_train_step_start"
 
-    def on_train_step_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         self.dummy_data = "on_train_step_end"
 
-    def on_train_epoch_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         self.dummy_data = "on_train_epoch_end"
 
-    def on_train_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         self.dummy_data = "on_train_end"

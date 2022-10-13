@@ -8,14 +8,7 @@ import torch
 
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import EntryPoint, State
-from torchtnt.runner.unit import (
-    EvalUnit,
-    PredictUnit,
-    TEvalData,
-    TPredictData,
-    TrainUnit,
-    TTrainData,
-)
+from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
 
 
 class PyTorchProfiler(Callback):
@@ -33,35 +26,33 @@ class PyTorchProfiler(Callback):
     ) -> None:
         self.profiler: torch.profiler.profile = profiler
 
-    def on_train_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         self.profiler.start()
 
-    def on_train_step_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         self.profiler.step()
 
-    def on_train_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         self.profiler.stop()
 
-    def on_eval_start(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_start(self, state: State, unit: TEvalUnit) -> None:
         # if in fit do nothing since the profiler was already started in on_train_start
         if state.entry_point == EntryPoint.EVALUATE:
             self.profiler.start()
 
-    def on_eval_step_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         self.profiler.step()
 
-    def on_eval_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
         # if in fit do nothing since the profiler will be stopped in on_train_end
         if state.entry_point == EntryPoint.EVALUATE:
             self.profiler.stop()
 
-    def on_predict_start(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
         self.profiler.start()
 
-    def on_predict_step_end(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         self.profiler.step()
 
-    def on_predict_end(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
         self.profiler.stop()

@@ -8,14 +8,7 @@ import gc
 
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import State
-from torchtnt.runner.unit import (
-    EvalUnit,
-    PredictUnit,
-    TEvalData,
-    TPredictData,
-    TrainUnit,
-    TTrainData,
-)
+from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
 
 
 class GarbageCollector(Callback):
@@ -43,10 +36,10 @@ class GarbageCollector(Callback):
     def __init__(self, step_interval: int) -> None:
         self._step_interval = step_interval
 
-    def on_train_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         gc.disable()
 
-    def on_train_step_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         if (
             state.train_state
             and (state.train_state.progress.num_steps_completed + 1)
@@ -55,13 +48,13 @@ class GarbageCollector(Callback):
         ):
             gc.collect()
 
-    def on_train_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         gc.enable()
 
-    def on_eval_start(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_start(self, state: State, unit: TEvalUnit) -> None:
         gc.disable()
 
-    def on_eval_step_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         if (
             state.eval_state
             and (state.eval_state.progress.num_steps_completed + 1)
@@ -70,15 +63,13 @@ class GarbageCollector(Callback):
         ):
             gc.collect()
 
-    def on_eval_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
         gc.enable()
 
-    def on_predict_start(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
         gc.disable()
 
-    def on_predict_step_end(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         if (
             state.predict_state
             and (state.predict_state.progress.num_steps_completed + 1)
@@ -87,5 +78,5 @@ class GarbageCollector(Callback):
         ):
             gc.collect()
 
-    def on_predict_end(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
         gc.enable()
