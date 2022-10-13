@@ -11,7 +11,7 @@ import torch
 from torchtnt.runner.callback import Callback
 
 from torchtnt.runner.state import EntryPoint, PhaseState, State
-from torchtnt.runner.unit import EvalUnit, TEvalData
+from torchtnt.runner.unit import TEvalData, TEvalUnit
 from torchtnt.runner.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
@@ -26,7 +26,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def evaluate(
-    eval_unit: EvalUnit[TEvalData],
+    eval_unit: TEvalUnit,
     dataloader: Iterable[TEvalData],
     *,
     callbacks: Optional[List[Callback]] = None,
@@ -58,7 +58,7 @@ def evaluate(
 @torch.no_grad()
 def _evaluate_impl(
     state: State,
-    eval_unit: EvalUnit[TEvalData],
+    eval_unit: TEvalUnit,
     callbacks: List[Callback],
 ) -> None:
     # input validation
@@ -90,7 +90,6 @@ def _evaluate_impl(
     data_iter = iter(eval_state.dataloader)
     step_input = data_iter
 
-    # pyre-ignore[6]: Incompatible parameter type
     pass_data_iter_to_step = _step_requires_iterator(eval_unit.eval_step)
     prev_steps_in_epoch = eval_state.progress.num_steps_completed_in_epoch
 

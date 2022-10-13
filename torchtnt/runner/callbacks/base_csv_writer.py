@@ -11,14 +11,7 @@ from typing import Any, List, TextIO, Union
 
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import EntryPoint, State
-from torchtnt.runner.unit import (
-    EvalUnit,
-    PredictUnit,
-    TEvalData,
-    TPredictData,
-    TrainUnit,
-    TTrainData,
-)
+from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils import get_filesystem, get_global_rank
 
 DEFAULT_FILE_NAME = "predictions.csv"
@@ -63,19 +56,17 @@ class BaseCSVWriter(Callback, ABC):
     def get_batch_output_rows(
         self,
         state: State,
-        unit: PredictUnit[TPredictData],
+        unit: TPredictUnit,
         # pyre-ignore: Missing parameter annotation [2]
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:
         ...
 
-    def on_predict_start(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
         if get_global_rank() == 0:
             self._writer.writerow(self.header_row)
 
-    def on_predict_step_end(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         assert state.predict_state is not None
         step_output = state.predict_state.step_output
         batch_output_rows = self.get_batch_output_rows(state, unit, step_output)
@@ -88,16 +79,14 @@ class BaseCSVWriter(Callback, ABC):
             else:
                 self._writer.writerow(batch_output_rows)
 
-    def on_predict_end(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
         self._file.flush()
         self._file.close()
 
     def on_exception(
         self,
         state: State,
-        unit: Union[
-            TrainUnit[TTrainData], EvalUnit[TEvalData], PredictUnit[TPredictData]
-        ],
+        unit: Union[TTrainUnit, TEvalUnit, TPredictUnit],
         exc: BaseException,
     ) -> None:
         if state.entry_point == EntryPoint.PREDICT:

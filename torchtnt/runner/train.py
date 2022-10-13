@@ -11,7 +11,7 @@ import torch
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.evaluate import _evaluate_impl
 from torchtnt.runner.state import EntryPoint, PhaseState, State
-from torchtnt.runner.unit import TrainUnit, TTrainData
+from torchtnt.runner.unit import TTrainData, TTrainUnit
 from torchtnt.runner.utils import (
     _is_done,
     _is_epoch_done,
@@ -29,7 +29,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 @torch.enable_grad()
 def train(
-    train_unit: TrainUnit[TTrainData],
+    train_unit: TTrainUnit,
     dataloader: Iterable[TTrainData],
     *,
     callbacks: Optional[List[Callback]] = None,
@@ -63,7 +63,7 @@ def train(
 
 def _train_impl(
     state: State,
-    train_unit: TrainUnit[TTrainData],
+    train_unit: TTrainUnit,
     callbacks: List[Callback],
 ) -> None:
     train_state = state.train_state
@@ -101,7 +101,7 @@ def _train_impl(
 
 @torch.enable_grad()
 def train_epoch(
-    train_unit: TrainUnit[TTrainData],
+    train_unit: TTrainUnit,
     dataloader: Iterable[TTrainData],
     *,
     callbacks: Optional[List[Callback]] = None,
@@ -140,7 +140,7 @@ def train_epoch(
 
 def _train_epoch_impl(
     state: State,
-    train_unit: TrainUnit[TTrainData],
+    train_unit: TTrainUnit,
     callbacks: List[Callback],
 ) -> None:
     logger.info("Started train epoch")
@@ -178,7 +178,6 @@ def _train_epoch_impl(
     data_iter = iter(train_state.dataloader)
     step_input = data_iter
 
-    # pyre-ignore[6]: Incompatible parameter type
     pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
     prev_steps_in_epoch = train_state.progress.num_steps_completed_in_epoch
 

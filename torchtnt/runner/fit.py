@@ -11,7 +11,7 @@ from torchtnt.runner.callback import Callback
 
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.train import _train_epoch_impl
-from torchtnt.runner.unit import EvalUnit, TEvalData, TrainUnit, TTrainData
+from torchtnt.runner.unit import EvalUnit, TEvalData, TrainUnit, TTrainData, TTrainUnit
 from torchtnt.runner.utils import _is_done, _run_callback_fn, log_api_usage
 from torchtnt.utils.timer import get_timer_summary
 
@@ -19,7 +19,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def fit(
-    unit: TrainUnit[TTrainData],
+    unit: TTrainUnit,
     train_dataloader: Iterable[TTrainData],
     eval_dataloader: Iterable[TEvalData],
     *,
@@ -63,7 +63,7 @@ def fit(
 
 def _fit_impl(
     state: State,
-    unit: TrainUnit[TTrainData],
+    unit: TTrainUnit,
     callbacks: List[Callback],
 ) -> None:
     # input validation

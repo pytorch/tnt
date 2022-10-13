@@ -8,14 +8,7 @@ import logging
 from typing import Union
 
 from torchtnt.runner.state import State
-from torchtnt.runner.unit import (
-    EvalUnit,
-    PredictUnit,
-    TEvalData,
-    TPredictData,
-    TrainUnit,
-    TTrainData,
-)
+from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -24,9 +17,7 @@ class _OnExceptionMixin:
     def on_exception(
         self,
         state: State,
-        unit: Union[
-            TrainUnit[TTrainData], EvalUnit[TEvalData], PredictUnit[TPredictData]
-        ],
+        unit: Union[TTrainUnit, TEvalUnit, TPredictUnit],
         exc: BaseException,
     ) -> None:
         pass
@@ -40,70 +31,62 @@ class _NameMixin:
 
 
 class _TrainCallback:
-    def on_train_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         pass
 
-    def on_train_epoch_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
         pass
 
-    def on_train_step_start(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
         pass
 
-    def on_train_step_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         pass
 
-    def on_train_epoch_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         pass
 
-    def on_train_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         pass
 
 
 class _EvalCallback:
-    def on_eval_start(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_start(self, state: State, unit: TEvalUnit) -> None:
         pass
 
-    def on_eval_epoch_start(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_epoch_start(self, state: State, unit: TEvalUnit) -> None:
         pass
 
-    def on_eval_step_start(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_step_start(self, state: State, unit: TEvalUnit) -> None:
         pass
 
-    def on_eval_step_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         pass
 
-    def on_eval_epoch_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_epoch_end(self, state: State, unit: TEvalUnit) -> None:
         pass
 
-    def on_eval_end(self, state: State, unit: EvalUnit[TEvalData]) -> None:
+    def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
         pass
 
 
 class _PredictCallback:
-    def on_predict_start(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
         pass
 
-    def on_predict_epoch_start(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
         pass
 
-    def on_predict_step_start(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_step_start(self, state: State, unit: TPredictUnit) -> None:
         pass
 
-    def on_predict_step_end(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         pass
 
-    def on_predict_epoch_end(
-        self, state: State, unit: PredictUnit[TPredictData]
-    ) -> None:
+    def on_predict_epoch_end(self, state: State, unit: TPredictUnit) -> None:
         pass
 
-    def on_predict_end(self, state: State, unit: PredictUnit[TPredictData]) -> None:
+    def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
         pass
 
 

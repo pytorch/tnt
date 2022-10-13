@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchtnt.loggers.tensorboard import TensorBoardLogger
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import State
-from torchtnt.runner.unit import TrainUnit, TTrainData
+from torchtnt.runner.unit import TTrainUnit
 
 
 def _write_histogram_parameters(
@@ -41,7 +41,7 @@ class TensorBoardParameterMonitor(Callback):
             logger = logger.writer
         self._writer: Optional[SummaryWriter] = logger
 
-    def on_train_epoch_end(self, state: State, unit: TrainUnit[TTrainData]) -> None:
+    def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         writer = self._writer
         if not writer:
             return
