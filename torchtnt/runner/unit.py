@@ -76,6 +76,9 @@ class _AppStateMixin:
     ) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
         return self._lr_schedulers
 
+    def tracked_misc_statefuls(self) -> Dict[str, Any]:
+        return self._misc_statefuls
+
     def __getattr__(self, name: str) -> Any:
         if "_modules" in self.__dict__:
             _modules = self.__dict__["_modules"]
@@ -112,6 +115,7 @@ class _AppStateMixin:
             self._modules,
             self._optimizers,
             self._lr_schedulers,
+            self._misc_statefuls,
         )
         tracked_objects[name] = value
 
@@ -151,6 +155,8 @@ class _AppStateMixin:
             del self._optimizers[name]
         elif name in self._lr_schedulers:
             del self._lr_schedulers[name]
+        elif name in self._misc_statefuls:
+            del self._misc_statefuls[name]
         else:
             super().__delattr__(name)
 
