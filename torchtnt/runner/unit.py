@@ -36,7 +36,7 @@ def _remove_from_dicts(name_to_remove: str, *dicts: Dict[str, Any]) -> None:
             del d[name_to_remove]
 
 
-class _AppStateMixin:
+class AppStateMixin:
     """
     A mixin to track modules, optimizers, and LR schedulers to simplify checkpointing object states.
     This can be easily extended to cover types that conform to the Stateful protocol.
@@ -58,10 +58,10 @@ class _AppStateMixin:
         # in order to let users customize the saving & loading paths independently?
         # or should we assume this is done outside of the loop framework entirely?
         app_state = {
-            **self._modules,
-            **self._optimizers,
-            **self._lr_schedulers,
-            **self._misc_statefuls,
+            **self.tracked_modules(),
+            **self.tracked_optimizers(),
+            **self.tracked_lr_schedulers(),
+            **self.tracked_misc_statefuls(),
         }
         return app_state
 
@@ -171,7 +171,7 @@ TEvalData = TypeVar("TEvalData")
 TPredictData = TypeVar("TPredictData")
 
 
-class TrainUnit(_AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
+class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
     """
     Base interface for training.
     """
@@ -193,7 +193,7 @@ class TrainUnit(_AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         pass
 
 
-class EvalUnit(_AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
+class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
     def on_eval_start(self, state: State) -> None:
         pass
 
@@ -214,7 +214,7 @@ class EvalUnit(_AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         pass
 
 
-class PredictUnit(_AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC):
+class PredictUnit(AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC):
     def on_predict_start(self, state: State) -> None:
         pass
 
