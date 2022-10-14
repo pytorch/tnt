@@ -5,7 +5,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, Union
+from typing import Mapping, Union
 
 from numpy import ndarray
 from torch import Tensor
@@ -30,7 +30,7 @@ class MetricLogger(Protocol):
         """
         pass
 
-    def log_dict(self, payload: Dict[str, Scalar], step: int) -> None:
+    def log_dict(self, payload: Mapping[str, Scalar], step: int) -> None:
         """Log multiple scalar values.
 
         Args:

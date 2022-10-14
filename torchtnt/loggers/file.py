@@ -10,7 +10,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from time import monotonic
-from typing import Dict
+from typing import Dict, Mapping
 
 from torchtnt.loggers.logger import Scalar
 from torchtnt.loggers.utils import scalar_to_float
@@ -53,7 +53,7 @@ class FileLogger(ABC):
     def path(self) -> str:
         return self._path
 
-    def log_dict(self, payload: Dict[str, Scalar], step: int) -> None:
+    def log_dict(self, payload: Mapping[str, Scalar], step: int) -> None:
         """Add multiple scalar values.
 
         Args:
