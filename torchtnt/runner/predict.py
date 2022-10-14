@@ -32,7 +32,18 @@ def predict(
     callbacks: Optional[List[Callback]] = None,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
-    """Makes a single pass through the predict dataloader."""
+    """
+    The `predict` entry point takes in a PredictUnit and dataloader and runs the prediction loop over the data.
+
+    Args:
+        predict_unit: an instance of PredictUnit which implements `predict_step`.
+        dataloader: dataloader to be used during prediction.
+        callbacks: an optional list of callbacks.
+        max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
+
+    Returns:
+        a State object containing metadata about the prediction run.
+    """
     log_api_usage("predict")
     callbacks = callbacks or []
     state = State(
