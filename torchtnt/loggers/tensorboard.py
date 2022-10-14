@@ -7,7 +7,7 @@
 
 import atexit
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 import torch.distributed as dist
 
@@ -89,7 +89,7 @@ class TensorBoardLogger(MetricLogger):
     def path(self) -> str:
         return self._path
 
-    def log_dict(self, payload: Dict[str, Scalar], step: int) -> None:
+    def log_dict(self, payload: Mapping[str, Scalar], step: int) -> None:
         """Add multiple scalar values to TensorBoard.
 
         Args:
