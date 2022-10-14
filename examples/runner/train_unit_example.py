@@ -26,7 +26,11 @@ from torcheval.metrics import BinaryAccuracy
 from torchtnt.data import CudaDataPrefetcher
 from torchtnt.loggers import TensorBoardLogger
 from torchtnt.runner import State, train, TrainUnit
-from torchtnt.runner.callbacks import PyTorchProfiler, TensorBoardParameterMonitor
+from torchtnt.runner.callbacks import (
+    LearningRateMonitor,
+    PyTorchProfiler,
+    TensorBoardParameterMonitor,
+)
 from torchtnt.utils import get_timer_summary, init_from_env, seed
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -199,6 +203,7 @@ def main(argv: List[str]) -> None:
         )
     )
     parameter_monitor = TensorBoardParameterMonitor(tb_logger)
+    lr_monitor = LearningRateMonitor(tb_logger)
 
     num_samples = 10240
     train_dataloader = prepare_dataloader(
@@ -208,7 +213,7 @@ def main(argv: List[str]) -> None:
     state = train(
         my_unit,
         train_dataloader,
-        callbacks=[parameter_monitor, profiler],
+        callbacks=[lr_monitor, parameter_monitor, profiler],
         max_epochs=args.max_epochs,
     )
     print(get_timer_summary(state.timer))
