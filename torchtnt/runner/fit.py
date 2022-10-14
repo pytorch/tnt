@@ -31,7 +31,24 @@ def fit(
     evaluate_every_n_steps: Optional[int] = None,
     evaluate_every_n_epochs: Optional[int] = 1,
 ) -> State:
-    """Function that interleaves training & evaluation."""
+    """
+    The `fit` entry point interleaves the training and evaluation loops, taking in an instance of TrainUnit/EvalUnit as well as train and eval dataloaders.
+
+    Args:
+        unit: an instance of both TrainUnit EvalUnit which implements both `train_step` and `eval_step`.
+        train_dataloader: dataloader to be used during training.
+        eval_dataloader: dataloader to be used during evaluation.
+        callbacks: an optional list of callbacks.
+        max_epochs: the max number of epochs to run for training. `None` means no limit (infinite training) unless stopped by max_steps.
+        max_steps: the max number of steps to run for training. `None` means no limit (infinite training) unless stopped by max_epochs.
+        max_train_steps_per_epoch: the max number of steps to run per epoch for training. None means train until the dataloader is exhausted.
+        max_eval_steps_per_epoch: the max number of steps to run per epoch for evaluation. None means evaluate until the dataloader is exhausted.
+        evaluate_every_n_steps: how often to run the evaluation loop in terms of training steps.
+        evaluate_every_n_epochs: how often to run the evaluation loop in terms of training epochs.
+
+    Returns:
+        a State object containing metadata about the fit run.
+    """
     log_api_usage("fit")
     callbacks = callbacks or []
     state = State(
