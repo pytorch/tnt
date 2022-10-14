@@ -32,7 +32,18 @@ def evaluate(
     callbacks: Optional[List[Callback]] = None,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
-    """Makes a single pass through the evaluation dataloader."""
+    """
+    The `evaluate` entry point takes in an EvalUnit and dataloader and runs the evaluation loop over the data.
+
+    Args:
+        eval_unit: an instance of EvalUnit which implements `eval_step`.
+        dataloader: dataloader to be used during evaluation.
+        callbacks: an optional list of callbacks.
+        max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
+
+    Returns:
+        a State object containing metadata about the evaluation run.
+    """
     log_api_usage("evaluate")
     callbacks = callbacks or []
     state = State(
