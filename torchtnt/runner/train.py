@@ -37,6 +37,20 @@ def train(
     max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
+    """
+    The `train` entry point takes in a TrainUnit and dataloader and runs the training loop over the data.
+
+    Args:
+        train_unit: an instance of TrainUnit which implements `train_step`.
+        dataloader: dataloader to be used during training.
+        callbacks: an optional list of callbacks.
+        max_epochs: the max number of epochs to run. `None` means no limit (infinite training) unless stopped by max_steps.
+        max_steps: the max number of steps to run. `None` means no limit (infinite training) unless stopped by max_epochs.
+        max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
+
+    Returns:
+        a State object containing metadata about the training run.
+    """
     log_api_usage("train")
     callbacks = callbacks or []
     state = State(
