@@ -7,6 +7,7 @@
 from .base_csv_writer import BaseCSVWriter
 from .garbage_collector import GarbageCollector
 from .lambda_callback import Lambda
+from .learning_rate_monitor import LearningRateMonitor
 from .pytorch_profiler import PyTorchProfiler
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
 from .tqdm_progress_bar import TQDMProgressBar
@@ -15,6 +16,7 @@ __all__ = [
     "BaseCSVWriter",
     "GarbageCollector",
     "Lambda",
+    "LearningRateMonitor",
     "PyTorchProfiler",
     "TensorBoardParameterMonitor",
     "TQDMProgressBar",
