@@ -14,7 +14,7 @@ from torch import nn
 
 from torchtnt.runner._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.runner.state import State
-from torchtnt.runner.train import train, train_epoch
+from torchtnt.runner.train import init_train_state, train, train_epoch
 from torchtnt.runner.unit import TrainUnit
 
 
@@ -33,8 +33,8 @@ class TrainTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = train(my_unit, dataloader, max_epochs=max_epochs)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, my_unit)
 
         self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
@@ -63,12 +63,13 @@ class TrainTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = train(
-            my_unit,
-            dataloader,
+        state = init_train_state(
+            dataloader=dataloader,
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
         )
+
+        train(state, my_unit)
 
         self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
@@ -96,7 +97,9 @@ class TrainTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = train_epoch(my_unit, dataloader)
+        state = init_train_state(dataloader=dataloader, max_epochs=1)
+
+        train_epoch(state, my_unit)
 
         self.assertEqual(state.train_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
@@ -125,12 +128,14 @@ class TrainTest(unittest.TestCase):
             input_dim=input_dim, steps_before_stopping=steps_before_stopping
         )
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = train(
-            my_unit,
-            dataloader,
+
+        state = init_train_state(
+            dataloader=dataloader,
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
         )
+
+        train(state, my_unit)
 
         self.assertEqual(state.train_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
@@ -152,14 +157,14 @@ class TrainTest(unittest.TestCase):
 
         my_unit = MagicMock()
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        callback_mock = MagicMock()
-        _ = train(
-            my_unit,
-            dataloader,
-            callbacks=[callback_mock],
+        state = init_train_state(
+            dataloader=dataloader,
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
         )
+
+        callback_mock = MagicMock()
+        train(state, my_unit, callbacks=[callback_mock])
         self.assertEqual(callback_mock.on_train_start.call_count, 1)
         self.assertEqual(callback_mock.on_train_epoch_start.call_count, max_epochs)
         self.assertEqual(
@@ -198,7 +203,11 @@ class TrainTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = train(my_unit, dataloader, max_epochs=1)
+        state = init_train_state(
+            dataloader=dataloader,
+            max_epochs=1,
+        )
+        train(state, my_unit)
 
         self.assertEqual(state.train_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
@@ -220,14 +229,22 @@ class TrainTest(unittest.TestCase):
         my_unit = MagicMock()
         my_unit.modules = MagicMock(return_value={})
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = train(my_unit, dataloader, max_epochs=None, max_steps=max_steps)
+
+        state = init_train_state(
+            dataloader=dataloader, max_epochs=None, max_steps=max_steps
+        )
+        train(state, my_unit)
+
         self.assertEqual(state.train_state.progress.num_steps_completed, max_steps)
         self.assertEqual(my_unit.train_step.call_count, max_steps)
 
         # hit max epoch condition before max steps
         my_unit = MagicMock()
         my_unit.modules = MagicMock(return_value={})
-        state = train(my_unit, dataloader, max_epochs=max_epochs, max_steps=100000)
+        state = init_train_state(
+            dataloader=dataloader, max_epochs=max_epochs, max_steps=100000
+        )
+        train(state, my_unit)
         self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
