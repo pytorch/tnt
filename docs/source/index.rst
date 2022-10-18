@@ -9,10 +9,26 @@ TNT is a library for PyTorch training tools and utilities.
 
 TorchTNT API
 -----------------
+.. toctree::
+   :maxdepth: 1
+   :caption: Overview
+
+   installation
+   project_structure
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Runner
+
+   train
+   eval
+   predict
+   fit
+   callbacks
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: API
 
    torchtnt.data.rst
    torchtnt.loggers.rst
