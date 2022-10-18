@@ -97,12 +97,12 @@ def _fit_impl(
         raise RuntimeError("Expected eval_state to be initialized")
 
     logger.info(
-        f"Started fit with max_epochs={train_state.max_epochs}"
-        f"max_steps={train_state.max_steps}"
-        f"max_train_steps_per_epoch={train_state.max_steps_per_epoch}"
-        f"max_eval_steps_per_epoch={eval_state.max_steps_per_epoch}"
-        f"evaluate_every_n_steps={eval_state.evaluate_every_n_steps}"
-        f"evaluate_every_n_epochs={eval_state.evaluate_every_n_epochs}"
+        f"Started fit with max_epochs={train_state.max_epochs} "
+        f"max_steps={train_state.max_steps} "
+        f"max_train_steps_per_epoch={train_state.max_steps_per_epoch} "
+        f"max_eval_steps_per_epoch={eval_state.max_steps_per_epoch} "
+        f"evaluate_every_n_steps={eval_state.evaluate_every_n_steps} "
+        f"evaluate_every_n_epochs={eval_state.evaluate_every_n_epochs} "
     )
 
     with state.timer.time(f"train.{unit.__class__.__name__}.on_train_start"):
