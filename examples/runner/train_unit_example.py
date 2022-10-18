@@ -31,6 +31,7 @@ from torchtnt.runner.callbacks import (
     PyTorchProfiler,
     TensorBoardParameterMonitor,
 )
+from torchtnt.runner.train import init_train_state
 from torchtnt.utils import get_timer_summary, init_from_env, seed
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -210,11 +211,15 @@ def main(argv: List[str]) -> None:
         num_samples, args.input_dim, args.batch_size, device
     )
 
-    state = train(
-        my_unit,
-        train_dataloader,
-        callbacks=[lr_monitor, parameter_monitor, profiler],
+    state = init_train_state(
+        dataloader=train_dataloader,
         max_epochs=args.max_epochs,
+    )
+
+    train(
+        state,
+        my_unit,
+        callbacks=[lr_monitor, parameter_monitor, profiler],
     )
     print(get_timer_summary(state.timer))
 

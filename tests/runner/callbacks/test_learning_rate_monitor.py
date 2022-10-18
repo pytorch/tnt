@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 from torchtnt.loggers.logger import MetricLogger
 from torchtnt.runner._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.runner.callbacks.learning_rate_monitor import LearningRateMonitor
-from torchtnt.runner.train import train
+from torchtnt.runner.train import init_train_state, train
 
 
 class LearningRateMonitorTest(unittest.TestCase):
@@ -29,8 +29,8 @@ class LearningRateMonitorTest(unittest.TestCase):
         monitor = LearningRateMonitor(loggers=log_writer)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        train(my_unit, dataloader, callbacks=[monitor], max_epochs=max_epochs)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, my_unit, callbacks=[monitor])
         self.assertEqual(log_writer.log_dict.call_count, 2)
 
     def test_learning_rate_monitor_step(self) -> None:
@@ -49,12 +49,11 @@ class LearningRateMonitorTest(unittest.TestCase):
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
         total_steps = (dataset_len / batch_size) * max_epochs
-
-        train(
-            my_unit,
-            dataloader,
-            callbacks=[monitor],
+        state = init_train_state(
+            dataloader=dataloader,
             max_epochs=max_epochs,
             max_steps=total_steps,
         )
+
+        train(state, my_unit, callbacks=[monitor])
         self.assertEqual(log_writer.log_dict.call_count, total_steps)

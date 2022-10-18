@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Iterable, List, Optional
+from typing import cast, Iterable, List, Optional
 
 import torch
 from torchtnt.runner.callback import Callback
@@ -27,33 +27,25 @@ from torchtnt.utils.timer import get_timer_summary
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-@torch.enable_grad()
-def train(
-    train_unit: TTrainUnit,
-    dataloader: Iterable[TTrainData],
+def init_train_state(
     *,
-    callbacks: Optional[List[Callback]] = None,
-    max_epochs: Optional[int],
+    dataloader: Iterable[TTrainData],
+    max_epochs: Optional[int] = None,
     max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    The `train` entry point takes in a TrainUnit and dataloader and runs the training loop over the data.
+    Helper function that initialize a state object
 
     Args:
-        train_unit: an instance of TrainUnit which implements `train_step`.
-        dataloader: dataloader to be used during training.
-        callbacks: an optional list of callbacks.
-        max_epochs: the max number of epochs to run. `None` means no limit (infinite training) unless stopped by max_steps.
+        dataloader: dataloader to be used during training.        max_epochs: the max number of epochs to run. `None` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run. `None` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
-
     Returns:
-        a State object containing metadata about the training run.
+        A initialied state object containing metadata.
     """
-    log_api_usage("train")
-    callbacks = callbacks or []
-    state = State(
+
+    return State(
         entry_point=EntryPoint.TRAIN,
         train_state=PhaseState(
             dataloader=dataloader,
@@ -62,11 +54,29 @@ def train(
             max_steps_per_epoch=max_steps_per_epoch,
         ),
     )
+
+
+@torch.enable_grad()
+def train(
+    state: State,
+    train_unit: TTrainUnit,
+    *,
+    callbacks: Optional[List[Callback]] = None,
+) -> None:
+    """
+    The `train` entry point takes in a State and a TrainUnit and runs the training loop.
+    state / train_unit / callbacks are expected to introduce side effects
+    Args:
+        state: a State object containing metadata about the training run.
+        train_unit: an instance of TrainUnit which implements `train_step`.
+        callbacks: an optional list of callbacks.
+    """
+    log_api_usage("train")
+    callbacks = callbacks or []
     try:
         _train_impl(state, train_unit, callbacks)
         logger.info("Finished train")
         logger.debug(get_timer_summary(state.timer))
-        return state
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(f"Exception during train\n: {e}")
@@ -115,26 +125,15 @@ def _train_impl(
 
 @torch.enable_grad()
 def train_epoch(
+    state: State,
     train_unit: TTrainUnit,
-    dataloader: Iterable[TTrainData],
-    *,
     callbacks: Optional[List[Callback]] = None,
-    max_steps_per_epoch: Optional[int] = None,
-) -> State:
+) -> None:
     callbacks = callbacks or []
-    state = State(
-        entry_point=EntryPoint.TRAIN,
-        train_state=PhaseState(
-            dataloader=dataloader,
-            max_epochs=1,
-            max_steps=max_steps_per_epoch,
-            max_steps_per_epoch=max_steps_per_epoch,
-        ),
-    )
-
     try:
+        assert cast(PhaseState, state.train_state).max_epochs == 1
         logger.info(
-            f"Started train_epoch with max_steps_per_epoch={max_steps_per_epoch}"
+            f"Started train_epoch with max_steps_per_epoch={cast(PhaseState, state.train_state).max_steps_per_epoch}"
         )
         _train_epoch_impl(
             state,
@@ -143,7 +142,6 @@ def train_epoch(
         )
         logger.info("Finished train")
         logger.debug(get_timer_summary(state.timer))
-        return state
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(f"Exception during train_epoch\n: {e}")

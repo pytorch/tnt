@@ -13,7 +13,7 @@ from torchtnt.runner._test_utils import DummyTrainUnit, generate_random_dataload
 from torchtnt.runner.callbacks.tensorboard_parameter_monitor import (
     TensorBoardParameterMonitor,
 )
-from torchtnt.runner.train import train
+from torchtnt.runner.train import init_train_state, train
 
 
 class TensorBoardParameterMonitorTest(unittest.TestCase):
@@ -31,6 +31,6 @@ class TensorBoardParameterMonitorTest(unittest.TestCase):
         monitor = TensorBoardParameterMonitor(logger=summary_writer)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        train(my_unit, dataloader, callbacks=[monitor], max_epochs=max_epochs)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, my_unit, callbacks=[monitor])
         self.assertGreater(summary_writer.add_histogram.call_count, 0)

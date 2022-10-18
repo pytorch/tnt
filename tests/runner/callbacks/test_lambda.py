@@ -22,7 +22,7 @@ from torchtnt.runner.callbacks.lambda_callback import Lambda
 from torchtnt.runner.evaluate import evaluate
 from torchtnt.runner.predict import predict
 from torchtnt.runner.state import State
-from torchtnt.runner.train import train
+from torchtnt.runner.train import init_train_state, train
 from torchtnt.runner.unit import TrainUnit
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -63,12 +63,15 @@ class LambdaTest(unittest.TestCase):
         hooks = _get_members_in_different_name(Callback, "train")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_train_unit = DummyTrainUnit(input_dim=input_dim)
-        _ = train(
-            my_train_unit,
-            train_dataloader,
-            callbacks=[Lambda(**hooks_args)],
+        state = init_train_state(
+            dataloader=train_dataloader,
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
+        )
+        train(
+            state,
+            my_train_unit,
+            callbacks=[Lambda(**hooks_args)],
         )
         self.assertEqual(checker, hooks)
 
@@ -144,12 +147,15 @@ class LambdaTest(unittest.TestCase):
         hooks_args = {h: partial(call, h) for h in hooks}
         my_train_unit = DummyTrainExceptUnit(input_dim=input_dim)
         try:
-            _ = train(
-                my_train_unit,
-                train_dataloader,
-                callbacks=[Lambda(**hooks_args)],
+            state = init_train_state(
+                dataloader=train_dataloader,
                 max_epochs=max_epochs,
                 max_steps_per_epoch=max_steps_per_epoch,
+            )
+            train(
+                state,
+                my_train_unit,
+                callbacks=[Lambda(**hooks_args)],
             )
         except Exception:
             self.assertRaisesRegex(RuntimeError, "testing")
