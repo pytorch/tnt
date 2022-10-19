@@ -17,7 +17,7 @@ from torchtnt.runner._test_utils import (
 )
 from torchtnt.runner.callbacks.pytorch_profiler import PyTorchProfiler
 from torchtnt.runner.evaluate import evaluate, init_eval_state
-from torchtnt.runner.predict import predict
+from torchtnt.runner.predict import init_predict_state, predict
 from torchtnt.runner.train import init_train_state, train
 
 
@@ -81,8 +81,9 @@ class PyTorchProfilerTest(unittest.TestCase):
         profiler = PyTorchProfiler(profiler=profiler_mock)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_predict_state(dataloader=dataloader)
 
-        predict(my_unit, dataloader, callbacks=[profiler])
+        predict(state, my_unit, callbacks=[profiler])
         self.assertEqual(profiler_mock.start.call_count, 1)
         self.assertEqual(profiler_mock.step.call_count, expected_num_total_steps)
         self.assertEqual(profiler_mock.stop.call_count, 1)

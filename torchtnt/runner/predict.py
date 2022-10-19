@@ -25,39 +25,51 @@ from torchtnt.utils.timer import get_timer_summary
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def predict(
-    predict_unit: TPredictUnit,
-    dataloader: Iterable[TPredictData],
+def init_predict_state(
     *,
-    callbacks: Optional[List[Callback]] = None,
+    dataloader: Iterable[TPredictData],
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    The `predict` entry point takes in a PredictUnit and dataloader and runs the prediction loop over the data.
+    Helper function that initializes a state object for prediction.
 
     Args:
-        predict_unit: an instance of PredictUnit which implements `predict_step`.
         dataloader: dataloader to be used during prediction.
-        callbacks: an optional list of callbacks.
         max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
 
     Returns:
-        a State object containing metadata about the prediction run.
+        An initialied state object containing metadata.
     """
-    log_api_usage("predict")
-    callbacks = callbacks or []
-    state = State(
+
+    return State(
         entry_point=EntryPoint.PREDICT,
         predict_state=PhaseState(
             dataloader=dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
         ),
     )
+
+
+def predict(
+    state: State,
+    predict_unit: TPredictUnit,
+    *,
+    callbacks: Optional[List[Callback]] = None,
+) -> None:
+    """
+    The `predict` entry point takes in a State and PredictUnit and runs the prediction loop over the data.
+
+    Args:
+        state: a State object containing metadata about the prediction run.
+        predict_unit: an instance of PredictUnit which implements `predict_step`.
+        callbacks: an optional list of callbacks.
+    """
+    log_api_usage("predict")
+    callbacks = callbacks or []
     try:
         _predict_impl(state, predict_unit, callbacks)
         logger.info("Finished predict")
         logger.debug(get_timer_summary(state.timer))
-        return state
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
