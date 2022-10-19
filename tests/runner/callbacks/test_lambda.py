@@ -19,7 +19,7 @@ from torchtnt.runner._test_utils import (
 )
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.callbacks.lambda_callback import Lambda
-from torchtnt.runner.evaluate import evaluate
+from torchtnt.runner.evaluate import evaluate, init_eval_state
 from torchtnt.runner.predict import predict
 from torchtnt.runner.state import State
 from torchtnt.runner.train import init_train_state, train
@@ -91,11 +91,13 @@ class LambdaTest(unittest.TestCase):
         hooks = _get_members_in_different_name(Callback, "eval")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_eval_unit = DummyEvalUnit(input_dim=input_dim)
-        _ = evaluate(
+        state = init_eval_state(
+            dataloader=eval_dataloader, max_steps_per_epoch=max_steps_per_epoch
+        )
+        evaluate(
+            state,
             my_eval_unit,
-            eval_dataloader,
             callbacks=[Lambda(**hooks_args)],
-            max_steps_per_epoch=max_steps_per_epoch,
         )
         self.assertEqual(checker, hooks)
 

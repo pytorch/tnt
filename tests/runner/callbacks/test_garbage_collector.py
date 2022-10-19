@@ -16,7 +16,7 @@ from torchtnt.runner._test_utils import (
     generate_random_dataloader,
 )
 from torchtnt.runner.callbacks.garbage_collector import GarbageCollector
-from torchtnt.runner.evaluate import evaluate
+from torchtnt.runner.evaluate import evaluate, init_eval_state
 from torchtnt.runner.predict import predict
 from torchtnt.runner.train import init_train_state, train
 
@@ -77,8 +77,9 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback_mock = MagicMock(spec=GarbageCollector)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_eval_state(dataloader=dataloader)
 
-        evaluate(my_unit, dataloader, callbacks=[gc_callback_mock])
+        evaluate(state, my_unit, callbacks=[gc_callback_mock])
         self.assertEqual(gc_callback_mock.on_eval_start.call_count, 1)
         self.assertEqual(
             gc_callback_mock.on_eval_step_end.call_count, expected_num_total_steps
@@ -97,9 +98,10 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback = GarbageCollector(2)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_eval_state(dataloader=dataloader)
 
         self.assertTrue(gc.isenabled())
-        evaluate(my_unit, dataloader, callbacks=[gc_callback])
+        evaluate(state, my_unit, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())
 
     def test_garbage_collector_call_count_predict(self) -> None:
