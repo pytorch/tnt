@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from .callback import Callback
-from .evaluate import evaluate
+from .evaluate import evaluate, init_eval_state
 from .fit import fit
 from .predict import predict
 from .progress import Progress
@@ -16,6 +16,7 @@ from .unit import EvalUnit, PredictUnit, TrainUnit
 __all__ = [
     "Callback",
     "evaluate",
+    "init_eval_state",
     "fit",
     "predict",
     "Progress",
