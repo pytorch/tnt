@@ -35,8 +35,12 @@ copyright = "2022, Meta"
 author = "Meta"
 
 # The full version, including alpha/beta/rc tags
-release = __version__
-
+if os.environ.get("RELEASE_BUILD", None):
+    version = __version__
+    release = __version__
+else:
+    version = "master (unstable)"
+    release = "master"
 
 # -- General configuration ---------------------------------------------------
 
@@ -66,6 +70,9 @@ html_theme_path = [pytorch_sphinx_theme.get_html_theme_path()]
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_theme_options = {
+    "display_version": True,
+}
 
 # where to find external docs
 intersphinx_mapping = {
