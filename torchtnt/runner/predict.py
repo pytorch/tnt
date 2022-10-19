@@ -139,11 +139,11 @@ def _predict_impl(
                 predict_state._step_output = predict_unit.predict_step(
                     state, step_input
                 )
+            predict_state.progress.increment_step()
             _run_callback_fn(callbacks, "on_predict_step_end", state, predict_unit)
 
             # clear step_output to avoid retaining extra memory
             predict_state._step_output = None
-            predict_state.progress.increment_step()
         except StopIteration:
             break
 
@@ -155,14 +155,14 @@ def _predict_impl(
     if not any_steps_completed:
         logger.warning("No steps completed during predict epoch!")
 
+    # set progress counters for the next epoch
+    predict_state.progress.increment_epoch()
+
     with state.timer.time(
         f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_end"
     ):
         predict_unit.on_predict_epoch_end(state)
     _run_callback_fn(callbacks, "on_predict_epoch_end", state, predict_unit)
-
-    # set progress counters for the next epoch
-    predict_state.progress.increment_epoch()
 
     with state.timer.time(f"predict.{predict_unit.__class__.__name__}.on_predict_end"):
         predict_unit.on_predict_end(state)

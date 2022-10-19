@@ -141,7 +141,7 @@ def _update_progress_bar(
     if not get_global_rank() == 0:
         return
 
-    if (num_steps_completed + 1) % refresh_rate == 0:
+    if num_steps_completed % refresh_rate == 0:
         progress_bar.update(refresh_rate)
 
 
@@ -151,9 +151,8 @@ def _close_progress_bar(
     if not get_global_rank() == 0:
         return
 
-    progress_bar.update(
-        num_steps_completed % refresh_rate
-    )  # complete remaining progress in bar
+    # complete remaining progress in bar
+    progress_bar.update(num_steps_completed % refresh_rate)
     progress_bar.close()
 
 
