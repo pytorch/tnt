@@ -10,7 +10,7 @@ from .fit import fit
 from .predict import predict
 from .progress import Progress
 from .state import PhaseState, State
-from .train import train
+from .train import init_train_state, train
 from .unit import EvalUnit, PredictUnit, TrainUnit
 
 __all__ = [
@@ -21,6 +21,7 @@ __all__ = [
     "Progress",
     "PhaseState",
     "State",
+    "init_train_state",
     "train",
     "EvalUnit",
     "PredictUnit",
