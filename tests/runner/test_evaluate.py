@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 import torch
 from torch import nn
 from torchtnt.runner._test_utils import DummyEvalUnit, generate_random_dataloader
-from torchtnt.runner.evaluate import evaluate
+from torchtnt.runner.evaluate import evaluate, init_eval_state
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import EvalUnit
 
@@ -31,8 +31,8 @@ class EvaluateTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = evaluate(my_unit, dataloader)
+        state = init_eval_state(dataloader=dataloader)
+        evaluate(state, my_unit)
 
         self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
@@ -56,8 +56,10 @@ class EvaluateTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = evaluate(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
+        state = init_eval_state(
+            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
+        )
+        evaluate(state, my_unit)
 
         self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
@@ -84,7 +86,10 @@ class EvaluateTest(unittest.TestCase):
             input_dim=input_dim, steps_before_stopping=steps_before_stopping
         )
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = evaluate(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
+        state = init_eval_state(
+            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
+        )
+        evaluate(state, my_unit)
 
         self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
@@ -119,8 +124,8 @@ class EvaluateTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = evaluate(my_unit, dataloader)
+        state = init_eval_state(dataloader=dataloader)
+        evaluate(state, my_unit)
 
         self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
@@ -143,13 +148,13 @@ class EvaluateTest(unittest.TestCase):
 
         my_unit = MagicMock()
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        callback_mock = MagicMock()
-        _ = evaluate(
-            my_unit,
-            dataloader,
-            callbacks=[callback_mock],
-            max_steps_per_epoch=max_steps_per_epoch,
+        state = init_eval_state(
+            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
         )
+        callback_mock = MagicMock()
+
+        evaluate(state, my_unit, callbacks=[callback_mock])
+
         self.assertEqual(callback_mock.on_eval_start.call_count, 1)
         self.assertEqual(callback_mock.on_eval_epoch_start.call_count, 1)
         self.assertEqual(
