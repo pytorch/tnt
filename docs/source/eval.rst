@@ -13,7 +13,7 @@ Below is a simple example of a user's subclass of :class:`~torchtnt.runner.unit.
 
 .. code-block:: python
 
- from torchtnt.runner.unit import EvalUnit
+ from torchtnt.runner import EvalUnit
 
  class MyEvalUnit(EvalUnit[Batch]):
      def __init__(
@@ -42,8 +42,9 @@ Below is an example of calling the :py:func:`~torchtnt.runner.evaluate` entry po
 
 .. code-block:: python
 
- from torchtnt.runner.evaluate import evaluate
+ from torchtnt.runner import evaluate, init_eval_state
 
  eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
- eval_dataloader = torch.utils.data.DataLoader(...)
- evaluate(eval_unit, eval_dataloader, max_steps_per_epoch=20)
+ dataloader = torch.utils.data.DataLoader(...)
+ state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
+ evaluate(state, eval_unit)
