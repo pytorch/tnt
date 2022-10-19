@@ -14,7 +14,7 @@ Below is a simple example of a user's fit Unit that implements a basic ``train_s
 
 .. code-block:: python
 
- from torchtnt.runner.unit import TrainUnit, EvalUnit
+ from torchtnt.runner import TrainUnit, EvalUnit
 
  class MyFitUnit(TrainUnit[Batch]), EvalUnit[Batch]:
      def __init__(
@@ -61,9 +61,10 @@ Below is an example of calling the :py:func:`~torchtnt.runner.fit` entry point w
 
 .. code-block:: python
 
- from torchtnt.runner.fit import fit
+ from torchtnt.runner import fit, init_fit_state
 
  fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
  train_dataloader = torch.utils.data.DataLoader(...)
  eval_dataloader = torch.utils.data.DataLoader(...)
- fit(fit_unit, train_dataloader, eval_dataloader, max_epochs=4)
+ state = init_fit_state(train_dataloader=train_dataloader, eval_dataloader=eval_dataloader, max_epochs=4)
+ fit(state, fit_unit)

@@ -13,7 +13,7 @@ import torch
 from torch import nn
 from torchtnt.runner._test_utils import DummyFitUnit, generate_random_dataloader
 from torchtnt.runner.callback import Callback
-from torchtnt.runner.fit import fit
+from torchtnt.runner.fit import fit, init_fit_state
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import EvalUnit, TrainUnit
 
@@ -41,14 +41,13 @@ class FitTest(unittest.TestCase):
         eval_dataloader = generate_random_dataloader(
             eval_dataset_len, input_dim, batch_size
         )
-
-        state = fit(
-            my_unit,
-            train_dataloader,
-            eval_dataloader,
+        state = init_fit_state(
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
             max_epochs=max_epochs,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
         )
+        fit(state, my_unit)
 
         self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
@@ -99,14 +98,14 @@ class FitTest(unittest.TestCase):
             eval_dataset_len, input_dim, batch_size
         )
 
-        state = fit(
-            my_unit,
-            train_dataloader,
-            eval_dataloader,
+        state = init_fit_state(
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
             max_epochs=max_epochs,
             evaluate_every_n_epochs=None,
             evaluate_every_n_steps=evaluate_every_n_steps,
         )
+        fit(state, my_unit)
 
         self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
@@ -185,13 +184,15 @@ class FitTest(unittest.TestCase):
         )
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = fit(
-            my_unit,
-            train_dl,
-            eval_dl,
+
+        state = init_fit_state(
+            train_dataloader=train_dl,
+            eval_dataloader=eval_dl,
             max_epochs=max_epochs,
             max_train_steps_per_epoch=max_steps_per_epoch,
         )
+        fit(state, my_unit)
+
         self.assertEqual(state.train_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
@@ -213,7 +214,11 @@ class FitTest(unittest.TestCase):
         my_unit.modules = MagicMock(return_value={})
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = fit(my_unit, train_dl, eval_dl, max_epochs=None, max_steps=max_steps)
+        state = init_fit_state(
+            train_dataloader=train_dl, eval_dataloader=eval_dl, max_steps=max_steps
+        )
+        fit(state, my_unit)
+
         self.assertEqual(state.train_state.progress.num_steps_completed, max_steps)
         self.assertEqual(my_unit.train_step.call_count, max_steps)
         self.assertEqual(
@@ -242,14 +247,12 @@ class FitTest(unittest.TestCase):
         )
 
         callback_mock = MagicMock(spec=Callback)
-
-        _ = fit(
-            my_unit,
-            train_dataloader,
-            eval_dataloader,
-            callbacks=[callback_mock],
+        state = init_fit_state(
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
             max_epochs=max_epochs,
         )
+        fit(state, my_unit, callbacks=[callback_mock])
 
         self.assertEqual(callback_mock.on_train_start.call_count, 1)
         self.assertEqual(callback_mock.on_train_epoch_start.call_count, max_epochs)
