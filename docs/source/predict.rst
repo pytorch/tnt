@@ -13,7 +13,7 @@ Below is a simple example of a user's subclass of :class:`~torchtnt.runner.unit.
 
 .. code-block:: python
 
- from torchtnt.runner.unit import PredictUnit
+ from torchtnt.runner import PredictUnit
 
  class MyPredictUnit(PredictUnit[Batch]):
      def __init__(
@@ -41,8 +41,9 @@ Below is an example of calling the :py:func:`~torchtnt.runner.predict` entry poi
 
 .. code-block:: python
 
- from torchtnt.runner.predict import predict
+ from torchtnt.runner import init_predict_state, predict
 
  predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
- predict_dataloader = torch.utils.data.DataLoader(...)
- predict(predict_unit, predict_dataloader, max_steps_per_epoch=20)
+ dataloader = torch.utils.data.DataLoader(...)
+ state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
+ predict(state, predict_unit)

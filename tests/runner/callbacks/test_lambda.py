@@ -20,7 +20,7 @@ from torchtnt.runner._test_utils import (
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.callbacks.lambda_callback import Lambda
 from torchtnt.runner.evaluate import evaluate, init_eval_state
-from torchtnt.runner.predict import predict
+from torchtnt.runner.predict import init_predict_state, predict
 from torchtnt.runner.state import State
 from torchtnt.runner.train import init_train_state, train
 from torchtnt.runner.unit import TrainUnit
@@ -68,11 +68,7 @@ class LambdaTest(unittest.TestCase):
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
         )
-        train(
-            state,
-            my_train_unit,
-            callbacks=[Lambda(**hooks_args)],
-        )
+        train(state, my_train_unit, callbacks=[Lambda(**hooks_args)])
         self.assertEqual(checker, hooks)
 
     def test_lambda_callback_eval(self) -> None:
@@ -94,11 +90,7 @@ class LambdaTest(unittest.TestCase):
         state = init_eval_state(
             dataloader=eval_dataloader, max_steps_per_epoch=max_steps_per_epoch
         )
-        evaluate(
-            state,
-            my_eval_unit,
-            callbacks=[Lambda(**hooks_args)],
-        )
+        evaluate(state, my_eval_unit, callbacks=[Lambda(**hooks_args)])
         self.assertEqual(checker, hooks)
 
     def test_lambda_callback_predict(self) -> None:
@@ -117,12 +109,10 @@ class LambdaTest(unittest.TestCase):
             predict_dataset_len, input_dim, batch_size
         )
         my_predict_unit = DummyPredictUnit(input_dim=input_dim)
-        _ = predict(
-            my_predict_unit,
-            predict_dataloader,
-            callbacks=[Lambda(**hooks_args)],
-            max_steps_per_epoch=max_steps_per_epoch,
+        state = init_predict_state(
+            dataloader=predict_dataloader, max_steps_per_epoch=max_steps_per_epoch
         )
+        predict(state, my_predict_unit, callbacks=[Lambda(**hooks_args)])
         self.assertEqual(checker, hooks)
 
     def test_lambda_callback_train_with_except(self) -> None:
@@ -154,11 +144,7 @@ class LambdaTest(unittest.TestCase):
                 max_epochs=max_epochs,
                 max_steps_per_epoch=max_steps_per_epoch,
             )
-            train(
-                state,
-                my_train_unit,
-                callbacks=[Lambda(**hooks_args)],
-            )
+            train(state, my_train_unit, callbacks=[Lambda(**hooks_args)])
         except Exception:
             self.assertRaisesRegex(RuntimeError, "testing")
         self.assertEqual(checker, hooks)
