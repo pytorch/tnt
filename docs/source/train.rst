@@ -13,7 +13,7 @@ Below is a simple example of a user's subclass of :class:`~torchtnt.runner.unit.
 
 .. code-block:: python
 
- from torchtnt.runner.unit import TrainUnit
+ from torchtnt.runner import TrainUnit
 
  class MyTrainUnit(TrainUnit[Batch]):
      def __init__(
@@ -54,8 +54,9 @@ Below is an example of calling the :py:func:`~torchtnt.runner.train` entry point
 
 .. code-block:: python
 
- from torchtnt.runner.train import train
+ from torchtnt.runner import init_train_state, train
 
  train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
- train_dataloader = torch.utils.data.DataLoader(...)
- train(train_unit, train_dataloader, max_epochs=4)
+ dataloader = torch.utils.data.DataLoader(...)
+ state = init_train_state(dataloader=dataloader, max_epochs=4)
+ train(state, train_unit)

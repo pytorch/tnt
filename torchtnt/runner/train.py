@@ -35,14 +35,16 @@ def init_train_state(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    Helper function that initialize a state object
+    Helper function that initializes a state object for training.
 
     Args:
-        dataloader: dataloader to be used during training.        max_epochs: the max number of epochs to run. `None` means no limit (infinite training) unless stopped by max_steps.
+        dataloader: dataloader to be used during training.
+        max_epochs: the max number of epochs to run. `None` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run. `None` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
+
     Returns:
-        A initialied state object containing metadata.
+        An initialied state object containing metadata.
     """
 
     return State(
