@@ -18,13 +18,10 @@ from torchtnt.utils.timer import get_timer_summary
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def fit(
-    unit: TTrainUnit,
+def init_fit_state(
     train_dataloader: Iterable[TTrainData],
     eval_dataloader: Iterable[TEvalData],
-    *,
-    callbacks: Optional[List[Callback]] = None,
-    max_epochs: Optional[int],
+    max_epochs: Optional[int] = None,
     max_steps: Optional[int] = None,
     max_train_steps_per_epoch: Optional[int] = None,
     max_eval_steps_per_epoch: Optional[int] = None,
@@ -32,26 +29,22 @@ def fit(
     evaluate_every_n_epochs: Optional[int] = 1,
 ) -> State:
     """
-    The `fit` entry point interleaves the training and evaluation loops, taking in an instance of TrainUnit/EvalUnit as well as train and eval dataloaders.
+    Helper function that initializes a state object for fitting.
 
     Args:
-        unit: an instance of both TrainUnit EvalUnit which implements both `train_step` and `eval_step`.
         train_dataloader: dataloader to be used during training.
         eval_dataloader: dataloader to be used during evaluation.
-        callbacks: an optional list of callbacks.
         max_epochs: the max number of epochs to run for training. `None` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run for training. `None` means no limit (infinite training) unless stopped by max_epochs.
         max_train_steps_per_epoch: the max number of steps to run per epoch for training. None means train until the dataloader is exhausted.
-        max_eval_steps_per_epoch: the max number of steps to run per epoch for evaluation. None means evaluate until the dataloader is exhausted.
         evaluate_every_n_steps: how often to run the evaluation loop in terms of training steps.
         evaluate_every_n_epochs: how often to run the evaluation loop in terms of training epochs.
 
     Returns:
-        a State object containing metadata about the fit run.
+        An initialied state object containing metadata.
     """
-    log_api_usage("fit")
-    callbacks = callbacks or []
-    state = State(
+
+    return State(
         entry_point=EntryPoint.FIT,
         train_state=PhaseState(
             dataloader=train_dataloader,
@@ -66,10 +59,28 @@ def fit(
             evaluate_every_n_epochs=evaluate_every_n_epochs,
         ),
     )
+
+
+def fit(
+    state: State, unit: TTrainUnit, *, callbacks: Optional[List[Callback]] = None
+) -> None:
+    """
+    The `fit` entry point interleaves the training and evaluation loops, taking in an instance of TrainUnit/EvalUnit as well as train and eval dataloaders.
+
+    Args:
+        state: a State object containing metadata about the fitting run.
+        unit: an instance of both TrainUnit EvalUnit which implements both `train_step` and `eval_step`.
+        callbacks: an optional list of callbacks.
+
+    Returns:
+        a State object containing metadata about the fit run.
+    """
+    log_api_usage("fit")
+    callbacks = callbacks or []
+
     try:
         _fit_impl(state, unit, callbacks)
         logger.debug(get_timer_summary(state.timer))
-        return state
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
@@ -85,9 +96,9 @@ def _fit_impl(
 ) -> None:
     # input validation
     if not isinstance(unit, TrainUnit):
-        raise TypeError("Expected module to implement TrainUnit interface.")
+        raise TypeError("Expected unit to implement TrainUnit interface.")
     if not isinstance(unit, EvalUnit):
-        raise TypeError("Expected module to implement EvalUnit interface.")
+        raise TypeError("Expected unit to implement EvalUnit interface.")
 
     train_state = state.train_state
     if not train_state:
