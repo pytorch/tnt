@@ -216,11 +216,11 @@ def _train_epoch_impl(
             _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
             with state.timer.time(f"train.{train_unit.__class__.__name__}.train_step"):
                 train_state._step_output = train_unit.train_step(state, step_input)
+            train_state.progress.increment_step()
             _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
 
             # clear step_output to avoid retaining extra memory
             train_state._step_output = None
-            train_state.progress.increment_step()
 
             if (
                 evaluate_every_n_steps
@@ -245,12 +245,12 @@ def _train_epoch_impl(
     if not any_steps_completed:
         logger.warning("No steps completed during train epoch!")
 
+    # set progress counters for the next epoch
+    train_state.progress.increment_epoch()
+
     with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_epoch_end"):
         train_unit.on_train_epoch_end(state)
     _run_callback_fn(callbacks, "on_train_epoch_end", state, train_unit)
-
-    # set progress counters for the next epoch
-    train_state.progress.increment_epoch()
 
     if (
         evaluate_every_n_epochs

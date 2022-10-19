@@ -42,8 +42,7 @@ class GarbageCollector(Callback):
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         if (
             state.train_state
-            and (state.train_state.progress.num_steps_completed + 1)
-            % self._step_interval
+            and (state.train_state.progress.num_steps_completed) % self._step_interval
             == 0
         ):
             gc.collect()
@@ -57,8 +56,7 @@ class GarbageCollector(Callback):
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         if (
             state.eval_state
-            and (state.eval_state.progress.num_steps_completed + 1)
-            % self._step_interval
+            and (state.eval_state.progress.num_steps_completed) % self._step_interval
             == 0
         ):
             gc.collect()
@@ -72,8 +70,7 @@ class GarbageCollector(Callback):
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         if (
             state.predict_state
-            and (state.predict_state.progress.num_steps_completed + 1)
-            % self._step_interval
+            and (state.predict_state.progress.num_steps_completed) % self._step_interval
             == 0
         ):
             gc.collect()

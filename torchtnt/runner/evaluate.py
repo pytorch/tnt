@@ -130,10 +130,11 @@ def _evaluate_impl(
             _run_callback_fn(callbacks, "on_eval_step_start", state, eval_unit)
             with state.timer.time(f"eval.{eval_unit.__class__.__name__}.eval_step"):
                 eval_state._step_output = eval_unit.eval_step(state, step_input)
+
+            eval_state.progress.increment_step()
             _run_callback_fn(callbacks, "on_eval_step_end", state, eval_unit)
             # clear step_output to avoid retaining extra memory
             eval_state._step_output = None
-            eval_state.progress.increment_step()
         except StopIteration:
             break
 
@@ -144,12 +145,12 @@ def _evaluate_impl(
     if not any_steps_completed:
         logger.warning("No steps completed during evaluate epoch!")
 
+    # set progress counters for the next epoch
+    eval_state.progress.increment_epoch()
+
     with state.timer.time(f"eval.{eval_unit.__class__.__name__}.on_eval_epoch_end"):
         eval_unit.on_eval_epoch_end(state)
     _run_callback_fn(callbacks, "on_eval_epoch_end", state, eval_unit)
-
-    # set progress counters for the next epoch
-    eval_state.progress.increment_epoch()
 
     with state.timer.time(f"eval.{eval_unit.__class__.__name__}.on_eval_end"):
         eval_unit.on_eval_end(state)
