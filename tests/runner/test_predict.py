@@ -14,7 +14,7 @@ from torch import nn
 
 from torchtnt.runner._test_utils import DummyPredictUnit, generate_random_dataloader
 
-from torchtnt.runner.predict import predict
+from torchtnt.runner.predict import init_predict_state, predict
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import PredictUnit
 
@@ -33,8 +33,8 @@ class PredictTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = predict(my_unit, dataloader)
+        state = init_predict_state(dataloader=dataloader)
+        predict(state, my_unit)
 
         self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)
@@ -60,8 +60,10 @@ class PredictTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = predict(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
+        state = init_predict_state(
+            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
+        )
+        predict(state, my_unit)
 
         self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)
@@ -88,7 +90,10 @@ class PredictTest(unittest.TestCase):
             input_dim=input_dim, steps_before_stopping=steps_before_stopping
         )
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = predict(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
+        state = init_predict_state(
+            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
+        )
+        predict(state, my_unit)
 
         self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)
@@ -110,12 +115,11 @@ class PredictTest(unittest.TestCase):
         my_unit = MagicMock()
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         callback_mock = MagicMock()
-        _ = predict(
-            my_unit,
-            dataloader,
-            callbacks=[callback_mock],
-            max_steps_per_epoch=max_steps_per_epoch,
+        state = init_predict_state(
+            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
         )
+        predict(state, my_unit, callbacks=[callback_mock])
+
         self.assertEqual(callback_mock.on_predict_start.call_count, 1)
         self.assertEqual(callback_mock.on_predict_epoch_start.call_count, 1)
         self.assertEqual(
@@ -155,8 +159,8 @@ class PredictTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = predict(my_unit, dataloader)
+        state = init_predict_state(dataloader=dataloader)
+        predict(state, my_unit)
 
         self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)

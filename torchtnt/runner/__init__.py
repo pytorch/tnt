@@ -7,7 +7,7 @@
 from .callback import Callback
 from .evaluate import evaluate, init_eval_state
 from .fit import fit
-from .predict import predict
+from .predict import init_predict_state, predict
 from .progress import Progress
 from .state import PhaseState, State
 from .train import init_train_state, train
@@ -18,6 +18,7 @@ __all__ = [
     "evaluate",
     "init_eval_state",
     "fit",
+    "init_predict_state",
     "predict",
     "Progress",
     "PhaseState",
