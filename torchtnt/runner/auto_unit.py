@@ -65,7 +65,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         lr_scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
         step_lr_interval: Literal["step", "epoch"] = "epoch",
         device: Optional[torch.device] = None,
-        log_frequency_steps: int,
+        log_frequency_steps: int = 100,
         precision: Optional[Union[str, torch.dtype]] = None,
         gradient_accumulation_steps: int = 1,
         detect_anomaly: bool = False,
