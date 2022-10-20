@@ -8,6 +8,7 @@
 # pyre-ignore-all-errors[2]
 # pyre-ignore-all-errors[3]
 
+import contextlib
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Tuple, Union
 
@@ -15,6 +16,7 @@ import torch
 from torch.cuda.amp import GradScaler
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import TrainUnit, TTrainData
 from torchtnt.utils import copy_data_to_device, get_device_from_env
@@ -163,9 +165,18 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
             dtype=self.precision,
             enabled=self.precision is not None,
         )
+        # if using gradient accumulation and DDP or FSDP, when in a step where we will not update the weights,
+        # run forward and backward in no_sync context
+        # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
+        # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
+        maybe_no_sync = (
+            self.module.no_sync()  # pyre-ignore
+            if not should_update_weights and isinstance(self.module, (DDP, FSDP))
+            else contextlib.nullcontext()
+        )
 
         # if detect_anomaly is true, run forward and backward pass in detect_anomaly context
-        with torch.autograd.set_detect_anomaly(self.detect_anomaly):
+        with maybe_no_sync, torch.autograd.set_detect_anomaly(self.detect_anomaly):
             with maybe_autocast_precision:
                 loss, outputs = self.compute_loss(state, data)
 
