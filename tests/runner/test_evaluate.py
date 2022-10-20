@@ -13,7 +13,7 @@ import torch
 from torch import nn
 from torchtnt.runner._test_utils import DummyEvalUnit, generate_random_dataloader
 from torchtnt.runner.evaluate import evaluate, init_eval_state
-from torchtnt.runner.state import State
+from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.unit import EvalUnit
 
 
@@ -37,6 +37,7 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
         self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(state.eval_state.progress.num_steps_completed, expected_steps)
+        self.assertEqual(state.entry_point, EntryPoint.EVALUATE)
 
         # step_output should be reset to None
         self.assertEqual(state.eval_state.step_output, None)
@@ -66,6 +67,7 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(
             state.eval_state.progress.num_steps_completed, max_steps_per_epoch
         )
+        self.assertEqual(state.entry_point, EntryPoint.EVALUATE)
 
         # step_output should be reset to None
         self.assertEqual(state.eval_state.step_output, None)

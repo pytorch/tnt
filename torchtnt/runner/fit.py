@@ -76,6 +76,7 @@ def fit(
     callbacks = callbacks or []
 
     try:
+        state._entry_point = EntryPoint.FIT
         _fit_impl(state, unit, callbacks)
         logger.debug(get_timer_summary(state.timer))
     except Exception as e:

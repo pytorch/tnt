@@ -13,7 +13,7 @@ import torch
 from torch import nn
 
 from torchtnt.runner._test_utils import DummyTrainUnit, generate_random_dataloader
-from torchtnt.runner.state import State
+from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.train import init_train_state, train, train_epoch
 from torchtnt.runner.unit import TrainUnit
 
@@ -47,6 +47,7 @@ class TrainTest(unittest.TestCase):
         self.assertEqual(state.train_state.step_output, None)
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
+        self.assertEqual(state.entry_point, EntryPoint.TRAIN)
 
     def test_train_max_steps_per_epoch(self) -> None:
         """
@@ -77,6 +78,7 @@ class TrainTest(unittest.TestCase):
             state.train_state.progress.num_steps_completed,
             max_epochs * max_steps_per_epoch,
         )
+        self.assertEqual(state.entry_point, EntryPoint.TRAIN)
 
         # step_output should be reset to None
         self.assertEqual(state.train_state.step_output, None)
@@ -107,6 +109,7 @@ class TrainTest(unittest.TestCase):
             state.train_state.progress.num_steps_completed,
             expected_steps_per_epoch,
         )
+        self.assertEqual(state.entry_point, EntryPoint.TRAIN)
 
         # step_output should be reset to None
         self.assertEqual(state.train_state.step_output, None)
