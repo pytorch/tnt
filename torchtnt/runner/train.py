@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import cast, Iterable, List, Optional
+from typing import Iterable, List, Optional
 
 import torch
 from torchtnt.runner.callback import Callback
