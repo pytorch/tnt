@@ -50,6 +50,8 @@ class MyTrainUnit(AutoTrainUnit[Batch]):
         train_accuracy: BinaryAccuracy,
         gradient_accumulation_steps: int = 1,
         detect_anomaly: bool = False,
+        clip_grad_norm: Optional[float] = None,
+        clip_grad_value: Optional[float] = None,
     ):
         super().__init__(
             module=module,
@@ -60,6 +62,8 @@ class MyTrainUnit(AutoTrainUnit[Batch]):
             precision=precision,
             gradient_accumulation_steps=gradient_accumulation_steps,
             detect_anomaly=detect_anomaly,
+            clip_grad_norm=clip_grad_norm,
+            clip_grad_value=clip_grad_value,
         )
         self.tb_logger = tb_logger
         # create an accuracy Metric to compute the accuracy of training
@@ -136,6 +140,7 @@ def main(argv: List[str]) -> None:
         tb_logger=tb_logger,
         gradient_accumulation_steps=4,
         detect_anomaly=True,
+        clip_grad_norm=1.0,
     )
 
     num_samples = 10240
