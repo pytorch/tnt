@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Search &mdash; TorchTNT master documentation</title>
+  <title>Installation &mdash; TorchTNT 0.0.2 documentation</title>
   
 
   
@@ -30,7 +31,9 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Project Structure" href="project_structure.html" />
+    <link rel="prev" title="Welcome to the TorchTNT documentation!" href="index.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -210,10 +213,6 @@
             
               
               
-                <div class="version">
-                  master (unstable)
-                </div>
-              
             
 
             
@@ -223,7 +222,7 @@
 
 
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="#" method="get">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -240,8 +239,8 @@
             
             
               <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Runner</span></p>
@@ -298,12 +297,14 @@
       </li>
 
         
-      <li>Search</li>
+      <li>Installation</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
+            <a href="_sources/installation.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
         
       </li>
     
@@ -328,24 +329,37 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <noscript>
-  <div id="fallback" class="admonition warning">
-    <p class="last">
-      Please activate JavaScript to enable the search
-      functionality.
-    </p>
-  </div>
-  </noscript>
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<p>TNT can be installed with pip. To do so, run:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install torchtnt
+</pre></div>
+</div>
+<p>If you run into issues, make sure that Pytorch is installed first.</p>
+<p>You can also install the latest version from master. Just run:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install git+https://github.com/pytorch/tnt.git@master
+</pre></div>
+</div>
+<p>To update to the latest version from master:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install --upgrade git+https://github.com/pytorch/tnt.git@master
+</pre></div>
+</div>
+</section>
 
-  
-  <div id="search-results">
-  
-  </div>
 
              </article>
              
             </div>
             <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="project_structure.html" class="btn btn-neutral float-right" title="Project Structure" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to the TorchTNT documentation!" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
   
 
   
@@ -374,7 +388,10 @@
         <div class="pytorch-content-right" id="pytorch-content-right">
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
-              
+              <ul>
+<li><a class="reference internal" href="#">Installation</a></li>
+</ul>
+
             </div>
           </div>
         </div>
@@ -393,8 +410,7 @@
          <script src="_static/underscore.js"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/searchtools.js"></script>
-         <script src="_static/language_data.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
      
 
   
@@ -408,10 +424,7 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-  <script type="text/javascript" src="searchindex.js" defer></script>
-   
-
+  </script> 
 
   <!-- Begin Footer -->
 

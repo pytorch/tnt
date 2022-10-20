@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Data &mdash; TorchTNT master documentation</title>
+  <title>Data &mdash; TorchTNT 0.0.2 documentation</title>
   
 
   
@@ -212,10 +212,6 @@
 
             
               
-              
-                <div class="version">
-                  master (unstable)
-                </div>
               
             
 
@@ -670,7 +666,28 @@ has been exhausted</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Data</a></li>
+<li><a class="reference internal" href="#">Data</a><ul>
+<li><a class="reference internal" href="#torchtnt.data.AllDatasetBatchesIterator"><code class="docutils literal notranslate"><span class="pre">AllDatasetBatchesIterator</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.CudaDataPrefetcher"><code class="docutils literal notranslate"><span class="pre">CudaDataPrefetcher</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategy"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategy</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategyRegistry"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategyRegistry</span></code></a><ul>
+<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategyRegistry.REGISTRY"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategyRegistry.REGISTRY</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategyRegistry.get"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategyRegistry.get()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#torchtnt.data.InOrderIterator"><code class="docutils literal notranslate"><span class="pre">InOrderIterator</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader</span></code></a><ul>
+<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.individual_dataloaders"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.individual_dataloaders</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.iteration_strategy"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.iteration_strategy</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.iterator_cls"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.iterator_cls</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.ignore_empty_data"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.ignore_empty_data</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#torchtnt.data.MultiIterator"><code class="docutils literal notranslate"><span class="pre">MultiIterator</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.RandomizedBatchSamplerIterator"><code class="docutils literal notranslate"><span class="pre">RandomizedBatchSamplerIterator</span></code></a></li>
+<li><a class="reference internal" href="#torchtnt.data.RoundRobinIterator"><code class="docutils literal notranslate"><span class="pre">RoundRobinIterator</span></code></a></li>
+</ul>
+</li>
 </ul>
 
             </div>
@@ -691,6 +708,7 @@ has been exhausted</p>
          <script src="_static/underscore.js"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="_static/doctools.js"></script>
+         <script src="_static/sphinx_highlight.js"></script>
      
 
   
