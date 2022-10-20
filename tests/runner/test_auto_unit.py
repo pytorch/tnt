@@ -12,12 +12,16 @@ from unittest.mock import MagicMock, patch
 
 import torch
 from parameterized import parameterized
+from torch.distributed import launcher
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.runner._test_utils import generate_random_dataloader
 
 from torchtnt.runner.auto_unit import AutoTrainUnit
 from torchtnt.runner.state import State
 from torchtnt.runner.train import init_train_state, train
 from torchtnt.utils import init_from_env
+from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class TestAutoUnit(unittest.TestCase):
@@ -244,6 +248,94 @@ class TestAutoUnit(unittest.TestCase):
                 lr_scheduler=my_lr_scheduler,
                 log_frequency_steps=0,
             )
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_no_sync(self) -> None:
+        """
+        Test that the no_sync autocast context is correctly applied when using gradient accumulation
+        """
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_ddp_no_sync)()
+        launcher.elastic_launch(config, entrypoint=self._test_fsdp_no_sync)()
+
+    @staticmethod
+    def _test_ddp_no_sync() -> None:
+        """
+        Test that the no_sync autocast context is correctly applied when using gradient accumulation and DDP
+        """
+
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_module = DDP(my_module, device_ids=[device.index])
+
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        auto_train_unit = DummyAutoTrainUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            lr_scheduler=my_lr_scheduler,
+            device=device,
+            log_frequency_steps=10,
+            gradient_accumulation_steps=2,
+        )
+
+        dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+
+        # for the first step no_sync should be called since we accumulate gradients
+        with patch.object(my_module, "no_sync") as no_sync_mock:
+            auto_train_unit.train_step(state=state, data=dummy_data)
+            no_sync_mock.assert_called()
+
+        state.train_state.progress.increment_step()
+        # for the second step no_sync should not be called since we run optimizer step
+        with patch.object(my_module, "no_sync") as no_sync_mock:
+            auto_train_unit.train_step(state=state, data=dummy_data)
+            no_sync_mock.assert_not_called()
+
+    @staticmethod
+    def _test_fsdp_no_sync() -> None:
+        """
+        Test that the no_sync autocast context is correctly applied when using gradient accumulation and FSDP
+        """
+
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_module = FSDP(my_module)
+
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        auto_train_unit = DummyAutoTrainUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            lr_scheduler=my_lr_scheduler,
+            device=device,
+            log_frequency_steps=10,
+            gradient_accumulation_steps=2,
+        )
+
+        dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+
+        # for the first step no_sync should be called since we accumulate gradients
+        with patch.object(my_module, "no_sync") as no_sync_mock:
+            auto_train_unit.train_step(state=state, data=dummy_data)
+            no_sync_mock.assert_called()
+
+        state.train_state.progress.increment_step()
+        # for the second step no_sync should not be called since we run optimizer step
+        with patch.object(my_module, "no_sync") as no_sync_mock:
+            auto_train_unit.train_step(state=state, data=dummy_data)
+            no_sync_mock.assert_not_called()
 
 
 class DummyAutoTrainUnit(AutoTrainUnit[Tuple[torch.tensor, torch.tensor]]):
