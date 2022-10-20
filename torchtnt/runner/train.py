@@ -10,7 +10,7 @@ from typing import Iterable, List, Optional
 import torch
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.evaluate import _evaluate_impl
-from torchtnt.runner.state import EntryPoint, PhaseState, State
+from torchtnt.runner.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.runner.unit import TTrainData, TTrainUnit
 from torchtnt.runner.utils import (
     _is_done,
@@ -100,6 +100,7 @@ def _train_impl(
     logger.info(
         f"Started train with max_epochs={train_state.max_epochs}, max_steps={train_state.max_steps}, max_steps_per_epoch={train_state.max_steps_per_epoch}"
     )
+    state._active_phase = ActivePhase.TRAIN
 
     # Set all modules to train() mode
     # access modules made available through _AppStateMixin
@@ -166,6 +167,7 @@ def _train_epoch_impl(
     callbacks: List[Callback],
 ) -> None:
     logger.info("Started train epoch")
+    state._active_phase = ActivePhase.TRAIN
 
     # Set all modules to train() mode
     # access modules made available through _AppStateMixin

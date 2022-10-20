@@ -27,7 +27,34 @@ def _check_loop_condition(name: str, val: Optional[int]) -> None:
 
 
 class EntryPoint(Enum):
+    """
+    Enum for the user-facing functions offered by the TorchTNT runner module.
+    - :py:func:`~torchtnt.runner.fit`
+    - :py:func:`~torchtnt.runner.train`
+    - :py:func:`~torchtnt.runner.evaluate`
+    - :py:func:`~torchtnt.runner.predict`
+    """
+
     FIT = auto()
+    TRAIN = auto()
+    EVALUATE = auto()
+    PREDICT = auto()
+
+
+class ActivePhase(Enum):
+    """Enum for the currently active phase.
+
+    This class complements :class:`EntryPoint` by specifying the active phase for each function.
+    More than one phase value can be set while a :class:`EntryPoint` is running:
+        - ``EntryPoint.FIT`` - ``ActivePhase.{TRAIN,EVALUATE}``
+        - ``EntryPoint.TRAIN`` - ``ActivePhase.TRAIN``
+        - ``EntryPoint.EVALUATE`` - ``ActivePhase.EVALUATE``
+        - ``EntryPoint.PREDICT`` - ``ActivePhase.PREDICT``
+
+    This can be used within hooks such as :meth:`~torchtnt.runner.unit._OnExceptionMixin.on_exception`
+    to determine within which of training, evaluation, or prediction the hook is being called.
+    """
+
     TRAIN = auto()
     EVALUATE = auto()
     PREDICT = auto()
@@ -116,10 +143,15 @@ class State:
         self._eval_state = eval_state
         self._predict_state = predict_state
         self._should_stop: bool = False
+        self._active_phase: ActivePhase = ActivePhase.TRAIN
 
     @property
     def entry_point(self) -> EntryPoint:
         return self._entry_point
+
+    @property
+    def active_phase(self) -> ActivePhase:
+        return self._active_phase
 
     @property
     def timer(self) -> Timer:

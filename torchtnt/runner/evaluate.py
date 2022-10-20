@@ -10,7 +10,7 @@ from typing import Iterable, List, Optional
 import torch
 from torchtnt.runner.callback import Callback
 
-from torchtnt.runner.state import EntryPoint, PhaseState, State
+from torchtnt.runner.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.runner.unit import TEvalData, TEvalUnit
 from torchtnt.runner.utils import (
     _is_epoch_done,
@@ -89,6 +89,8 @@ def _evaluate_impl(
     eval_state = state.eval_state
     if not eval_state:
         raise RuntimeError("Expected eval_state to be initialized!")
+
+    state._active_phase = ActivePhase.EVALUATE
     logger.info(
         f"Started evaluate with max_steps_per_epoch={eval_state.max_steps_per_epoch}"
     )
