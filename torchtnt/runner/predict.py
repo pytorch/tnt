@@ -10,7 +10,7 @@ from typing import Iterable, List, Optional
 import torch
 from torchtnt.runner.callback import Callback
 
-from torchtnt.runner.state import EntryPoint, PhaseState, State
+from torchtnt.runner.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.runner.unit import TPredictData, TPredictUnit
 from torchtnt.runner.utils import (
     _is_epoch_done,
@@ -89,6 +89,8 @@ def _predict_impl(
     predict_state = state.predict_state
     if not predict_state:
         raise RuntimeError("Expected predict_state to be initialized!")
+
+    state._active_phase = ActivePhase.PREDICT
     logger.info(
         f"Started predict with max_steps_per_epoch={predict_state.max_steps_per_epoch}"
     )
