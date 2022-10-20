@@ -39,6 +39,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         log_frequency_steps: how often to log in terms of steps (parameter updates)
         precision: the precision to use in training, as either a string or a torch.dtype.
         gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
+        detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
 
     Attributes:
         module: module to be used during training.
@@ -51,6 +52,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         grad_scaler: a torch.cuda.amp.GradScaler, if using fp16 precision
         gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
         num_optimizer_steps_completed: number of optimizer steps (weight updates) completed
+        detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
     """
 
     def __init__(
@@ -64,6 +66,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         log_frequency_steps: int,
         precision: Optional[Union[str, torch.dtype]] = None,
         gradient_accumulation_steps: int = 1,
+        detect_anomaly: bool = False,
     ) -> None:
         super().__init__()
         self.module = module
@@ -96,6 +99,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
             )
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self._num_optimizer_steps_completed: int = 0
+
+        self.detect_anomaly = detect_anomaly
 
         # TODO: Make AutoTrainUnit work when data type is Iterator
 
@@ -155,16 +160,18 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
             enabled=self.precision is not None,
         )
 
-        with maybe_autocast_precision:
-            loss, outputs = self.compute_loss(state, data)
+        # if detect_anomaly is true, run forward and backward pass in detect_anomaly context
+        with torch.autograd.set_detect_anomaly(self.detect_anomaly):
+            with maybe_autocast_precision:
+                loss, outputs = self.compute_loss(state, data)
 
-        # normalize loss to account for gradient accumulation
-        loss = loss / self.gradient_accumulation_steps
+            # normalize loss to account for gradient accumulation
+            loss = loss / self.gradient_accumulation_steps
 
-        grad_scaler = self.grad_scaler
-        if grad_scaler:
-            loss = grad_scaler.scale(loss)
-        loss.backward()
+            grad_scaler = self.grad_scaler
+            if grad_scaler:
+                loss = grad_scaler.scale(loss)
+            loss.backward()
 
         # users can override this, by default this is a no-op
         self.update_metrics(state, data, loss, outputs)
