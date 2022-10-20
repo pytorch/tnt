@@ -73,6 +73,7 @@ if __name__ == "__main__":
         python_requires=">=3.7",
         install_requires=read_requirements("requirements.txt"),
         packages=find_packages(),
+        package_data={"torchtnt": ["py.typed"]},
         zip_safe=True,
         classifiers=[
             "Development Status :: 2 - Pre-Alpha",
