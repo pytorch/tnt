@@ -11,7 +11,7 @@ import os
 import sys
 import tempfile
 from argparse import Namespace
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -45,16 +45,18 @@ class MyTrainUnit(AutoTrainUnit[Batch]):
         lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
         device: Optional[torch.device],
         log_frequency_steps: int,
+        precision: Optional[Union[str, torch.dtype]] = None,
         tb_logger: TensorBoardLogger,
         train_accuracy: BinaryAccuracy,
     ):
         super().__init__(
+            module=module,
             optimizer=optimizer,
             lr_scheduler=lr_scheduler,
             device=device,
             log_frequency_steps=log_frequency_steps,
+            precision=precision,
         )
-        self.module = module
         self.tb_logger = tb_logger
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = train_accuracy
@@ -125,6 +127,7 @@ def main(argv: List[str]) -> None:
         lr_scheduler=lr_scheduler,
         device=device,
         log_frequency_steps=args.log_frequency_steps,
+        precision="fp16",
         train_accuracy=train_accuracy,
         tb_logger=tb_logger,
     )
