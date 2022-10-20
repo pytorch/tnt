@@ -67,6 +67,7 @@ def predict(
     log_api_usage("predict")
     callbacks = callbacks or []
     try:
+        state._entry_point = EntryPoint.PREDICT
         _predict_impl(state, predict_unit, callbacks)
         logger.info("Finished predict")
         logger.debug(get_timer_summary(state.timer))
