@@ -38,6 +38,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         device: the device to be used.
         log_frequency_steps: how often to log in terms of steps (parameter updates)
         precision: the precision to use in training, as either a string or a torch.dtype.
+        gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
 
     Attributes:
         module: module to be used during training.
@@ -48,6 +49,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         log_frequency_steps: how often to log in terms of steps (parameter updates)
         precision: the precision to use in training, as a torch.dtype.
         grad_scaler: a torch.cuda.amp.GradScaler, if using fp16 precision
+        gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
+        num_optimizer_steps_completed: number of optimizer steps (weight updates) completed
     """
 
     def __init__(
@@ -60,6 +63,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         device: Optional[torch.device] = None,
         log_frequency_steps: int,
         precision: Optional[Union[str, torch.dtype]] = None,
+        gradient_accumulation_steps: int = 1,
     ) -> None:
         super().__init__()
         self.module = module
@@ -85,6 +89,13 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
                 self.precision,
                 self.module,
             )
+
+        if not gradient_accumulation_steps > 0:
+            raise ValueError(
+                f"gradient_accumulation_steps must be > 0. Got {gradient_accumulation_steps}"
+            )
+        self.gradient_accumulation_steps = gradient_accumulation_steps
+        self._num_optimizer_steps_completed: int = 0
 
         # TODO: Make AutoTrainUnit work when data type is Iterator
 
@@ -133,6 +144,11 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         data = copy_data_to_device(data, self.device)
         # users must override this
         loss, outputs = self.compute_loss(state, data)
+        assert state.train_state
+        should_update_weights = (
+            state.train_state.progress.num_steps_completed_in_epoch + 1
+        ) % self.gradient_accumulation_steps == 0
+
         maybe_autocast_precision = torch.autocast(
             device_type=self.device.type,
             dtype=self.precision,
@@ -142,12 +158,26 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         with maybe_autocast_precision:
             loss, outputs = self.compute_loss(state, data)
 
+        # normalize loss to account for gradient accumulation
+        loss = loss / self.gradient_accumulation_steps
+
         grad_scaler = self.grad_scaler
         if grad_scaler:
             loss = grad_scaler.scale(loss)
         loss.backward()
 
+        # users can override this, by default this is a no-op
+        self.update_metrics(state, data, loss, outputs)
+
+        if should_update_weights:
+            self._run_optimizer_lr_scheduler_step(state)
+
+        return loss, outputs
+
+    def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
+        """Runs the optimizer step, sets gradients to zero, runs lr scheduler step, and calls `log_metrics`"""
         # optimizer step
+        grad_scaler = self.grad_scaler
         if grad_scaler:
             grad_scaler.step(self.optimizer)
             # update the scale for next iteration
@@ -155,33 +185,47 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         else:
             self.optimizer.step()
 
+        self._num_optimizer_steps_completed += 1
+
         # sets gradients to zero
         self.optimizer.zero_grad(set_to_none=True)
 
-        if self.lr_scheduler and self.step_lr_interval == "step":
-            self.lr_scheduler.step()
+        # optionally step lr scheduler
+        lr_scheduler = self.lr_scheduler
+        if lr_scheduler and self.step_lr_interval == "step":
+            lr_scheduler.step()
 
-        # users can override this, by default this is a no-op
-        self.update_metrics(state, data, loss, outputs)
-
-        assert state.train_state
-        step_count = state.train_state.progress.num_steps_completed
-        if (step_count + 1) % self.log_frequency_steps == 0:
+        # call `log_metrics`
+        if self.num_optimizer_steps_completed % self.log_frequency_steps == 0:
             # users can override this, by default this is a no-op
-            self.log_metrics(state, step_count, "step")
-
-        return loss, outputs
+            self.log_metrics(state, self.num_optimizer_steps_completed - 1, "step")
 
     def on_train_epoch_end(self, state: State) -> None:
-        # step the learning rate scheduler
         # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
+        assert state.train_state
+        train_state = state.train_state
+
+        # in the case that the number of training steps is not evenly divisible by gradient_accumulation_steps, we must update the weights one last
+        # time for the last step
+        should_update_weights_for_last_step = (
+            train_state.progress.num_steps_completed_in_epoch
+            % self.gradient_accumulation_steps
+            != 0
+        )
+
+        if should_update_weights_for_last_step:
+            self._run_optimizer_lr_scheduler_step(state)
+
+        # optionally step lr scheduler
         if self.lr_scheduler and self.step_lr_interval == "epoch":
             self.lr_scheduler.step()
 
-        assert state.train_state
-        step_count = state.train_state.progress.num_steps_completed
         # users can override this, by default this is a no-op
-        self.log_metrics(state, step_count, "epoch")
+        self.log_metrics(state, train_state.progress.num_steps_completed, "epoch")
+
+    @property
+    def num_optimizer_steps_completed(self) -> int:
+        return self._num_optimizer_steps_completed
 
 
 def _convert_precision_str_to_dtype(precision: str) -> torch.dtype:

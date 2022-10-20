@@ -5,11 +5,13 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import math
 import unittest
-from typing import Any, Literal, Optional, Tuple
+from typing import Any, Tuple
 from unittest.mock import MagicMock, patch
 
 import torch
+from parameterized import parameterized
 from torchtnt.runner._test_utils import generate_random_dataloader
 
 from torchtnt.runner.auto_unit import AutoTrainUnit
@@ -183,6 +185,45 @@ class TestAutoUnit(unittest.TestCase):
                 log_frequency_steps=100,
                 precision="f16",
             )
+
+    @parameterized.expand(
+        [
+            [1],
+            [2],
+            [4],
+            [5],
+        ]
+    )
+    def test_num_optimizer_steps_completed(self, gradient_accumulation_steps) -> None:
+        """
+        Test the num_optimizer_steps_completed property of AutoTrainUnit
+        """
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+
+        input_dim = 2
+        dataset_len = 16
+        batch_size = 2
+        max_epochs = 1
+
+        auto_train_unit = DummyAutoTrainUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            log_frequency_steps=100,
+            gradient_accumulation_steps=gradient_accumulation_steps,
+        )
+
+        expected_opt_steps_per_epoch = math.ceil(
+            dataset_len / batch_size / gradient_accumulation_steps
+        )
+
+        train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
+        train(state, auto_train_unit)
+        self.assertTrue(
+            auto_train_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
+        )
 
 
 class DummyAutoTrainUnit(AutoTrainUnit[Tuple[torch.tensor, torch.tensor]]):

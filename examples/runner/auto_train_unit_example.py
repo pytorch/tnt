@@ -48,6 +48,7 @@ class MyTrainUnit(AutoTrainUnit[Batch]):
         precision: Optional[Union[str, torch.dtype]] = None,
         tb_logger: TensorBoardLogger,
         train_accuracy: BinaryAccuracy,
+        gradient_accumulation_steps: int = 1,
     ):
         super().__init__(
             module=module,
@@ -56,6 +57,7 @@ class MyTrainUnit(AutoTrainUnit[Batch]):
             device=device,
             log_frequency_steps=log_frequency_steps,
             precision=precision,
+            gradient_accumulation_steps=gradient_accumulation_steps,
         )
         self.tb_logger = tb_logger
         # create an accuracy Metric to compute the accuracy of training
@@ -130,6 +132,7 @@ def main(argv: List[str]) -> None:
         precision="fp16",
         train_accuracy=train_accuracy,
         tb_logger=tb_logger,
+        gradient_accumulation_steps=4,
     )
 
     num_samples = 10240
