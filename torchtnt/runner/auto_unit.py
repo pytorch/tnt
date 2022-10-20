@@ -69,6 +69,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         precision: Optional[Union[str, torch.dtype]] = None,
         gradient_accumulation_steps: int = 1,
         detect_anomaly: bool = False,
+        clip_grad_norm: Optional[float] = None,
+        clip_grad_value: Optional[float] = None,
     ) -> None:
         super().__init__()
         self.module = module
@@ -107,6 +109,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         self._num_optimizer_steps_completed: int = 0
 
         self.detect_anomaly = detect_anomaly
+        self.clip_grad_norm = clip_grad_norm
+        self.clip_grad_value = clip_grad_value
 
         # TODO: Make AutoTrainUnit work when data type is Iterator
 
@@ -200,6 +204,29 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         """Runs the optimizer step, sets gradients to zero, runs lr scheduler step, and calls `log_metrics`"""
         # optimizer step
         grad_scaler = self.grad_scaler
+        clip_grad_norm = self.clip_grad_norm
+        clip_grad_value = self.clip_grad_value
+        if grad_scaler and (clip_grad_norm or clip_grad_value):
+            # unscale the gradients of optimizer's assigned params in-place in preparation for gradient clipping
+            grad_scaler.unscale_(self.optimizer)
+
+        # gradient norm clipping
+        if clip_grad_norm:
+            if isinstance(self.module, FSDP):
+                self.module.clip_grad_norm_(max_norm=clip_grad_norm)
+            else:
+                torch.nn.utils.clip_grad_norm_(
+                    parameters=self.module.parameters(),
+                    max_norm=clip_grad_norm,
+                )
+        # gradient value clipping
+        if clip_grad_value:
+            torch.nn.utils.clip_grad_value_(
+                parameters=self.module.parameters(),
+                clip_value=clip_grad_value,
+            )
+
+        # optimizer step
         if grad_scaler:
             grad_scaler.step(self.optimizer)
             # update the scale for next iteration
