@@ -223,14 +223,6 @@ def main(argv: List[str]) -> None:
     print(get_timer_summary(state.timer))
 
 
-class ValidateAccumGradBatchesAction(argparse.Action):
-    # Validate input to accum_grad_batches
-    def __call__(self, parser, namespace, values, option_string=None):  # pyre-ignore
-        if values < 1:
-            raise ValueError(f"`accum_grad_batches` must be an int >= 1. Got {values}.")
-        setattr(namespace, self.dest, values)
-
-
 def get_args(argv: List[str]) -> Namespace:
     """Parse command line arguments"""
     parser = argparse.ArgumentParser()
