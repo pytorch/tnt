@@ -14,7 +14,7 @@ from torch import nn
 from torchtnt.runner._test_utils import DummyFitUnit, generate_random_dataloader
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.fit import fit, init_fit_state
-from torchtnt.runner.state import State
+from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.unit import EvalUnit, TrainUnit
 
 
@@ -65,6 +65,7 @@ class FitTest(unittest.TestCase):
             state.eval_state.progress.num_steps_completed,
             max_epochs * expected_eval_steps_per_epoch,
         )
+        self.assertEqual(state.entry_point, EntryPoint.FIT)
 
         # step_output should be reset to None
         self.assertEqual(state.eval_state.step_output, None)
@@ -123,6 +124,7 @@ class FitTest(unittest.TestCase):
             state.eval_state.progress.num_steps_completed,
             expected_num_evaluate_calls * expected_eval_steps_per_epoch,
         )
+        self.assertEqual(state.entry_point, EntryPoint.FIT)
 
         # step_output should be reset to None
         self.assertEqual(state.eval_state.step_output, None)

@@ -67,6 +67,7 @@ def evaluate(
     log_api_usage("evaluate")
     callbacks = callbacks or []
     try:
+        state._entry_point = EntryPoint.EVALUATE
         _evaluate_impl(state, eval_unit, callbacks)
         logger.info("Finished evaluation")
         logger.debug(get_timer_summary(state.timer))

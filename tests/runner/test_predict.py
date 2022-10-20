@@ -15,7 +15,7 @@ from torch import nn
 from torchtnt.runner._test_utils import DummyPredictUnit, generate_random_dataloader
 
 from torchtnt.runner.predict import init_predict_state, predict
-from torchtnt.runner.state import State
+from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.unit import PredictUnit
 
 
@@ -41,6 +41,7 @@ class PredictTest(unittest.TestCase):
         self.assertEqual(
             state.predict_state.progress.num_steps_completed, expected_steps
         )
+        self.assertEqual(state.entry_point, EntryPoint.PREDICT)
 
         # step_output should be reset to None
         self.assertEqual(state.predict_state.step_output, None)

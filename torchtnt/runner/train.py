@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import cast, Iterable, List, Optional
+from typing import Iterable, List, Optional
 
 import torch
 from torchtnt.runner.callback import Callback
@@ -76,6 +76,7 @@ def train(
     log_api_usage("train")
     callbacks = callbacks or []
     try:
+        state._entry_point = EntryPoint.TRAIN
         _train_impl(state, train_unit, callbacks)
         logger.info("Finished train")
         logger.debug(get_timer_summary(state.timer))
@@ -140,6 +141,7 @@ def train_epoch(
             raise RuntimeError(
                 f"Expected state.train_state.max_epochs to be 1, but received {train_state.max_epochs}."
             )
+        state._entry_point = EntryPoint.TRAIN
         logger.info(
             f"Started train_epoch with max_steps_per_epoch={train_state.max_steps_per_epoch}"
         )
