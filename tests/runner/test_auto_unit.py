@@ -225,6 +225,26 @@ class TestAutoUnit(unittest.TestCase):
             auto_train_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
         )
 
+    def test_log_frequency_steps_exception(self) -> None:
+        """
+        Test that an exception is raised when log_frequency_steps is < 1
+        """
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        with self.assertRaisesRegex(
+            ValueError, "log_frequency_steps must be > 0. Got 0"
+        ):
+            _ = DummyAutoTrainUnit(
+                module=my_module,
+                optimizer=my_optimizer,
+                lr_scheduler=my_lr_scheduler,
+                log_frequency_steps=0,
+            )
+
 
 class DummyAutoTrainUnit(AutoTrainUnit[Tuple[torch.tensor, torch.tensor]]):
     def compute_loss(

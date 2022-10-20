@@ -74,6 +74,10 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         self.lr_scheduler = lr_scheduler
         self.step_lr_interval = step_lr_interval
         self.device: torch.device = device or get_device_from_env()
+        if not log_frequency_steps > 0:
+            raise ValueError(
+                f"log_frequency_steps must be > 0. Got {log_frequency_steps}"
+            )
         self.log_frequency_steps: int = log_frequency_steps
 
         if not precision:
