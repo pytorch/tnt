@@ -645,6 +645,11 @@ and how many parameter updates have been run on the model.</p>
 <dd><p>Parent State class which can contain up to 3 instances of PhaseState, for the 3 phases.</p>
 <p>A new State class is created (and the previous one erased) each time an entry point is called.</p>
 <dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.runner.State.active_phase">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">active_phase</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ActivePhase</span></em><a class="headerlink" href="#torchtnt.runner.State.active_phase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="torchtnt.runner.State.entry_point">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">entry_point</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">EntryPoint</span></em><a class="headerlink" href="#torchtnt.runner.State.entry_point" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -949,6 +954,7 @@ state / train_unit / callbacks are expected to introduce side effects
 </ul>
 </li>
 <li><a class="reference internal" href="#torchtnt.runner.State"><code class="docutils literal notranslate"><span class="pre">State</span></code></a><ul>
+<li><a class="reference internal" href="#torchtnt.runner.State.active_phase"><code class="docutils literal notranslate"><span class="pre">State.active_phase</span></code></a></li>
 <li><a class="reference internal" href="#torchtnt.runner.State.entry_point"><code class="docutils literal notranslate"><span class="pre">State.entry_point</span></code></a></li>
 <li><a class="reference internal" href="#torchtnt.runner.State.eval_state"><code class="docutils literal notranslate"><span class="pre">State.eval_state</span></code></a></li>
 <li><a class="reference internal" href="#torchtnt.runner.State.predict_state"><code class="docutils literal notranslate"><span class="pre">State.predict_state</span></code></a></li>
