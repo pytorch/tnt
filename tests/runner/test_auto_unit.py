@@ -40,7 +40,6 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
-            log_frequency_steps=100,
             precision="fp16",
         )
         self.assertEqual(auto_train_unit.tracked_modules()["module"], my_module)
@@ -74,7 +73,6 @@ class TestAutoUnit(unittest.TestCase):
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
             step_lr_interval="step",
-            log_frequency_steps=100,
         )
 
         input_dim = 2
@@ -103,7 +101,6 @@ class TestAutoUnit(unittest.TestCase):
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
             step_lr_interval="epoch",
-            log_frequency_steps=100,
         )
 
         input_dim = 2
@@ -135,7 +132,6 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
-            log_frequency_steps=100,
             precision="fp16",
         )
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
@@ -162,7 +158,6 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
-            log_frequency_steps=100,
             precision="bf16",
         )
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
@@ -186,7 +181,6 @@ class TestAutoUnit(unittest.TestCase):
                 module=my_module,
                 optimizer=my_optimizer,
                 lr_scheduler=my_lr_scheduler,
-                log_frequency_steps=100,
                 precision="f16",
             )
 
@@ -214,7 +208,6 @@ class TestAutoUnit(unittest.TestCase):
         auto_train_unit = DummyAutoTrainUnit(
             module=my_module,
             optimizer=my_optimizer,
-            log_frequency_steps=100,
             gradient_accumulation_steps=gradient_accumulation_steps,
         )
 
@@ -282,7 +275,6 @@ class TestAutoUnit(unittest.TestCase):
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
             device=device,
-            log_frequency_steps=10,
             gradient_accumulation_steps=2,
         )
 
@@ -319,7 +311,6 @@ class TestAutoUnit(unittest.TestCase):
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
             device=device,
-            log_frequency_steps=10,
             gradient_accumulation_steps=2,
         )
 

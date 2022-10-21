@@ -44,7 +44,7 @@ class MyTrainUnit(AutoTrainUnit[Batch]):
         optimizer: torch.optim.Optimizer,
         lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
         device: Optional[torch.device],
-        log_frequency_steps: int,
+        log_frequency_steps: int = 1000,
         precision: Optional[Union[str, torch.dtype]] = None,
         tb_logger: TensorBoardLogger,
         train_accuracy: BinaryAccuracy,
