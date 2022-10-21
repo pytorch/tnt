@@ -1,3 +1,4 @@
 parameterized
 pytest
 pytest-cov
+torchsnapshot-nightly

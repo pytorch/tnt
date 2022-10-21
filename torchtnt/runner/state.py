@@ -123,10 +123,7 @@ class PhaseState:
 
 
 class State:
-    """Parent State class which can contain up to 3 instances of PhaseState, for the 3 phases.
-
-    A new State class is created (and the previous one erased) each time an entry point is called.
-    """
+    """Parent State class which can contain up to 3 instances of PhaseState, for the 3 phases."""
 
     def __init__(
         self,
