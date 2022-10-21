@@ -10,7 +10,9 @@ from .lambda_callback import Lambda
 from .learning_rate_monitor import LearningRateMonitor
 from .pytorch_profiler import PyTorchProfiler
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
+from .torchsnapshot_saver import TorchSnapshotSaver
 from .tqdm_progress_bar import TQDMProgressBar
+
 
 __all__ = [
     "BaseCSVWriter",
@@ -19,5 +21,6 @@ __all__ = [
     "LearningRateMonitor",
     "PyTorchProfiler",
     "TensorBoardParameterMonitor",
+    "TorchSnapshotSaver",
     "TQDMProgressBar",
 ]
