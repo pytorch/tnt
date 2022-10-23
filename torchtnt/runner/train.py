@@ -133,6 +133,18 @@ def train_epoch(
     train_unit: TTrainUnit,
     callbacks: Optional[List[Callback]] = None,
 ) -> None:
+    """
+    The `train_epoch` entry point takes in a State and a TrainUnit and runs one epoch (one pass through the dataloader).
+    This entry point can be used for interleaving training with another entry point (evaluate or predict).
+
+    Note: this does not call the `on_train_start` or `on_train_end` methods on the unit or callback.
+
+    state / train_unit / callbacks are expected to introduce side effects
+    Args:
+        state: a State object containing metadata about the training run.
+        train_unit: an instance of TrainUnit which implements `train_step`.
+        callbacks: an optional list of callbacks.
+    """
     callbacks = callbacks or []
     try:
         train_state = state.train_state
