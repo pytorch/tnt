@@ -157,9 +157,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
 
     def train_step(self, state: State, data: TTrainData) -> Tuple[torch.Tensor, Any]:
         data = copy_data_to_device(data, self.device)
-        # users must override this
-        loss, outputs = self.compute_loss(state, data)
         assert state.train_state
+
         should_update_weights = (
             state.train_state.progress.num_steps_completed_in_epoch + 1
         ) % self.gradient_accumulation_steps == 0
@@ -182,6 +181,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         # if detect_anomaly is true, run forward and backward pass in detect_anomaly context
         with maybe_no_sync, torch.autograd.set_detect_anomaly(self.detect_anomaly):
             with maybe_autocast_precision:
+                # users must override this
                 loss, outputs = self.compute_loss(state, data)
 
             # normalize loss to account for gradient accumulation
