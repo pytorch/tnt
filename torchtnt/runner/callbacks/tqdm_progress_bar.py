@@ -42,7 +42,7 @@ class TQDMProgressBar(Callback):
             )
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        if self._train_progress_bar and state.train_state:
+        if self._train_progress_bar is not None and state.train_state:
             _update_progress_bar(
                 self._train_progress_bar,
                 state.train_state.progress.num_steps_completed,
@@ -50,7 +50,7 @@ class TQDMProgressBar(Callback):
             )
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
-        if self._train_progress_bar and state.train_state:
+        if self._train_progress_bar is not None and state.train_state:
             _close_progress_bar(
                 self._train_progress_bar,
                 state.train_state.progress.num_steps_completed,
@@ -69,7 +69,7 @@ class TQDMProgressBar(Callback):
             )
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
-        if self._eval_progress_bar and state.eval_state:
+        if self._eval_progress_bar is not None and state.eval_state:
             _update_progress_bar(
                 self._eval_progress_bar,
                 state.eval_state.progress.num_steps_completed,
@@ -77,7 +77,7 @@ class TQDMProgressBar(Callback):
             )
 
     def on_eval_epoch_end(self, state: State, unit: TEvalUnit) -> None:
-        if self._eval_progress_bar and state.eval_state:
+        if self._eval_progress_bar is not None and state.eval_state:
             _close_progress_bar(
                 self._eval_progress_bar,
                 state.eval_state.progress.num_steps_completed,
@@ -96,7 +96,7 @@ class TQDMProgressBar(Callback):
             )
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
-        if self._predict_progress_bar and state.predict_state:
+        if self._predict_progress_bar is not None and state.predict_state:
             _update_progress_bar(
                 self._predict_progress_bar,
                 state.predict_state.progress.num_steps_completed,
@@ -104,7 +104,7 @@ class TQDMProgressBar(Callback):
             )
 
     def on_predict_epoch_end(self, state: State, unit: TPredictUnit) -> None:
-        if self._predict_progress_bar and state.predict_state:
+        if self._predict_progress_bar is not None and state.predict_state:
             _close_progress_bar(
                 self._predict_progress_bar,
                 state.predict_state.progress.num_steps_completed,

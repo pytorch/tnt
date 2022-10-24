@@ -19,6 +19,7 @@ from torchtnt.runner.callbacks.tqdm_progress_bar import (
     TQDMProgressBar,
 )
 from torchtnt.runner.state import EntryPoint, PhaseState, State
+from torchtnt.runner.train import init_train_state, train
 
 
 class TQDMProgressBarTest(unittest.TestCase):
@@ -45,6 +46,22 @@ class TQDMProgressBarTest(unittest.TestCase):
         progress_bar = TQDMProgressBar()
         progress_bar.on_train_epoch_start(state, my_unit)
         self.assertEqual(progress_bar._train_progress_bar.total, expected_total)
+
+    def test_progress_bar_train_integration(self) -> None:
+        """
+        Test TQDMProgressBar callback with train entry point
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+
+        my_unit = MagicMock(spec=DummyTrainUnit)
+        progress_bar = TQDMProgressBar()
+        train(state, my_unit, callbacks=[progress_bar])
 
     def test_progress_bar_evaluate(self) -> None:
         """
