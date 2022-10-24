@@ -151,9 +151,6 @@ class MyTrainUnit(TrainUnit[Batch]):
         # step the learning rate scheduler
         self.lr_scheduler.step()
 
-    def on_train_end(self, state: State) -> None:
-        self.tb_logger.close()
-
 
 def main(argv: List[str]) -> None:
     # parse command line arguments
