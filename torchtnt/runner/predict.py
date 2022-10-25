@@ -31,7 +31,7 @@ def init_predict_state(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    Helper function that initializes a state object for prediction.
+    Helper function that initializes a :class:`~torchtnt.runner.State` object for prediction.
 
     Args:
         dataloader: dataloader to be used during prediction.
@@ -57,11 +57,11 @@ def predict(
     callbacks: Optional[List[Callback]] = None,
 ) -> None:
     """
-    The `predict` entry point takes in a State and PredictUnit and runs the prediction loop over the data.
+    The ``predict`` entry point takes in a :class:`~torchtnt.runner.State` and :class:`~torchtnt.runner.PredictUnit` and runs the prediction loop over the data.
 
     Args:
-        state: a State object containing metadata about the prediction run.
-        predict_unit: an instance of PredictUnit which implements `predict_step`.
+        state: a State object containing metadata about the prediction run. This can be initialized using :func:`~torchtnt.runner.init_predict_state`.
+        predict_unit: an instance of :class:`~torchtnt.runner.PredictUnit` which implements `predict_step`.
         callbacks: an optional list of callbacks.
     """
     log_api_usage("predict")

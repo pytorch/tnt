@@ -53,9 +53,9 @@ Fit Entry Point
 
 To run your fit loop, call the fit loop entry point: :py:func:`~torchtnt.runner.fit`.
 
-The `:py:func:`~torchtnt.runner.fit` entry point takes as arguments one TrainUnit/EvalUnit, one iterable containing your training data and one iterable containing your eval
-data (can be *any* iterable, including PyTorch DataLoader, numpy, etc.), an optional list of callbacks(described below), and several optional parameters to control
-run duration of the loop.
+The :py:func:`~torchtnt.runner.fit` entry point takes an object subclassing both :class:`~torchtnt.runner.TrainUnit` and :class:`~torchtnt.runner.EvalUnit`, a :class:`~torchtnt.runner.state.State` object, and an optional list of callbacks.
+
+The :class:`~torchtnt.runner.state.State` object can be initialized with :func:`~torchtnt.runner.init_fit_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
 
 Below is an example of calling the :py:func:`~torchtnt.runner.fit` entry point with the TrainUnit/EvalUnit created above.
 

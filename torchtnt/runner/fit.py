@@ -29,13 +29,13 @@ def init_fit_state(
     evaluate_every_n_epochs: Optional[int] = 1,
 ) -> State:
     """
-    Helper function that initializes a state object for fitting.
+    Helper function that initializes a :class:`~torchtnt.runner.State` object for fitting.
 
     Args:
         train_dataloader: dataloader to be used during training.
         eval_dataloader: dataloader to be used during evaluation.
-        max_epochs: the max number of epochs to run for training. `None` means no limit (infinite training) unless stopped by max_steps.
-        max_steps: the max number of steps to run for training. `None` means no limit (infinite training) unless stopped by max_epochs.
+        max_epochs: the max number of epochs to run for training. ``None`` means no limit (infinite training) unless stopped by max_steps.
+        max_steps: the max number of steps to run for training. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_train_steps_per_epoch: the max number of steps to run per epoch for training. None means train until the dataloader is exhausted.
         evaluate_every_n_steps: how often to run the evaluation loop in terms of training steps.
         evaluate_every_n_epochs: how often to run the evaluation loop in terms of training epochs.
@@ -65,11 +65,13 @@ def fit(
     state: State, unit: TTrainUnit, *, callbacks: Optional[List[Callback]] = None
 ) -> None:
     """
-    The `fit` entry point interleaves the training and evaluation loops, taking in an instance of TrainUnit/EvalUnit as well as train and eval dataloaders.
+    The ``fit`` entry point interleaves training and evaluation loops.
 
     Args:
-        state: a State object containing metadata about the fitting run.
-        unit: an instance of both TrainUnit EvalUnit which implements both `train_step` and `eval_step`.
+        state: a :class:`~torchtnt.runner.State` object containing metadata about the fitting run.
+         :func:`~torchtnt.runner.init_fit_state` can be used to initialize a state object.
+        unit: an instance that subclasses both :class:`~torchtnt.runner.unit.TrainUnit` and :class:`~torchtnt.runner.unit.EvalUnit`,
+         implementing :meth:`~torchtnt.runner.TrainUnit.train_step` and :meth:`~torchtnt.runner.EvalUnit.eval_step`.
         callbacks: an optional list of callbacks.
     """
     log_api_usage("fit")
