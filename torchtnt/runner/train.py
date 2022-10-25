@@ -138,7 +138,7 @@ def train_epoch(
     This entry point can be used for interleaving training with another entry point (evaluate or predict).
 
     Note: this does not call the ``on_train_start`` or ``on_train_end`` methods on the unit or callbacks.
-   
+
     Args:
         state: a class:`~torchtnt.runner.State` object containing metadata about the training run.
         train_unit: an instance of :class:`~torchtnt.runner.TrainUnit` which implements `train_step`.
