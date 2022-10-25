@@ -27,8 +27,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
     """
     The AutoTrainUnit is a convenience for users who are training with stochastic gradient descent and would like to have model optimization
     handled for them. The AutoTrainUnit subclasses TrainUnit, and runs the train_step for the user, specifically: forward pass, loss computation,
-    backward pass, and optimizer step. To benefit from the AutoTrainUnit, the user must subclass it and implement the `compute_loss` method, and
-    optionally the `update_metrics` and `log_metrics` methods. Then use with the `train` or `fit` entry point as normal.
+    backward pass, and optimizer step. To benefit from the AutoTrainUnit, the user must subclass it and implement the ``compute_loss`` method, and
+    optionally the ``update_metrics`` and ``log_metrics`` methods. Then use with the ``train`` or ``fit`` entry point as normal.
 
     For more advanced customization, the basic TrainUnit interface may be a better fit.
 
@@ -120,8 +120,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         The user should implement this method with their loss computation. This will be called every `train_step`.
 
         Args:
-            state: a State object which is passed from the `train_step`
-            data: a batch of data which is passed from the `train_step`
+            state: a State object which is passed from the ``train_step``
+            data: a batch of data which is passed from the ``train_step``
 
         Returns:
             Tuple containing the loss and the output of the model
@@ -135,8 +135,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         The user should implement this method with code to update metrics. This will be called every `train_step`.
 
         Args:
-            state: a State object which is passed from the `train_step`
-            data: a batch of data which is passed from the `train_step`
+            state: a State object which is passed from the ``train_step``
+            data: a batch of data which is passed from the ``train_step``
             outputs: the outputs of the model forward pass
         """
         pass
@@ -149,9 +149,9 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         and how many parameter updates have been run on the model.
 
         Args:
-            state: a State object which is passed from the `train_step`
+            state: a State object which is passed from the ``train_step``
             step: how many steps have been completed (i.e. how many parameter updates have been run on the model)
-            interval: whether `log_metrics` is called at the end of a step or at the end of an epoch
+            interval: whether ``log_metrics`` is called at the end of a step or at the end of an epoch
         """
         pass
 

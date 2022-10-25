@@ -34,10 +34,11 @@ Predict Entry Point
 
 To run your prediction loop, call the prediction loop entry point: :py:func:`~torchtnt.runner.predict`.
 
-The :py:func:`~torchtnt.runner.predict`. entry point takes as arguments one PredictUnit, one iterable containing your data (can be *any* iterable, including PyTorch DataLoader, numpy, etc.), an optional list of callbacks
-(described below), and several optional parameters to control run duration of the loop.
+The :py:func:`~torchtnt.runner.predict` entry point takes a :class:`~torchtnt.runner.PredictUnit` object, a :class:`~torchtnt.runner.State` object, and an optional list of callbacks.
 
-Below is an example of calling the :py:func:`~torchtnt.runner.predict` entry point with the ``PredictUnit`` created above.
+The :class:`~torchtnt.runner.State` object can be initialized with :func:`~torchtnt.runner.init_predict_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
+
+Below is an example of calling the :py:func:`~torchtnt.runner.predict` entry point with ``MyPredictUnit`` created above.
 
 .. code-block:: python
 

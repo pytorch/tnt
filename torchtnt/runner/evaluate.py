@@ -31,7 +31,7 @@ def init_eval_state(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    Helper function that initializes a state object for evaluation.
+    Helper function that initializes a :class:`~torchtnt.runner.state.State` object for evaluation.
 
     Args:
         dataloader: dataloader to be used during evaluation.
@@ -57,11 +57,11 @@ def evaluate(
     callbacks: Optional[List[Callback]] = None,
 ) -> None:
     """
-    The `evaluate` entry point takes in a State and EvalUnit and runs the evaluation loop over the data.
+    The``evaluate``entry point takes in a :class:`~torchtnt.runner.State` and :class:`~torchtnt.runner.unit.EvalUnit` and runs the evaluation loop over the data.
 
     Args:
-        state: a State object containing metadata about the evaluation run.
-        eval_unit: an instance of EvalUnit which implements `eval_step`.
+        state: a :class:`~torchtnt.runner.State` object containing metadata about the evaluation run.
+        eval_unit: an instance of :class:`~torchtnt.runner.EvalUnit` which implements `eval_step`.
         callbacks: an optional list of callbacks.
     """
     log_api_usage("evaluate")

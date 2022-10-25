@@ -35,10 +35,11 @@ Evaluate Entry Point
 
 To run your evaluation loop, call :py:func:`~torchtnt.runner.evaluate`.
 
-The :py:func:`~torchtnt.runner.evaluate` entry point takes as arguments one EvalUnit, one iterable containing your data (can be *any* iterable, including PyTorch DataLoader, numpy, etc.), an optional list of callbacks
-(described below), and several optional parameters to control run duration of the loop.
+The :py:func:`~torchtnt.runner.evaluate` entry point takes a :class:`~torchtnt.runner.EvalUnit` object, a :class:`~torchtnt.runner.State` object, and an optional list of callbacks.
 
-Below is an example of calling the :py:func:`~torchtnt.runner.evaluate` entry point with the ``EvalUnit`` created above.
+The :class:`~torchtnt.runner.State` object can be initialized with :func:`~torchtnt.runner.init_eval_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
+
+Below is an example of calling the :py:func:`~torchtnt.runner.evaluate` entry point with ``MyEvalUnit`` created above.
 
 .. code-block:: python
 

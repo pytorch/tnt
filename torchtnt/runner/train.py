@@ -35,12 +35,12 @@ def init_train_state(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    Helper function that initializes a state object for training.
+    Helper function that initializes a :class:`~torchtnt.runner.State` object for training.
 
     Args:
         dataloader: dataloader to be used during training.
-        max_epochs: the max number of epochs to run. `None` means no limit (infinite training) unless stopped by max_steps.
-        max_steps: the max number of steps to run. `None` means no limit (infinite training) unless stopped by max_epochs.
+        max_epochs: the max number of epochs to run. ``None`` means no limit (infinite training) unless stopped by max_steps.
+        max_steps: the max number of steps to run. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
 
     Returns:
@@ -66,11 +66,11 @@ def train(
     callbacks: Optional[List[Callback]] = None,
 ) -> None:
     """
-    The `train` entry point takes in a State and a TrainUnit and runs the training loop.
-    state / train_unit / callbacks are expected to introduce side effects
+    The ``train`` entry point takes in a :class:`~torchtnt.runner.State` object and a :class:`~torchtnt.runner.TrainUnit` object and runs the training loop.
+
     Args:
-        state: a State object containing metadata about the training run.
-        train_unit: an instance of TrainUnit which implements `train_step`.
+        state: a :class:`~torchtnt.runner.State` object containing metadata about the training run.
+        train_unit: an instance of :class:`~torchtnt.runner.TrainUnit` which implements `train_step`.
         callbacks: an optional list of callbacks.
     """
     log_api_usage("train")
@@ -137,12 +137,11 @@ def train_epoch(
     The `train_epoch` entry point takes in a State and a TrainUnit and runs one epoch (one pass through the dataloader).
     This entry point can be used for interleaving training with another entry point (evaluate or predict).
 
-    Note: this does not call the `on_train_start` or `on_train_end` methods on the unit or callbacks.
+    Note: this does not call the ``on_train_start`` or ``on_train_end`` methods on the unit or callbacks.
 
-    state / train_unit / callbacks are expected to introduce side effects.
     Args:
-        state: a State object containing metadata about the training run.
-        train_unit: an instance of TrainUnit which implements `train_step`.
+        state: a class:`~torchtnt.runner.State` object containing metadata about the training run.
+        train_unit: an instance of :class:`~torchtnt.runner.TrainUnit` which implements `train_step`.
         callbacks: an optional list of callbacks.
     """
     callbacks = callbacks or []
