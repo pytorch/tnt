@@ -23,7 +23,7 @@ class BaseCSVWriter(Callback, ABC):
 
     This callback provides an interface to simplify writing outputs during prediction
     into a CSV file. This callback must be extended with an implementation for
-    ``get_batch_output_rows`` to write the desired outputs as rows in the CSV file.
+    ``get_step_output_rows`` to write the desired outputs as rows in the CSV file.
 
     By default, outputs at each step across all processes will be written into the same CSV file.
     The outputs in each row is a a list of strings, and should match
@@ -53,7 +53,7 @@ class BaseCSVWriter(Callback, ABC):
         self._writer: csv._writer = csv.writer(self._file, delimiter=delimiter)
 
     @abstractmethod
-    def get_batch_output_rows(
+    def get_step_output_rows(
         self,
         state: State,
         unit: TPredictUnit,
@@ -69,15 +69,15 @@ class BaseCSVWriter(Callback, ABC):
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         assert state.predict_state is not None
         step_output = state.predict_state.step_output
-        batch_output_rows = self.get_batch_output_rows(state, unit, step_output)
+        output_rows = self.get_step_output_rows(state, unit, step_output)
 
         # Check whether the first item is a list or not
-        if len(batch_output_rows) > 0:
-            if isinstance(batch_output_rows[0], list):
-                for row in batch_output_rows:
+        if len(output_rows) > 0:
+            if isinstance(output_rows[0], list):
+                for row in output_rows:
                     self._writer.writerow(row)
             else:
-                self._writer.writerow(batch_output_rows)
+                self._writer.writerow(output_rows)
 
     def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
         self._file.flush()
