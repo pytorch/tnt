@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Tuple
+from typing import Iterable, Tuple
 from unittest.mock import MagicMock
 
 import torch
@@ -277,3 +277,33 @@ class FitTest(unittest.TestCase):
         )
         self.assertEqual(callback_mock.on_eval_epoch_end.call_count, max_epochs)
         self.assertEqual(callback_mock.on_eval_end.call_count, max_epochs)
+
+    def test_fit_dataloader_func(self) -> None:
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+        max_epochs = 3
+
+        class DataloaderFunc:
+            def __init__(self) -> None:
+                self.call_count = 0
+
+            def __call__(
+                self, state: State
+            ) -> Iterable[Tuple[torch.Tensor, torch.Tensor]]:
+                self.call_count += 1
+                return generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        my_unit = MagicMock(spec=DummyFitUnit)
+
+        train_dl_func = DataloaderFunc()
+        eval_dl_func = DataloaderFunc()
+
+        state = init_fit_state(
+            train_dataloader=train_dl_func,
+            eval_dataloader=eval_dl_func,
+            max_epochs=max_epochs,
+        )
+        fit(state, my_unit)
+        self.assertEqual(train_dl_func.call_count, max_epochs)
+        self.assertEqual(eval_dl_func.call_count, max_epochs)

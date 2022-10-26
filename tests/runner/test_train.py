@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Iterator, Tuple
+from typing import Iterable, Iterator, Tuple
 from unittest.mock import MagicMock
 
 import torch
@@ -257,6 +257,32 @@ class TrainTest(unittest.TestCase):
         self.assertEqual(
             my_unit.train_step.call_count, max_epochs * expected_steps_per_epoch
         )
+
+    def test_train_dataloader_func(self) -> None:
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+        max_epochs = 3
+
+        class DataloaderFunc:
+            def __init__(self) -> None:
+                self.call_count = 0
+
+            def __call__(
+                self, state: State
+            ) -> Iterable[Tuple[torch.Tensor, torch.Tensor]]:
+                self.call_count += 1
+                return generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        my_unit = MagicMock()
+
+        dl_func = DataloaderFunc()
+        state = init_train_state(
+            dataloader=dl_func,
+            max_epochs=max_epochs,
+        )
+        train(state, my_unit)
+        self.assertEqual(dl_func.call_count, max_epochs)
 
 
 class StopTrainUnit(TrainUnit[Tuple[torch.Tensor, torch.Tensor]]):
