@@ -21,7 +21,7 @@ _FILENAME = "test_csv_writer.csv"
 
 
 class CustomCSVWriter(BaseCSVWriter):
-    def get_batch_output_rows(
+    def get_step_output_rows(
         self,
         state: State,
         unit: PredictUnit[TPredictData],
@@ -31,7 +31,7 @@ class CustomCSVWriter(BaseCSVWriter):
 
 
 class CustomCSVWriterSingleRow(BaseCSVWriter):
-    def get_batch_output_rows(
+    def get_step_output_rows(
         self,
         state: State,
         unit: PredictUnit[TPredictData],
@@ -100,7 +100,7 @@ class BaseCSVWriterTest(unittest.TestCase):
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_predict_state(dataloader=dataloader)
 
-        # Throw exception because get_batch_output_rows is not defined.
+        # Throw exception because get_step_output_rows is not defined.
         with self.assertRaises(TypeError):
             csv_callback = BaseCSVWriter(
                 header_row=_HEADER_ROW, dir_path="", filename=_FILENAME
