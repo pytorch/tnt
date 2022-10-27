@@ -15,11 +15,11 @@ from typing import Any, Optional, Tuple, Union
 import torch
 from torch.cuda.amp import GradScaler
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import TrainUnit, TTrainData
 from torchtnt.utils import copy_data_to_device, get_device_from_env
+from torchtnt.utils.version import is_torch_version_geq_1_12
 from typing_extensions import Literal
 
 
@@ -301,6 +301,14 @@ def _get_grad_scaler_from_precision(
 ) -> Optional[GradScaler]:
     if precision == torch.float16:
         if isinstance(module, FSDP):
+            if not is_torch_version_geq_1_12():
+                raise RuntimeError(
+                    "Using float16 precision with torch.distributed.fsdp.FullyShardedDataParallel requires "
+                    "torch.distributed.fsdp.sharded_grad_scaler.ShardedGradScaler from PyTorch 1.12. "
+                    "Please install PyTorch 1.12 or higher to continue: https://pytorch.org/get-started/locally/"
+                )
+            from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+
             return ShardedGradScaler()
         else:
             return GradScaler()

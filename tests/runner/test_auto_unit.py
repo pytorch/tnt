@@ -328,6 +328,46 @@ class TestAutoUnit(unittest.TestCase):
             auto_train_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_not_called()
 
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_fsdp_fp16_pytorch_version(self) -> None:
+        """
+        Test that a RuntimeError is thrown when using FSDP, fp16 precision, and PyTorch < v1.12
+        """
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(
+            config, entrypoint=self._test_fsdp_fp16_pytorch_version
+        )()
+
+    @staticmethod
+    def _test_fsdp_fp16_pytorch_version() -> None:
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_module = FSDP(my_module)
+
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        tc = unittest.TestCase()
+        with patch(
+            "torchtnt.runner.auto_unit.is_torch_version_geq_1_12", return_value=False
+        ), tc.assertRaisesRegex(
+            RuntimeError,
+            "Using float16 precision with torch.distributed.fsdp.FullyShardedDataParallel requires torch.distributed.fsdp.sharded_grad_scaler.ShardedGradScaler from PyTorch 1.12.",
+        ):
+            _ = DummyAutoTrainUnit(
+                module=my_module,
+                optimizer=my_optimizer,
+                lr_scheduler=my_lr_scheduler,
+                device=device,
+                precision="fp16",
+            )
+
 
 class DummyAutoTrainUnit(AutoTrainUnit[Tuple[torch.tensor, torch.tensor]]):
     def compute_loss(
