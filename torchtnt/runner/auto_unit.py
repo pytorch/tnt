@@ -42,6 +42,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         precision: the precision to use in training, as either a string or a torch.dtype.
         gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
+        clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
+        clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
 
     Attributes:
         module: module to be used during training.
@@ -55,6 +57,8 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
         num_optimizer_steps_completed: number of optimizer steps (weight updates) completed
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
+        clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
+        clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
     """
 
     def __init__(
