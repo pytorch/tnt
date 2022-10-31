@@ -161,11 +161,13 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
 
     def train_step(self, state: State, data: TTrainData) -> Tuple[torch.Tensor, Any]:
         data = copy_data_to_device(data, self.device)
-        assert state.train_state
+
+        train_state = state.train_state
+        assert train_state
 
         should_update_weights = (
-            state.train_state.progress.num_steps_completed_in_epoch + 1
-        ) % self.gradient_accumulation_steps == 0
+            train_state.progress.num_steps_completed_in_epoch + 1
+        ) % self.gradient_accumulation_steps == 0 or train_state.is_last_batch
 
         maybe_autocast_precision = torch.autocast(
             device_type=self.device.type,
@@ -257,17 +259,6 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
         assert state.train_state
         train_state = state.train_state
-
-        # in the case that the number of training steps is not evenly divisible by gradient_accumulation_steps, we must update the weights one last
-        # time for the last step
-        should_update_weights_for_last_step = (
-            train_state.progress.num_steps_completed_in_epoch
-            % self.gradient_accumulation_steps
-            != 0
-        )
-
-        if should_update_weights_for_last_step:
-            self._run_optimizer_lr_scheduler_step(state)
 
         # optionally step lr scheduler
         if self.lr_scheduler and self.step_lr_interval == "epoch":
