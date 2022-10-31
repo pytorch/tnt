@@ -45,6 +45,8 @@ class TrainTest(unittest.TestCase):
 
         # step_output should be reset to None
         self.assertEqual(state.train_state.step_output, None)
+        # is_last_batch should be set to True
+        self.assertEqual(state.train_state.is_last_batch, True)
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
         self.assertEqual(state.entry_point, EntryPoint.TRAIN)
