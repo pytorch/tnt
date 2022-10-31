@@ -10,27 +10,31 @@
 
 import contextlib
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Tuple, TypeVar, Union
 
 import torch
 from torch.cuda.amp import GradScaler
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torchtnt.runner.state import State
-from torchtnt.runner.unit import TrainUnit, TTrainData
+from torchtnt.runner.state import EntryPoint, State
+from torchtnt.runner.unit import EvalUnit, PredictUnit, TrainUnit
 from torchtnt.utils import copy_data_to_device, get_device_from_env
 from torchtnt.utils.version import is_torch_version_geq_1_12
 from typing_extensions import Literal
 
 
-class AutoTrainUnit(TrainUnit[TTrainData], ABC):
-    """
-    The AutoTrainUnit is a convenience for users who are training with stochastic gradient descent and would like to have model optimization
-    handled for them. The AutoTrainUnit subclasses TrainUnit, and runs the train_step for the user, specifically: forward pass, loss computation,
-    backward pass, and optimizer step. To benefit from the AutoTrainUnit, the user must subclass it and implement the ``compute_loss`` method, and
-    optionally the ``update_metrics`` and ``log_metrics`` methods. Then use with the ``train`` or ``fit`` entry point as normal.
+TData = TypeVar("TData")
 
-    For more advanced customization, the basic TrainUnit interface may be a better fit.
+
+class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
+    """
+    The AutoUnit is a convenience for users who are training with stochastic gradient descent and would like to have model optimization
+    handled for them. The AutoUnit subclasses TrainUnit, EvalUnit, and PredictUnit, and runs the train_step/eval_step/predict_step for the user. For the train_step it runs:
+    forward pass, loss computation, backward pass, and optimizer step. For the eval_step it only runs forward and loss computation. For the predict_step it only runs forward.
+    To benefit from the AutoUnit, the user must subclass it and implement the `compute_loss` method, and optionally the ``update_metrics`` and ``log_metrics`` methods.
+    Then use with the ``train``, ``eval``, ``predict``, or ``fit`` entry point as normal.
+
+    For more advanced customization, the basic TrainUnit/EvalUnit/PredictUnit interface may be a better fit.
 
     Args:
         module: module to be used during training.
@@ -38,9 +42,9 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         lr_scheduler: lr_scheduler to be used during training.
         step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
         device: the device to be used.
-        log_frequency_steps: how often to log in terms of steps (parameter updates)
+        log_frequency_steps: how often to log in terms of steps (parameter updates) during training.
         precision: the precision to use in training, as either a string or a torch.dtype.
-        gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
+        gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps).
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
@@ -51,11 +55,11 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         lr_scheduler: lr_scheduler to be used during training.
         step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
         device: the device to be used.
-        log_frequency_steps: how often to log in terms of steps (parameter updates)
+        log_frequency_steps: how often to log in terms of steps (parameter updates) during training.
         precision: the precision to use in training, as a torch.dtype.
-        grad_scaler: a torch.cuda.amp.GradScaler, if using fp16 precision
-        gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps)
-        num_optimizer_steps_completed: number of optimizer steps (weight updates) completed
+        grad_scaler: a torch.cuda.amp.GradScaler, if using fp16 precision.
+        gradient_accumulation_steps: how often to accumulate gradients (every gradient_accumulation_steps).
+        num_optimizer_steps_completed: number of optimizer steps (weight updates) completed.
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
@@ -116,10 +120,10 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         self.clip_grad_norm = clip_grad_norm
         self.clip_grad_value = clip_grad_value
 
-        # TODO: Make AutoTrainUnit work when data type is Iterator
+        # TODO: Make AutoUnit work when data type is Iterator
 
     @abstractmethod
-    def compute_loss(self, state: State, data: TTrainData) -> Tuple[torch.Tensor, Any]:
+    def compute_loss(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         """
         The user should implement this method with their loss computation. This will be called every `train_step`.
 
@@ -133,7 +137,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         ...
 
     def update_metrics(
-        self, state: State, data: TTrainData, loss: torch.Tensor, outputs: Any
+        self, state: State, data: TData, loss: torch.Tensor, outputs: Any
     ) -> None:
         """
         The user should implement this method with code to update metrics. This will be called every `train_step`.
@@ -159,7 +163,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         """
         pass
 
-    def train_step(self, state: State, data: TTrainData) -> Tuple[torch.Tensor, Any]:
+    def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         data = copy_data_to_device(data, self.device)
 
         train_state = state.train_state
@@ -266,6 +270,50 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
 
         # users can override this, by default this is a no-op
         self.log_metrics(state, train_state.progress.num_steps_completed, "epoch")
+
+    def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
+        data = copy_data_to_device(data, self.device)
+
+        maybe_autocast_precision = torch.autocast(
+            device_type=self.device.type,
+            dtype=self.precision,
+            enabled=self.precision is not None,
+        )
+
+        with maybe_autocast_precision:
+            # users must override this
+            loss, outputs = self.compute_loss(state, data)
+
+        # users can override this, by default this is a no-op
+        self.update_metrics(state, data, loss, outputs)
+        return loss, outputs
+
+    def on_eval_epoch_end(self, state: State) -> None:
+        # note: if user wants to override on_eval_epoch_end themselves, they should remember to call up to this method via super().on_eval_epoch_end()
+        if state.entry_point == EntryPoint.FIT:
+            # if in fit, use the number of optimizer steps completed
+            # users can override this, by default this is a no-op
+            self.log_metrics(state, self.num_optimizer_steps_completed, "epoch")
+        else:
+            assert state.eval_state
+            # if in evaluate, use the number of eval steps completed
+            # users can override this, by default this is a no-op
+            self.log_metrics(
+                state, state.eval_state.progress.num_steps_completed, "epoch"
+            )
+
+    def predict_step(self, state: State, data: Any) -> Any:
+        data = copy_data_to_device(data, self.device)
+        maybe_autocast_precision = torch.autocast(
+            device_type=self.device.type,
+            dtype=self.precision,
+            enabled=self.precision is not None,
+        )
+
+        with maybe_autocast_precision:
+            outputs = self.module(data)
+
+        return outputs
 
     @property
     def num_optimizer_steps_completed(self) -> int:

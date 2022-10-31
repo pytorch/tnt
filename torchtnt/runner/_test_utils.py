@@ -5,11 +5,11 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Tuple
+from typing import Iterator, Tuple
 
 import torch
-from torch import nn
-from torch.utils.data import DataLoader, Dataset, TensorDataset
+from torch import nn, Tensor
+from torch.utils.data import DataLoader, Dataset, IterableDataset, TensorDataset
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import EvalUnit, PredictUnit, TrainUnit
 
@@ -109,5 +109,24 @@ def generate_random_dataloader(
 ) -> DataLoader:
     return DataLoader(
         generate_random_dataset(num_samples, input_dim),
+        batch_size=batch_size,
+    )
+
+
+class RandomIterableDataset(IterableDataset):
+    def __init__(self, size: int, count: int) -> None:
+        self.count: int = count
+        self.size: int = size
+
+    def __iter__(self) -> Iterator[Tensor]:
+        for _ in range(self.count):
+            yield torch.randn(self.size)
+
+
+def generate_random_predict_dataloader(
+    num_samples: int, input_dim: int, batch_size: int
+) -> DataLoader:
+    return DataLoader(
+        dataset=RandomIterableDataset(input_dim, num_samples),
         batch_size=batch_size,
     )

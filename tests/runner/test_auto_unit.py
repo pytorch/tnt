@@ -15,9 +15,14 @@ from parameterized import parameterized
 from torch.distributed import launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torchtnt.runner._test_utils import generate_random_dataloader
+from torchtnt.runner._test_utils import (
+    generate_random_dataloader,
+    generate_random_predict_dataloader,
+)
 
-from torchtnt.runner.auto_unit import AutoTrainUnit
+from torchtnt.runner.auto_unit import AutoUnit
+from torchtnt.runner.evaluate import evaluate, init_eval_state
+from torchtnt.runner.predict import init_predict_state, predict
 from torchtnt.runner.state import State
 from torchtnt.runner.train import init_train_state, train
 from torchtnt.utils import init_from_env
@@ -29,34 +34,32 @@ class TestAutoUnit(unittest.TestCase):
 
     def test_app_state_mixin(self) -> None:
         """
-        Test that app_state, tracked_optimizers, tracked_lr_schedulers are set as expected with AutoTrainUnit
+        Test that app_state, tracked_optimizers, tracked_lr_schedulers are set as expected with AutoUnit
         """
         my_module = torch.nn.Linear(2, 2)
         my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
         my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
             my_optimizer, gamma=0.9
         )
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
             precision="fp16",
         )
-        self.assertEqual(auto_train_unit.tracked_modules()["module"], my_module)
+        self.assertEqual(auto_unit.tracked_modules()["module"], my_module)
+        self.assertEqual(auto_unit.tracked_optimizers()["optimizer"], my_optimizer)
         self.assertEqual(
-            auto_train_unit.tracked_optimizers()["optimizer"], my_optimizer
-        )
-        self.assertEqual(
-            auto_train_unit.tracked_lr_schedulers()["lr_scheduler"], my_lr_scheduler
+            auto_unit.tracked_lr_schedulers()["lr_scheduler"], my_lr_scheduler
         )
         self.assertTrue(
             isinstance(
-                auto_train_unit.tracked_misc_statefuls()["grad_scaler"],
+                auto_unit.tracked_misc_statefuls()["grad_scaler"],
                 torch.cuda.amp.GradScaler,
             )
         )
         for key in ("module", "optimizer", "lr_scheduler", "grad_scaler"):
-            self.assertTrue(key in auto_train_unit.app_state())
+            self.assertTrue(key in auto_unit.app_state())
 
     @unittest.skipUnless(
         condition=(not cuda_available), reason="This test shouldn't run on a GPU host."
@@ -68,7 +71,7 @@ class TestAutoUnit(unittest.TestCase):
         my_module = torch.nn.Linear(2, 2)
         my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
         my_lr_scheduler = MagicMock()
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
@@ -83,7 +86,7 @@ class TestAutoUnit(unittest.TestCase):
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
-        train(state, auto_train_unit)
+        train(state, auto_unit)
         self.assertTrue(my_lr_scheduler.step.call_count, expected_steps_per_epoch)
 
     @unittest.skipUnless(
@@ -96,7 +99,7 @@ class TestAutoUnit(unittest.TestCase):
         my_module = torch.nn.Linear(2, 2)
         my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
         my_lr_scheduler = MagicMock()
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
@@ -111,7 +114,7 @@ class TestAutoUnit(unittest.TestCase):
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
-        train(state, auto_train_unit)
+        train(state, auto_unit)
         self.assertTrue(my_lr_scheduler.step.call_count, max_epochs)
 
     @unittest.skipUnless(
@@ -128,14 +131,14 @@ class TestAutoUnit(unittest.TestCase):
         my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
             my_optimizer, gamma=0.9
         )
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
             precision="fp16",
         )
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
-        auto_train_unit.train_step(state=MagicMock(), data=dummy_data)
+        auto_unit.train_step(state=MagicMock(), data=dummy_data)
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.float16, enabled=True
         )
@@ -154,14 +157,14 @@ class TestAutoUnit(unittest.TestCase):
         my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
             my_optimizer, gamma=0.9
         )
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
             precision="bf16",
         )
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
-        auto_train_unit.train_step(state=MagicMock(), data=dummy_data)
+        auto_unit.train_step(state=MagicMock(), data=dummy_data)
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.bfloat16, enabled=True
         )
@@ -177,7 +180,7 @@ class TestAutoUnit(unittest.TestCase):
             my_optimizer, gamma=0.9
         )
         with self.assertRaisesRegex(ValueError, "Precision f16 not supported"):
-            _ = DummyAutoTrainUnit(
+            _ = DummyAutoUnit(
                 module=my_module,
                 optimizer=my_optimizer,
                 lr_scheduler=my_lr_scheduler,
@@ -194,7 +197,7 @@ class TestAutoUnit(unittest.TestCase):
     )
     def test_num_optimizer_steps_completed(self, gradient_accumulation_steps) -> None:
         """
-        Test the num_optimizer_steps_completed property of AutoTrainUnit
+        Test the num_optimizer_steps_completed property of AutoUnit
         """
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2).to(device)
@@ -205,7 +208,7 @@ class TestAutoUnit(unittest.TestCase):
         batch_size = 2
         max_epochs = 1
 
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             gradient_accumulation_steps=gradient_accumulation_steps,
@@ -217,9 +220,9 @@ class TestAutoUnit(unittest.TestCase):
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
-        train(state, auto_train_unit)
+        train(state, auto_unit)
         self.assertTrue(
-            auto_train_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
+            auto_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
         )
 
     def test_log_frequency_steps_exception(self) -> None:
@@ -235,12 +238,70 @@ class TestAutoUnit(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "log_frequency_steps must be > 0. Got 0"
         ):
-            _ = DummyAutoTrainUnit(
+            _ = DummyAutoUnit(
                 module=my_module,
                 optimizer=my_optimizer,
                 lr_scheduler=my_lr_scheduler,
                 log_frequency_steps=0,
             )
+
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    @patch("torch.autocast")
+    def test_eval_mixed_precision_bf16(self, mock_autocast) -> None:
+        """
+        Test that the mixed precision autocast context is called during evaluate when precision = bf16
+        """
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            precision="bf16",
+        )
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+
+        eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_eval_state(dataloader=eval_dl)
+        evaluate(state, auto_unit)
+        mock_autocast.assert_called_with(
+            device_type="cuda", dtype=torch.bfloat16, enabled=True
+        )
+
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    @patch("torch.autocast")
+    def test_predict_mixed_precision_bf16(self, mock_autocast) -> None:
+        """
+        Test that the mixed precision autocast context is called during predict when precision = fp16
+        """
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            precision="fp16",
+        )
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+
+        predict_dl = generate_random_predict_dataloader(
+            dataset_len, input_dim, batch_size
+        )
+        state = init_predict_state(dataloader=predict_dl)
+        predict(state, auto_unit)
+        mock_autocast.assert_called_with(
+            device_type="cuda", dtype=torch.float16, enabled=True
+        )
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
@@ -270,7 +331,7 @@ class TestAutoUnit(unittest.TestCase):
         my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
             my_optimizer, gamma=0.9
         )
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
@@ -283,13 +344,13 @@ class TestAutoUnit(unittest.TestCase):
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(my_module, "no_sync") as no_sync_mock:
-            auto_train_unit.train_step(state=state, data=dummy_data)
+            auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_called()
 
         state.train_state.progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(my_module, "no_sync") as no_sync_mock:
-            auto_train_unit.train_step(state=state, data=dummy_data)
+            auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_not_called()
 
     @staticmethod
@@ -306,7 +367,7 @@ class TestAutoUnit(unittest.TestCase):
         my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
             my_optimizer, gamma=0.9
         )
-        auto_train_unit = DummyAutoTrainUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             optimizer=my_optimizer,
             lr_scheduler=my_lr_scheduler,
@@ -319,13 +380,13 @@ class TestAutoUnit(unittest.TestCase):
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(my_module, "no_sync") as no_sync_mock:
-            auto_train_unit.train_step(state=state, data=dummy_data)
+            auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_called()
 
         state.train_state.progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(my_module, "no_sync") as no_sync_mock:
-            auto_train_unit.train_step(state=state, data=dummy_data)
+            auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_not_called()
 
     @unittest.skipUnless(
@@ -360,7 +421,7 @@ class TestAutoUnit(unittest.TestCase):
             RuntimeError,
             "Using float16 precision with torch.distributed.fsdp.FullyShardedDataParallel requires torch.distributed.fsdp.sharded_grad_scaler.ShardedGradScaler from PyTorch 1.12.",
         ):
-            _ = DummyAutoTrainUnit(
+            _ = DummyAutoUnit(
                 module=my_module,
                 optimizer=my_optimizer,
                 lr_scheduler=my_lr_scheduler,
@@ -369,7 +430,7 @@ class TestAutoUnit(unittest.TestCase):
             )
 
 
-class DummyAutoTrainUnit(AutoTrainUnit[Tuple[torch.tensor, torch.tensor]]):
+class DummyAutoUnit(AutoUnit[Tuple[torch.tensor, torch.tensor]]):
     def compute_loss(
         self, state: State, data: Tuple[torch.tensor, torch.tensor]
     ) -> Tuple[torch.Tensor, Any]:
