@@ -9,12 +9,9 @@ import unittest
 
 import torch
 import torch.distributed.launcher as pet
-from torchtnt.utils import (
-    get_device_from_env,
-    get_pet_launch_config,
-    get_process_group_backend_from_device,
-)
+from torchtnt.utils import get_device_from_env, get_process_group_backend_from_device
 from torchtnt.utils.env import init_from_env
+from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class EnvTest(unittest.TestCase):
