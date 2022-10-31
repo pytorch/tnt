@@ -24,6 +24,7 @@ from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.runner.utils import (
     _is_done,
     _is_epoch_done,
+    _is_last_batch_in_epoch,
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _run_callback_fn,
@@ -251,6 +252,39 @@ class UtilsTest(unittest.TestCase):
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=200))
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=None))
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=None))
+
+    def test_is_last_batch_in_epoch(self) -> None:
+        p = Progress(
+            num_epochs_completed=2,
+            num_steps_completed=99,
+            num_steps_completed_in_epoch=9,
+        )
+
+        self.assertTrue(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=10, max_steps=200)
+        )
+        self.assertTrue(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=10, max_steps=None)
+        )
+        self.assertTrue(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=100, max_steps=100)
+        )
+        self.assertTrue(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=None, max_steps=100)
+        )
+
+        self.assertFalse(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=11, max_steps=200)
+        )
+        self.assertFalse(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=None, max_steps=200)
+        )
+        self.assertFalse(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=11, max_steps=None)
+        )
+        self.assertFalse(
+            _is_last_batch_in_epoch(p, max_steps_per_epoch=None, max_steps=None)
+        )
 
 
 class DummyCallback(Callback):

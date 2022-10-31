@@ -87,7 +87,9 @@ class PhaseState:
         self._max_steps_per_epoch = max_steps_per_epoch
         self._evaluate_every_n_steps = evaluate_every_n_steps
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
+
         self._step_output: Any = None
+        self._is_last_batch: bool = False  # only used for train
 
     @property
     def dataloader(self) -> Iterable[Any]:
@@ -120,6 +122,10 @@ class PhaseState:
     @property
     def step_output(self) -> Any:
         return self._step_output
+
+    @property
+    def is_last_batch(self) -> bool:
+        return self._is_last_batch
 
 
 class State:
