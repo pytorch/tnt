@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callbacks &mdash; TorchTNT 0.0.2 documentation</title>
+  <title>Fit &mdash; TorchTNT 0.0.3 documentation</title>
   
 
   
@@ -32,8 +32,8 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Data" href="torchtnt.data.html" />
-    <link rel="prev" title="Fit" href="fit.html" />
+    <link rel="next" title="Callbacks" href="callbacks.html" />
+    <link rel="prev" title="Predict" href="predict.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -213,6 +213,10 @@
             
               
               
+                <div class="version">
+                  0.0.3
+                </div>
+              
             
 
             
@@ -248,8 +252,8 @@
 <li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Callbacks</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callbacks</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
@@ -297,13 +301,13 @@
       </li>
 
         
-      <li>Callbacks</li>
+      <li>Fit</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/callbacks.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="_sources/fit.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -329,41 +333,68 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="callbacks">
-<h1>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this heading">¶</a></h1>
-<p>In TorchTNT a <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.Callback" title="torchtnt.runner.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> is an optional extension that can be used to supplement your loop with additional functionality. Good candidates
-for such logic are ones that can be re-used across units. A Callback is simply a class with various hooks that are called during loop execution.</p>
-<p>To benefit from a Callback, you must extend the Callback interface and implement the necessary hooks
-to add your supplemental functionality. For a list of hooks which can be implemented see the <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.Callback" title="torchtnt.runner.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> API reference.</p>
-<p>Below is an example of a basic callback which can be included by the user to print the state of the loop at various points.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.runner.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
+  <section id="fit">
+<h1>Fit<a class="headerlink" href="#fit" title="Permalink to this heading">¶</a></h1>
+<p>Here we lay out the steps needed to configure and run your fit loop. The fit loop interleaves training with evaluation,
+to give you immediate feedback about how your model is performing while training.</p>
+<section id="trainunit-and-evalunit">
+<h2>TrainUnit and EvalUnit<a class="headerlink" href="#trainunit-and-evalunit" title="Permalink to this heading">¶</a></h2>
+<p>In TorchTNT the Unit interface allows you to customize your fit loop when run by <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.fit" title="torchtnt.runner.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a>.
+For fit, you must create a class which subclasses <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.TrainUnit" title="torchtnt.runner.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> and <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.EvalUnit" title="torchtnt.runner.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>.
+You must implement the <code class="docutils literal notranslate"><span class="pre">train_step</span></code> and <code class="docutils literal notranslate"><span class="pre">eval_step</span></code> methods on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
+Below is a simple example of a user’s fit Unit that implements a basic <code class="docutils literal notranslate"><span class="pre">train_step</span></code>, <code class="docutils literal notranslate"><span class="pre">eval_step</span></code>, and the <code class="docutils literal notranslate"><span class="pre">on_train_epoch_end</span></code> hook.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.runner</span> <span class="kn">import</span> <span class="n">TrainUnit</span><span class="p">,</span> <span class="n">EvalUnit</span>
 
-<span class="k">class</span> <span class="nc">PrintingCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
-   <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TrainUnit</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting training&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MyFitUnit</span><span class="p">(</span><span class="n">TrainUnit</span><span class="p">[</span><span class="n">Batch</span><span class="p">]),</span> <span class="n">EvalUnit</span><span class="p">[</span><span class="n">Batch</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span>
+        <span class="n">lr_scheduler</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">_LRScheduler</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span>
 
-   <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TrainUnit</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending training&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">binary_cross_entropy_with_logits</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
 
-   <span class="k">def</span> <span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">EvalUnit</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting evaluation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
 
-   <span class="k">def</span> <span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">EvalUnit</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending evaluation&quot;</span><span class="p">)</span>
+   <span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">binary_cross_entropy_with_logits</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
 
-   <span class="k">def</span> <span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">PredictUnit</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting prediction&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+       <span class="c1"># step the learning rate scheduler</span>
+       <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
-   <span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">PredictUnit</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending prediction&quot;</span><span class="p">)</span>
+<span class="n">fit_unit</span> <span class="o">=</span> <span class="n">MyFitUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=...</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=...</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To include this in your loop, instantiate the class and pass it in the <cite>callbacks</cite> parameter to the <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.train" title="torchtnt.runner.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a>, <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.evaluate" title="torchtnt.runner.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a>,
-<a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.predict" title="torchtnt.runner.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>, or <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.fit" title="torchtnt.runner.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> entry point.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">printing_callback</span> <span class="o">=</span> <span class="n">PrintingCallback</span><span class="p">()</span>
-<span class="n">train</span><span class="p">(</span><span class="n">train_unit</span><span class="p">,</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">printing_callback</span><span class="p">])</span>
+</section>
+<section id="fit-entry-point">
+<h2>Fit Entry Point<a class="headerlink" href="#fit-entry-point" title="Permalink to this heading">¶</a></h2>
+<p>To run your fit loop, call the fit loop entry point: <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.fit" title="torchtnt.runner.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a>.</p>
+<p>The <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.fit" title="torchtnt.runner.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> entry point takes an object subclassing both <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.TrainUnit" title="torchtnt.runner.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> and <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.EvalUnit" title="torchtnt.runner.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>, a <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.State" title="torchtnt.runner.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object, and an optional list of callbacks.</p>
+<p>The <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.State" title="torchtnt.runner.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object can be initialized with <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.init_fit_state" title="torchtnt.runner.init_fit_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_fit_state()</span></code></a>, which takes in a dataloader (can be <em>any</em> iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.</p>
+<p>Below is an example of calling the <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.fit" title="torchtnt.runner.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> entry point with the TrainUnit/EvalUnit created above.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.runner</span> <span class="kn">import</span> <span class="n">fit</span><span class="p">,</span> <span class="n">init_fit_state</span>
+
+<span class="n">fit_unit</span> <span class="o">=</span> <span class="n">MyFitUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=...</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=...</span><span class="p">)</span>
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">eval_dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">state</span> <span class="o">=</span> <span class="n">init_fit_state</span><span class="p">(</span><span class="n">train_dataloader</span><span class="o">=</span><span class="n">train_dataloader</span><span class="p">,</span> <span class="n">eval_dataloader</span><span class="o">=</span><span class="n">eval_dataloader</span><span class="p">,</span> <span class="n">max_epochs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">fit</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">fit_unit</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
 </section>
 
 
@@ -374,10 +405,10 @@ to add your supplemental functionality. For a list of hooks which can be impleme
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.data.html" class="btn btn-neutral float-right" title="Data" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="callbacks.html" class="btn btn-neutral float-right" title="Callbacks" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="fit.html" class="btn btn-neutral" title="Fit" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="predict.html" class="btn btn-neutral" title="Predict" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -409,7 +440,11 @@ to add your supplemental functionality. For a list of hooks which can be impleme
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Callbacks</a></li>
+<li><a class="reference internal" href="#">Fit</a><ul>
+<li><a class="reference internal" href="#trainunit-and-evalunit">TrainUnit and EvalUnit</a></li>
+<li><a class="reference internal" href="#fit-entry-point">Fit Entry Point</a></li>
+</ul>
+</li>
 </ul>
 
             </div>
@@ -430,7 +465,6 @@ to add your supplemental functionality. For a list of hooks which can be impleme
          <script src="_static/underscore.js"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/sphinx_highlight.js"></script>
      
 
   

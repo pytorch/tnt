@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; TorchTNT 0.0.2 documentation</title>
+  <title>Project Structure &mdash; TorchTNT 0.0.3 documentation</title>
   
 
   
@@ -32,8 +32,8 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Project Structure" href="project_structure.html" />
-    <link rel="prev" title="Welcome to the TorchTNT documentation!" href="index.html" />
+    <link rel="next" title="Train" href="train.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -213,6 +213,10 @@
             
               
               
+                <div class="version">
+                  0.0.3
+                </div>
+              
             
 
             
@@ -240,8 +244,8 @@
             
               <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Project Structure</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Runner</span></p>
 <ul>
@@ -297,13 +301,13 @@
       </li>
 
         
-      <li>Installation</li>
+      <li>Project Structure</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/installation.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="_sources/project_structure.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -329,21 +333,15 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
-<p>TNT can be installed with pip. To do so, run:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install torchtnt
-</pre></div>
-</div>
-<p>If you run into issues, make sure that Pytorch is installed first.</p>
-<p>You can also install the latest version from master. Just run:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install git+https://github.com/pytorch/tnt.git@master
-</pre></div>
-</div>
-<p>To update to the latest version from master:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install --upgrade git+https://github.com/pytorch/tnt.git@master
-</pre></div>
-</div>
+  <section id="project-structure">
+<h1>Project Structure<a class="headerlink" href="#project-structure" title="Permalink to this heading">¶</a></h1>
+<p>The top level modules in TorchTNT are:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="torchtnt.data.html#module-torchtnt.data" title="torchtnt.data"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.data</span></code></a>: contains data related abstractions and utilities for DataLoader v1. For more expansive support, please see TorchData: <a class="reference external" href="https://github.com/pytorch/data">https://github.com/pytorch/data</a></p></li>
+<li><p><a class="reference internal" href="torchtnt.loggers.html#module-torchtnt.loggers" title="torchtnt.loggers"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.loggers</span></code></a>: contains wrappers around different publishers to make logging metrics uniform and simple.</p></li>
+<li><p><a class="reference internal" href="torchtnt.runner.html#module-torchtnt.runner" title="torchtnt.runner"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.runner</span></code></a>: contains a lightweight training framework to simplify maintaining training, evaluation, and prediction loops.</p></li>
+<li><p><a class="reference internal" href="torchtnt.utils.html#module-torchtnt.utils" title="torchtnt.utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.utils</span></code></a>: contains a grab-bag of various independent, training-related utilities.</p></li>
+</ol>
 </section>
 
 
@@ -354,10 +352,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="project_structure.html" class="btn btn-neutral float-right" title="Project Structure" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="train.html" class="btn btn-neutral float-right" title="Train" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Welcome to the TorchTNT documentation!" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -389,7 +387,7 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Installation</a></li>
+<li><a class="reference internal" href="#">Project Structure</a></li>
 </ul>
 
             </div>
@@ -410,7 +408,6 @@
          <script src="_static/underscore.js"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/sphinx_highlight.js"></script>
      
 
   

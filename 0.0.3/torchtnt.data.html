@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Data &mdash; TorchTNT 0.0.2 documentation</title>
+  <title>Data &mdash; TorchTNT 0.0.3 documentation</title>
   
 
   
@@ -213,6 +213,10 @@
             
               
               
+                <div class="version">
+                  0.0.3
+                </div>
+              
             
 
             
@@ -377,7 +381,7 @@ dataloader_2_name: batch_obtained_from_dataloader_2,</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.data.CudaDataPrefetcher">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.data.</span></span><span class="sig-name descname"><span class="pre">CudaDataPrefetcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_iterable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Batch</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v1.12)"><span class="pre">device</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_prefetch_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.data.CudaDataPrefetcher" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.data.</span></span><span class="sig-name descname"><span class="pre">CudaDataPrefetcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_iterable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Batch</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v1.13)"><span class="pre">device</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_prefetch_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.data.CudaDataPrefetcher" title="Permalink to this definition">¶</a></dt>
 <dd><p>An iterator that prefetches batches and moves them to the device.</p>
 <p>This class can be used to interleave data loading, host-to-device copies, and computation more effectively.</p>
 <dl class="field-list simple">
@@ -666,28 +670,7 @@ has been exhausted</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Data</a><ul>
-<li><a class="reference internal" href="#torchtnt.data.AllDatasetBatchesIterator"><code class="docutils literal notranslate"><span class="pre">AllDatasetBatchesIterator</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.CudaDataPrefetcher"><code class="docutils literal notranslate"><span class="pre">CudaDataPrefetcher</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategy"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategy</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategyRegistry"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategyRegistry</span></code></a><ul>
-<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategyRegistry.REGISTRY"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategyRegistry.REGISTRY</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.DataIterationStrategyRegistry.get"><code class="docutils literal notranslate"><span class="pre">DataIterationStrategyRegistry.get()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#torchtnt.data.InOrderIterator"><code class="docutils literal notranslate"><span class="pre">InOrderIterator</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader</span></code></a><ul>
-<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.individual_dataloaders"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.individual_dataloaders</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.iteration_strategy"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.iteration_strategy</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.iterator_cls"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.iterator_cls</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.MultiDataLoader.ignore_empty_data"><code class="docutils literal notranslate"><span class="pre">MultiDataLoader.ignore_empty_data</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#torchtnt.data.MultiIterator"><code class="docutils literal notranslate"><span class="pre">MultiIterator</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.RandomizedBatchSamplerIterator"><code class="docutils literal notranslate"><span class="pre">RandomizedBatchSamplerIterator</span></code></a></li>
-<li><a class="reference internal" href="#torchtnt.data.RoundRobinIterator"><code class="docutils literal notranslate"><span class="pre">RoundRobinIterator</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Data</a></li>
 </ul>
 
             </div>
@@ -708,7 +691,6 @@ has been exhausted</p>
          <script src="_static/underscore.js"></script>
          <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/sphinx_highlight.js"></script>
      
 
   

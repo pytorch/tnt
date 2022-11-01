@@ -47,10 +47,11 @@ Train Entry Point
 
 To run your training loop, call the training loop entry point: :py:func:`~torchtnt.runner.train`.
 
-The :py:func:`~torchtnt.runner.train` entry point takes as arguments one TrainUnit, one iterable containing your data (can be *any* iterable, including PyTorch DataLoader, numpy, etc.), an optional list of callbacks
-(described below), and several optional parameters to control run duration of the loop.
+The :py:func:`~torchtnt.runner.train` entry point takes a :class:`~torchtnt.runner.TrainUnit` object, a :class:`~torchtnt.runner.State` object, and an optional list of callbacks.
 
-Below is an example of calling the :py:func:`~torchtnt.runner.train` entry point with the ``TrainUnit`` created above.
+The :class:`~torchtnt.runner.State` object can be initialized with :func:`~torchtnt.runner.init_train_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
+
+Below is an example of calling the :py:func:`~torchtnt.runner.train` entry point with ``MyTrainUnit`` created above.
 
 .. code-block:: python
 
