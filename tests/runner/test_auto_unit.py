@@ -58,14 +58,12 @@ class TestAutoUnit(unittest.TestCase):
         for key in ("module", "optimizer", "lr_scheduler", "grad_scaler"):
             self.assertTrue(key in auto_train_unit.app_state())
 
-    @unittest.skipUnless(
-        condition=(not cuda_available), reason="This test shouldn't run on a GPU host."
-    )
     def test_lr_scheduler_step(self) -> None:
         """
         Test that the lr scheduler is stepped every optimizer step when step_lr_interval="step"
         """
-        my_module = torch.nn.Linear(2, 2)
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2, device=device)
         my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
         my_lr_scheduler = MagicMock()
         auto_train_unit = DummyAutoTrainUnit(
@@ -84,16 +82,14 @@ class TestAutoUnit(unittest.TestCase):
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
         train(state, auto_train_unit)
-        self.assertTrue(my_lr_scheduler.step.call_count, expected_steps_per_epoch)
+        self.assertEqual(my_lr_scheduler.step.call_count, expected_steps_per_epoch)
 
-    @unittest.skipUnless(
-        condition=(not cuda_available), reason="This test shouldn't run on a GPU host."
-    )
     def test_lr_scheduler_epoch(self) -> None:
         """
         Test that the lr scheduler is stepped every epoch when step_lr_interval="epoch"
         """
-        my_module = torch.nn.Linear(2, 2)
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2, device=device)
         my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
         my_lr_scheduler = MagicMock()
         auto_train_unit = DummyAutoTrainUnit(
@@ -112,7 +108,7 @@ class TestAutoUnit(unittest.TestCase):
 
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
         train(state, auto_train_unit)
-        self.assertTrue(my_lr_scheduler.step.call_count, max_epochs)
+        self.assertEqual(my_lr_scheduler.step.call_count, max_epochs)
 
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
