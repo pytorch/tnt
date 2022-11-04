@@ -21,6 +21,7 @@ from torchtnt.runner.auto_unit import AutoTrainUnit
 from torchtnt.runner.state import State
 from torchtnt.runner.train import init_train_state, train
 from torchtnt.utils import init_from_env
+from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.test_utils import get_pet_launch_config
 
 
@@ -364,11 +365,35 @@ class TestAutoUnit(unittest.TestCase):
                 precision="fp16",
             )
 
+    def test_move_data_to_device(self) -> None:
+        """
+        Test that move_data_to_device is called
+        """
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2).to(device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
 
-class DummyAutoTrainUnit(AutoTrainUnit[Tuple[torch.tensor, torch.tensor]]):
-    def compute_loss(
-        self, state: State, data: Tuple[torch.tensor, torch.tensor]
-    ) -> Tuple[torch.Tensor, Any]:
+        auto_train_unit = DummyAutoTrainUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+        )
+
+        dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
+
+        with patch.object(
+            DummyAutoTrainUnit, "move_data_to_device"
+        ) as move_data_to_device_mock:
+            dummy_data = copy_data_to_device(dummy_data, device)
+            move_data_to_device_mock.return_value = dummy_data
+            auto_train_unit.train_step(state=MagicMock(), data=dummy_data)
+            move_data_to_device_mock.assert_called_once()
+
+
+Batch = Tuple[torch.tensor, torch.tensor]
+
+
+class DummyAutoTrainUnit(AutoTrainUnit[Batch]):
+    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         outputs = self.module(inputs)
         loss = torch.nn.functional.cross_entropy(outputs, targets)

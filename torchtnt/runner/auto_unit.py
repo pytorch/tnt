@@ -159,8 +159,22 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         """
         pass
 
+    def move_data_to_device(self, state: State, data: TTrainData) -> TTrainData:
+        """
+        The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``.
+        By default this uses the utility function :py:func:`~torchtnt.utils.copy_data_to_device`.
+
+        Args:
+            state: a State object which is passed from the ``train_step``
+            data: a batch of data which is passed from the ``train_step``
+
+        Returns:
+            A batch of data which is on the device
+        """
+        return copy_data_to_device(data, self.device)
+
     def train_step(self, state: State, data: TTrainData) -> Tuple[torch.Tensor, Any]:
-        data = copy_data_to_device(data, self.device)
+        data = self.move_data_to_device(state, data)
         assert state.train_state
 
         should_update_weights = (
