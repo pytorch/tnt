@@ -191,7 +191,7 @@ class AutoTrainUnit(TrainUnit[TTrainData], ABC):
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
         # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
         maybe_no_sync = (
-            self.module.no_sync()  # pyre-ignore
+            self.module.no_sync()
             if not should_update_weights and isinstance(self.module, (DDP, FSDP))
             else contextlib.nullcontext()
         )
