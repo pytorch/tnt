@@ -104,6 +104,10 @@ def _evaluate_impl(
         eval_unit.on_eval_start(state)
     _run_callback_fn(callbacks, "on_eval_start", state, eval_unit)
 
+    dataloader_func = eval_state.dataloader_func
+    if dataloader_func:
+        eval_state._dataloader = dataloader_func(state)
+
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if eval_state.progress.num_steps_completed_in_epoch == 0:

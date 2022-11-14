@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Iterable, List, Optional
+from typing import Callable, Iterable, List, Optional, Union
 
 from torchtnt.runner.callback import Callback
 
@@ -19,8 +19,10 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def init_fit_state(
-    train_dataloader: Iterable[TTrainData],
-    eval_dataloader: Iterable[TEvalData],
+    train_dataloader: Union[
+        Iterable[TTrainData], Callable[[State], Iterable[TTrainData]]
+    ],
+    eval_dataloader: Union[Iterable[TEvalData], Callable[[State], Iterable[TEvalData]]],
     max_epochs: Optional[int] = None,
     max_steps: Optional[int] = None,
     max_train_steps_per_epoch: Optional[int] = None,
@@ -33,30 +35,49 @@ def init_fit_state(
 
     Args:
         train_dataloader: dataloader to be used during training.
+            This can either be any iterable, or a callable which accepts State as an argument and returns an iterable.
         eval_dataloader: dataloader to be used during evaluation.
+            This can either be any iterable, or a callable which accepts State as an argument and returns an iterable.
         max_epochs: the max number of epochs to run for training. ``None`` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run for training. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_train_steps_per_epoch: the max number of steps to run per epoch for training. None means train until the dataloader is exhausted.
         evaluate_every_n_steps: how often to run the evaluation loop in terms of training steps.
         evaluate_every_n_epochs: how often to run the evaluation loop in terms of training epochs.
+        train_dataloader_func: optional function to reinitialize the train dataloader at the start of the train epoch.
+        eval_dataloader_func: optional function to reinitialize the eval dataloader at the start of the eval epoch.
 
     Returns:
         An initialized state object containing metadata.
     """
+    if callable(train_dataloader):
+        train_dl = None
+        train_dl_func = train_dataloader
+    else:
+        train_dl = train_dataloader
+        train_dl_func = None
+
+    if callable(eval_dataloader):
+        eval_dl = None
+        eval_dl_func = eval_dataloader
+    else:
+        eval_dl = eval_dataloader
+        eval_dl_func = None
 
     return State(
         entry_point=EntryPoint.FIT,
         train_state=PhaseState(
-            dataloader=train_dataloader,
+            dataloader=train_dl,
             max_epochs=max_epochs,
             max_steps=max_steps,
             max_steps_per_epoch=max_train_steps_per_epoch,
+            dataloader_func=train_dl_func,
         ),
         eval_state=PhaseState(
-            dataloader=eval_dataloader,
+            dataloader=eval_dl,
             max_steps_per_epoch=max_eval_steps_per_epoch,
             evaluate_every_n_steps=evaluate_every_n_steps,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
+            dataloader_func=eval_dl_func,
         ),
     )
 

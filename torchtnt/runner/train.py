@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
-from typing import Iterable, List, Optional
+from typing import Callable, Iterable, List, Optional, Union
 
 import torch
 from torchtnt.runner.callback import Callback
@@ -29,7 +29,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 def init_train_state(
     *,
-    dataloader: Iterable[TTrainData],
+    dataloader: Union[Iterable[TTrainData], Callable[[State], Iterable[TTrainData]]],
     max_epochs: Optional[int] = None,
     max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
@@ -39,6 +39,7 @@ def init_train_state(
 
     Args:
         dataloader: dataloader to be used during training.
+            This can either be any iterable, or a callable which accepts State as an argument and returns an iterable.
         max_epochs: the max number of epochs to run. ``None`` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
@@ -46,14 +47,20 @@ def init_train_state(
     Returns:
         An initialized state object containing metadata.
     """
+    dl, dataloader_func = None, None
+    if callable(dataloader):
+        dataloader_func = dataloader
+    else:
+        dl = dataloader
 
     return State(
         entry_point=EntryPoint.TRAIN,
         train_state=PhaseState(
-            dataloader=dataloader,
+            dataloader=dl,
             max_epochs=max_epochs,
             max_steps=max_steps,
             max_steps_per_epoch=max_steps_per_epoch,
+            dataloader_func=dataloader_func,
         ),
     )
 
@@ -195,6 +202,10 @@ def _train_epoch_impl(
             evaluate_every_n_steps = state.eval_state.evaluate_every_n_steps
         if state.eval_state.evaluate_every_n_epochs:
             evaluate_every_n_epochs = state.eval_state.evaluate_every_n_epochs
+
+    dataloader_func = train_state.dataloader_func
+    if dataloader_func:
+        train_state._dataloader = dataloader_func(state)
 
     # Check the progress to conditionally run this
     # to avoid running this multiple times

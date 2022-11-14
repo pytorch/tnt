@@ -11,7 +11,7 @@
 
 import logging
 from enum import auto, Enum
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 from torchtnt.runner.progress import Progress
 from torchtnt.utils.timer import Timer
@@ -73,6 +73,7 @@ class PhaseState:
         max_steps_per_epoch: Optional[int] = None,
         evaluate_every_n_steps: Optional[int] = None,  # used only for evaluate
         evaluate_every_n_epochs: Optional[int] = None,  # used only for evaluate
+        dataloader_func: Optional[Callable[["State"], Iterable[Any]]] = None,
     ) -> None:
         _check_loop_condition("max_epochs", max_epochs)
         _check_loop_condition("max_steps", max_steps)
@@ -88,10 +89,15 @@ class PhaseState:
         self._evaluate_every_n_steps = evaluate_every_n_steps
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
         self._step_output: Any = None
+        self._dataloader_func = dataloader_func
 
     @property
     def dataloader(self) -> Iterable[Any]:
         return self._dataloader
+
+    @property
+    def dataloader_func(self) -> Optional[Callable[["State"], Iterable[Any]]]:
+        return self._dataloader_func
 
     @property
     def progress(self) -> Progress:
