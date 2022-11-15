@@ -12,9 +12,18 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, TypeVar
 
 import torch
+from packaging.version import Version
 
 from torchtnt.runner.state import State
+from torchtnt.utils.version import get_torch_version
 from typing_extensions import Protocol, runtime_checkable
+
+# This PR exposes LRScheduler as a public class
+# https://github.com/pytorch/pytorch/pull/88503
+if get_torch_version() > Version("1.13.0"):
+    TLRScheduler = torch.optim.lr_scheduler.LRScheduler
+else:
+    TLRScheduler = torch.optim.lr_scheduler._LRScheduler
 
 """
 This file defines mixins and interfaces for users to customize hooks in training, evaluation, and prediction loops.
@@ -46,7 +55,7 @@ class AppStateMixin:
     def __init__(self) -> None:
         self._modules: Dict[str, torch.nn.Module] = {}
         self._optimizers: Dict[str, torch.optim.Optimizer] = {}
-        self._lr_schedulers: Dict[str, torch.optim.lr_scheduler._LRScheduler] = {}
+        self._lr_schedulers: Dict[str, TLRScheduler] = {}
         # catch-all for miscellaneous statefuls
         self._misc_statefuls: Dict[str, Any] = {}
         # TODO: include other known statefuls
@@ -73,7 +82,7 @@ class AppStateMixin:
 
     def tracked_lr_schedulers(
         self,
-    ) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
+    ) -> Dict[str, TLRScheduler]:
         return self._lr_schedulers
 
     def tracked_misc_statefuls(self) -> Dict[str, Any]:
@@ -124,7 +133,7 @@ class AppStateMixin:
             self._update_attr(name, value, self.__dict__.get("_modules"))
         elif isinstance(value, torch.optim.Optimizer):
             self._update_attr(name, value, self.__dict__.get("_optimizers"))
-        elif isinstance(value, torch.optim.lr_scheduler._LRScheduler):
+        elif isinstance(value, TLRScheduler):
             self._update_attr(
                 name,
                 value,
