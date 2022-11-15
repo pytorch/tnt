@@ -232,6 +232,10 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         if should_update_weights:
             self._run_optimizer_lr_scheduler_step(state)
 
+            # log metrics only after an optimizer step
+            if self.num_optimizer_steps_completed % self.log_frequency_steps == 0:
+                self.log_metrics(state, self.num_optimizer_steps_completed - 1, "step")
+
         return loss, outputs
 
     def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
@@ -277,11 +281,6 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         lr_scheduler = self.lr_scheduler
         if lr_scheduler and self.step_lr_interval == "step":
             lr_scheduler.step()
-
-        # call `log_metrics`
-        if self.num_optimizer_steps_completed % self.log_frequency_steps == 0:
-            # users can override this, by default this is a no-op
-            self.log_metrics(state, self.num_optimizer_steps_completed - 1, "step")
 
     def on_train_epoch_end(self, state: State) -> None:
         # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
