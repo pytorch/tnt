@@ -18,7 +18,7 @@ import torch.nn as nn
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.loggers import TensorBoardLogger
-from torchtnt.runner import AutoTrainUnit, init_train_state, State, train
+from torchtnt.runner import AutoUnit, fit, init_fit_state, State
 from torchtnt.utils import get_timer_summary, init_from_env, seed
 from typing_extensions import Literal
 
@@ -36,7 +36,7 @@ def _generate_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
     return TensorDataset(data, labels)
 
 
-class MyTrainUnit(AutoTrainUnit[Batch]):
+class MyUnit(AutoUnit[Batch]):
     def __init__(
         self,
         *,
@@ -129,7 +129,7 @@ def main(argv: List[str]) -> None:
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     train_accuracy = BinaryAccuracy(device=device)
 
-    my_unit = MyTrainUnit(
+    my_unit = MyUnit(
         module=module,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
@@ -143,19 +143,26 @@ def main(argv: List[str]) -> None:
         clip_grad_norm=1.0,
     )
 
-    num_samples = 10240
-    dataset = _generate_dataset(num_samples, args.input_dim)
+    num_samples = 1024
     train_dataloader = torch.utils.data.DataLoader(
-        dataset,
+        dataset=_generate_dataset(num_samples=num_samples, input_dim=args.input_dim),
         batch_size=args.batch_size,
         pin_memory=(device.type == "cuda"),
     )
-    state = init_train_state(
-        dataloader=train_dataloader,
+
+    eval_dataloader = torch.utils.data.DataLoader(
+        dataset=_generate_dataset(num_samples=num_samples, input_dim=args.input_dim),
+        batch_size=args.batch_size,
+        pin_memory=(device.type == "cuda"),
+    )
+
+    state = init_fit_state(
+        train_dataloader=train_dataloader,
+        eval_dataloader=eval_dataloader,
         max_epochs=args.max_epochs,
     )
 
-    train(state, my_unit)
+    fit(state, my_unit)
 
     print(get_timer_summary(state.timer))
 
