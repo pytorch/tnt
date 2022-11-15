@@ -258,8 +258,43 @@ class TrainTest(unittest.TestCase):
             my_unit.train_step.call_count, max_epochs * expected_steps_per_epoch
         )
 
+    def test_train_is_last_batch(self) -> None:
+        """
+        Test train entry point and the is_last_batch field of train_state
+        """
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+        max_epochs = 3
+        expected_steps_per_epoch = dataset_len / batch_size
 
-class StopTrainUnit(TrainUnit[Tuple[torch.Tensor, torch.Tensor]]):
+        my_unit = LastBatchTrainUnit(
+            input_dim=input_dim, expected_steps_per_epoch=expected_steps_per_epoch
+        )
+        initial_training_mode = my_unit.module.training
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, my_unit)
+
+        self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
+        self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(
+            state.train_state.progress.num_steps_completed,
+            max_epochs * expected_steps_per_epoch,
+        )
+
+        # step_output should be reset to None
+        self.assertEqual(state.train_state.step_output, None)
+
+        self.assertEqual(my_unit.module.training, initial_training_mode)
+        self.assertEqual(state.entry_point, EntryPoint.TRAIN)
+
+
+Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+class StopTrainUnit(TrainUnit[Batch]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
         super().__init__()
         # initialize module, loss_fn, & optimizer
@@ -269,9 +304,7 @@ class StopTrainUnit(TrainUnit[Tuple[torch.Tensor, torch.Tensor]]):
         self.steps_processed = 0
         self.steps_before_stopping = steps_before_stopping
 
-    def train_step(
-        self, state: State, data: Tuple[torch.Tensor, torch.Tensor]
-    ) -> torch.Tensor:
+    def train_step(self, state: State, data: Batch) -> torch.Tensor:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -289,4 +322,35 @@ class StopTrainUnit(TrainUnit[Tuple[torch.Tensor, torch.Tensor]]):
             state.stop()
 
         self.steps_processed += 1
+        return loss, outputs
+
+
+class LastBatchTrainUnit(TrainUnit[Batch]):
+    def __init__(self, input_dim: int, expected_steps_per_epoch: int) -> None:
+        super().__init__()
+        self.expected_steps_per_epoch = expected_steps_per_epoch
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
+
+    def train_step(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        tc = unittest.TestCase()
+        tc.assertEqual(
+            state.train_state.is_last_batch,
+            state.train_state.progress.num_steps_completed_in_epoch + 1
+            == self.expected_steps_per_epoch,
+        )
+
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        loss.backward()
+
+        self.optimizer.step()
+        self.optimizer.zero_grad()
+
         return loss, outputs
