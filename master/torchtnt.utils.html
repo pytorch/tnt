@@ -361,15 +361,14 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mode</strong> (<em>an improvement. In rel</em>) – one of <cite>min</cite>, <cite>max</cite>. In <cite>min</cite> mode, signal to stop early will be given when
+<li><p><strong>mode</strong> – one of <cite>min</cite>, <cite>max</cite>. In <cite>min</cite> mode, signal to stop early will be given when
 the metric has stopped decreasing. In <cite>max</cite> mode, the signal is given when the
 metric has stopped increasing.</p></li>
 <li><p><strong>patience</strong> – Number of checks without improvement after which early stop will be signaled.</p></li>
-<li><p><strong>min_delta</strong> – Must be &gt;= 0. Minimum absolute or relative change in the metric to qualify as</p></li>
-<li><p><strong>mode</strong> – </p></li>
-<li><p><strong>*</strong> (<em>mode</em><em> or </em><em>best_val</em>) – </p></li>
-<li><p><strong>*</strong> – </p></li>
-<li><p><strong>mode.</strong> (<em>best_val +  min_delta in max mode</em><em> or </em><em>best_val - threshold in min</em>) – </p></li>
+<li><p><strong>min_delta</strong> – Must be &gt;= 0. Minimum absolute or relative change in the metric to qualify as
+an improvement. In <cite>rel</cite> mode, improvement_threshold = best_val * ( 1 + min_delta ) in ‘max’
+mode or best_val * ( 1 - min_delta ) in <cite>min</cite> mode. In <cite>abs</cite> mode, improvement_threshold =
+best_val +  min_delta in <cite>max</cite> mode or best_val - threshold in <cite>min</cite> mode.</p></li>
 <li><p><strong>check_finite</strong> – When set to <cite>True</cite>, signals early stop when metric becomes NaN or infinite.</p></li>
 <li><p><strong>threshold_mode</strong> – one of <cite>abs</cite> or <cite>rel</cite>, threshold delta between checks for determining whether to stop.</p></li>
 <li><p><strong>stopping_threshold</strong> – Signals early stop once the metric improves beyond this threshold.</p></li>
