@@ -12,8 +12,10 @@ from torchtnt.utils.early_stop_checker import EarlyStopChecker
 
 
 class EarlyStopCheckerTest(unittest.TestCase):
-    def test_early_stop_patience(self) -> None:
 
+    cuda_available = torch.cuda.is_available()
+
+    def test_early_stop_patience(self) -> None:
         # Loss does not decrease beyond 0.25
         losses = [0.4, 0.3, 0.28, 0.25, 0.26, 0.25]
         es1 = EarlyStopChecker("min", 3)
@@ -65,6 +67,40 @@ class EarlyStopCheckerTest(unittest.TestCase):
 
         # Loss decreases beyond 0.25 but not more than min_delta
         losses = [0.4, 0.38, 0.31, 0.25, 0.27, 0.24]
+        es1 = EarlyStopChecker("min", 3, min_delta=0.05)
+        es2 = EarlyStopChecker("min", 4, min_delta=0.05)
+
+        for loss in losses:
+            should_stop = es1.check(torch.tensor(loss))
+            self.assertFalse(should_stop)
+            should_stop = es2.check(torch.tensor(loss))
+            self.assertFalse(should_stop)
+
+        # Patience should run out
+        should_stop = es1.check(torch.tensor(0.25))
+        self.assertTrue(should_stop)
+
+        # es2 has more patience than es1
+        should_stop = es2.check(torch.tensor(0.25))
+        self.assertFalse(should_stop)
+        should_stop = es2.check(torch.tensor(0.26))
+        self.assertTrue(should_stop)
+
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_early_stop_min_delta_on_gpu(self) -> None:
+        device = torch.device("cuda:0")
+
+        # Loss decreases beyond 0.25 but not more than min_delta
+        losses = [
+            torch.tensor([0.4], device=device),
+            torch.tensor([0.38], device=device),
+            torch.tensor([0.31], device=device),
+            torch.tensor([0.25], device=device),
+            torch.tensor([0.27], device=device),
+            torch.tensor([0.24], device=device),
+        ]
         es1 = EarlyStopChecker("min", 3, min_delta=0.05)
         es2 = EarlyStopChecker("min", 4, min_delta=0.05)
 

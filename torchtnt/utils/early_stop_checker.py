@@ -25,9 +25,9 @@ class EarlyStopChecker:
             metric has stopped increasing.
         patience: Number of checks without improvement after which early stop will be signaled.
         min_delta: Must be >= 0. Minimum absolute or relative change in the metric to qualify as
-        an improvement. In `rel` mode, improvement_threshold = best_val * ( 1 + min_delta ) in 'max'
-        mode or best_val * ( 1 - min_delta ) in `min` mode. In `abs` mode, improvement_threshold =
-        best_val +  min_delta in `max` mode or best_val - threshold in `min` mode.
+            an improvement. In `rel` mode, improvement_threshold = best_val * ( 1 + min_delta ) in 'max'
+            mode or best_val * ( 1 - min_delta ) in `min` mode. In `abs` mode, improvement_threshold =
+            best_val +  min_delta in `max` mode or best_val - threshold in `min` mode.
         check_finite: When set to `True`, signals early stop when metric becomes NaN or infinite.
         threshold_mode: one of `abs` or `rel`, threshold delta between checks for determining whether to stop.
         stopping_threshold: Signals early stop once the metric improves beyond this threshold.
@@ -176,6 +176,8 @@ class EarlyStopChecker:
         if self._threshold_mode == "rel":
             base_val = self._best_value if torch.isfinite(self._best_value) else 0.0
             improvement_threshold = self.min_delta * base_val
+
+        improvement_threshold = improvement_threshold.to(val.device)
 
         # Check finite
         if self.check_finite and not torch.isfinite(val):
