@@ -10,17 +10,47 @@
 
 import contextlib
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Tuple, TypeVar, Union
+from dataclasses import dataclass
+from typing import Any, Callable, Optional, Tuple, TypeVar, Union
 
 import torch
+from torch import Tensor
 from torch.cuda.amp import GradScaler
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.unit import EvalUnit, PredictUnit, TrainUnit
-from torchtnt.utils import copy_data_to_device, get_device_from_env
+from torchtnt.utils import (
+    copy_data_to_device,
+    get_device_from_env,
+    transfer_batch_norm_stats,
+    transfer_weights,
+)
 from torchtnt.utils.version import is_torch_version_geq_1_12
 from typing_extensions import Literal
+
+TSWA_avg_fn = Callable[[Tensor, Tensor, int], Tensor]
+
+
+@dataclass
+class SWAParams:
+    """
+    Dataclass to store parameters for stochastic weight averaging.
+
+    Args:
+        epoch_start: number of epochs to wait for before starting SWA
+        anneal_epochs: number of epochs to anneal the SWA Scheduler to the learning rate (lr)
+        anneal_strategy: method for annealing, supports "linear" and "cos"
+        lr: learning rate for SWA
+        avg_fn: function to compute custom average of parameters
+    """
+
+    epoch_start: int
+    anneal_epochs: int
+    anneal_strategy: str = "linear"
+    lr: float = 0.05
+    avg_fn: Optional[TSWA_avg_fn] = None
 
 
 TData = TypeVar("TData")
@@ -56,6 +86,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
+        swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
 
     Attributes:
         module: module to be used during training.
@@ -71,6 +102,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
+        swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
     """
 
     def __init__(
@@ -87,6 +119,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         detect_anomaly: bool = False,
         clip_grad_norm: Optional[float] = None,
         clip_grad_value: Optional[float] = None,
+        swa_params: Optional[SWAParams] = None,
     ) -> None:
         super().__init__()
         self.module = module
@@ -134,7 +167,28 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             dtype=self.precision,
             enabled=self.precision is not None,
         )
-        # TODO: Make AutoUnit work when data type is Iterator
+
+        self.swa_model: Optional[AveragedModel] = None
+        self.swa_scheduler: Optional[SWALR] = None
+        self.swa_params: Optional[SWAParams] = swa_params
+        if swa_params:
+            if not swa_params.avg_fn:
+                # pyre-ignore: Unexpected keyword [28]
+                self.swa_model = AveragedModel(self.module, use_buffers=True)
+            else:
+                # pyre-ignore: Unexpected keyword [28]
+                self.swa_model = AveragedModel(
+                    self.module, avg_fn=swa_params.avg_fn, use_buffers=True
+                )
+
+            self.swa_scheduler = SWALR(
+                optimizer=self.optimizer,
+                swa_lr=swa_params.lr,
+                anneal_epochs=swa_params.anneal_epochs,
+                anneal_strategy=swa_params.anneal_strategy,
+            )
+
+        # TODO: Make AutoTrainUnit work when data type is Iterator
 
     @abstractmethod
     def compute_loss(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
@@ -277,20 +331,46 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         # sets gradients to zero
         self.optimizer.zero_grad(set_to_none=True)
 
-        # optionally step lr scheduler
-        lr_scheduler = self.lr_scheduler
-        if lr_scheduler and self.step_lr_interval == "step":
-            lr_scheduler.step()
+        # optionally step lr scheduler if SWA not in use
+        train_state = state.train_state
+        assert train_state
+        if (
+            self.swa_params is None
+            or train_state.progress.num_epochs_completed < self.swa_params.epoch_start
+        ):
+            lr_scheduler = self.lr_scheduler
+            if lr_scheduler and self.step_lr_interval == "step":
+                lr_scheduler.step()
 
     def on_train_epoch_end(self, state: State) -> None:
         # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
 
-        # optionally step lr scheduler
-        if self.lr_scheduler and self.step_lr_interval == "epoch":
+        train_state = state.train_state
+        assert train_state
+
+        if (
+            self.swa_model
+            and self.swa_params
+            and train_state.progress.num_epochs_completed >= self.swa_params.epoch_start
+        ):
+            self.swa_model.update_parameters(self.module)
+            assert self.swa_scheduler
+            self.swa_scheduler.step()
+        elif self.lr_scheduler and self.step_lr_interval == "epoch":
+            # optionally step lr scheduler
             self.lr_scheduler.step()
 
         # users can override this, by default this is a no-op
         self.log_metrics(state, self.num_optimizer_steps_completed, "epoch")
+
+    def on_train_end(self, state: State) -> None:
+        """
+        Note that if using SWA and implementing `on_train_end()`, must call `super().on_train_end()`.
+        """
+        if self.swa_model:
+            transfer_weights(self.swa_model, self.module)
+            # pyre-ignore: Incompatible parameter type [6]
+            transfer_batch_norm_stats(self.swa_model, self.module)
 
     def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         data = self.move_data_to_device(state, data)
