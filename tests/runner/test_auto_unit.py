@@ -20,7 +20,7 @@ from torchtnt.runner._test_utils import (
     generate_random_iterable_dataloader,
 )
 
-from torchtnt.runner.auto_unit import AutoUnit
+from torchtnt.runner.auto_unit import AutoUnit, SWAParams
 from torchtnt.runner.evaluate import evaluate, init_eval_state
 from torchtnt.runner.predict import init_predict_state, predict
 from torchtnt.runner.state import State
@@ -220,6 +220,90 @@ class TestAutoUnit(unittest.TestCase):
         train(state, auto_unit)
         self.assertTrue(
             auto_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
+        )
+
+    def test_stochastic_weight_averaging_basic(self) -> None:
+        """
+        Basic stochastic weight averaging tests
+        """
+        my_module = torch.nn.Linear(2, 2)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+        )
+
+        auto_unit2 = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            swa_params=SWAParams(epoch_start=1, anneal_epochs=5),
+        )
+
+        self.assertIsNone(auto_unit.swa_model)
+        self.assertIsNotNone(auto_unit2.swa_model)
+
+        self.assertTrue("swa_model" not in auto_unit.app_state())
+        self.assertTrue("swa_model" not in auto_unit.tracked_modules())
+        self.assertTrue("swa_scheduler" not in auto_unit.app_state())
+        self.assertTrue("swa_scheduler" not in auto_unit.tracked_lr_schedulers())
+        self.assertTrue("swa_model" in auto_unit2.app_state())
+        self.assertTrue("swa_model" in auto_unit2.tracked_modules())
+        self.assertTrue("swa_scheduler" in auto_unit2.app_state())
+        self.assertTrue("swa_scheduler" in auto_unit2.tracked_lr_schedulers())
+
+    def test_stochastic_weight_averaging_e2e(self) -> None:
+        """
+        e2e stochastic weight averaging test
+        """
+
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.l1 = torch.nn.Linear(2, 2)
+                self.b1 = torch.nn.BatchNorm1d(2)
+                self.l2 = torch.nn.Linear(2, 2)
+
+            def forward(self, x):
+                x = self.l1(x)
+                x = self.b1(x)
+                x = self.l2(x)
+                return x
+
+        my_module = Net()
+        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            swa_params=my_swa_params,
+        )
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 10
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, auto_unit)
+
+        orig_module = auto_unit.module
+        swa_module = auto_unit.swa_model
+
+        self.assertTrue(
+            torch.allclose(
+                orig_module.b1.running_mean, swa_module.module.b1.running_mean
+            )
+        )
+        self.assertTrue(
+            torch.allclose(orig_module.b1.running_var, swa_module.module.b1.running_var)
+        )
+        self.assertTrue(
+            torch.allclose(orig_module.l1.weight, swa_module.module.l1.weight)
+        )
+        self.assertTrue(
+            torch.allclose(orig_module.l2.weight, swa_module.module.l2.weight)
         )
 
     def test_log_frequency_steps_exception(self) -> None:

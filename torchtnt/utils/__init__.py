@@ -23,7 +23,7 @@ from .early_stop_checker import EarlyStopChecker
 from .env import init_from_env
 from .fsspec import get_filesystem
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
-from .misc import days_to_secs
+from .misc import days_to_secs, transfer_batch_norm_stats, transfer_weights
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
 from .rank_zero_log import (
     rank_zero_critical,
@@ -77,6 +77,8 @@ __all__ = [
     "seed",
     "FullSyncPeriodicTimer",
     "get_timer_summary",
+    "transfer_batch_norm_stats",
+    "transfer_weights",
     "Timer",
     "get_python_version",
     "get_torch_version",
