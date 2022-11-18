@@ -52,13 +52,9 @@ class TorchSnapshotSaver(Callback):
         save_every_n_epochs: Optional[int] = None,
         replicated: Optional[List[str]] = None,
     ) -> None:
-
-        if not _TORCHSNAPSHOT_AVAILABLE:
-            raise RuntimeError(
-                "TorchSnapshotSaver support requires torchsnapshot. "
-                "Please make sure ``torchsnapshot`` is installed. "
-                "Installation: https://github.com/pytorch/torchsnapshot#install"
-            )
+        _validate_snapshot_available()
+        self._dirpath: str = dirpath
+        self._replicated: Set[str] = set(replicated or [])
         if save_every_n_train_steps is not None and save_every_n_train_steps < 0:
             raise ValueError(
                 f"Invalid value passed for save_every_n_train_steps. Expected to receive either None or non-negative number, but received {save_every_n_train_steps}"
@@ -123,6 +119,66 @@ class TorchSnapshotSaver(Callback):
             snapshot_path, app_state=app_state, replicated=list(self._replicated)
         )
         rank_zero_info(f"Saved snapshot to path: {snapshot_path}")
+
+    @staticmethod
+    def restore(
+        path: str,
+        state: State,
+        unit: TTrainUnit,
+        *,
+        restore_train_progress: bool = True,
+        restore_train_dataloader: bool = True,
+        restore_eval_progress: bool = True,
+    ) -> None:
+        """Utility method to restore snapshot state from a path.
+
+        Since the class also manages saving the progress and dataloader states,
+        this method handles their restoration. There are additional flags offered
+        should the user want to skip loading these states. By default, the train progress,
+        train dataloader, and eval progress are restored, if applicable.
+        """
+
+        _validate_snapshot_available()
+        app_state = unit.app_state()
+        _check_app_state_collision(app_state)
+
+        snapshot = torchsnapshot.Snapshot(path)
+
+        train_state = state.train_state
+        assert train_state
+
+        rng_state = torchsnapshot.RNGState()
+        app_state[RNG_STATE_KEY] = rng_state
+
+        if restore_train_progress:
+            train_progress = train_state.progress
+            app_state[TRAIN_PROGRESS_STATE_KEY] = train_progress
+
+        if restore_train_dataloader:
+            # request to restore the dataloader state only if
+            # the persisted snapshot state includes the dataloader entry
+            manifest = snapshot.get_manifest()
+            for key in manifest:
+                if TRAIN_DL_STATE_KEY in key:
+                    app_state[TRAIN_DL_STATE_KEY] = train_state.dataloader
+                    break
+
+        if state.entry_point == EntryPoint.FIT and restore_eval_progress:
+            # include evaluation states if fitting
+            eval_state = state.eval_state
+            assert eval_state
+            app_state[EVAL_PROGRESS_STATE_KEY] = eval_state.progress
+
+        snapshot.restore(app_state)
+
+
+def _validate_snapshot_available() -> None:
+    if not _TORCHSNAPSHOT_AVAILABLE:
+        raise RuntimeError(
+            "TorchSnapshotSaver support requires torchsnapshot. "
+            "Please make sure ``torchsnapshot`` is installed. "
+            "Installation: https://github.com/pytorch/torchsnapshot#install"
+        )
 
 
 def _get_snapshot_save_path(dirpath: str, epoch: int, step: int) -> str:
