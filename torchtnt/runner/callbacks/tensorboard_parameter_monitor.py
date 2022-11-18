@@ -7,6 +7,9 @@
 from typing import Dict, Optional, Union
 
 import torch
+
+from pyre_extensions import none_throws
+
 from torch.utils.tensorboard import SummaryWriter
 from torchtnt.loggers.tensorboard import TensorBoardLogger
 from torchtnt.runner.callback import Callback
@@ -46,8 +49,7 @@ class TensorBoardParameterMonitor(Callback):
         if not writer:
             return
 
-        train_state = state.train_state
-        assert train_state
+        train_state = none_throws(state.train_state)
 
         step = train_state.progress.num_steps_completed
         modules = unit.tracked_modules()

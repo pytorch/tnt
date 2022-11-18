@@ -8,6 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 import torch
+from pyre_extensions import none_throws
 from torchtnt.runner.callback import Callback
 
 from torchtnt.runner.state import ActivePhase, EntryPoint, PhaseState, State
@@ -86,9 +87,7 @@ def _predict_impl(
     callbacks: List[Callback],
 ) -> None:
     # input validation
-    predict_state = state.predict_state
-    if not predict_state:
-        raise RuntimeError("Expected predict_state to be initialized!")
+    predict_state = none_throws(state.predict_state)
 
     state._active_phase = ActivePhase.PREDICT
     logger.info(

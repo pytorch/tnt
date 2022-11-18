@@ -8,6 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 import torch
+from pyre_extensions import none_throws
 from torchtnt.runner.callback import Callback
 
 from torchtnt.runner.state import ActivePhase, EntryPoint, PhaseState, State
@@ -86,9 +87,7 @@ def _evaluate_impl(
     callbacks: List[Callback],
 ) -> None:
     # input validation
-    eval_state = state.eval_state
-    if not eval_state:
-        raise RuntimeError("Expected eval_state to be initialized!")
+    eval_state = none_throws(state.eval_state)
 
     state._active_phase = ActivePhase.EVALUATE
     logger.info(
