@@ -9,6 +9,8 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any, List, TextIO, Union
 
+from pyre_extensions import none_throws
+
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
@@ -67,8 +69,8 @@ class BaseCSVWriter(Callback, ABC):
             self._writer.writerow(self.header_row)
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
-        assert state.predict_state is not None
-        step_output = state.predict_state.step_output
+        predict_state = none_throws(state.predict_state)
+        step_output = predict_state.step_output
         output_rows = self.get_step_output_rows(state, unit, step_output)
 
         # Check whether the first item is a list or not

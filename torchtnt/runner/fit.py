@@ -7,8 +7,8 @@
 import logging
 from typing import Iterable, List, Optional
 
+from pyre_extensions import none_throws
 from torchtnt.runner.callback import Callback
-
 from torchtnt.runner.state import EntryPoint, PhaseState, State
 from torchtnt.runner.train import _train_epoch_impl
 from torchtnt.runner.unit import EvalUnit, TEvalData, TrainUnit, TTrainData, TTrainUnit
@@ -100,12 +100,8 @@ def _fit_impl(
     if not isinstance(unit, EvalUnit):
         raise TypeError("Expected unit to implement EvalUnit interface.")
 
-    train_state = state.train_state
-    if not train_state:
-        raise RuntimeError("Expected train_state to be initialized")
-    eval_state = state.eval_state
-    if not eval_state:
-        raise RuntimeError("Expected eval_state to be initialized")
+    train_state = none_throws(state.train_state)
+    eval_state = none_throws(state.eval_state)
 
     logger.info(
         f"Started fit with max_epochs={train_state.max_epochs} "

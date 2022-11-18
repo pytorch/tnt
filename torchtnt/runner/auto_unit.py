@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Optional, Tuple, TypeVar, Union
 
 import torch
-from torch import Tensor
+from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -30,7 +30,7 @@ from torchtnt.utils import (
 from torchtnt.utils.version import is_torch_version_geq_1_12
 from typing_extensions import Literal
 
-TSWA_avg_fn = Callable[[Tensor, Tensor, int], Tensor]
+TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
 
 
 @dataclass
@@ -249,8 +249,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         data = self.move_data_to_device(state, data)
 
-        train_state = state.train_state
-        assert train_state
+        train_state = none_throws(state.train_state)
 
         should_update_weights = (
             train_state.progress.num_steps_completed_in_epoch + 1
@@ -332,8 +331,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         self.optimizer.zero_grad(set_to_none=True)
 
         # optionally step lr scheduler if SWA not in use
-        train_state = state.train_state
-        assert train_state
+        train_state = none_throws(state.train_state)
         if (
             self.swa_params is None
             or train_state.progress.num_epochs_completed < self.swa_params.epoch_start
@@ -345,8 +343,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     def on_train_epoch_end(self, state: State) -> None:
         # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
 
-        train_state = state.train_state
-        assert train_state
+        train_state = none_throws(state.train_state)
 
         if (
             self.swa_model
@@ -354,8 +351,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             and train_state.progress.num_epochs_completed >= self.swa_params.epoch_start
         ):
             self.swa_model.update_parameters(self.module)
-            assert self.swa_scheduler
-            self.swa_scheduler.step()
+            none_throws(self.swa_scheduler).step()
         elif self.lr_scheduler and self.step_lr_interval == "epoch":
             # optionally step lr scheduler
             self.lr_scheduler.step()
@@ -367,10 +363,10 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         """
         Note that if using SWA and implementing `on_train_end()`, must call `super().on_train_end()`.
         """
-        if self.swa_model:
-            transfer_weights(self.swa_model, self.module)
-            # pyre-ignore: Incompatible parameter type [6]
-            transfer_batch_norm_stats(self.swa_model, self.module)
+        swa_model = self.swa_model
+        if swa_model:
+            transfer_weights(swa_model, self.module)
+            transfer_batch_norm_stats(swa_model, self.module)
 
     def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         data = self.move_data_to_device(state, data)
@@ -390,12 +386,11 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             # users can override this, by default this is a no-op
             self.log_metrics(state, self.num_optimizer_steps_completed, "epoch")
         else:
-            assert state.eval_state
+            eval_state = none_throws(state.eval_state)
+
             # if in evaluate, use the number of eval steps completed
             # users can override this, by default this is a no-op
-            self.log_metrics(
-                state, state.eval_state.progress.num_steps_completed, "epoch"
-            )
+            self.log_metrics(state, eval_state.progress.num_steps_completed, "epoch")
 
     def predict_step(self, state: State, data: Any) -> Any:
         data = self.move_data_to_device(state, data)

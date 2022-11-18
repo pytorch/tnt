@@ -7,6 +7,8 @@
 import os
 from typing import Dict, List, Optional, Set
 
+from pyre_extensions import none_throws
+
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import EntryPoint, State
 from torchtnt.runner.unit import _Stateful as StatefulProtocol, TTrainUnit
@@ -78,8 +80,7 @@ class TorchSnapshotSaver(Callback):
         _check_app_state_collision(app_state)
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        train_state = state.train_state
-        assert train_state
+        train_state = none_throws(state.train_state)
 
         global_step = train_state.progress.num_steps_completed
         every_n_train_steps = self._save_every_n_train_steps
@@ -100,8 +101,7 @@ class TorchSnapshotSaver(Callback):
         rank_zero_info(f"Saved snapshot to path: {snapshot_path}")
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
-        train_state = state.train_state
-        assert train_state
+        train_state = none_throws(state.train_state)
 
         train_progress = train_state.progress
         epoch = train_progress.num_epochs_completed
@@ -132,8 +132,7 @@ def _get_snapshot_save_path(dirpath: str, epoch: int, step: int) -> str:
 def _get_app_state(
     state: State, unit: TTrainUnit, replicated: Set[str], *, intra_epoch: bool
 ) -> Dict[str, _TStateful]:
-    train_state = state.train_state
-    assert train_state
+    train_state = none_throws(state.train_state)
 
     train_progress = train_state.progress
     app_state = unit.app_state()
@@ -151,8 +150,7 @@ def _get_app_state(
 
     if state.entry_point == EntryPoint.FIT:
         # include evaluation states if fitting
-        eval_state = state.eval_state
-        assert eval_state
+        eval_state = none_throws(state.eval_state)
 
         app_state[EVAL_PROGRESS_STATE_KEY] = eval_state.progress
         eval_prog_glob = f"{EVAL_PROGRESS_STATE_KEY}/*"

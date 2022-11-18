@@ -7,6 +7,8 @@
 from collections.abc import Sized
 from typing import Iterable, Optional
 
+from pyre_extensions import none_throws
+
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
@@ -31,83 +33,89 @@ class TQDMProgressBar(Callback):
         self._predict_progress_bar: Optional[tqdm] = None
 
     def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
-        if state.train_state:
-            self._train_progress_bar = _create_progress_bar(
-                state.train_state.dataloader,
-                desc="Train Epoch",
-                num_epochs_completed=state.train_state.progress.num_epochs_completed,
-                num_steps_completed=state.train_state.progress.num_steps_completed,
-                max_steps=state.train_state.max_steps,
-                max_steps_per_epoch=state.train_state.max_steps_per_epoch,
-            )
+        train_state = none_throws(state.train_state)
+        self._train_progress_bar = _create_progress_bar(
+            train_state.dataloader,
+            desc="Train Epoch",
+            num_epochs_completed=train_state.progress.num_epochs_completed,
+            num_steps_completed=train_state.progress.num_steps_completed,
+            max_steps=train_state.max_steps,
+            max_steps_per_epoch=train_state.max_steps_per_epoch,
+        )
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        if self._train_progress_bar is not None and state.train_state:
+        train_state = none_throws(state.train_state)
+        if self._train_progress_bar is not None:
             _update_progress_bar(
                 self._train_progress_bar,
-                state.train_state.progress.num_steps_completed,
+                train_state.progress.num_steps_completed,
                 self._refresh_rate,
             )
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
-        if self._train_progress_bar is not None and state.train_state:
+        train_state = none_throws(state.train_state)
+        if self._train_progress_bar is not None:
             _close_progress_bar(
                 self._train_progress_bar,
-                state.train_state.progress.num_steps_completed,
+                train_state.progress.num_steps_completed,
                 self._refresh_rate,
             )
 
     def on_eval_epoch_start(self, state: State, unit: TEvalUnit) -> None:
-        if state.eval_state:
-            self._eval_progress_bar = _create_progress_bar(
-                state.eval_state.dataloader,
-                desc="Eval Epoch",
-                num_epochs_completed=state.eval_state.progress.num_epochs_completed,
-                num_steps_completed=state.eval_state.progress.num_steps_completed,
-                max_steps=state.eval_state.max_steps,
-                max_steps_per_epoch=state.eval_state.max_steps_per_epoch,
-            )
+        eval_state = none_throws(state.eval_state)
+        self._eval_progress_bar = _create_progress_bar(
+            eval_state.dataloader,
+            desc="Eval Epoch",
+            num_epochs_completed=eval_state.progress.num_epochs_completed,
+            num_steps_completed=eval_state.progress.num_steps_completed,
+            max_steps=eval_state.max_steps,
+            max_steps_per_epoch=eval_state.max_steps_per_epoch,
+        )
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
-        if self._eval_progress_bar is not None and state.eval_state:
+        eval_state = none_throws(state.eval_state)
+        if self._eval_progress_bar is not None:
             _update_progress_bar(
                 self._eval_progress_bar,
-                state.eval_state.progress.num_steps_completed,
+                eval_state.progress.num_steps_completed,
                 self._refresh_rate,
             )
 
     def on_eval_epoch_end(self, state: State, unit: TEvalUnit) -> None:
+        eval_state = none_throws(state.eval_state)
         if self._eval_progress_bar is not None and state.eval_state:
             _close_progress_bar(
                 self._eval_progress_bar,
-                state.eval_state.progress.num_steps_completed,
+                eval_state.progress.num_steps_completed,
                 self._refresh_rate,
             )
 
     def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
-        if state.predict_state:
-            self._predict_progress_bar = _create_progress_bar(
-                state.predict_state.dataloader,
-                desc="Predict Epoch",
-                num_epochs_completed=state.predict_state.progress.num_epochs_completed,
-                num_steps_completed=state.predict_state.progress.num_steps_completed,
-                max_steps=state.predict_state.max_steps,
-                max_steps_per_epoch=state.predict_state.max_steps_per_epoch,
-            )
+        predict_state = none_throws(state.predict_state)
+        self._predict_progress_bar = _create_progress_bar(
+            predict_state.dataloader,
+            desc="Predict Epoch",
+            num_epochs_completed=predict_state.progress.num_epochs_completed,
+            num_steps_completed=predict_state.progress.num_steps_completed,
+            max_steps=predict_state.max_steps,
+            max_steps_per_epoch=predict_state.max_steps_per_epoch,
+        )
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
-        if self._predict_progress_bar is not None and state.predict_state:
+        predict_state = none_throws(state.predict_state)
+        if self._predict_progress_bar is not None:
             _update_progress_bar(
                 self._predict_progress_bar,
-                state.predict_state.progress.num_steps_completed,
+                predict_state.progress.num_steps_completed,
                 self._refresh_rate,
             )
 
     def on_predict_epoch_end(self, state: State, unit: TPredictUnit) -> None:
-        if self._predict_progress_bar is not None and state.predict_state:
+        predict_state = none_throws(state.predict_state)
+        if self._predict_progress_bar is not None:
             _close_progress_bar(
                 self._predict_progress_bar,
-                state.predict_state.progress.num_steps_completed,
+                predict_state.progress.num_steps_completed,
                 self._refresh_rate,
             )
 

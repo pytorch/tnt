@@ -8,6 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 import torch
+from pyre_extensions import none_throws
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.evaluate import _evaluate_impl
 from torchtnt.runner.state import ActivePhase, EntryPoint, PhaseState, State
@@ -93,9 +94,7 @@ def _train_impl(
     train_unit: TTrainUnit,
     callbacks: List[Callback],
 ) -> None:
-    train_state = state.train_state
-    if not train_state:
-        raise RuntimeError("Expected train_state to be initialized!")
+    train_state = none_throws(state.train_state)
 
     logger.info(
         f"Started train with max_epochs={train_state.max_epochs}, max_steps={train_state.max_steps}, max_steps_per_epoch={train_state.max_steps_per_epoch}"
@@ -146,9 +145,7 @@ def train_epoch(
     """
     callbacks = callbacks or []
     try:
-        train_state = state.train_state
-        if not train_state:
-            raise RuntimeError("Expected train_state to be initialized!")
+        train_state = none_throws(state.train_state)
         if not train_state.max_epochs == 1:
             raise RuntimeError(
                 f"Expected state.train_state.max_epochs to be 1, but received {train_state.max_epochs}."
@@ -185,8 +182,7 @@ def _train_epoch_impl(
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
-    train_state = state.train_state
-    assert train_state is not None
+    train_state = none_throws(state.train_state)
 
     evaluate_every_n_steps = None
     evaluate_every_n_epochs = None

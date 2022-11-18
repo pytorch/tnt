@@ -6,6 +6,8 @@
 
 import gc
 
+from pyre_extensions import none_throws
+
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import TEvalUnit, TPredictUnit, TTrainUnit
@@ -40,11 +42,8 @@ class GarbageCollector(Callback):
         gc.disable()
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        if (
-            state.train_state
-            and (state.train_state.progress.num_steps_completed) % self._step_interval
-            == 0
-        ):
+        train_state = none_throws(state.train_state)
+        if train_state.progress.num_steps_completed % self._step_interval == 0:
             gc.collect()
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
@@ -54,11 +53,8 @@ class GarbageCollector(Callback):
         gc.disable()
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
-        if (
-            state.eval_state
-            and (state.eval_state.progress.num_steps_completed) % self._step_interval
-            == 0
-        ):
+        eval_state = none_throws(state.eval_state)
+        if eval_state.progress.num_steps_completed % self._step_interval == 0:
             gc.collect()
 
     def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
@@ -68,11 +64,8 @@ class GarbageCollector(Callback):
         gc.disable()
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
-        if (
-            state.predict_state
-            and (state.predict_state.progress.num_steps_completed) % self._step_interval
-            == 0
-        ):
+        predict_state = none_throws(state.predict_state)
+        if predict_state.progress.num_steps_completed % self._step_interval == 0:
             gc.collect()
 
     def on_predict_end(self, state: State, unit: TPredictUnit) -> None:

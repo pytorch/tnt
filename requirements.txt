@@ -3,6 +3,7 @@ numpy
 fsspec
 tensorboard
 psutil
+pyre_extensions
 typing_extensions
 setuptools
 tqdm
