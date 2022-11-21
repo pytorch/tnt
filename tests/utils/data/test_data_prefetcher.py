@@ -10,7 +10,7 @@ from typing import Tuple
 
 import torch
 from torch.utils.data.dataset import Dataset, TensorDataset
-from torchtnt.data.data_prefetcher import CudaDataPrefetcher
+from torchtnt.utils.data.data_prefetcher import CudaDataPrefetcher
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 

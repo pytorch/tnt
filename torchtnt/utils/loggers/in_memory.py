@@ -11,8 +11,8 @@ from collections import OrderedDict
 from time import monotonic
 from typing import Dict, Mapping
 
-from torchtnt.loggers.logger import MetricLogger, Scalar
-from torchtnt.loggers.utils import scalar_to_float
+from torchtnt.utils.loggers.logger import MetricLogger, Scalar
+from torchtnt.utils.loggers.utils import scalar_to_float
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class InMemoryLogger(MetricLogger):
         """A simple logger that buffers data in-memory.
 
         Example:
-            from torchtnt.loggers import InMemoryLogger
+            from torchtnt.utils.loggers import InMemoryLogger
             logger = InMemoryLogger()
             logger.log("accuracy", 23.56, 10)
             logger.close()

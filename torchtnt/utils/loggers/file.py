@@ -12,9 +12,10 @@ from collections import OrderedDict
 from time import monotonic
 from typing import Dict, Mapping
 
-from torchtnt.loggers.logger import Scalar
-from torchtnt.loggers.utils import scalar_to_float
 from torchtnt.utils.distributed import get_global_rank
+
+from torchtnt.utils.loggers.logger import Scalar
+from torchtnt.utils.loggers.utils import scalar_to_float
 
 
 logger: logging.Logger = logging.getLogger(__name__)

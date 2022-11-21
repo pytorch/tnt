@@ -9,10 +9,10 @@ from typing import Dict, List, Union
 from pyre_extensions import none_throws
 
 from torch.optim.optimizer import Optimizer
-from torchtnt.loggers.logger import MetricLogger
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import TTrainUnit
+from torchtnt.utils.loggers.logger import MetricLogger
 
 
 def _extract_lr_from_optimizer(

@@ -14,7 +14,7 @@ import torch.distributed.launcher as launcher
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 from torch import distributed as dist
 
-from torchtnt.loggers.tensorboard import TensorBoardLogger
+from torchtnt.utils.loggers.tensorboard import TensorBoardLogger
 from torchtnt.utils.test_utils import get_pet_launch_config
 
 

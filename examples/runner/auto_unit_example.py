@@ -17,9 +17,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.loggers import TensorBoardLogger
 from torchtnt.runner import AutoUnit, fit, init_fit_state, State
 from torchtnt.utils import get_timer_summary, init_from_env, seed
+from torchtnt.utils.loggers import TensorBoardLogger
 from typing_extensions import Literal
 
 _logger: logging.Logger = logging.getLogger(__name__)

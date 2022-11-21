@@ -8,7 +8,7 @@ import unittest
 
 import numpy as np
 import torch
-from torchtnt.loggers.utils import scalar_to_float
+from torchtnt.utils.loggers.utils import scalar_to_float
 
 
 class TestUtilities(unittest.TestCase):
