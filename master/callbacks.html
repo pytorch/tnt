@@ -32,7 +32,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Runner" href="torchtnt.runner.html" />
+    <link rel="next" title="Framework" href="torchtnt.framework.html" />
     <link rel="prev" title="Fit" href="fit.html" />
   <!-- Google Analytics -->
   
@@ -247,7 +247,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Runner</span></p>
+<p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
@@ -257,7 +257,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.runner.html">Runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="torchtnt.framework.html">Framework</a></li>
 <li class="toctree-l1"><a class="reference internal" href="torchtnt.utils.html">Utils</a></li>
 </ul>
 
@@ -333,12 +333,12 @@
               
   <section id="callbacks">
 <h1>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this heading">¶</a></h1>
-<p>In TorchTNT a <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.Callback" title="torchtnt.runner.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> is an optional extension that can be used to supplement your loop with additional functionality. Good candidates
+<p>In TorchTNT a <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> is an optional extension that can be used to supplement your loop with additional functionality. Good candidates
 for such logic are ones that can be re-used across units. A Callback is simply a class with various hooks that are called during loop execution.</p>
 <p>To benefit from a Callback, you must extend the Callback interface and implement the necessary hooks
-to add your supplemental functionality. For a list of hooks which can be implemented see the <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.Callback" title="torchtnt.runner.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> API reference.</p>
+to add your supplemental functionality. For a list of hooks which can be implemented see the <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> API reference.</p>
 <p>Below is an example of a basic callback which can be included by the user to print the state of the loop at various points.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.runner.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
 
 <span class="k">class</span> <span class="nc">PrintingCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
    <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TrainUnit</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -360,8 +360,8 @@ to add your supplemental functionality. For a list of hooks which can be impleme
        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending prediction&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To include this in your loop, instantiate the class and pass it in the <cite>callbacks</cite> parameter to the <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.train" title="torchtnt.runner.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a>, <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.evaluate" title="torchtnt.runner.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a>,
-<a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.predict" title="torchtnt.runner.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>, or <a class="reference internal" href="torchtnt.runner.html#torchtnt.runner.fit" title="torchtnt.runner.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> entry point.</p>
+<p>To include this in your loop, instantiate the class and pass it in the <cite>callbacks</cite> parameter to the <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a>, <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.evaluate" title="torchtnt.framework.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a>,
+<a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict" title="torchtnt.framework.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>, or <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.fit" title="torchtnt.framework.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> entry point.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">printing_callback</span> <span class="o">=</span> <span class="n">PrintingCallback</span><span class="p">()</span>
 <span class="n">train</span><span class="p">(</span><span class="n">train_unit</span><span class="p">,</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">printing_callback</span><span class="p">])</span>
 </pre></div>
@@ -376,7 +376,7 @@ to add your supplemental functionality. For a list of hooks which can be impleme
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.runner.html" class="btn btn-neutral float-right" title="Runner" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.framework.html" class="btn btn-neutral float-right" title="Framework" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="fit.html" class="btn btn-neutral" title="Fit" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>

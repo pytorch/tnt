@@ -5,15 +5,15 @@ Here we lay out the steps needed to configure and run your training loop.
 TrainUnit
 ~~~~~~~~~~~~~
 
-In TorchTNT, :class:`~torchtnt.runner.unit.TrainUnit` is the interface that allows you to customize your training loop when run by :py:func:`~torchtnt.runner.train`.
-To use, you must create a class which subclasses :class:`~torchtnt.runner.unit.TrainUnit`.
+In TorchTNT, :class:`~torchtnt.framework.unit.TrainUnit` is the interface that allows you to customize your training loop when run by :py:func:`~torchtnt.framework.train`.
+To use, you must create a class which subclasses :class:`~torchtnt.framework.unit.TrainUnit`.
 You must implement the ``train_step`` method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
-Below is a simple example of a user's subclass of :class:`~torchtnt.runner.unit.TrainUnit` that implements a basic ``train_step``, and the ``on_train_epoch_end`` hook.
+Below is a simple example of a user's subclass of :class:`~torchtnt.framework.unit.TrainUnit` that implements a basic ``train_step``, and the ``on_train_epoch_end`` hook.
 
 
 .. code-block:: python
 
- from torchtnt.runner import TrainUnit
+ from torchtnt.framework import TrainUnit
 
  class MyTrainUnit(TrainUnit[Batch]):
      def __init__(
@@ -45,17 +45,17 @@ Below is a simple example of a user's subclass of :class:`~torchtnt.runner.unit.
 Train Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-To run your training loop, call the training loop entry point: :py:func:`~torchtnt.runner.train`.
+To run your training loop, call the training loop entry point: :py:func:`~torchtnt.framework.train`.
 
-The :py:func:`~torchtnt.runner.train` entry point takes a :class:`~torchtnt.runner.TrainUnit` object, a :class:`~torchtnt.runner.State` object, and an optional list of callbacks.
+The :py:func:`~torchtnt.framework.train` entry point takes a :class:`~torchtnt.framework.TrainUnit` object, a :class:`~torchtnt.framework.State` object, and an optional list of callbacks.
 
-The :class:`~torchtnt.runner.State` object can be initialized with :func:`~torchtnt.runner.init_train_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
+The :class:`~torchtnt.framework.State` object can be initialized with :func:`~torchtnt.framework.init_train_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
 
-Below is an example of calling the :py:func:`~torchtnt.runner.train` entry point with ``MyTrainUnit`` created above.
+Below is an example of calling the :py:func:`~torchtnt.framework.train` entry point with ``MyTrainUnit`` created above.
 
 .. code-block:: python
 
- from torchtnt.runner import init_train_state, train
+ from torchtnt.framework import init_train_state, train
 
  train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
  dataloader = torch.utils.data.DataLoader(...)

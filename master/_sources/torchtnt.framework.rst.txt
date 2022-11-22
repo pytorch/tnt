@@ -1,6 +1,6 @@
-Runner
+Framework
 =============
 
-.. automodule:: torchtnt.runner
+.. automodule:: torchtnt.framework
    :members:
    :undoc-members:
