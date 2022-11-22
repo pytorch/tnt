@@ -18,7 +18,7 @@ TorchTNT API
 
 .. toctree::
    :maxdepth: 1
-   :caption: Runner
+   :caption: Framework
 
    train
    eval
@@ -30,7 +30,7 @@ TorchTNT API
    :maxdepth: 2
    :caption: API
 
-   torchtnt.runner.rst
+   torchtnt.framework.rst
    torchtnt.utils.rst
 
 Indices and tables

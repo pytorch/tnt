@@ -6,15 +6,15 @@ to give you immediate feedback about how your model is performing while training
 TrainUnit and EvalUnit
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-In TorchTNT the Unit interface allows you to customize your fit loop when run by :py:func:`~torchtnt.runner.fit`.
-For fit, you must create a class which subclasses :class:`~torchtnt.runner.unit.TrainUnit` and :class:`~torchtnt.runner.unit.EvalUnit`.
+In TorchTNT the Unit interface allows you to customize your fit loop when run by :py:func:`~torchtnt.framework.fit`.
+For fit, you must create a class which subclasses :class:`~torchtnt.framework.unit.TrainUnit` and :class:`~torchtnt.framework.unit.EvalUnit`.
 You must implement the ``train_step`` and ``eval_step`` methods on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
 Below is a simple example of a user's fit Unit that implements a basic ``train_step``, ``eval_step``, and the ``on_train_epoch_end`` hook.
 
 
 .. code-block:: python
 
- from torchtnt.runner import TrainUnit, EvalUnit
+ from torchtnt.framework import TrainUnit, EvalUnit
 
  class MyFitUnit(TrainUnit[Batch]), EvalUnit[Batch]:
      def __init__(
@@ -51,17 +51,17 @@ Below is a simple example of a user's fit Unit that implements a basic ``train_s
 Fit Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-To run your fit loop, call the fit loop entry point: :py:func:`~torchtnt.runner.fit`.
+To run your fit loop, call the fit loop entry point: :py:func:`~torchtnt.framework.fit`.
 
-The :py:func:`~torchtnt.runner.fit` entry point takes an object subclassing both :class:`~torchtnt.runner.TrainUnit` and :class:`~torchtnt.runner.EvalUnit`, a :class:`~torchtnt.runner.state.State` object, and an optional list of callbacks.
+The :py:func:`~torchtnt.framework.fit` entry point takes an object subclassing both :class:`~torchtnt.framework.TrainUnit` and :class:`~torchtnt.framework.EvalUnit`, a :class:`~torchtnt.framework.state.State` object, and an optional list of callbacks.
 
-The :class:`~torchtnt.runner.state.State` object can be initialized with :func:`~torchtnt.runner.init_fit_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
+The :class:`~torchtnt.framework.state.State` object can be initialized with :func:`~torchtnt.framework.init_fit_state`, which takes in a dataloader (can be *any* iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.
 
-Below is an example of calling the :py:func:`~torchtnt.runner.fit` entry point with the TrainUnit/EvalUnit created above.
+Below is an example of calling the :py:func:`~torchtnt.framework.fit` entry point with the TrainUnit/EvalUnit created above.
 
 .. code-block:: python
 
- from torchtnt.runner import fit, init_fit_state
+ from torchtnt.framework import fit, init_fit_state
 
  fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
  train_dataloader = torch.utils.data.DataLoader(...)
