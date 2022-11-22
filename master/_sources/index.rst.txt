@@ -30,8 +30,6 @@ TorchTNT API
    :maxdepth: 2
    :caption: API
 
-   torchtnt.data.rst
-   torchtnt.loggers.rst
    torchtnt.runner.rst
    torchtnt.utils.rst
 
