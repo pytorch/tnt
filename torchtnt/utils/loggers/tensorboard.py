@@ -12,8 +12,8 @@ from typing import Any, Dict, List, Mapping, Optional
 import torch.distributed as dist
 
 from torch.utils.tensorboard import SummaryWriter
-from torchtnt.loggers.logger import MetricLogger, Scalar
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
+from torchtnt.utils.loggers.logger import MetricLogger, Scalar
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class TensorBoardLogger(MetricLogger):
 
     Examples::
 
-        from torchtnt.loggers import TensorBoardLogger
+        from torchtnt.utils.loggers import TensorBoardLogger
         logger = TensorBoardLogger()
         logger.log("accuracy", 23.56, 10)
         logger.close()

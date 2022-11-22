@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Iterable, Iterator, Optional, Type, TYPE_CHECKING, Union
 
-from torchtnt.data.iterators import (
+from torchtnt.utils.data.iterators import (
     DataIterationStrategy,
     DataIterationStrategyRegistry,
     MultiIterator,

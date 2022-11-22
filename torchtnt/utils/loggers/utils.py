@@ -6,7 +6,7 @@
 
 from numpy import ndarray
 from torch import Tensor
-from torchtnt.loggers.logger import Scalar
+from torchtnt.utils.loggers.logger import Scalar
 
 
 def scalar_to_float(scalar: Scalar) -> float:

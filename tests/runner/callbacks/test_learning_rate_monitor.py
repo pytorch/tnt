@@ -8,10 +8,11 @@
 import unittest
 from unittest.mock import MagicMock
 
-from torchtnt.loggers.logger import MetricLogger
 from torchtnt.runner._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.runner.callbacks.learning_rate_monitor import LearningRateMonitor
 from torchtnt.runner.train import init_train_state, train
+
+from torchtnt.utils.loggers.logger import MetricLogger
 
 
 class LearningRateMonitorTest(unittest.TestCase):

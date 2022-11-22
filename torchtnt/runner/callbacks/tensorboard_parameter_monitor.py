@@ -11,10 +11,10 @@ import torch
 from pyre_extensions import none_throws
 
 from torch.utils.tensorboard import SummaryWriter
-from torchtnt.loggers.tensorboard import TensorBoardLogger
 from torchtnt.runner.callback import Callback
 from torchtnt.runner.state import State
 from torchtnt.runner.unit import TTrainUnit
+from torchtnt.utils.loggers.tensorboard import TensorBoardLogger
 
 
 def _write_histogram_parameters(

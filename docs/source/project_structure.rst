@@ -1,9 +1,7 @@
 Project Structure
 =======================
 
-The top level modules in TorchTNT are:
+TorchTNT has two main components, which are the top-level modules of the repo:
 
-1. :mod:`torchtnt.data`: contains data related abstractions and utilities for DataLoader v1. For more expansive support, please see TorchData: https://github.com/pytorch/data
-2. :mod:`torchtnt.loggers`: contains wrappers around different publishers to make logging metrics uniform and simple.
-3. :mod:`torchtnt.runner`: contains a lightweight training framework to simplify maintaining training, evaluation, and prediction loops.
-4. :mod:`torchtnt.utils`: contains a grab-bag of various independent, training-related utilities.
+1. :mod:`torchtnt.runner`: contains a lightweight training framework to simplify maintaining training, evaluation, and prediction loops.
+2. :mod:`torchtnt.utils`: contains a grab-bag of various independent, training-related utilities, including data related abstractions and wrappers around different publishers to simplify logging metrics.

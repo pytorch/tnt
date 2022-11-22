@@ -11,7 +11,7 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from io import StringIO
 
-from torchtnt.loggers.in_memory import InMemoryLogger
+from torchtnt.utils.loggers.in_memory import InMemoryLogger
 
 
 class InMemoryLoggerTest(unittest.TestCase):

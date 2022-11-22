@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Mapping
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from torchtnt.data.iterators import (
+from torchtnt.utils.data.iterators import (
     AllDatasetBatches,
     DataIterationStrategy,
     InOrder,
@@ -22,7 +22,7 @@ from torchtnt.data.iterators import (
     RoundRobin,
     StoppingMechanism,
 )
-from torchtnt.data.multi_dataloader import MultiDataLoader
+from torchtnt.utils.data.multi_dataloader import MultiDataLoader
 
 
 class RandomDataset(Dataset[torch.Tensor]):

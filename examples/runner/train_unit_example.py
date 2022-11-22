@@ -23,8 +23,6 @@ from torch.distributed.fsdp import (
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.data import CudaDataPrefetcher
-from torchtnt.loggers import TensorBoardLogger
 from torchtnt.runner import init_train_state, State, train, TrainUnit
 from torchtnt.runner.callbacks import (
     LearningRateMonitor,
@@ -32,6 +30,8 @@ from torchtnt.runner.callbacks import (
     TensorBoardParameterMonitor,
 )
 from torchtnt.utils import get_timer_summary, init_from_env, seed
+from torchtnt.utils.data import CudaDataPrefetcher
+from torchtnt.utils.loggers import TensorBoardLogger
 
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
