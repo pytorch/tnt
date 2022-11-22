@@ -86,7 +86,7 @@ class GarbageCollectorTest(unittest.TestCase):
         )
         self.assertEqual(gc_callback_mock.on_eval_end.call_count, 1)
 
-    def test_garbage_collector_enabled_evaluate(self):
+    def test_garbage_collector_enabled_evaluate(self) -> None:
         """
         Test garbage collection is enabled after runs are finished (with evaluate entry point)
         """
@@ -126,7 +126,7 @@ class GarbageCollectorTest(unittest.TestCase):
         )
         self.assertEqual(gc_callback_mock.on_predict_end.call_count, 1)
 
-    def test_garbage_collector_enabled_predict(self):
+    def test_garbage_collector_enabled_predict(self) -> None:
         """
         Test garbage collection is enabled after runs are finished (with predict entry point)
         """
