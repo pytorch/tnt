@@ -76,6 +76,48 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 os.path.exists(expected_path) and os.path.isdir(expected_path)
             )
 
+    def test_save_restore(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 2
+        expected_steps_per_epoch = math.ceil(dataset_len / batch_size)
+        save_every_n_train_steps = 2
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        expected_paths: List[str] = []
+        with tempfile.TemporaryDirectory() as temp_dir:
+            cumulative_steps = 0
+            for epoch in range(max_epochs):
+                for _ in range(
+                    save_every_n_train_steps,
+                    expected_steps_per_epoch + 1,
+                    save_every_n_train_steps,
+                ):
+                    cumulative_steps += save_every_n_train_steps
+                    expected_paths.append(
+                        os.path.join(temp_dir, f"epoch_{epoch}_step_{cumulative_steps}")
+                    )
+            snapshot_cb = TorchSnapshotSaver(
+                temp_dir,
+                save_every_n_train_steps=save_every_n_train_steps,
+                replicated=["**"],
+            )
+            train(state, my_unit, callbacks=[snapshot_cb])
+
+            end_num_steps_completed = state.train_state.progress.num_steps_completed
+            self.assertGreater(len(expected_paths), 0)
+            snapshot_cb.restore(expected_paths[0], state, my_unit)
+            restored_num_steps_completed = (
+                state.train_state.progress.num_steps_completed
+            )
+            # A snapshot is saved every n steps
+            # so the first snapshot's progress will be equal to save_every_n_train_steps
+            self.assertNotEqual(restored_num_steps_completed, end_num_steps_completed)
+            self.assertEqual(restored_num_steps_completed, save_every_n_train_steps)
+
     def test_saver_invalid_args(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             with self.assertRaisesRegex(
