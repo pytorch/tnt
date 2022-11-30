@@ -12,7 +12,8 @@ from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import _Stateful as StatefulProtocol, TTrainUnit
-from torchtnt.utils import rank_zero_info
+from torchtnt.utils import rank_zero_info, rank_zero_warn
+from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 
 try:
     import torchsnapshot
@@ -68,6 +69,8 @@ class TorchSnapshotSaver(Callback):
         self._dirpath: str = dirpath
         self._replicated: Set[str] = set(replicated or [])
 
+        self._pending: Optional[PendingSnapshot] = None
+
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         """Validate there's no key collision for the app state."""
         app_state = unit.app_state()
@@ -87,12 +90,7 @@ class TorchSnapshotSaver(Callback):
         # TODO: discuss whether this path should be customized
         epoch = train_state.progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
-
-        # TODO: use async take and ensure pending snapshot is done before saving the next one
-        torchsnapshot.Snapshot.take(
-            snapshot_path, app_state=app_state, replicated=list(self._replicated)
-        )
-        rank_zero_info(f"Saved snapshot to path: {snapshot_path}")
+        self.async_snapshot(snapshot_path, app_state, wait=False)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         train_state = none_throws(state.train_state)
@@ -111,12 +109,41 @@ class TorchSnapshotSaver(Callback):
         # TODO: discuss whether this path should be customized
         global_step = train_progress.num_steps_completed
         snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
+        self.async_snapshot(snapshot_path, app_state, wait=True)
 
-        # TODO: use async take and ensure pending snapshot is done before saving the next one
-        torchsnapshot.Snapshot.take(
-            snapshot_path, app_state=app_state, replicated=list(self._replicated)
+    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
+        self.wait()
+
+    def on_exception(self, state: State, unit: TTrainUnit, exc: BaseException) -> None:
+        self.wait()
+
+    def wait(self) -> None:
+        if self._pending is not None:
+            self._pending.wait()
+
+    def async_snapshot(
+        self, snapshot_path: str, app_state: Dict[str, _TStateful], *, wait: bool
+    ) -> bool:
+        if self._pending is not None:
+            if self._pending.path == snapshot_path:
+                # Snapshot for this step already has been saved.
+                # This can happen when on_train_step and on_valid_step trigger at the same step.
+                return True
+            prev_snapshot = self._pending.path
+            pending = not self._pending.done()
+            if pending and wait:
+                self._pending.wait()
+            elif pending:
+                rank_zero_warn(
+                    f"Still writing previous snapshot, will skip this one. Consider increasing 'frequency' (current {self._save_every_n_train_steps})"
+                )
+                return False
+
+        self._pending = Snapshot.async_take(
+            str(snapshot_path), app_state=app_state, replicated=list(self._replicated)
         )
-        rank_zero_info(f"Saved snapshot to path: {snapshot_path}")
+        rank_zero_info(f"Saving snapshot to path: {snapshot_path}")
+        return True
 
     @staticmethod
     def restore(
