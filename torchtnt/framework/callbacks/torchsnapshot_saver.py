@@ -90,7 +90,7 @@ class TorchSnapshotSaver(Callback):
         # TODO: discuss whether this path should be customized
         epoch = train_state.progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
-        self.async_snapshot(snapshot_path, app_state, wait=False)
+        self._async_snapshot(snapshot_path, app_state, wait=False)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         train_state = none_throws(state.train_state)
@@ -109,19 +109,19 @@ class TorchSnapshotSaver(Callback):
         # TODO: discuss whether this path should be customized
         global_step = train_progress.num_steps_completed
         snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
-        self.async_snapshot(snapshot_path, app_state, wait=True)
+        self._async_snapshot(snapshot_path, app_state, wait=True)
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
-        self.wait()
+        self._wait()
 
     def on_exception(self, state: State, unit: TTrainUnit, exc: BaseException) -> None:
-        self.wait()
+        self._wait()
 
-    def wait(self) -> None:
+    def _wait(self) -> None:
         if self._pending is not None:
             self._pending.wait()
 
-    def async_snapshot(
+    def _async_snapshot(
         self, snapshot_path: str, app_state: Dict[str, _TStateful], *, wait: bool
     ) -> bool:
         if self._pending is not None:
