@@ -5,15 +5,16 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
+import logging
 from typing import Dict, List, Optional, Set
 
 from pyre_extensions import none_throws
+from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import _Stateful as StatefulProtocol, TTrainUnit
 from torchtnt.utils import rank_zero_info, rank_zero_warn
-from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 
 try:
     import torchsnapshot
@@ -28,6 +29,8 @@ _EVAL_PROGRESS_STATE_KEY = "eval_progress"
 _RNG_STATE_KEY = "rng_state"
 _TRAIN_PROGRESS_STATE_KEY = "train_progress"
 _TRAIN_DL_STATE_KEY = "train_dataloader"
+
+logger = logging.getLogger(__name__)
 
 
 class TorchSnapshotSaver(Callback):
@@ -135,14 +138,15 @@ class TorchSnapshotSaver(Callback):
                 self._pending.wait()
             elif pending:
                 rank_zero_warn(
-                    f"Still writing previous snapshot, will skip this one. Consider increasing 'frequency' (current {self._save_every_n_train_steps})"
+                    f"Still writing previous snapshot, will skip this one. Consider increasing 'frequency' (current {self._save_every_n_train_steps})",
+                    logger=logger,
                 )
                 return False
 
         self._pending = Snapshot.async_take(
             str(snapshot_path), app_state=app_state, replicated=list(self._replicated)
         )
-        rank_zero_info(f"Saving snapshot to path: {snapshot_path}")
+        rank_zero_info(f"Saving snapshot to path: {snapshot_path}", logger=logger)
         return True
 
     @staticmethod
