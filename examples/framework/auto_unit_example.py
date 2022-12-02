@@ -7,7 +7,6 @@
 
 import argparse
 import logging
-import os
 import sys
 import tempfile
 from argparse import Namespace
@@ -25,7 +24,16 @@ from typing_extensions import Literal
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+
 Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+def prepare_module(input_dim: int, device: torch.device) -> nn.Module:
+    """
+    Instantiate a nn.Module which will define the architecture of your model. If using a data parallel technique, wrap the module in DDP or FSDP.
+    See https://pytorch.org/docs/stable/generated/torch.nn.Module.html for docs.
+    """
+    return nn.Linear(input_dim, 1, device=device)
 
 
 def _generate_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
@@ -34,6 +42,19 @@ def _generate_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
     data = torch.randn(num_samples, input_dim)
     labels = torch.randint(low=0, high=2, size=(num_samples,))
     return TensorDataset(data, labels)
+
+
+def prepare_dataloader(
+    num_samples: int, input_dim: int, batch_size: int, device: torch.device
+) -> torch.utils.data.DataLoader:
+    """Instantiate DataLoader"""
+    # pin_memory enables faster host to GPU copies
+    on_cuda = device.type == "cuda"
+    return torch.utils.data.DataLoader(
+        _generate_dataset(num_samples, input_dim),
+        batch_size=batch_size,
+        pin_memory=on_cuda,
+    )
 
 
 class MyUnit(AutoUnit[Batch]):
@@ -111,20 +132,10 @@ def main(argv: List[str]) -> None:
     # device and process group initialization
     device = init_from_env()
 
-    _logger.info(
-        f"LOCAL_RANK: {os.environ.get('LOCAL_RANK', '0')}\n"
-        f"RANK: {os.environ.get('RANK', '0')}\n"
-        f"GROUP_RANK: {os.environ.get('GROUP_RANK', '0')}\n"
-        f"WORLD_SIZE: {os.environ.get('WORLD_SIZE', '0')}"
-    )
-
     path = tempfile.mkdtemp()
     tb_logger = TensorBoardLogger(path)
 
-    module = nn.Linear(args.input_dim, 1)
-    # move module to device
-    module = module.to(device)
-
+    module = prepare_module(args.input_dim, device)
     optimizer = torch.optim.SGD(module.parameters(), lr=args.lr)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     train_accuracy = BinaryAccuracy(device=device)
@@ -135,7 +146,7 @@ def main(argv: List[str]) -> None:
         lr_scheduler=lr_scheduler,
         device=device,
         log_frequency_steps=args.log_frequency_steps,
-        precision="fp16",
+        precision=args.precision,
         train_accuracy=train_accuracy,
         tb_logger=tb_logger,
         gradient_accumulation_steps=4,
@@ -143,19 +154,12 @@ def main(argv: List[str]) -> None:
         clip_grad_norm=1.0,
     )
 
-    num_samples = 1024
-    train_dataloader = torch.utils.data.DataLoader(
-        dataset=_generate_dataset(num_samples=num_samples, input_dim=args.input_dim),
-        batch_size=args.batch_size,
-        pin_memory=(device.type == "cuda"),
+    train_dataloader = prepare_dataloader(
+        args.num_batches_per_epoch, args.input_dim, args.batch_size, device
     )
-
-    eval_dataloader = torch.utils.data.DataLoader(
-        dataset=_generate_dataset(num_samples=num_samples, input_dim=args.input_dim),
-        batch_size=args.batch_size,
-        pin_memory=(device.type == "cuda"),
+    eval_dataloader = prepare_dataloader(
+        args.num_batches_per_epoch, args.input_dim, args.batch_size, device
     )
-
     state = init_fit_state(
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
@@ -163,7 +167,6 @@ def main(argv: List[str]) -> None:
     )
 
     fit(state, my_unit)
-
     print(get_timer_summary(state.timer))
 
 
@@ -173,11 +176,18 @@ def get_args(argv: List[str]) -> Namespace:
     parser.add_argument("--seed", type=int, default=0, help="random seed")
     parser.add_argument("--input-dim", type=int, default=32, help="input dimension")
     parser.add_argument("--max-epochs", type=int, default=2, help="training epochs")
+    parser.add_argument(
+        "--num-batches-per-epoch",
+        type=int,
+        default=1024,
+        help="number of batches per epoch",
+    )
     parser.add_argument("--batch-size", type=int, default=32, help="batch size")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument(
         "--log-frequency-steps", type=int, default=10, help="log every n steps"
     )
+    parser.add_argument("--precision", type=str, default="bf16")
     return parser.parse_args(argv)
 
 
