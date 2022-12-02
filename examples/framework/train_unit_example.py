@@ -7,30 +7,17 @@
 
 import argparse
 import logging
-import os
 import sys
 import tempfile
 from argparse import Namespace
-from typing import List, Optional, Tuple, Union
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
-from torch.distributed.fsdp import (
-    CPUOffload,
-    FullyShardedDataParallel as FSDP,
-    MixedPrecision,
-)
-from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import init_train_state, State, train, TrainUnit
-from torchtnt.framework.callbacks import (
-    LearningRateMonitor,
-    PyTorchProfiler,
-    TensorBoardParameterMonitor,
-)
 from torchtnt.utils import get_timer_summary, init_from_env, seed
-from torchtnt.utils.data import CudaDataPrefetcher
 from torchtnt.utils.loggers import TensorBoardLogger
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -39,39 +26,12 @@ logging.basicConfig(level=logging.INFO)
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
-def prepare_module(
-    input_dim: int,
-    device: torch.device,
-    strategy: Optional[str],
-    precision: Optional[torch.dtype],
-) -> nn.Module:
+def prepare_module(input_dim: int, device: torch.device) -> nn.Module:
     """
-    Instantiate a nn.Module which will define the architecture of your model. If using a data parallel technique, wrap the module in DDP or FSDP.
+    Instantiate a nn.Module which will define the architecture of your model.
     See https://pytorch.org/docs/stable/generated/torch.nn.Module.html for docs.
     """
-    module = nn.Linear(input_dim, 1)
-    # move module to device
-    module = module.to(device)
-
-    if strategy == "ddp":
-        # wrap module in DDP
-        device_ids = None
-        if device.type == "cuda":
-            device_ids = [device.index]
-        return DDP(module, device_ids=device_ids)
-    elif strategy == "fsdp":
-        # wrap module in FSDP
-        return FSDP(
-            module,
-            cpu_offload=CPUOffload(offload_params=True),
-            mixed_precision=MixedPrecision(
-                param_dtype=precision,
-                reduce_dtype=precision,
-                buffer_dtype=precision,
-            ),
-        )
-    else:
-        return module
+    return nn.Linear(input_dim, 1, device=device)
 
 
 def _generate_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
@@ -84,18 +44,15 @@ def _generate_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
 
 def prepare_dataloader(
     num_samples: int, input_dim: int, batch_size: int, device: torch.device
-) -> Union[CudaDataPrefetcher, torch.utils.data.DataLoader]:
-    """Instantiate DataLoader and CudaDataPrefetcher"""
+) -> torch.utils.data.DataLoader:
+    """Instantiate DataLoader"""
     # pin_memory enables faster host to GPU copies
     on_cuda = device.type == "cuda"
-    dataloader = torch.utils.data.DataLoader(
+    return torch.utils.data.DataLoader(
         _generate_dataset(num_samples, input_dim),
         batch_size=batch_size,
         pin_memory=on_cuda,
     )
-    if on_cuda:
-        dataloader = CudaDataPrefetcher(dataloader, device)
-    return dataloader
 
 
 class MyTrainUnit(TrainUnit[Batch]):
@@ -145,7 +102,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         acc = self.train_accuracy.compute()
         self.tb_logger.log("accuracy_epoch", acc, step_count)
 
-        # reset the metric every epoch
+        # reset the metric at the end of every epoch
         self.train_accuracy.reset()
 
         # step the learning rate scheduler
@@ -156,32 +113,23 @@ def main(argv: List[str]) -> None:
     # parse command line arguments
     args = get_args(argv)
 
-    precision = None
-    if args.precision == "fp16":
-        precision = torch.float16
-    elif args.precision == "bf16":
-        precision = torch.bfloat16
-
     # seed the RNG for better reproducibility. see docs https://pytorch.org/docs/stable/notes/randomness.html
     seed(args.seed)
 
     # device and process group initialization
     device = init_from_env()
 
-    _logger.info(
-        f"LOCAL_RANK: {os.environ.get('LOCAL_RANK', '0')}\n"
-        f"RANK: {os.environ.get('RANK', '0')}\n"
-        f"GROUP_RANK: {os.environ.get('GROUP_RANK', '0')}\n"
-        f"WORLD_SIZE: {os.environ.get('WORLD_SIZE', '0')}"
-    )
-
     path = tempfile.mkdtemp()
     tb_logger = TensorBoardLogger(path)
 
-    module = prepare_module(args.input_dim, device, args.strategy, precision)
+    module = prepare_module(args.input_dim, device)
     optimizer = torch.optim.SGD(module.parameters(), lr=args.lr)
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     train_accuracy = BinaryAccuracy(device=device)
+
+    dataloader = prepare_dataloader(
+        args.num_batches_per_epoch, args.input_dim, args.batch_size, device
+    )
 
     my_unit = MyTrainUnit(
         module,
@@ -191,32 +139,12 @@ def main(argv: List[str]) -> None:
         tb_logger,
         args.log_frequency_steps,
     )
-
-    profiler = PyTorchProfiler(
-        profiler=torch.profiler.profile(
-            schedule=torch.profiler.schedule(wait=2, warmup=2, active=6, repeat=1),
-            on_trace_ready=torch.profiler.tensorboard_trace_handler(dir_name=path),
-            with_stack=True,
-        )
-    )
-    parameter_monitor = TensorBoardParameterMonitor(tb_logger)
-    lr_monitor = LearningRateMonitor(tb_logger)
-
-    num_samples = 10240
-    train_dataloader = prepare_dataloader(
-        num_samples, args.input_dim, args.batch_size, device
-    )
-
     state = init_train_state(
-        dataloader=train_dataloader,
+        dataloader=dataloader,
         max_epochs=args.max_epochs,
     )
 
-    train(
-        state,
-        my_unit,
-        callbacks=[lr_monitor, parameter_monitor, profiler],
-    )
+    train(state, my_unit)
     print(get_timer_summary(state.timer))
 
 
@@ -226,24 +154,16 @@ def get_args(argv: List[str]) -> Namespace:
     parser.add_argument("--seed", type=int, default=0, help="random seed")
     parser.add_argument("--input-dim", type=int, default=32, help="input dimension")
     parser.add_argument("--max-epochs", type=int, default=2, help="training epochs")
+    parser.add_argument(
+        "--num-batches-per-epoch",
+        type=int,
+        default=1024,
+        help="number of batches per epoch",
+    )
     parser.add_argument("--batch-size", type=int, default=32, help="batch size")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument(
         "--log-frequency-steps", type=int, default=10, help="log every n steps"
-    )
-    parser.add_argument(
-        "--precision",
-        type=str,
-        default=None,
-        help="fp16 or bf16",
-        choices=["fp16", "bf16"],
-    )
-    parser.add_argument(
-        "--strategy",
-        type=str,
-        default=None,
-        help="define the training strategy (ddp or fsdp)",
-        choices=["ddp", "fsdp"],
     )
     return parser.parse_args(argv)
 
