@@ -8,7 +8,10 @@
 import logging
 from typing import Any, Optional
 
+from packaging.version import Version
+
 from torchtnt.utils.distributed import get_global_rank
+from torchtnt.utils.version import get_python_version
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -25,7 +28,9 @@ def rank_zero_debug(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.debug(*args, stacklevel=2, **kwargs)
+    if _supports_stacklevel():
+        kwargs["stacklevel"] = 2
+    logger.debug(*args, **kwargs)
 
 
 def rank_zero_info(
@@ -34,7 +39,9 @@ def rank_zero_info(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.info(*args, stacklevel=2, **kwargs)
+    if _supports_stacklevel():
+        kwargs["stacklevel"] = 2
+    logger.info(*args, **kwargs)
 
 
 def rank_zero_warn(
@@ -43,7 +50,9 @@ def rank_zero_warn(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.warn(*args, stacklevel=2, **kwargs)
+    if _supports_stacklevel():
+        kwargs["stacklevel"] = 2
+    logger.warning(*args, **kwargs)
 
 
 def rank_zero_error(
@@ -52,7 +61,9 @@ def rank_zero_error(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.error(*args, stacklevel=2, **kwargs)
+    if _supports_stacklevel():
+        kwargs["stacklevel"] = 2
+    logger.error(*args, **kwargs)
 
 
 def rank_zero_critical(
@@ -61,4 +72,10 @@ def rank_zero_critical(
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
-    logger.critical(*args, stacklevel=2, **kwargs)
+    if _supports_stacklevel():
+        kwargs["stacklevel"] = 2
+    logger.critical(*args, **kwargs)
+
+
+def _supports_stacklevel() -> bool:
+    return get_python_version() >= Version("3.8.0")
