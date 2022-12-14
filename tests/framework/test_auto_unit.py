@@ -270,7 +270,8 @@ class TestAutoUnit(unittest.TestCase):
                 x = self.l2(x)
                 return x
 
-        my_module = Net()
+        device = init_from_env()
+        my_module = Net().to(device)
         my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
         my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
 
