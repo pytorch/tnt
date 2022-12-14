@@ -6,7 +6,7 @@
 
 import os
 import logging
-from typing import Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 from pyre_extensions import none_throws
 from torchsnapshot.snapshot import PendingSnapshot, Snapshot
@@ -72,7 +72,7 @@ class TorchSnapshotSaver(Callback):
         self._dirpath: str = dirpath
         self._replicated: Set[str] = set(replicated or [])
 
-        self._pending: Optional[PendingSnapshot] = None
+        self._prev_snapshot: Optional[PendingSnapshot] = None
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         """Validate there's no key collision for the app state."""
@@ -117,33 +117,33 @@ class TorchSnapshotSaver(Callback):
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         self._wait()
 
-    def on_exception(self, state: State, unit: TTrainUnit, exc: BaseException) -> None:
+    def on_exception(self, state: State, unit: Any, exc: BaseException) -> None:
         self._wait()
 
     def _wait(self) -> None:
-        if self._pending is not None:
-            self._pending.wait()
+        if self._prev_snapshot is not None:
+            self._prev_snapshot.wait()
 
     def _async_snapshot(
         self, snapshot_path: str, app_state: Dict[str, _TStateful], *, wait: bool
     ) -> bool:
-        if self._pending is not None:
-            if self._pending.path == snapshot_path:
+        prev_snapshot = self._prev_snapshot
+        if prev_snapshot is not None:
+            if prev_snapshot.path == snapshot_path:
                 # Snapshot for this step already has been saved.
-                # This can happen when on_train_step and on_valid_step trigger at the same step.
+                # This can happen if we call _async_snapshot twice at the same step.
                 return True
-            prev_snapshot = self._pending.path
-            pending = not self._pending.done()
-            if pending and wait:
-                self._pending.wait()
-            elif pending:
+            still_pending = not prev_snapshot.done()
+            if still_pending and wait:
+                prev_snapshot.wait()
+            elif still_pending:
                 rank_zero_warn(
                     f"Still writing previous snapshot, will skip this one. Consider increasing 'frequency' (current {self._save_every_n_train_steps})",
                     logger=logger,
                 )
                 return False
 
-        self._pending = Snapshot.async_take(
+        self._prev_snapshot = Snapshot.async_take(
             str(snapshot_path), app_state=app_state, replicated=list(self._replicated)
         )
         rank_zero_info(f"Saving snapshot to path: {snapshot_path}", logger=logger)
