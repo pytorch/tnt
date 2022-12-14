@@ -11,6 +11,7 @@ from .device import (
     get_nvidia_smi_gpu_stats,
     get_psutil_cpu_stats,
     GPUStats,
+    maybe_enable_tf32,
 )
 from .distributed import (
     all_gather_tensors,
@@ -41,8 +42,11 @@ from .version import (
     is_torch_version_geq_1_10,
     is_torch_version_geq_1_11,
     is_torch_version_geq_1_12,
+    is_torch_version_geq_1_13,
+    is_torch_version_geq_1_14,
     is_torch_version_geq_1_8,
     is_torch_version_geq_1_9,
+    is_torch_version_geq_2_0,
     is_windows,
 )
 
@@ -53,6 +57,7 @@ __all__ = [
     "get_nvidia_smi_gpu_stats",
     "get_psutil_cpu_stats",
     "GPUStats",
+    "maybe_enable_tf32",
     "all_gather_tensors",
     "get_global_rank",
     "get_process_group_backend_from_device",
@@ -85,7 +90,10 @@ __all__ = [
     "is_torch_version_geq_1_10",
     "is_torch_version_geq_1_11",
     "is_torch_version_geq_1_12",
+    "is_torch_version_geq_1_13",
+    "is_torch_version_geq_1_14",
     "is_torch_version_geq_1_8",
     "is_torch_version_geq_1_9",
+    "is_torch_version_geq_2_0",
     "is_windows",
 ]
