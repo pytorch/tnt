@@ -12,7 +12,8 @@ from datetime import timedelta
 
 import torch
 from torch.distributed.constants import default_pg_timeout
-from torchtnt.utils import get_device_from_env, get_process_group_backend_from_device
+from torchtnt.utils import get_process_group_backend_from_device
+from torchtnt.utils.device import get_device_from_env, maybe_enable_tf32
 
 _log: logging.Logger = logging.getLogger(__name__)
 
@@ -32,9 +33,11 @@ def _check_dist_env() -> bool:
 
 
 def init_from_env(
+    *,
     device_type: T.Optional[str] = None,
     pg_backend: T.Optional[str] = None,
     pg_timeout: timedelta = default_pg_timeout,
+    float32_matmul_precision: str = "high",
 ) -> torch.device:
     """Utility function that initializes the device and process group, if applicable.
 
@@ -53,6 +56,7 @@ def init_from_env(
                                     default process group backend from the device
         pg_timeout (timedelta, optional): Timeout for operations executed against the process
                                           group. Default value equals 30 minutes
+        float32_matmul_precision (str, optional): The setting for torch's precision of matrix multiplications.
     """
     device = torch.device("cpu") if device_type == "cpu" else get_device_from_env()
 
@@ -78,4 +82,5 @@ def init_from_env(
             else get_process_group_backend_from_device(device)
         )
         torch.distributed.init_process_group(backend=pg_backend, timeout=pg_timeout)
+    maybe_enable_tf32(float32_matmul_precision)
     return device

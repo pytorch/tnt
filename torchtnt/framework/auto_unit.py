@@ -24,10 +24,11 @@ from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 from torchtnt.utils import (
     copy_data_to_device,
     get_device_from_env,
+    is_torch_version_geq_1_12,
+    maybe_enable_tf32,
     transfer_batch_norm_stats,
     transfer_weights,
 )
-from torchtnt.utils.version import is_torch_version_geq_1_12
 from typing_extensions import Literal
 
 TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
@@ -127,6 +128,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         self.lr_scheduler = lr_scheduler
         self.step_lr_interval = step_lr_interval
         self.device: torch.device = device or get_device_from_env()
+        maybe_enable_tf32()
         if not log_frequency_steps > 0:
             raise ValueError(
                 f"log_frequency_steps must be > 0. Got {log_frequency_steps}"
