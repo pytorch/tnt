@@ -23,6 +23,8 @@ import sys
 import pytorch_sphinx_theme
 from torchtnt import __version__
 
+sys.path.append(os.path.abspath("./ext"))
+
 current_dir = os.path.dirname(__file__)
 target_dir = os.path.abspath(os.path.join(current_dir, "../.."))
 sys.path.insert(0, target_dir)
@@ -47,7 +49,25 @@ else:
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.napoleon", "sphinx.ext.autodoc", "sphinx.ext.intersphinx"]
+extensions = [
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autodoc",
+    "fbcode",
+]
+
+FBCODE = "fbcode" in os.getcwd()
+
+if not FBCODE:
+    extensions += [
+        "sphinx.ext.intersphinx",
+        "sphinxcontrib.katex",
+        "sphinx_gallery.gen_gallery",
+    ]
+if FBCODE:
+    nbsphinx_execute = "never"
+
+html_context = {"fbcode": FBCODE}
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
