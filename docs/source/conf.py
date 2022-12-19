@@ -60,8 +60,6 @@ FBCODE = "fbcode" in os.getcwd()
 if not FBCODE:
     extensions += [
         "sphinx.ext.intersphinx",
-        "sphinxcontrib.katex",
-        "sphinx_gallery.gen_gallery",
     ]
 if FBCODE:
     nbsphinx_execute = "never"
