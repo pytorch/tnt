@@ -33,9 +33,11 @@ TorchTNT API
    torchtnt.framework.rst
    torchtnt.utils.rst
 
-Indices and tables
-==================
+.. fbcode::
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   .. toctree::
+      :maxdepth: 2
+      :caption: API (Meta)
+      :glob:
+
+      torchtnt.meta.utils.rst

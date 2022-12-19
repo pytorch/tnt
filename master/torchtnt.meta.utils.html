@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to the TorchTNT documentation! &mdash; TorchTNT master documentation</title>
+  <title>Utils &mdash; TorchTNT master documentation</title>
   
 
   
@@ -32,7 +32,6 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="installation.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -290,7 +289,7 @@
   <ul class="pytorch-breadcrumbs">
     
       <li>
-        <a href="#">
+        <a href="index.html">
           
             Docs
           
@@ -298,13 +297,13 @@
       </li>
 
         
-      <li>Welcome to the TorchTNT documentation!</li>
+      <li>Utils</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="_sources/torchtnt.meta.utils.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -330,103 +329,13 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="welcome-to-the-torchtnt-documentation">
-<h1>Welcome to the TorchTNT documentation!<a class="headerlink" href="#welcome-to-the-torchtnt-documentation" title="Permalink to this heading">¶</a></h1>
-<p>TNT is a library for PyTorch training tools and utilities.</p>
-<p><a class="reference external" href="https://github.com/pytorch/tnt/#installation">Installation instructions</a></p>
-<section id="torchtnt-api">
-<h2>TorchTNT API<a class="headerlink" href="#torchtnt-api" title="Permalink to this heading">¶</a></h2>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Overview</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Framework</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callbacks</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.framework.html">Framework</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.AutoUnit"><code class="docutils literal notranslate"><span class="pre">AutoUnit</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.Callback"><code class="docutils literal notranslate"><span class="pre">Callback</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.EvalUnit"><code class="docutils literal notranslate"><span class="pre">EvalUnit</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.PhaseState"><code class="docutils literal notranslate"><span class="pre">PhaseState</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.PredictUnit"><code class="docutils literal notranslate"><span class="pre">PredictUnit</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.Progress"><code class="docutils literal notranslate"><span class="pre">Progress</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.State"><code class="docutils literal notranslate"><span class="pre">State</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.TrainUnit"><code class="docutils literal notranslate"><span class="pre">TrainUnit</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.evaluate"><code class="docutils literal notranslate"><span class="pre">evaluate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.fit"><code class="docutils literal notranslate"><span class="pre">fit()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.init_eval_state"><code class="docutils literal notranslate"><span class="pre">init_eval_state()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.init_fit_state"><code class="docutils literal notranslate"><span class="pre">init_fit_state()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.init_predict_state"><code class="docutils literal notranslate"><span class="pre">init_predict_state()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.init_train_state"><code class="docutils literal notranslate"><span class="pre">init_train_state()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.train"><code class="docutils literal notranslate"><span class="pre">train()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.utils.html">Utils</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.CPUStats"><code class="docutils literal notranslate"><span class="pre">CPUStats</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.EarlyStopChecker"><code class="docutils literal notranslate"><span class="pre">EarlyStopChecker</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.FullSyncPeriodicTimer"><code class="docutils literal notranslate"><span class="pre">FullSyncPeriodicTimer</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.GPUStats"><code class="docutils literal notranslate"><span class="pre">GPUStats</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.PGWrapper"><code class="docutils literal notranslate"><span class="pre">PGWrapper</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.RSSProfiler"><code class="docutils literal notranslate"><span class="pre">RSSProfiler</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.Timer"><code class="docutils literal notranslate"><span class="pre">Timer</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.all_gather_tensors"><code class="docutils literal notranslate"><span class="pre">all_gather_tensors()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.copy_data_to_device"><code class="docutils literal notranslate"><span class="pre">copy_data_to_device()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.days_to_secs"><code class="docutils literal notranslate"><span class="pre">days_to_secs()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_device_from_env"><code class="docutils literal notranslate"><span class="pre">get_device_from_env()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_filesystem"><code class="docutils literal notranslate"><span class="pre">get_filesystem()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_global_rank"><code class="docutils literal notranslate"><span class="pre">get_global_rank()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_nvidia_smi_gpu_stats"><code class="docutils literal notranslate"><span class="pre">get_nvidia_smi_gpu_stats()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_process_group_backend_from_device"><code class="docutils literal notranslate"><span class="pre">get_process_group_backend_from_device()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_psutil_cpu_stats"><code class="docutils literal notranslate"><span class="pre">get_psutil_cpu_stats()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_python_version"><code class="docutils literal notranslate"><span class="pre">get_python_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_tensor_size_bytes_map"><code class="docutils literal notranslate"><span class="pre">get_tensor_size_bytes_map()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_timer_summary"><code class="docutils literal notranslate"><span class="pre">get_timer_summary()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.get_torch_version"><code class="docutils literal notranslate"><span class="pre">get_torch_version()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.init_from_env"><code class="docutils literal notranslate"><span class="pre">init_from_env()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_out_of_cpu_memory"><code class="docutils literal notranslate"><span class="pre">is_out_of_cpu_memory()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_out_of_cuda_memory"><code class="docutils literal notranslate"><span class="pre">is_out_of_cuda_memory()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_out_of_memory_error"><code class="docutils literal notranslate"><span class="pre">is_out_of_memory_error()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_10"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_1_10()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_11"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_1_11()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_12"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_1_12()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_13"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_1_13()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_14"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_1_14()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_8"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_1_8()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_9"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_1_9()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_2_0"><code class="docutils literal notranslate"><span class="pre">is_torch_version_geq_2_0()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.is_windows"><code class="docutils literal notranslate"><span class="pre">is_windows()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.maybe_enable_tf32"><code class="docutils literal notranslate"><span class="pre">maybe_enable_tf32()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.measure_rss_deltas"><code class="docutils literal notranslate"><span class="pre">measure_rss_deltas()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.rank_zero_critical"><code class="docutils literal notranslate"><span class="pre">rank_zero_critical()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.rank_zero_debug"><code class="docutils literal notranslate"><span class="pre">rank_zero_debug()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.rank_zero_error"><code class="docutils literal notranslate"><span class="pre">rank_zero_error()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.rank_zero_info"><code class="docutils literal notranslate"><span class="pre">rank_zero_info()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.rank_zero_print"><code class="docutils literal notranslate"><span class="pre">rank_zero_print()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.rank_zero_warn"><code class="docutils literal notranslate"><span class="pre">rank_zero_warn()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.seed"><code class="docutils literal notranslate"><span class="pre">seed()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.sync_bool"><code class="docutils literal notranslate"><span class="pre">sync_bool()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.transfer_batch_norm_stats"><code class="docutils literal notranslate"><span class="pre">transfer_batch_norm_stats()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#torchtnt.utils.transfer_weights"><code class="docutils literal notranslate"><span class="pre">transfer_weights()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#module-torchtnt.utils.data">Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="torchtnt.utils.html#module-torchtnt.utils.loggers">Loggers</a></li>
-</ul>
-</li>
-</ul>
-</div>
+  <section id="utils">
+<h1>Utils<a class="headerlink" href="#utils" title="Permalink to this heading">¶</a></h1>
+<section id="data">
+<h2>Data<a class="headerlink" href="#data" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="loggers">
+<h2>Loggers<a class="headerlink" href="#loggers" title="Permalink to this heading">¶</a></h2>
 </section>
 </section>
 
@@ -435,13 +344,6 @@
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-    </div>
   
 
   
@@ -471,10 +373,9 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Welcome to the TorchTNT documentation!</a><ul>
-<li><a class="reference internal" href="#torchtnt-api">TorchTNT API</a><ul>
-</ul>
-</li>
+<li><a class="reference internal" href="#">Utils</a><ul>
+<li><a class="reference internal" href="#data">Data</a></li>
+<li><a class="reference internal" href="#loggers">Loggers</a></li>
 </ul>
 </li>
 </ul>
