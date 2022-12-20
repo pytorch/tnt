@@ -60,11 +60,11 @@ class MyTrainUnit(TrainUnit[Batch]):
         self,
         module: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
+        lr_scheduler: torch.optim.lr_scheduler.LRScheduler,
         train_accuracy: BinaryAccuracy,
         tb_logger: TensorBoardLogger,
         log_frequency_steps: int,
-    ):
+    ) -> None:
         super().__init__()
         self.module = module
         self.optimizer = optimizer
@@ -90,6 +90,7 @@ class MyTrainUnit(TrainUnit[Batch]):
 
         # update metrics & logs
         self.train_accuracy.update(outputs, targets)
+        # pyre-fixme[16]: See T137070928
         step_count = state.train_state.progress.num_steps_completed
         if (step_count + 1) % self.log_frequency_steps == 0:
             acc = self.train_accuracy.compute()
@@ -98,6 +99,7 @@ class MyTrainUnit(TrainUnit[Batch]):
 
     def on_train_epoch_end(self, state: State) -> None:
         # compute and log the metric at the end of the epoch
+        # pyre-fixme[16]: See T137070928
         step_count = state.train_state.progress.num_steps_completed
         acc = self.train_accuracy.compute()
         self.tb_logger.log("accuracy_epoch", acc, step_count)

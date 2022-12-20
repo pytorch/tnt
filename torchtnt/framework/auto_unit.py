@@ -111,7 +111,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         *,
         module: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        lr_scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        lr_scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
         step_lr_interval: Literal["step", "epoch"] = "epoch",
         device: Optional[torch.device] = None,
         log_frequency_steps: int = 1000,
