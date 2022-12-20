@@ -4,8 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional, Set
 
 from pyre_extensions import none_throws
@@ -30,7 +30,7 @@ _RNG_STATE_KEY = "rng_state"
 _TRAIN_PROGRESS_STATE_KEY = "train_progress"
 _TRAIN_DL_STATE_KEY = "train_dataloader"
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class TorchSnapshotSaver(Callback):
