@@ -39,6 +39,7 @@ from .timer import FullSyncPeriodicTimer, get_timer_summary, Timer
 from .version import (
     get_python_version,
     get_torch_version,
+    is_torch_version_ge_1_13_1,
     is_torch_version_geq_1_10,
     is_torch_version_geq_1_11,
     is_torch_version_geq_1_12,
@@ -87,6 +88,7 @@ __all__ = [
     "Timer",
     "get_python_version",
     "get_torch_version",
+    "is_torch_version_ge_1_13_1",
     "is_torch_version_geq_1_10",
     "is_torch_version_geq_1_11",
     "is_torch_version_geq_1_12",
