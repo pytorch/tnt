@@ -87,3 +87,7 @@ class TestVersion(unittest.TestCase):
             self.assertTrue(version.is_torch_version_geq_1_10())
             self.assertTrue(version.is_torch_version_geq_1_11())
             self.assertTrue(version.is_torch_version_geq_1_12())
+
+        with patch.object(torch, "__version__", "2.0.0a0"):
+            self.assertTrue(version.is_torch_version_ge_1_13_1())
+            self.assertFalse(version.is_torch_version_geq_2_0())
