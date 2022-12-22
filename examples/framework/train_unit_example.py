@@ -18,6 +18,7 @@ from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import init_train_state, State, train, TrainUnit
 from torchtnt.utils import get_timer_summary, init_from_env, seed
+from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.loggers import TensorBoardLogger
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -61,6 +62,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         module: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         lr_scheduler: torch.optim.lr_scheduler.LRScheduler,
+        device: torch.device,
         train_accuracy: BinaryAccuracy,
         tb_logger: TensorBoardLogger,
         log_frequency_steps: int,
@@ -69,6 +71,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.module = module
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
+        self.device = device
 
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = train_accuracy
@@ -77,6 +80,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.tb_logger = tb_logger
 
     def train_step(self, state: State, data: Batch) -> None:
+        data = copy_data_to_device(data, self.device)
         inputs, targets = data
         # convert targets to float Tensor for binary_cross_entropy_with_logits
         targets = targets.float()
@@ -137,6 +141,7 @@ def main(argv: List[str]) -> None:
         module,
         optimizer,
         lr_scheduler,
+        device,
         train_accuracy,
         tb_logger,
         args.log_frequency_steps,
