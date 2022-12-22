@@ -26,6 +26,7 @@ from torchtnt.utils import (
     get_device_from_env,
     is_torch_version_geq_1_12,
     maybe_enable_tf32,
+    TLRScheduler,
     transfer_batch_norm_stats,
     transfer_weights,
 )
@@ -111,7 +112,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         *,
         module: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        lr_scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
+        lr_scheduler: Optional[TLRScheduler] = None,
         step_lr_interval: Literal["step", "epoch"] = "epoch",
         device: Optional[torch.device] = None,
         log_frequency_steps: int = 1000,
