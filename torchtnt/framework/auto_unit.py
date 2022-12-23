@@ -30,6 +30,7 @@ from torchtnt.utils import (
     transfer_batch_norm_stats,
     transfer_weights,
 )
+from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
 
 TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
@@ -55,6 +56,20 @@ class SWAParams:
     avg_fn: Optional[TSWA_avg_fn] = None
 
 
+@dataclass
+class TorchDynamoParams:
+    """
+    Dataclass to store parameters for torchdynamo.
+
+    Args:
+        backend: a string backend name in `torch._dynamo.list_backends()`
+    """
+
+    backend: str
+
+
+# pyre-ignore: Invalid type parameters [24]
+TSelf = TypeVar("TSelf", bound="AutoUnit")
 TData = TypeVar("TData")
 
 
@@ -89,6 +104,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
+        torchdynamo_params: params for TorchDynamo
 
     Attributes:
         module: module to be used during training.
@@ -105,6 +121,10 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
+        torchdynamo_params: params for TorchDynamo
+
+            Note:
+                TorchDynamo support is only available in PyTorch 2.0 or higher.
     """
 
     def __init__(
@@ -122,6 +142,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_norm: Optional[float] = None,
         clip_grad_value: Optional[float] = None,
         swa_params: Optional[SWAParams] = None,
+        torchdynamo_params: Optional[TorchDynamoParams] = None,
     ) -> None:
         super().__init__()
         self.module = module
@@ -191,6 +212,20 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
                 anneal_strategy=swa_params.anneal_strategy,
             )
 
+        if torchdynamo_params:
+            if not is_torch_version_ge_1_13_1():
+                raise RuntimeError(
+                    "TorchDynamo support is available only in PyTorch 2.0 or higher. "
+                    "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
+                )
+            # pyre-ignore
+            self.compute_loss = _dynamo_wrapper(self.compute_loss, torchdynamo_params)
+            # pyre-ignore
+            self._forward_and_backward = _dynamo_wrapper(
+                self._forward_and_backward, torchdynamo_params
+            )
+            self.module = _dynamo_wrapper(self.module, torchdynamo_params)
+
         # TODO: Make AutoTrainUnit work when data type is Iterator
 
     @abstractmethod
@@ -253,11 +288,27 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         data = self.move_data_to_device(state, data)
 
         train_state = none_throws(state.train_state)
-
         should_update_weights = (
             train_state.progress.num_steps_completed_in_epoch + 1
         ) % self.gradient_accumulation_steps == 0 or train_state.is_last_batch
 
+        loss, outputs = self._forward_and_backward(state, data, should_update_weights)
+
+        # users can override this, by default this is a no-op
+        self.update_metrics(state, data, loss, outputs)
+
+        if should_update_weights:
+            # TODO try to use dynamo here
+            self._run_optimizer_lr_scheduler_step(state)
+
+            # log metrics only after an optimizer step
+            if self.num_optimizer_steps_completed % self.log_frequency_steps == 0:
+                self.log_metrics(state, self.num_optimizer_steps_completed - 1, "step")
+        return loss, outputs
+
+    def _forward_and_backward(
+        self, state: State, data: TData, should_update_weights: bool
+    ):
         # if using gradient accumulation and DDP or FSDP, when in a step where we will not update the weights,
         # run forward and backward in no_sync context
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
@@ -281,17 +332,6 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             if grad_scaler:
                 loss = grad_scaler.scale(loss)
             loss.backward()
-
-        # users can override this, by default this is a no-op
-        self.update_metrics(state, data, loss, outputs)
-
-        if should_update_weights:
-            self._run_optimizer_lr_scheduler_step(state)
-
-            # log metrics only after an optimizer step
-            if self.num_optimizer_steps_completed % self.log_frequency_steps == 0:
-                self.log_metrics(state, self.num_optimizer_steps_completed - 1, "step")
-
         return loss, outputs
 
     def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
@@ -400,7 +440,6 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
 
         with self.maybe_autocast_precision:
             outputs = self.module(data)
-
         return outputs
 
     @property
@@ -444,3 +483,18 @@ def _get_grad_scaler_from_precision(
         else:
             return GradScaler()
     return None
+
+
+# pyre-ignore
+def _dynamo_wrapper(fn: Callable, torchdynamo_params: TorchDynamoParams):
+    backend = torchdynamo_params.backend
+    try:
+        return torch.compile(fn, backend=backend)
+    except KeyError as e:
+        raise RuntimeError(
+            f"Torchdynamo backend {torchdynamo_params.backend} is not supported."
+        ) from e
+    except Exception as e:
+        raise RuntimeError(
+            f"The following error encountered when calling torch.compile for dynamo: {e}"
+        ) from e

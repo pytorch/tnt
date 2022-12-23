@@ -11,6 +11,7 @@ from typing import Any, Tuple
 from unittest.mock import MagicMock, patch
 
 import torch
+import torch._dynamo
 from parameterized import parameterized
 from torch.distributed import launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
@@ -20,7 +21,7 @@ from torchtnt.framework._test_utils import (
     generate_random_iterable_dataloader,
 )
 
-from torchtnt.framework.auto_unit import AutoUnit, SWAParams
+from torchtnt.framework.auto_unit import AutoUnit, SWAParams, TorchDynamoParams
 from torchtnt.framework.evaluate import evaluate, init_eval_state
 from torchtnt.framework.predict import init_predict_state, predict
 from torchtnt.framework.state import State
@@ -307,6 +308,156 @@ class TestAutoUnit(unittest.TestCase):
             torch.allclose(orig_module.l2.weight, swa_module.module.l2.weight)
         )
 
+    def test_dynamo_eager(self) -> None:
+        """
+        e2e torchdynamo test
+        """
+
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2, device=device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+
+        input_dim = 2
+        dataset_len = 16
+        batch_size = 2
+        max_epochs = 1
+
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            torchdynamo_params=TorchDynamoParams("eager"),
+        )
+
+        train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
+        self.assertFalse(auto_unit._dynamo_used)
+        train(state, auto_unit)
+        self.assertTrue(auto_unit._dynamo_used)
+
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_dynamo_train(self) -> None:
+        """
+        e2e torchdynamo on train
+        """
+
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2, device=device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+
+        input_dim = 2
+        dataset_len = 16
+        batch_size = 2
+        max_epochs = 1
+
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            torchdynamo_params=TorchDynamoParams("inductor"),
+            device=device,
+        )
+
+        train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
+
+        self.assertFalse(auto_unit._dynamo_used)
+        train(state, auto_unit)
+        self.assertTrue(auto_unit._dynamo_used)
+
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_dynamo_eval(self) -> None:
+        """
+        e2e torchdynamo on eval
+        """
+
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2, device=device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+
+        input_dim = 2
+        dataset_len = 16
+        batch_size = 2
+
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            torchdynamo_params=TorchDynamoParams("inductor"),
+            device=device,
+        )
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+
+        eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_eval_state(dataloader=eval_dl)
+        self.assertFalse(auto_unit._dynamo_used)
+        evaluate(state, auto_unit)
+        self.assertTrue(auto_unit._dynamo_used)
+
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_dynamo_predict(self) -> None:
+        """
+        e2e torchdynamo on predict
+        """
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2, device=device)
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            optimizer=my_optimizer,
+            torchdynamo_params=TorchDynamoParams("inductor"),
+            device=device,
+        )
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+
+        predict_dl = generate_random_iterable_dataloader(
+            dataset_len, input_dim, batch_size
+        )
+        state = init_predict_state(dataloader=predict_dl)
+        self.assertFalse(auto_unit._dynamo_used)
+        predict(state, auto_unit)
+
+    def test_dynamo_invalid_backend(self) -> None:
+        """
+        verify error is thrown on invalid backend
+        """
+
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.l1 = torch.nn.Linear(2, 2)
+                self.b1 = torch.nn.BatchNorm1d(2)
+                self.l2 = torch.nn.Linear(2, 2)
+
+            def forward(self, x):
+                x = self.l1(x)
+                x = self.b1(x)
+                x = self.l2(x)
+                return x
+
+        my_module = Net()
+        my_dynamo_params = TorchDynamoParams(backend="foo")
+        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+
+        self.failUnlessRaises(
+            RuntimeError,
+            DummyAutoUnit,
+            **{
+                "module": my_module,
+                "optimizer": my_optimizer,
+                "torchdynamo_params": my_dynamo_params,
+            },
+        )
+
     def test_log_frequency_steps_exception(self) -> None:
         """
         Test that an exception is raised when log_frequency_steps is < 1
@@ -539,7 +690,12 @@ Batch = Tuple[torch.tensor, torch.tensor]
 
 
 class DummyAutoUnit(AutoUnit[Batch]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._dynamo_used = False
+
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+        self._dynamo_used = torch._dynamo.is_compiling()
         inputs, targets = data
         outputs = self.module(inputs)
         loss = torch.nn.functional.cross_entropy(outputs, targets)

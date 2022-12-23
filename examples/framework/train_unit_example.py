@@ -17,7 +17,7 @@ import torch.nn as nn
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import init_train_state, State, train, TrainUnit
-from torchtnt.utils import get_timer_summary, init_from_env, seed, TLRScheduler
+from torchtnt.utils import copy_data_to_device, get_timer_summary, init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -61,6 +61,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         module: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         lr_scheduler: TLRScheduler,
+        device: torch.device,
         train_accuracy: BinaryAccuracy,
         tb_logger: TensorBoardLogger,
         log_frequency_steps: int,
@@ -69,6 +70,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.module = module
         self.optimizer = optimizer
         self.lr_scheduler = lr_scheduler
+        self.device = device
 
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = train_accuracy
@@ -77,6 +79,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         self.tb_logger = tb_logger
 
     def train_step(self, state: State, data: Batch) -> None:
+        data = copy_data_to_device(data, self.device)
         inputs, targets = data
         # convert targets to float Tensor for binary_cross_entropy_with_logits
         targets = targets.float()
@@ -90,7 +93,6 @@ class MyTrainUnit(TrainUnit[Batch]):
 
         # update metrics & logs
         self.train_accuracy.update(outputs, targets)
-        # pyre-fixme[16]: See T137070928
         step_count = state.train_state.progress.num_steps_completed
         if (step_count + 1) % self.log_frequency_steps == 0:
             acc = self.train_accuracy.compute()
@@ -99,7 +101,6 @@ class MyTrainUnit(TrainUnit[Batch]):
 
     def on_train_epoch_end(self, state: State) -> None:
         # compute and log the metric at the end of the epoch
-        # pyre-fixme[16]: See T137070928
         step_count = state.train_state.progress.num_steps_completed
         acc = self.train_accuracy.compute()
         self.tb_logger.log("accuracy_epoch", acc, step_count)
@@ -137,6 +138,7 @@ def main(argv: List[str]) -> None:
         module,
         optimizer,
         lr_scheduler,
+        device,
         train_accuracy,
         tb_logger,
         args.log_frequency_steps,
