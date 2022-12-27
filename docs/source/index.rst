@@ -3,8 +3,6 @@ Welcome to the TorchTNT documentation!
 
 TNT is a library for PyTorch training tools and utilities.
 
-`Installation instructions <https://github.com/pytorch/tnt/#installation>`_
-
 
 
 TorchTNT API
@@ -40,4 +38,5 @@ TorchTNT API
       :caption: API (Meta)
       :glob:
 
+      torchtnt.meta.framework.rst
       torchtnt.meta.utils.rst
