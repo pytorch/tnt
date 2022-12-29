@@ -25,9 +25,9 @@ jobs:
           conda activate test
           conda install pytorch cpuonly -c pytorch-nightly
           pip install -r requirements.txt
-          pip install -r dev-requirements.txt
           python setup.py sdist bdist_wheel
           pip install dist/*.whl
+          pip install -r dev-requirements.txt
       - name: Run unit tests
         shell: bash -l {0}
         run: |
@@ -54,7 +54,6 @@ jobs:
           conda activate test
           conda install pytorch cpuonly -c pytorch-nightly
           pip install -r requirements.txt
-          pip install -r dev-requirements.txt
           pip install  --no-build-isolation -e ".[dev]"
       - name: Upload to PyPI
         shell: bash -l {0}
