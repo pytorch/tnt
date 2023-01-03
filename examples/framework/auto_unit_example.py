@@ -89,10 +89,8 @@ class MyUnit(AutoUnit[Batch]):
         self.tb_logger = tb_logger
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = train_accuracy
-        # pyre-fixme[4]: See T137070928
         self.loss = None
 
-    # pyre-fixme[3]: See T137070928
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         # convert targets to float Tensor for binary_cross_entropy_with_logits
@@ -108,7 +106,6 @@ class MyUnit(AutoUnit[Batch]):
         state: State,
         data: Batch,
         loss: torch.Tensor,
-        # pyre-fixme[2]: See T137070928
         outputs: Any,
     ) -> None:
         self.loss = loss
