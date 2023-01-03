@@ -12,18 +12,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, TypeVar
 
 import torch
-from packaging.version import Version
 
 from torchtnt.framework.state import State
-from torchtnt.utils.version import get_torch_version
+from torchtnt.utils import TLRScheduler
 from typing_extensions import Protocol, runtime_checkable
-
-# This PR exposes LRScheduler as a public class
-# https://github.com/pytorch/pytorch/pull/88503
-if get_torch_version() > Version("1.13.0"):
-    TLRScheduler = torch.optim.lr_scheduler.LRScheduler
-else:
-    TLRScheduler = torch.optim.lr_scheduler._LRScheduler
 
 """
 This file defines mixins and interfaces for users to customize hooks in training, evaluation, and prediction loops.

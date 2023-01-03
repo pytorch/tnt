@@ -23,6 +23,7 @@ from .distributed import (
 from .early_stop_checker import EarlyStopChecker
 from .env import init_from_env
 from .fsspec import get_filesystem
+from .lr_scheduler import TLRScheduler
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
 from .misc import days_to_secs, transfer_batch_norm_stats, transfer_weights
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
@@ -86,6 +87,7 @@ __all__ = [
     "transfer_batch_norm_stats",
     "transfer_weights",
     "Timer",
+    "TLRScheduler",
     "get_python_version",
     "get_torch_version",
     "is_torch_version_ge_1_13_1",

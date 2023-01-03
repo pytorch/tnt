@@ -17,7 +17,7 @@ import torch.nn as nn
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
-from torchtnt.utils import get_timer_summary, init_from_env, seed
+from torchtnt.utils import get_timer_summary, init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 from typing_extensions import Literal
 
@@ -63,7 +63,7 @@ class MyUnit(AutoUnit[Batch]):
         *,
         module: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        lr_scheduler: torch.optim.lr_scheduler.LRScheduler,
+        lr_scheduler: TLRScheduler,
         device: Optional[torch.device],
         log_frequency_steps: int = 1000,
         precision: Optional[Union[str, torch.dtype]] = None,

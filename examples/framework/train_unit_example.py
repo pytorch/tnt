@@ -17,8 +17,14 @@ import torch.nn as nn
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import init_train_state, State, train, TrainUnit
-from torchtnt.utils import get_timer_summary, init_from_env, seed
-from torchtnt.utils.device import copy_data_to_device
+from torchtnt.utils import (
+    copy_data_to_device,
+    get_timer_summary,
+    init_from_env,
+    seed,
+    TLRScheduler,
+)
+
 from torchtnt.utils.loggers import TensorBoardLogger
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -61,7 +67,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         self,
         module: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        lr_scheduler: torch.optim.lr_scheduler.LRScheduler,
+        lr_scheduler: TLRScheduler,
         device: torch.device,
         train_accuracy: BinaryAccuracy,
         tb_logger: TensorBoardLogger,

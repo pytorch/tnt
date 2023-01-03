@@ -11,6 +11,7 @@ from typing import Any, Dict
 import torch
 from torch import nn
 from torchtnt.framework.unit import AppStateMixin
+from torchtnt.utils import TLRScheduler
 
 
 class Dummy(AppStateMixin):
@@ -196,7 +197,7 @@ class AppStateMixinTest(unittest.TestCase):
 
             def tracked_lr_schedulers(
                 self,
-            ) -> Dict[str, torch.optim.lr_scheduler._LRScheduler]:
+            ) -> Dict[str, TLRScheduler]:
                 return {"lr_2": self.lr_2}
 
             def tracked_misc_statefuls(self) -> Dict[str, Any]:
