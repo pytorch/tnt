@@ -47,5 +47,5 @@ TorchTNT API
       :caption: API (Meta)
       :glob:
 
-      torchtnt.meta.framework.rst
-      torchtnt.meta.utils.rst
+      meta/torchtnt.meta.framework.rst
+      meta/torchtnt.meta.utils.rst
