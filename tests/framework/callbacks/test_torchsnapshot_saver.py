@@ -8,11 +8,12 @@
 import math
 import os
 import tempfile
+import time
 import unittest
 from typing import List
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
-from torchtnt.framework.callbacks.torchsnapshot_saver import TorchSnapshotSaver
+from torchtnt.framework.callbacks import Lambda, TorchSnapshotSaver
 from torchtnt.framework.train import init_train_state, train
 
 
@@ -46,7 +47,10 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 save_every_n_train_steps=save_every_n_train_steps,
                 replicated=["**"],
             )
-            train(state, my_unit, callbacks=[snapshot])
+            # Artificially increase the step duration, otherwise torchsnapshot
+            # doesn't have the time to save all snapshots and will skip some.
+            slowdown = Lambda(on_train_step_end=lambda *_: time.sleep(0.1))
+            train(state, my_unit, callbacks=[snapshot, slowdown])
             for path in expected_paths:
                 self.assertTrue(os.path.exists(path) and os.path.isdir(path))
 

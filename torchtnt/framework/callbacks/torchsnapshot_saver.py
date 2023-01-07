@@ -4,15 +4,22 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import logging
 import os
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Union
 
 from pyre_extensions import none_throws
+from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
-from torchtnt.framework.unit import _Stateful as StatefulProtocol, TTrainUnit
-from torchtnt.utils import rank_zero_info
+from torchtnt.framework.unit import (
+    _Stateful as StatefulProtocol,
+    TEvalUnit,
+    TPredictUnit,
+    TTrainUnit,
+)
+from torchtnt.utils import rank_zero_info, rank_zero_warn
 
 try:
     import torchsnapshot
@@ -27,6 +34,8 @@ _EVAL_PROGRESS_STATE_KEY = "eval_progress"
 _RNG_STATE_KEY = "rng_state"
 _TRAIN_PROGRESS_STATE_KEY = "train_progress"
 _TRAIN_DL_STATE_KEY = "train_dataloader"
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class TorchSnapshotSaver(Callback):
@@ -68,6 +77,8 @@ class TorchSnapshotSaver(Callback):
         self._dirpath: str = dirpath
         self._replicated: Set[str] = set(replicated or [])
 
+        self._prev_snapshot: Optional[PendingSnapshot] = None
+
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         """Validate there's no key collision for the app state."""
         app_state = unit.app_state()
@@ -87,12 +98,7 @@ class TorchSnapshotSaver(Callback):
         # TODO: discuss whether this path should be customized
         epoch = train_state.progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
-
-        # TODO: use async take and ensure pending snapshot is done before saving the next one
-        torchsnapshot.Snapshot.take(
-            snapshot_path, app_state=app_state, replicated=list(self._replicated)
-        )
-        rank_zero_info(f"Saved snapshot to path: {snapshot_path}")
+        self._async_snapshot(snapshot_path, app_state, wait=False)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         train_state = none_throws(state.train_state)
@@ -111,12 +117,47 @@ class TorchSnapshotSaver(Callback):
         # TODO: discuss whether this path should be customized
         global_step = train_progress.num_steps_completed
         snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
+        self._async_snapshot(snapshot_path, app_state, wait=True)
 
-        # TODO: use async take and ensure pending snapshot is done before saving the next one
-        torchsnapshot.Snapshot.take(
-            snapshot_path, app_state=app_state, replicated=list(self._replicated)
+    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
+        self._wait()
+
+    def on_exception(
+        self,
+        state: State,
+        unit: Union[TTrainUnit, TEvalUnit, TPredictUnit],
+        exc: BaseException,
+    ) -> None:
+        self._wait()
+
+    def _wait(self) -> None:
+        if self._prev_snapshot is not None:
+            self._prev_snapshot.wait()
+
+    def _async_snapshot(
+        self, snapshot_path: str, app_state: Dict[str, _TStateful], *, wait: bool
+    ) -> bool:
+        prev_snapshot = self._prev_snapshot
+        if prev_snapshot is not None:
+            if prev_snapshot.path == snapshot_path:
+                # Snapshot for this step already has been saved.
+                # This can happen if we call _async_snapshot twice at the same step.
+                return True
+            still_pending = not prev_snapshot.done()
+            if still_pending and wait:
+                prev_snapshot.wait()
+            elif still_pending:
+                rank_zero_warn(
+                    f"Still writing previous snapshot, will skip this one. Consider increasing 'frequency' (current {self._save_every_n_train_steps})",
+                    logger=logger,
+                )
+                return False
+
+        self._prev_snapshot = Snapshot.async_take(
+            str(snapshot_path), app_state=app_state, replicated=list(self._replicated)
         )
-        rank_zero_info(f"Saved snapshot to path: {snapshot_path}")
+        rank_zero_info(f"Saving snapshot to path: {snapshot_path}", logger=logger)
+        return True
 
     @staticmethod
     def restore(
