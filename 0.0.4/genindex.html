@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; TorchTNT master documentation</title>
+  <title>Index &mdash; TorchTNT 0.0.5 documentation</title>
   
 
   
@@ -29,6 +29,8 @@
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
   <!-- Google Analytics -->
@@ -192,7 +194,15 @@
 
 <body class="pytorch-body">
 
-   
+  
+  
+    <div id="redirect-banner" style="display: none">
+      <p>
+        This is the public documentation. There is internal documentation for Meta employees at
+        <a href="https://www.internalfb.com/intern/staticdocs/torchtnt/">https://www.internalfb.com/intern/staticdocs/torchtnt/</a>
+      </p>
+    </div>
+  
 
     
 
@@ -211,7 +221,7 @@
               
               
                 <div class="version">
-                  master (unstable)
+                  0.0.5
                 </div>
               
             
@@ -578,17 +588,19 @@
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.RSSProfiler.interval">interval (torchtnt.utils.RSSProfiler attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="torchtnt.utils.html#torchtnt.utils.Timer.interval_time_seconds">interval_time_seconds (torchtnt.utils.Timer property)</a>
 </li>
       <li><a href="torchtnt.framework.html#torchtnt.framework.PhaseState.is_last_batch">is_last_batch (torchtnt.framework.PhaseState property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_out_of_cpu_memory">is_out_of_cpu_memory() (in module torchtnt.utils)</a>
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_out_of_cuda_memory">is_out_of_cuda_memory() (in module torchtnt.utils)</a>
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_out_of_memory_error">is_out_of_memory_error() (in module torchtnt.utils)</a>
+</li>
+      <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_ge_1_13_1">is_torch_version_ge_1_13_1() (in module torchtnt.utils)</a>
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_10">is_torch_version_geq_1_10() (in module torchtnt.utils)</a>
 </li>
@@ -596,9 +608,15 @@
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_12">is_torch_version_geq_1_12() (in module torchtnt.utils)</a>
 </li>
+      <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_13">is_torch_version_geq_1_13() (in module torchtnt.utils)</a>
+</li>
+      <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_14">is_torch_version_geq_1_14() (in module torchtnt.utils)</a>
+</li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_8">is_torch_version_geq_1_8() (in module torchtnt.utils)</a>
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_1_9">is_torch_version_geq_1_9() (in module torchtnt.utils)</a>
+</li>
+      <li><a href="torchtnt.utils.html#torchtnt.utils.is_torch_version_geq_2_0">is_torch_version_geq_2_0() (in module torchtnt.utils)</a>
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.is_windows">is_windows() (in module torchtnt.utils)</a>
 </li>
@@ -674,6 +692,8 @@
 </li>
       <li><a href="torchtnt.framework.html#torchtnt.framework.PhaseState.max_steps_per_epoch">max_steps_per_epoch (torchtnt.framework.PhaseState property)</a>
 </li>
+      <li><a href="torchtnt.utils.html#torchtnt.utils.maybe_enable_tf32">maybe_enable_tf32() (in module torchtnt.utils)</a>
+</li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.measure_rss_deltas">measure_rss_deltas() (in module torchtnt.utils)</a>
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.GPUStats.memory_free_mb">memory_free_mb (torchtnt.utils.GPUStats attribute)</a>
@@ -684,10 +704,10 @@
 </li>
       <li><a href="torchtnt.utils.html#torchtnt.utils.EarlyStopChecker.min_delta">min_delta (torchtnt.utils.EarlyStopChecker property)</a>
 </li>
-      <li><a href="torchtnt.utils.html#torchtnt.utils.EarlyStopChecker.mode">mode (torchtnt.utils.EarlyStopChecker property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="torchtnt.utils.html#torchtnt.utils.EarlyStopChecker.mode">mode (torchtnt.utils.EarlyStopChecker property)</a>
+</li>
       <li>
     module
 
@@ -919,6 +939,10 @@
 </li>
       <li><a href="torchtnt.framework.html#torchtnt.framework.State.timer">timer (torchtnt.framework.State property)</a>
 </li>
+      <li><a href="torchtnt.utils.html#torchtnt.utils.TLRScheduler">TLRScheduler (in module torchtnt.utils)</a>
+</li>
+      <li><a href="torchtnt.framework.html#torchtnt.framework.AutoUnit.torchdynamo_params">torchdynamo_params (torchtnt.framework.AutoUnit attribute)</a>
+</li>
       <li>
     torchtnt.framework
 
@@ -1008,7 +1032,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2022, Meta.
+        &copy; Copyright 2023, Meta.
 
     </p>
   </div>
@@ -1041,11 +1065,9 @@
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
          <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
          <script src="_static/doctools.js"></script>
          <script src="_static/sphinx_highlight.js"></script>
+         <script src="_static/js/torchtnt.js"></script>
      
 
   
