@@ -12,7 +12,7 @@ from .predict import init_predict_state, predict
 from .progress import Progress
 from .state import PhaseState, State
 from .train import init_train_state, train
-from .unit import EvalUnit, PredictUnit, TrainUnit
+from .unit import EvalUnit, PredictUnit, TEvalUnit, TPredictUnit, TrainUnit, TTrainUnit
 
 __all__ = [
     "AutoUnit",
@@ -30,5 +30,8 @@ __all__ = [
     "train",
     "EvalUnit",
     "PredictUnit",
+    "TEvalUnit",
+    "TPredictUnit",
     "TrainUnit",
+    "TTrainUnit",
 ]
