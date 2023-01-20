@@ -44,8 +44,16 @@ TorchTNT
 
    .. toctree::
       :maxdepth: 2
-      :caption: API (Meta)
+      :caption: Framework (Meta)
       :glob:
 
-      meta/torchtnt.meta.framework.rst
+      meta/callbacks.rst
+
+.. fbcode::
+
+   .. toctree::
+      :maxdepth: 2
+      :caption: Utils (Meta)
+      :glob:
+
       meta/torchtnt.meta.utils.rst
