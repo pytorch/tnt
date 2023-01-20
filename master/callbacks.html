@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Framework" href="torchtnt.framework.html" />
+    <link rel="next" title="BaseCSVWriter" href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html" />
     <link rel="prev" title="Fit" href="fit.html" />
   <!-- Google Analytics -->
   
@@ -343,39 +343,84 @@
               
   <section id="callbacks">
 <h1>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this heading">¶</a></h1>
-<p>In TorchTNT a <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> is an optional extension that can be used to supplement your loop with additional functionality. Good candidates
+<section id="what-is-a-callback-and-how-is-it-used">
+<h2>What is a callback and how is it used<a class="headerlink" href="#what-is-a-callback-and-how-is-it-used" title="Permalink to this heading">¶</a></h2>
+<p>In TorchTNT a <a class="reference internal" href="#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> is an optional extension that can be used to supplement your loop with additional functionality. Good candidates
 for such logic are ones that can be re-used across units. A Callback is simply a class with various hooks that are called during loop execution.</p>
-<p>To benefit from a Callback, you must extend the Callback interface and implement the necessary hooks
-to add your supplemental functionality. For a list of hooks which can be implemented see the <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> API reference.</p>
-<p>Below is an example of a basic callback which can be included by the user to print the state of the loop at various points.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
+<p>Below is an example of a basic callback which prints a message at various points during execution.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">Callback</span><span class="p">,</span> <span class="n">State</span><span class="p">,</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
 
 <span class="k">class</span> <span class="nc">PrintingCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
-   <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TrainUnit</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+   <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting training&quot;</span><span class="p">)</span>
 
-   <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TrainUnit</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+   <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending training&quot;</span><span class="p">)</span>
 
-   <span class="k">def</span> <span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">EvalUnit</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+   <span class="k">def</span> <span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting evaluation&quot;</span><span class="p">)</span>
 
-   <span class="k">def</span> <span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">EvalUnit</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+   <span class="k">def</span> <span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending evaluation&quot;</span><span class="p">)</span>
 
-   <span class="k">def</span> <span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">PredictUnit</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+   <span class="k">def</span> <span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting prediction&quot;</span><span class="p">)</span>
 
-   <span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">PredictUnit</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+   <span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending prediction&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To include this in your loop, instantiate the class and pass it in the <cite>callbacks</cite> parameter to the <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a>, <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.evaluate" title="torchtnt.framework.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a>,
+<p>To use a callback, instantiate the class and pass it in the <code class="docutils literal notranslate"><span class="pre">callbacks</span></code> parameter to the <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a>, <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.evaluate" title="torchtnt.framework.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a>,
 <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict" title="torchtnt.framework.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>, or <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.fit" title="torchtnt.framework.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> entry point.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">printing_callback</span> <span class="o">=</span> <span class="n">PrintingCallback</span><span class="p">()</span>
 <span class="n">train</span><span class="p">(</span><span class="n">train_unit</span><span class="p">,</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">printing_callback</span><span class="p">])</span>
 </pre></div>
 </div>
+</section>
+<section id="built-in-callbacks">
+<h2>Built-in callbacks<a class="headerlink" href="#built-in-callbacks" title="Permalink to this heading">¶</a></h2>
+<p>We offer several pre-written callbacks which are ready to be used out of the box:</p>
+<table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html#torchtnt.framework.callbacks.BaseCSVWriter" title="torchtnt.framework.callbacks.BaseCSVWriter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseCSVWriter</span></code></a></p></td>
+<td><p>A callback to write prediction outputs to a CSV file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.GarbageCollector.html#torchtnt.framework.callbacks.GarbageCollector" title="torchtnt.framework.callbacks.GarbageCollector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GarbageCollector</span></code></a></p></td>
+<td><p>A callback that performs periodic synchronous garbage collection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.Lambda.html#torchtnt.framework.callbacks.Lambda" title="torchtnt.framework.callbacks.Lambda"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Lambda</span></code></a></p></td>
+<td><p>A callback that accepts functions run during the training, evaluation, and prediction loops.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.LearningRateMonitor.html#torchtnt.framework.callbacks.LearningRateMonitor" title="torchtnt.framework.callbacks.LearningRateMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearningRateMonitor</span></code></a></p></td>
+<td><p>A callback which logs learning rate of tracked optimizers and learning rate schedulers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary" title="torchtnt.framework.callbacks.ModuleSummary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModuleSummary</span></code></a></p></td>
+<td><p>A callback which generates and logs a summary of the modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler" title="torchtnt.framework.callbacks.PyTorchProfiler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PyTorchProfiler</span></code></a></p></td>
+<td><p>A callback which profiles user code using PyTorch Profiler: <a class="reference external" href="https://pytorch.org/docs/stable/profiler.html">https://pytorch.org/docs/stable/profiler.html</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.html#torchtnt.framework.callbacks.TensorBoardParameterMonitor" title="torchtnt.framework.callbacks.TensorBoardParameterMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorBoardParameterMonitor</span></code></a></p></td>
+<td><p>A callback which logs module parameters as histograms to TensorBoard.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a></p></td>
+<td><p>A callback which periodically saves the application state during training using TorchSnapshot: <a class="reference external" href="https://pytorch.org/torchsnapshot">https://pytorch.org/torchsnapshot</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TQDMProgressBar.html#torchtnt.framework.callbacks.TQDMProgressBar" title="torchtnt.framework.callbacks.TQDMProgressBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TQDMProgressBar</span></code></a></p></td>
+<td><p>A callback for progress bar visualization in training, evaluation, and prediction.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="writing-your-own-callback">
+<h2>Writing your own callback<a class="headerlink" href="#writing-your-own-callback" title="Permalink to this heading">¶</a></h2>
+<p>To write your own callback, subclass the <a class="reference internal" href="#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> class and add your own code into the hooks.</p>
+<span class="target" id="module-torchtnt.framework.callback"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.framework.callback.Callback">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callback.</span></span><span class="sig-name descname"><span class="pre">Callback</span></span><a class="headerlink" href="#torchtnt.framework.callback.Callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
 </section>
 
 
@@ -386,7 +431,7 @@ to add your supplemental functionality. For a list of hooks which can be impleme
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.framework.html" class="btn btn-neutral float-right" title="Framework" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html" class="btn btn-neutral float-right" title="BaseCSVWriter" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="fit.html" class="btn btn-neutral" title="Fit" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
@@ -421,7 +466,12 @@ to add your supplemental functionality. For a list of hooks which can be impleme
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Callbacks</a></li>
+<li><a class="reference internal" href="#">Callbacks</a><ul>
+<li><a class="reference internal" href="#what-is-a-callback-and-how-is-it-used">What is a callback and how is it used</a></li>
+<li><a class="reference internal" href="#built-in-callbacks">Built-in callbacks</a></li>
+<li><a class="reference internal" href="#writing-your-own-callback">Writing your own callback</a></li>
+</ul>
+</li>
 </ul>
 
             </div>
