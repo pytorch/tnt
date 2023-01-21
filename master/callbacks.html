@@ -341,42 +341,13 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="callbacks">
-<h1>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this heading">¶</a></h1>
-<section id="what-is-a-callback-and-how-is-it-used">
-<h2>What is a callback and how is it used<a class="headerlink" href="#what-is-a-callback-and-how-is-it-used" title="Permalink to this heading">¶</a></h2>
-<p>In TorchTNT a <a class="reference internal" href="#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> is an optional extension that can be used to supplement your loop with additional functionality. Good candidates
-for such logic are ones that can be re-used across units. A Callback is simply a class with various hooks that are called during loop execution.</p>
-<p>Below is an example of a basic callback which prints a message at various points during execution.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">Callback</span><span class="p">,</span> <span class="n">State</span><span class="p">,</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
+  <section id="module-torchtnt.framework.callback">
+<span id="callbacks"></span><h1>Callbacks<a class="headerlink" href="#module-torchtnt.framework.callback" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.framework.callback.Callback">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callback.</span></span><span class="sig-name descname"><span class="pre">Callback</span></span><a class="headerlink" href="#torchtnt.framework.callback.Callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<span class="k">class</span> <span class="nc">PrintingCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
-   <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting training&quot;</span><span class="p">)</span>
-
-   <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending training&quot;</span><span class="p">)</span>
-
-   <span class="k">def</span> <span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting evaluation&quot;</span><span class="p">)</span>
-
-   <span class="k">def</span> <span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending evaluation&quot;</span><span class="p">)</span>
-
-   <span class="k">def</span> <span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting prediction&quot;</span><span class="p">)</span>
-
-   <span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-       <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending prediction&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>To use a callback, instantiate the class and pass it in the <code class="docutils literal notranslate"><span class="pre">callbacks</span></code> parameter to the <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a>, <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.evaluate" title="torchtnt.framework.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a>,
-<a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict" title="torchtnt.framework.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>, or <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.fit" title="torchtnt.framework.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a> entry point.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">printing_callback</span> <span class="o">=</span> <span class="n">PrintingCallback</span><span class="p">()</span>
-<span class="n">train</span><span class="p">(</span><span class="n">train_unit</span><span class="p">,</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">printing_callback</span><span class="p">])</span>
-</pre></div>
-</div>
-</section>
 <section id="built-in-callbacks">
 <h2>Built-in callbacks<a class="headerlink" href="#built-in-callbacks" title="Permalink to this heading">¶</a></h2>
 <p>We offer several pre-written callbacks which are ready to be used out of the box:</p>
@@ -411,15 +382,6 @@ for such logic are ones that can be re-used across units. A Callback is simply a
 </tr>
 </tbody>
 </table>
-</section>
-<section id="writing-your-own-callback">
-<h2>Writing your own callback<a class="headerlink" href="#writing-your-own-callback" title="Permalink to this heading">¶</a></h2>
-<p>To write your own callback, subclass the <a class="reference internal" href="#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> class and add your own code into the hooks.</p>
-<span class="target" id="module-torchtnt.framework.callback"></span><dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callback.Callback">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callback.</span></span><span class="sig-name descname"><span class="pre">Callback</span></span><a class="headerlink" href="#torchtnt.framework.callback.Callback" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </section>
 </section>
 
@@ -467,9 +429,7 @@ for such logic are ones that can be re-used across units. A Callback is simply a
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
 <li><a class="reference internal" href="#">Callbacks</a><ul>
-<li><a class="reference internal" href="#what-is-a-callback-and-how-is-it-used">What is a callback and how is it used</a></li>
 <li><a class="reference internal" href="#built-in-callbacks">Built-in callbacks</a></li>
-<li><a class="reference internal" href="#writing-your-own-callback">Writing your own callback</a></li>
 </ul>
 </li>
 </ul>
