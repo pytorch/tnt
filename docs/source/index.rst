@@ -32,6 +32,7 @@ TorchTNT
    predict
    fit
    callbacks
+   auto_unit
 
 .. toctree::
    :maxdepth: 2
