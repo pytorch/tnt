@@ -40,7 +40,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class TorchSnapshotSaver(Callback):
     """
-    A callback which periodically saves the application state during training using TorchSnapshot: https://pytorch.org/torchsnapshot.
+    A callback which periodically saves the application state during training using `TorchSnapshot <https://pytorch.org/torchsnapshot/>`_.
 
     This callback supplements the application state provided by :class:`torchtnt.unit.AppStateMixin`
     with the train progress, train dataloader (if applicable), and random number generator state.

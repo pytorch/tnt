@@ -31,8 +31,7 @@ def _log_module_summary_tables(module_summaries: List[ModuleSummaryObj]) -> None
 
 class ModuleSummary(Callback):
     """
-    A callback which generates and logs a summary of the modules. Requires torcheval:
-    https://pytorch.org/torcheval/stable/
+    A callback which generates and logs a summary of the modules using `TorchEval <https://pytorch.org/torcheval/>`_.
 
     Args:
         max_depth: The maximum depth of module summaries to keep.
