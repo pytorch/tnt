@@ -214,13 +214,12 @@ def _train_epoch_impl(
 
     # Prefetch each batch while iterating over the data, so that we can set the
     # _is_last_batch field on the train_state and pass that metadata to the user
-
-    try:
-        # get the first batch from the data iterator
-        if not pass_data_iter_to_step:
+    if not pass_data_iter_to_step:
+        try:
+            # get the first batch from the data iterator
             step_input = next(data_iter)
-    except StopIteration:
-        raise RuntimeError("Dataloader is empty")
+        except StopIteration:
+            raise RuntimeError("Dataloader is empty")
 
     # set is_last_batch to False before starting the loop. it will only be modified inside the loop
     train_state._is_last_batch = False
