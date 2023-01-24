@@ -10,12 +10,13 @@
 
 import contextlib
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Callable, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
+from torch.distributed import ProcessGroup
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
@@ -23,9 +24,8 @@ from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 from torchtnt.utils import (
     copy_data_to_device,
-    get_device_from_env,
+    init_from_env,
     is_torch_version_geq_1_12,
-    maybe_enable_tf32,
     TLRScheduler,
     transfer_batch_norm_stats,
     transfer_weights,
@@ -34,6 +34,28 @@ from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
 
 TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
+
+
+@dataclass
+class Strategy:
+    """Dataclass representing the parallelization strategy for the AutoParallelUnit"""
+
+    pass
+
+
+@dataclass
+class DDPStrategy(Strategy):
+    """Dataclass representing the DistributedDataParallel strategy. See https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel for details"""
+
+    output_device: Optional[Union[int, torch.device]] = None
+    dim: int = 0
+    broadcast_buffers: bool = True
+    process_group: Optional[ProcessGroup] = None
+    bucket_cap_mb: int = 25
+    find_unused_parameters: bool = False
+    check_reduction: bool = False
+    gradient_as_bucket_view: bool = False
+    static_graph: bool = False
 
 
 @dataclass
@@ -76,12 +98,15 @@ TData = TypeVar("TData")
 class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     """
     The AutoUnit is a convenience for users who are training with stochastic gradient descent and would like to have model optimization
-    handled for them. The AutoUnit subclasses :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, and :class:`~torchtnt.framework.unit.PredictUnit`, and implements the ``train_step``, ``eval_step``, and ``predict_step`` for the user.
+    and data parallel replication handled for them.
+    The AutoUnit subclasses :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, and :class:`~torchtnt.framework.unit.PredictUnit`,
+    and implements the ``train_step``, ``eval_step``, and ``predict_step`` methods for the user.
 
     For the ``train_step`` it runs:
-    * forward pass as part of the loss computation
-    * backward pass
-    * optimizer step
+
+    - forward pass and loss computation
+    - backward pass
+    - optimizer step
 
     For the ``eval_step`` it only runs forward and loss computation.
 
@@ -91,12 +116,12 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     Then use with the :py:func:`~torchtnt.framework.train`, :py:func:`~torchtnt.framework.evaluate`, :py:func:`~torchtnt.framework.predict`, or :py:func:`~torchtnt.framework.fit` entry point as normal.
 
     For more advanced customization, directly use the :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, and :class:`~torchtnt.framework.unit.PredictUnit` interfaces.
+
     Args:
         module: module to be used during training.
-        optimizer: optimizer to be used during training.
-        lr_scheduler: lr_scheduler to be used during training.
-        step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
         device: the device to be used.
+        strategy: the data parallelization strategy to be used
+        step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
         log_frequency_steps: how often to log in terms of steps (parameter updates) during training.
         precision: the precision to use in training, as either a string or a torch.dtype.
         gradient_accumulation_steps: how many batches to accumulate gradients over.
@@ -131,10 +156,9 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         self,
         *,
         module: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        lr_scheduler: Optional[TLRScheduler] = None,
-        step_lr_interval: Literal["step", "epoch"] = "epoch",
         device: Optional[torch.device] = None,
+        strategy: Optional[Union[str, Strategy]] = None,
+        step_lr_interval: Literal["step", "epoch"] = "epoch",
         log_frequency_steps: int = 1000,
         precision: Optional[Union[str, torch.dtype]] = None,
         gradient_accumulation_steps: int = 1,
@@ -145,12 +169,26 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         torchdynamo_params: Optional[TorchDynamoParams] = None,
     ) -> None:
         super().__init__()
-        self.module = module
-        self.optimizer = optimizer
-        self.lr_scheduler = lr_scheduler
+        self.device: torch.device = device or init_from_env()
+
+        if strategy:
+            if isinstance(strategy, str):
+                strategy = _convert_str_to_strategy(strategy)
+            if isinstance(strategy, DDPStrategy):
+                # move module to device
+                module = module.to(self.device)
+                # wrap module in DDP
+                device_ids = None
+                if self.device.type == "cuda":
+                    device_ids = [self.device.index]
+                module = DDP(module, device_ids=device_ids, **asdict(strategy))
+        else:
+            # move module to device
+            module = module.to(self.device)
+
+        self.module: torch.nn.Module = module
+
         self.step_lr_interval = step_lr_interval
-        self.device: torch.device = device or get_device_from_env()
-        maybe_enable_tf32()
         if not log_frequency_steps > 0:
             raise ValueError(
                 f"log_frequency_steps must be > 0. Got {log_frequency_steps}"
@@ -226,7 +264,29 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             )
             self.module = _dynamo_wrapper(self.module, torchdynamo_params)
 
+        optimizer, lr_scheduler = self.configure_optimizers_and_lr_scheduler(
+            self.module
+        )
+        self.optimizer: torch.optim.optimizer.Optimizer = optimizer
+        self.lr_scheduler: TLRScheduler = lr_scheduler
+
         # TODO: Make AutoTrainUnit work when data type is Iterator
+
+    @abstractmethod
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        """
+        The user should implement this method with their optimizer and learning rate scheduler construction code. This will be called upon initialization of
+        the AutoDDPUnit.
+
+        Args:
+            module: the module with which to construct optimizer and lr_scheduler
+
+        Returns:
+            Either an optimizer, or a tuple containing optimizer and optional lr scheduler
+        """
+        ...
 
     @abstractmethod
     def compute_loss(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
@@ -445,6 +505,15 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     @property
     def num_optimizer_steps_completed(self) -> int:
         return self._num_optimizer_steps_completed
+
+
+def _convert_str_to_strategy(strategy: str) -> Strategy:
+    if strategy == "ddp":
+        return DDPStrategy()
+    else:
+        raise ValueError(
+            f"Strategy {strategy} not supported. Please use one of `ddp` or `None`"
+        )
 
 
 def _convert_precision_str_to_dtype(precision: str) -> torch.dtype:
