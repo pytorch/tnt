@@ -26,7 +26,7 @@ from torchtnt.framework.evaluate import evaluate, init_eval_state
 from torchtnt.framework.predict import init_predict_state, predict
 from torchtnt.framework.state import State
 from torchtnt.framework.train import init_train_state, train
-from torchtnt.utils import init_from_env
+from torchtnt.utils import init_from_env, TLRScheduler
 from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.test_utils import get_pet_launch_config
 
@@ -39,21 +39,12 @@ class TestAutoUnit(unittest.TestCase):
         Test that app_state, tracked_optimizers, tracked_lr_schedulers are set as expected with AutoUnit
         """
         my_module = torch.nn.Linear(2, 2)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
+
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
-            lr_scheduler=my_lr_scheduler,
             precision="fp16",
         )
         self.assertEqual(auto_unit.tracked_modules()["module"], my_module)
-        self.assertEqual(auto_unit.tracked_optimizers()["optimizer"], my_optimizer)
-        self.assertEqual(
-            auto_unit.tracked_lr_schedulers()["lr_scheduler"], my_lr_scheduler
-        )
         self.assertTrue(
             isinstance(
                 auto_unit.tracked_misc_statefuls()["grad_scaler"],
@@ -67,16 +58,13 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that the lr scheduler is stepped every optimizer step when step_lr_interval="step"
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2, device=device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = MagicMock()
+        my_module = torch.nn.Linear(2, 2)
+
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
-            lr_scheduler=my_lr_scheduler,
             step_lr_interval="step",
         )
+        auto_unit.lr_scheduler = MagicMock()
 
         input_dim = 2
         dataset_len = 8
@@ -87,22 +75,21 @@ class TestAutoUnit(unittest.TestCase):
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
         train(state, auto_unit)
-        self.assertEqual(my_lr_scheduler.step.call_count, expected_steps_per_epoch)
+        self.assertEqual(
+            auto_unit.lr_scheduler.step.call_count, expected_steps_per_epoch
+        )
 
     def test_lr_scheduler_epoch(self) -> None:
         """
         Test that the lr scheduler is stepped every epoch when step_lr_interval="epoch"
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2, device=device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = MagicMock()
+        my_module = torch.nn.Linear(2, 2)
+
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
-            lr_scheduler=my_lr_scheduler,
             step_lr_interval="epoch",
         )
+        auto_unit.lr_scheduler = MagicMock()
 
         input_dim = 2
         dataset_len = 8
@@ -113,7 +100,7 @@ class TestAutoUnit(unittest.TestCase):
 
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
         train(state, auto_unit)
-        self.assertEqual(my_lr_scheduler.step.call_count, max_epochs)
+        self.assertEqual(auto_unit.lr_scheduler.step.call_count, max_epochs)
 
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
@@ -123,16 +110,9 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that the mixed precision autocast context is called when fp16 precision is set
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
+        my_module = torch.nn.Linear(2, 2)
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
-            lr_scheduler=my_lr_scheduler,
             precision="fp16",
         )
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
@@ -149,16 +129,10 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that the mixed precision autocast context is called when bf16 precision is set
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
+        my_module = torch.nn.Linear(2, 2)
+
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
-            lr_scheduler=my_lr_scheduler,
             precision="bf16",
         )
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
@@ -171,17 +145,11 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that an exception is raised with an invalid precision string
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
+        my_module = torch.nn.Linear(2, 2)
+
         with self.assertRaisesRegex(ValueError, "Precision f16 not supported"):
             _ = DummyAutoUnit(
                 module=my_module,
-                optimizer=my_optimizer,
-                lr_scheduler=my_lr_scheduler,
                 precision="f16",
             )
 
@@ -197,9 +165,7 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test the num_optimizer_steps_completed property of AutoUnit
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
 
         input_dim = 2
         dataset_len = 16
@@ -208,7 +174,6 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             gradient_accumulation_steps=gradient_accumulation_steps,
         )
 
@@ -228,16 +193,13 @@ class TestAutoUnit(unittest.TestCase):
         Basic stochastic weight averaging tests
         """
         my_module = torch.nn.Linear(2, 2)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
         )
 
         auto_unit2 = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             swa_params=SWAParams(epoch_start=1, anneal_epochs=5),
         )
 
@@ -271,14 +233,11 @@ class TestAutoUnit(unittest.TestCase):
                 x = self.l2(x)
                 return x
 
-        device = init_from_env()
-        my_module = Net().to(device)
+        my_module = Net()
         my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             swa_params=my_swa_params,
         )
 
@@ -313,9 +272,7 @@ class TestAutoUnit(unittest.TestCase):
         e2e torchdynamo test
         """
 
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2, device=device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
 
         input_dim = 2
         dataset_len = 16
@@ -324,7 +281,6 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             torchdynamo_params=TorchDynamoParams("eager"),
         )
 
@@ -342,9 +298,7 @@ class TestAutoUnit(unittest.TestCase):
         e2e torchdynamo on train
         """
 
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2, device=device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
 
         input_dim = 2
         dataset_len = 16
@@ -353,9 +307,7 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             torchdynamo_params=TorchDynamoParams("inductor"),
-            device=device,
         )
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
@@ -373,9 +325,7 @@ class TestAutoUnit(unittest.TestCase):
         e2e torchdynamo on eval
         """
 
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2, device=device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
 
         input_dim = 2
         dataset_len = 16
@@ -383,9 +333,7 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             torchdynamo_params=TorchDynamoParams("inductor"),
-            device=device,
         )
 
         input_dim = 2
@@ -405,14 +353,10 @@ class TestAutoUnit(unittest.TestCase):
         """
         e2e torchdynamo on predict
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2, device=device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             torchdynamo_params=TorchDynamoParams("inductor"),
-            device=device,
         )
 
         input_dim = 2
@@ -446,14 +390,12 @@ class TestAutoUnit(unittest.TestCase):
 
         my_module = Net()
         my_dynamo_params = TorchDynamoParams(backend="foo")
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
 
         self.failUnlessRaises(
             RuntimeError,
             DummyAutoUnit,
             **{
                 "module": my_module,
-                "optimizer": my_optimizer,
                 "torchdynamo_params": my_dynamo_params,
             },
         )
@@ -462,19 +404,13 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that an exception is raised when log_frequency_steps is < 1
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
+        my_module = torch.nn.Linear(2, 2)
+
         with self.assertRaisesRegex(
             ValueError, "log_frequency_steps must be > 0. Got 0"
         ):
             _ = DummyAutoUnit(
                 module=my_module,
-                optimizer=my_optimizer,
-                lr_scheduler=my_lr_scheduler,
                 log_frequency_steps=0,
             )
 
@@ -486,12 +422,9 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that the mixed precision autocast context is called during evaluate when precision = bf16
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             precision="bf16",
         )
 
@@ -514,12 +447,9 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that the mixed precision autocast context is called during predict when precision = fp16
         """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
             precision="fp16",
         )
 
@@ -556,19 +486,11 @@ class TestAutoUnit(unittest.TestCase):
         Test that the no_sync autocast context is correctly applied when using gradient accumulation and DDP
         """
 
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_module = DDP(my_module, device_ids=[device.index])
+        my_module = torch.nn.Linear(2, 2)
 
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
-            lr_scheduler=my_lr_scheduler,
-            device=device,
+            strategy="ddp",
             gradient_accumulation_steps=2,
         )
 
@@ -576,13 +498,13 @@ class TestAutoUnit(unittest.TestCase):
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
 
         # for the first step no_sync should be called since we accumulate gradients
-        with patch.object(my_module, "no_sync") as no_sync_mock:
+        with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
             auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_called()
 
         state.train_state.progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
-        with patch.object(my_module, "no_sync") as no_sync_mock:
+        with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
             auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_not_called()
 
@@ -591,19 +513,12 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that the no_sync autocast context is correctly applied when using gradient accumulation and FSDP
         """
-
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2).to(device)
         my_module = FSDP(my_module)
 
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
-            lr_scheduler=my_lr_scheduler,
             device=device,
             gradient_accumulation_steps=2,
         )
@@ -612,13 +527,13 @@ class TestAutoUnit(unittest.TestCase):
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
 
         # for the first step no_sync should be called since we accumulate gradients
-        with patch.object(my_module, "no_sync") as no_sync_mock:
+        with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
             auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_called()
 
         state.train_state.progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
-        with patch.object(my_module, "no_sync") as no_sync_mock:
+        with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
             auto_unit.train_step(state=state, data=dummy_data)
             no_sync_mock.assert_not_called()
 
@@ -643,10 +558,6 @@ class TestAutoUnit(unittest.TestCase):
         my_module = torch.nn.Linear(2, 2).to(device)
         my_module = FSDP(my_module)
 
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
         tc = unittest.TestCase()
         with patch(
             "torchtnt.framework.auto_unit.is_torch_version_geq_1_12", return_value=False
@@ -656,8 +567,6 @@ class TestAutoUnit(unittest.TestCase):
         ):
             _ = DummyAutoUnit(
                 module=my_module,
-                optimizer=my_optimizer,
-                lr_scheduler=my_lr_scheduler,
                 device=device,
                 precision="fp16",
             )
@@ -667,12 +576,11 @@ class TestAutoUnit(unittest.TestCase):
         Test that move_data_to_device is called
         """
         device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
+        my_module = torch.nn.Linear(2, 2)
 
         auto_train_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
+            device=device,
         )
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
@@ -684,6 +592,103 @@ class TestAutoUnit(unittest.TestCase):
             move_data_to_device_mock.return_value = dummy_data
             auto_train_unit.train_step(state=MagicMock(), data=dummy_data)
             move_data_to_device_mock.assert_called_once()
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_auto_unit_ddp(self) -> None:
+        """
+        Launch tests of DDP strategy
+        """
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_ddp_wrap)()
+        launcher.elastic_launch(
+            config, entrypoint=self._test_stochastic_weight_averaging_with_ddp
+        )()
+
+    @staticmethod
+    def _test_ddp_wrap() -> None:
+        """
+        Test that the module is correctly wrapped in DDP
+        """
+
+        my_module = torch.nn.Linear(2, 2)
+
+        auto_ddp_unit = DummyAutoUnit(
+            module=my_module,
+            strategy="ddp",
+            gradient_accumulation_steps=2,
+        )
+        tc = unittest.TestCase()
+
+        tc.assertTrue(isinstance(auto_ddp_unit.module, DDP))
+
+    @staticmethod
+    def _test_stochastic_weight_averaging_with_ddp() -> None:
+        """
+        e2e stochastic weight averaging test with ddp
+        """
+
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.l1 = torch.nn.Linear(2, 2)
+                self.b1 = torch.nn.BatchNorm1d(2)
+                self.l2 = torch.nn.Linear(2, 2)
+
+            def forward(self, x):
+                x = self.l1(x)
+                x = self.b1(x)
+                x = self.l2(x)
+                return x
+
+        my_module = Net()
+        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
+
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            strategy="ddp",
+            swa_params=my_swa_params,
+        )
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 10
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, auto_unit)
+
+        orig_module = auto_unit.module.module
+        swa_module = auto_unit.swa_model.module.module
+
+        tc = unittest.TestCase()
+        tc.assertTrue(
+            torch.allclose(
+                orig_module.b1.running_mean,
+                swa_module.b1.running_mean,
+            )
+        )
+        tc.assertTrue(
+            torch.allclose(
+                orig_module.b1.running_var,
+                swa_module.b1.running_var,
+            )
+        )
+        tc.assertTrue(torch.allclose(orig_module.l1.weight, swa_module.l1.weight))
+        tc.assertTrue(torch.allclose(orig_module.l2.weight, swa_module.l2.weight))
+
+    def test_strategy_invalid_str(self) -> None:
+        """
+        Test that an exception is raised with an invalid strategy string
+        """
+        my_module = torch.nn.Linear(2, 2)
+
+        with self.assertRaisesRegex(ValueError, "Strategy deepspeed not supported"):
+            _ = DummyAutoUnit(
+                module=my_module,
+                strategy="deepspeed",
+            )
 
 
 Batch = Tuple[torch.tensor, torch.tensor]
@@ -701,3 +706,12 @@ class DummyAutoUnit(AutoUnit[Batch]):
         loss = torch.nn.functional.cross_entropy(outputs, targets)
 
         return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        return my_optimizer, my_lr_scheduler

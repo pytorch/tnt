@@ -7,13 +7,14 @@
 
 import argparse
 import logging
-import sys
 import tempfile
+import uuid
 from argparse import Namespace
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Dict, Tuple
 
 import torch
 import torch.nn as nn
+from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
@@ -26,6 +27,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+NUM_PROCESSES = 2
 
 
 def prepare_module(input_dim: int, device: torch.device) -> nn.Module:
@@ -61,35 +63,22 @@ class MyUnit(AutoUnit[Batch]):
     def __init__(
         self,
         *,
-        module: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        lr_scheduler: TLRScheduler,
-        device: Optional[torch.device],
-        log_frequency_steps: int = 1000,
-        precision: Optional[Union[str, torch.dtype]] = None,
         tb_logger: TensorBoardLogger,
         train_accuracy: BinaryAccuracy,
-        gradient_accumulation_steps: int = 1,
-        detect_anomaly: bool = False,
-        clip_grad_norm: Optional[float] = None,
-        clip_grad_value: Optional[float] = None,
+        **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
     ):
-        super().__init__(
-            module=module,
-            optimizer=optimizer,
-            lr_scheduler=lr_scheduler,
-            device=device,
-            log_frequency_steps=log_frequency_steps,
-            precision=precision,
-            gradient_accumulation_steps=gradient_accumulation_steps,
-            detect_anomaly=detect_anomaly,
-            clip_grad_norm=clip_grad_norm,
-            clip_grad_value=clip_grad_value,
-        )
+        super().__init__(**kwargs)
         self.tb_logger = tb_logger
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = train_accuracy
         self.loss = None
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
+        return optimizer, lr_scheduler
 
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
@@ -126,10 +115,7 @@ class MyUnit(AutoUnit[Batch]):
         self.train_accuracy.reset()
 
 
-def main(argv: List[str]) -> None:
-    # parse command line arguments
-    args = get_args(argv)
-
+def main(args: Namespace) -> None:
     # seed the RNG for better reproducibility. see docs https://pytorch.org/docs/stable/notes/randomness.html
     seed(args.seed)
 
@@ -140,19 +126,16 @@ def main(argv: List[str]) -> None:
     tb_logger = TensorBoardLogger(path)
 
     module = prepare_module(args.input_dim, device)
-    optimizer = torch.optim.SGD(module.parameters(), lr=args.lr)
-    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     train_accuracy = BinaryAccuracy(device=device)
 
     my_unit = MyUnit(
+        tb_logger=tb_logger,
+        train_accuracy=train_accuracy,
         module=module,
-        optimizer=optimizer,
-        lr_scheduler=lr_scheduler,
         device=device,
+        strategy="ddp",
         log_frequency_steps=args.log_frequency_steps,
         precision=args.precision,
-        train_accuracy=train_accuracy,
-        tb_logger=tb_logger,
         gradient_accumulation_steps=4,
         detect_anomaly=True,
         clip_grad_norm=1.0,
@@ -174,7 +157,7 @@ def main(argv: List[str]) -> None:
     print(get_timer_summary(state.timer))
 
 
-def get_args(argv: List[str]) -> Namespace:
+def get_args() -> Namespace:
     """Parse command line arguments"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=0, help="random seed")
@@ -191,9 +174,27 @@ def get_args(argv: List[str]) -> Namespace:
     parser.add_argument(
         "--log-frequency-steps", type=int, default=10, help="log every n steps"
     )
-    parser.add_argument("--precision", type=str, default="bf16")
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--precision",
+        type=str,
+        default=None,
+        help="fp16 or bf16",
+        choices=["fp16", "bf16"],
+    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    args = get_args()
+    lc = pet.LaunchConfig(
+        min_nodes=1,
+        max_nodes=1,
+        nproc_per_node=NUM_PROCESSES,
+        run_id=str(uuid.uuid4()),
+        rdzv_backend="c10d",
+        rdzv_endpoint="localhost:0",
+        max_restarts=0,
+        monitor_interval=1,
+    )
+
+    pet.elastic_launch(lc, entrypoint=main)(args)
