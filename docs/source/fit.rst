@@ -16,7 +16,7 @@ Below is a simple example of a user's fit Unit that implements a basic ``train_s
 
  from torchtnt.framework import TrainUnit, EvalUnit
 
- class MyFitUnit(TrainUnit[Batch]), EvalUnit[Batch]:
+ class MyFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
      def __init__(
          self,
          module: torch.nn.Module,
