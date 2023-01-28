@@ -17,6 +17,7 @@ from .distributed import (
     all_gather_tensors,
     get_global_rank,
     get_process_group_backend_from_device,
+    get_world_size,
     PGWrapper,
     sync_bool,
 )
@@ -63,6 +64,7 @@ __all__ = [
     "all_gather_tensors",
     "get_global_rank",
     "get_process_group_backend_from_device",
+    "get_world_size",
     "PGWrapper",
     "sync_bool",
     "EarlyStopChecker",
