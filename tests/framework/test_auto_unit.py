@@ -11,7 +11,14 @@ from typing import Any, Tuple
 from unittest.mock import MagicMock, patch
 
 import torch
-import torch._dynamo
+
+from torchtnt.utils.version import is_torch_version_geq_1_13
+
+DYNAMO_AVAIL = False
+if is_torch_version_geq_1_13():
+    DYNAMO_AVAIL = True
+    import torch._dynamo
+
 from parameterized import parameterized
 from torch.distributed import launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
@@ -308,6 +315,9 @@ class TestAutoUnit(unittest.TestCase):
             torch.allclose(orig_module.l2.weight, swa_module.module.l2.weight)
         )
 
+    @unittest.skipUnless(
+        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+    )
     def test_dynamo_eager(self) -> None:
         """
         e2e torchdynamo test
@@ -334,6 +344,9 @@ class TestAutoUnit(unittest.TestCase):
         train(state, auto_unit)
         self.assertTrue(auto_unit._dynamo_used)
 
+    @unittest.skipUnless(
+        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+    )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
@@ -365,6 +378,9 @@ class TestAutoUnit(unittest.TestCase):
         train(state, auto_unit)
         self.assertTrue(auto_unit._dynamo_used)
 
+    @unittest.skipUnless(
+        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+    )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
@@ -399,6 +415,9 @@ class TestAutoUnit(unittest.TestCase):
         self.assertTrue(auto_unit._dynamo_used)
 
     @unittest.skipUnless(
+        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+    )
+    @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     def test_dynamo_predict(self) -> None:
@@ -426,6 +445,9 @@ class TestAutoUnit(unittest.TestCase):
         self.assertFalse(auto_unit._dynamo_used)
         predict(state, auto_unit)
 
+    @unittest.skipUnless(
+        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+    )
     def test_dynamo_invalid_backend(self) -> None:
         """
         verify error is thrown on invalid backend
@@ -695,7 +717,8 @@ class DummyAutoUnit(AutoUnit[Batch]):
         self._dynamo_used = False
 
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
-        self._dynamo_used = torch._dynamo.is_compiling()
+        if DYNAMO_AVAIL:
+            self._dynamo_used = torch._dynamo.is_compiling()
         inputs, targets = data
         outputs = self.module(inputs)
         loss = torch.nn.functional.cross_entropy(outputs, targets)

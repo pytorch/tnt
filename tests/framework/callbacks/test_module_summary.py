@@ -10,10 +10,16 @@ from typing import Any, Tuple
 from unittest.mock import MagicMock
 
 import torch
+
 from torchtnt.framework import AutoUnit
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.callbacks.module_summary import ModuleSummary
 from torchtnt.framework.state import EntryPoint, PhaseState, State
+from torchtnt.utils.version import is_torch_version_geq_1_13
+
+MODULE_SUMMARY_FLOPS_AVAILABLE = False
+if is_torch_version_geq_1_13():
+    MODULE_SUMMARY_FLOPS_AVAILABLE = True
 
 
 class ModuleSummaryTest(unittest.TestCase):
@@ -77,6 +83,10 @@ class ModuleSummaryTest(unittest.TestCase):
         self.assertTrue("b1" in ms.submodule_summaries)
         self.assertTrue("l2" in ms.submodule_summaries)
 
+    @unittest.skipUnless(
+        condition=MODULE_SUMMARY_FLOPS_AVAILABLE,
+        reason="This test needs PyTorch 1.13 or greater to run.",
+    )
     def test_module_summary_retrieve_module_summaries_module_inputs(self) -> None:
         """
         Test ModuleSummary callback in train
