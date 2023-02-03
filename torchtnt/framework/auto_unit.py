@@ -130,24 +130,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
-        torchdynamo_params: params for TorchDynamo
-
-    Attributes:
-        module: module to be used during training.
-        optimizer: optimizer to be used during training.
-        lr_scheduler: lr_scheduler to be used during training.
-        step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
-        device: the device to be used.
-        log_frequency_steps: how often to log in terms of steps (parameter updates) during training.
-        precision: the precision to use in training, as a torch.dtype.
-        grad_scaler: a torch.cuda.amp.GradScaler, if using fp16 precision.
-        gradient_accumulation_steps: how many batches to accumulate gradients over.
-        num_optimizer_steps_completed: number of optimizer steps (weight updates) completed.
-        detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
-        clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
-        clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
-        swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
-        torchdynamo_params: params for TorchDynamo
+        torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/master/dynamo/
 
             Note:
                 TorchDynamo support is only available in PyTorch 2.0 or higher.
@@ -325,8 +308,9 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     ) -> None:
         """
         The user should implement this method with their code to log metrics. This will be called:
-        * every ``train_step`` based on ``log_frequency_steps`` and how many parameter updates have been run on the model
-        * in ``on_train_epoch_end`` and ``on_eval_epoch_end``
+
+        - every ``train_step`` based on ``log_frequency_steps`` and how many parameter updates have been run on the model
+        - in ``on_train_epoch_end`` and ``on_eval_epoch_end``
 
         Args:
             state: a State object which is passed from ``train_step``/``on_train_epoch_end``/``on_eval_epoch_end``
