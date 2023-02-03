@@ -20,6 +20,7 @@ from torchtnt.utils.version import is_torch_version_geq_1_13
 MODULE_SUMMARY_FLOPS_AVAILABLE = False
 if is_torch_version_geq_1_13():
     MODULE_SUMMARY_FLOPS_AVAILABLE = True
+from torchtnt.utils import TLRScheduler
 
 
 class ModuleSummaryTest(unittest.TestCase):
@@ -65,11 +66,9 @@ class ModuleSummaryTest(unittest.TestCase):
                 return x
 
         my_module = Net()
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
         )
 
         module_summary_callback = ModuleSummary()
@@ -106,11 +105,9 @@ class ModuleSummaryTest(unittest.TestCase):
                 return x
 
         my_module = Net()
-        my_optimizer = torch.optim.SGD(my_module.parameters(), lr=0.01)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            optimizer=my_optimizer,
         )
 
         module_inputs = {"module": ((torch.rand(2, 2),), {})}
@@ -135,3 +132,12 @@ class DummyAutoUnit(AutoUnit[Batch]):
         loss = torch.nn.functional.cross_entropy(outputs, targets)
 
         return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        return my_optimizer, my_lr_scheduler
