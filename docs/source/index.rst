@@ -27,6 +27,7 @@ TorchTNT
    :maxdepth: 1
    :caption: Framework
 
+   unit
    train
    eval
    predict
