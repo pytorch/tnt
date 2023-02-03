@@ -10,7 +10,7 @@ import shutil
 import subprocess
 from collections import defaultdict
 from dataclasses import fields, is_dataclass
-from typing import Any, Mapping, TypeVar
+from typing import Any, Dict, Mapping, TypeVar
 
 import torch
 from torchtnt.utils.version import is_torch_version_geq_1_12
@@ -217,6 +217,9 @@ class CPUStats(TypedDict):
     cpu_vm_percent: float
     cpu_percent: float
     cpu_swap_percent: float
+    worker_cpu_time_user: float
+    worker_cpu_time_system: float
+    worker_rss: float
 
 
 def get_psutil_cpu_stats() -> CPUStats:
@@ -239,12 +242,35 @@ def get_psutil_cpu_stats() -> CPUStats:
             " Install it by running `pip install -U psutil`."
         )
 
+    process = psutil.Process()
+    cpu_times = process.cpu_times()
+
     stats: CPUStats = {
         "cpu_vm_percent": psutil.virtual_memory().percent,
         "cpu_percent": psutil.cpu_percent(),
         "cpu_swap_percent": psutil.swap_memory().percent,
+        "worker_cpu_time_user": cpu_times.user,
+        "worker_cpu_time_system": cpu_times.system,
+        "worker_rss": float(process.memory_info().rss),
     }
     return stats
+
+
+def collect_system_stats(device: torch.device) -> Dict[str, Any]:
+    system_stats: Dict[str, Any] = {}
+    cpu_stats = get_psutil_cpu_stats()
+
+    # pyre-ignore
+    system_stats.update(cpu_stats)
+
+    if torch.cuda.is_available():
+        gpu_stats = get_nvidia_smi_gpu_stats(device)
+
+        # pyre-ignore
+        system_stats.update(gpu_stats)
+        system_stats.update(torch.cuda.memory_stats())
+
+    return system_stats
 
 
 def maybe_enable_tf32(precision: str = "high") -> None:
