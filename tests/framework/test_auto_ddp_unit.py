@@ -9,7 +9,6 @@ import unittest
 from typing import Any, Tuple
 
 import torch
-import torch._dynamo
 from torch.distributed import launcher
 from torch.nn.parallel import DistributedDataParallel
 
