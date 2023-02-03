@@ -174,65 +174,246 @@ TPredictData = TypeVar("TPredictData")
 
 class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
     """
-    Base interface for training.
+    The TrainUnit is an interface that can be used to organize your training logic. The core of it is the ``train_step`` which
+    is an abstract method where you can define the code you want to run each iteration of the dataloader.
+
+    To use the TrainUnit, create a class which subclasses TrainUnit. Then implement the ``train_step`` method on your class, and optionally
+    implement any of the hooks, which allow you to control the behavior of the loop at different points.
+
+    Below is a simple example of a user's subclass of TrainUnit that implements a basic ``train_step``, and the ``on_train_epoch_end`` hook.
+
+    .. code-block:: python
+
+      from torchtnt.framework import TrainUnit
+
+      Batch = Tuple[torch.tensor, torch.tensor]
+      # specify type of the data in each batch of the dataloader to allow for typechecking
+
+      class MyTrainUnit(TrainUnit[Batch]):
+          def __init__(
+              self,
+              module: torch.nn.Module,
+              optimizer: torch.optim.Optimizer,
+              lr_scheduler: torch.optim.lr_scheduler._LRScheduler,
+          ):
+              super().__init__()
+              self.module = module
+              self.optimizer = optimizer
+              self.lr_scheduler = lr_scheduler
+
+          def train_step(self, state: State, data: Batch) -> None:
+               inputs, targets = data
+              outputs = self.module(inputs)
+              loss = torch.nn.functional.binary_cross_entropy_with_logits(outputs, targets)
+              loss.backward()
+
+              self.optimizer.step()
+              self.optimizer.zero_grad()
+
+          def on_train_epoch_end(self, state: State) -> None:
+              # step the learning rate scheduler
+              self.lr_scheduler.step()
+
+      train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
     """
 
     def on_train_start(self, state: State) -> None:
+        """Hook called before training starts.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+        """
         pass
 
     def on_train_epoch_start(self, state: State) -> None:
+        """Hook called before a train epoch starts.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+        """
         pass
 
     @abstractmethod
     def train_step(self, state: State, data: TTrainData) -> Any:
+        """Core required method for user to implement. This method will be called at each iteration of the
+        train dataloader, and can return any data the user wishes.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+            data: one batch of training data.
+        """
         ...
 
     def on_train_epoch_end(self, state: State) -> None:
+        """Hook called after a train epoch ends.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+        """
         pass
 
     def on_train_end(self, state: State) -> None:
+        """Hook called after training ends.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+        """
         pass
 
 
 class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
+    """
+    The EvalUnit is an interface that can be used to organize your evaluation logic. The core of it is the ``eval_step`` which
+    is an abstract method where you can define the code you want to run each iteration of the dataloader.
+
+    To use the EvalUnit, create a class which subclasses :class:`~torchtnt.framework.unit.EvalUnit`.
+    Then implement the ``eval_step`` method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
+    Below is a simple example of a user's subclass of :class:`~torchtnt.framework.unit.EvalUnit` that implements a basic ``eval_step``.
+
+    .. code-block:: python
+
+      from torchtnt.framework import EvalUnit
+
+      Batch = Tuple[torch.tensor, torch.tensor]
+      # specify type of the data in each batch of the dataloader to allow for typechecking
+
+      class MyEvalUnit(EvalUnit[Batch]):
+          def __init__(
+              self,
+              module: torch.nn.Module,
+          ):
+              super().__init__()
+              self.module = module
+
+          def eval_step(self, state: State, data: Batch) -> None:
+              inputs, targets = data
+              outputs = self.module(inputs)
+              loss = torch.nn.functional.binary_cross_entropy_with_logits(outputs, targets)
+
+      eval_unit = MyEvalUnit(module=...)
+    """
+
     def on_eval_start(self, state: State) -> None:
+        """Hook called before evaluation starts.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+        """
         pass
 
     def on_eval_epoch_start(self, state: State) -> None:
+        """Hook called before a new eval epoch starts.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+        """
         pass
 
     @abstractmethod
     def eval_step(self, state: State, data: TEvalData) -> Any:
         """
-        Optionally can be decorated with ``@torch.inference_mode()`` for improved peformance.
+        Core required method for user to implement. This method will be called at each iteration of the
+        eval dataloader, and can return any data the user wishes.
+        Optionally can be decorated with ``@torch.inference_mode()`` for improved performance.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+            data: one batch of evaluation data.
         """
         ...
 
     def on_eval_epoch_end(self, state: State) -> None:
+        """Hook called after an eval epoch ends.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+        """
         pass
 
     def on_eval_end(self, state: State) -> None:
+        """Hook called after evaluation ends.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+        """
         pass
 
 
 class PredictUnit(AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC):
+    """
+    The PredictUnit is an interface that can be used to organize your prediction logic. The core of it is the ``predict_step`` which
+    is an abstract method where you can define the code you want to run each iteration of the dataloader.
+
+    To use the PredictUnit, create a class which subclasses :class:`~torchtnt.framework.unit.PredictUnit`.
+    Then implement the ``predict_step`` method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
+    Below is a simple example of a user's subclass of :class:`~torchtnt.framework.unit.PredictUnit` that implements a basic ``predict_step``.
+
+    .. code-block:: python
+
+      from torchtnt.framework import PredictUnit
+
+      Batch = Tuple[torch.tensor, torch.tensor]
+      # specify type of the data in each batch of the dataloader to allow for typechecking
+
+      class MyPredictUnit(PredictUnit[Batch]):
+          def __init__(
+              self,
+              module: torch.nn.Module,
+          ):
+              super().__init__()
+              self.module = module
+
+          def predict_step(self, state: State, data: Batch) -> torch.tensor:
+              inputs, targets = data
+              outputs = self.module(inputs)
+              return outputs
+
+      predict_unit = MyPredictUnit(module=...)
+    """
+
     def on_predict_start(self, state: State) -> None:
+        """Hook called before prediction starts.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+        """
         pass
 
     def on_predict_epoch_start(self, state: State) -> None:
+        """Hook called before a predict epoch starts.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+        """
         pass
 
     @abstractmethod
     def predict_step(self, state: State, data: TPredictData) -> Any:
         """
-        Optionally can be decorated with ``@torch.inference_mode()`` for improved peformance.
+        Core required method for user to implement. This method will be called at each iteration of the
+        predict dataloader, and can return any data the user wishes.
+        Optionally can be decorated with ``@torch.inference_mode()`` for improved performance.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+            data: one batch of prediction data.
         """
         ...
 
     def on_predict_epoch_end(self, state: State) -> None:
+        """Hook called after a predict epoch ends.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+        """
         pass
 
     def on_predict_end(self, state: State) -> None:
+        """Hook called after prediction ends.
+
+        Args:
+            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+        """
         pass
 
 
