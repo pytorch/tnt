@@ -32,14 +32,26 @@ def init_eval_state(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    Helper function that initializes a :class:`~torchtnt.framework.state.State` object for evaluation.
+    ``init_eval_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for evaluation. This :class:`~torchtnt.framework.State` object
+    can then be passed to the :func:`~torchtnt.framework.evaluate` entry point.
 
     Args:
-        dataloader: dataloader to be used during evaluation.
+        dataloader: dataloader to be used during prediction, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
 
     Returns:
         An initialized state object containing metadata.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.init_eval_state` and :py:func:`~torchtnt.framework.evaluate` together.
+
+    .. code-block:: python
+
+      from torchtnt.framework import init_eval_state, evaluate
+
+      eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
+      dataloader = torch.utils.data.DataLoader(...)
+      state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
+      evaluate(state, eval_unit)
     """
 
     return State(
@@ -58,12 +70,24 @@ def evaluate(
     callbacks: Optional[List[Callback]] = None,
 ) -> None:
     """
-    The``evaluate``entry point takes in a :class:`~torchtnt.framework.State` and :class:`~torchtnt.framework.unit.EvalUnit` and runs the evaluation loop over the data.
+    The ``evaluate`` entry point takes in a :class:`~torchtnt.framework.State` object, a :class:`~torchtnt.framework.EvalUnit` object, and an optional list of :class:`~torchtnt.framework.Callback` s,
+    and runs the evaluation loop. The :class:`~torchtnt.framework.State` object can be initialized with :func:`~torchtnt.framework.init_eval_state`.
 
     Args:
         state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
         eval_unit: an instance of :class:`~torchtnt.framework.EvalUnit` which implements `eval_step`.
         callbacks: an optional list of callbacks.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.init_eval_state` and :py:func:`~torchtnt.framework.evaluate` together.
+
+    .. code-block:: python
+
+      from torchtnt.framework import init_eval_state, evaluate
+
+      eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
+      dataloader = torch.utils.data.DataLoader(...)
+      state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
+      evaluate(state, eval_unit)
     """
     log_api_usage("evaluate")
     callbacks = callbacks or []
