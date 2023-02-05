@@ -32,14 +32,27 @@ def init_predict_state(
     max_steps_per_epoch: Optional[int] = None,
 ) -> State:
     """
-    Helper function that initializes a :class:`~torchtnt.framework.State` object for prediction.
+    ``init_predict_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for prediction. This :class:`~torchtnt.framework.State` object
+    can then be passed to the :func:`~torchtnt.framework.predict` entry point.
 
     Args:
-        dataloader: dataloader to be used during prediction.
+        dataloader: dataloader to be used during prediction, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
 
     Returns:
         An initialized state object containing metadata.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.init_predict_state` and :py:func:`~torchtnt.framework.predict` together.
+
+    .. code-block:: python
+
+      from torchtnt.framework import init_predict_state, predict
+
+      predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
+      dataloader = torch.utils.data.DataLoader(...)
+      state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
+      predict(state, predict_unit)
+
     """
 
     return State(
@@ -58,12 +71,24 @@ def predict(
     callbacks: Optional[List[Callback]] = None,
 ) -> None:
     """
-    The ``predict`` entry point takes in a :class:`~torchtnt.framework.State` and :class:`~torchtnt.framework.PredictUnit` and runs the prediction loop over the data.
+    The ``predict`` entry point takes in a :class:`~torchtnt.framework.State` object, a :class:`~torchtnt.framework.PredictUnit` object, and an optional list of :class:`~torchtnt.framework.Callback` s,
+    and runs the prediction loop. The :class:`~torchtnt.framework.State` object can be initialized with :func:`~torchtnt.framework.init_predict_state`.
 
     Args:
         state: a State object containing metadata about the prediction run. This can be initialized using :func:`~torchtnt.framework.init_predict_state`.
         predict_unit: an instance of :class:`~torchtnt.framework.PredictUnit` which implements `predict_step`.
         callbacks: an optional list of callbacks.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.init_predict_state` and :py:func:`~torchtnt.framework.predict` together.
+
+    .. code-block:: python
+
+      from torchtnt.framework import init_predict_state, predict
+
+      predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
+      dataloader = torch.utils.data.DataLoader(...)
+      state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
+      predict(state, predict_unit)
     """
     log_api_usage("predict")
     callbacks = callbacks or []
