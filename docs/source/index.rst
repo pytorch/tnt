@@ -32,6 +32,7 @@ TorchTNT
    eval
    predict
    fit
+   state
    callbacks
    auto_unit
 
