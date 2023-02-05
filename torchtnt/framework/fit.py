@@ -35,11 +35,12 @@ def init_fit_state(
     evaluate_every_n_epochs: Optional[int] = 1,
 ) -> State:
     """
-    Helper function that initializes a :class:`~torchtnt.framework.State` object for fitting.
+    ``init_fit_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for fitting. This :class:`~torchtnt.framework.State` object
+    can then be passed to the :func:`~torchtnt.framework.fit` entry point.
 
     Args:
-        train_dataloader: dataloader to be used during training.
-        eval_dataloader: dataloader to be used during evaluation.
+        train_dataloader: dataloader to be used during training, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
+        eval_dataloader: dataloader to be used during evaluation, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_epochs: the max number of epochs to run for training. ``None`` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run for training. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_train_steps_per_epoch: the max number of steps to run per epoch for training. None means train until the dataloader is exhausted.
@@ -48,6 +49,18 @@ def init_fit_state(
 
     Returns:
         An initialized state object containing metadata.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.init_fit_state` and :py:func:`~torchtnt.framework.fit` together.
+
+    .. code-block:: python
+
+      from torchtnt.framework import fit, init_fit_state
+
+      fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
+      train_dataloader = torch.utils.data.DataLoader(...)
+      eval_dataloader = torch.utils.data.DataLoader(...)
+      state = init_fit_state(train_dataloader=train_dataloader, eval_dataloader=eval_dataloader, max_epochs=4)
+      fit(state, fit_unit)
     """
 
     return State(
@@ -71,7 +84,8 @@ def fit(
     state: State, unit: TTrainUnit, *, callbacks: Optional[List[Callback]] = None
 ) -> None:
     """
-    The ``fit`` entry point interleaves training and evaluation loops.
+    The ``fit`` entry point interleaves training and evaluation loops.  It takes in a :class:`~torchtnt.framework.State` object, an object which subclasses both :class:`~torchtnt.framework.TrainUnit` and :class:`~torchtnt.framework.EvalUnit`,
+    and an optional list of :class:`~torchtnt.framework.Callback` s, and runs the fit loop. The :class:`~torchtnt.framework.State` object can be initialized with :func:`~torchtnt.framework.init_fit_state`.
 
     Args:
         state: a :class:`~torchtnt.framework.State` object containing metadata about the fitting run.
@@ -79,6 +93,18 @@ def fit(
         unit: an instance that subclasses both :class:`~torchtnt.framework.unit.TrainUnit` and :class:`~torchtnt.framework.unit.EvalUnit`,
          implementing :meth:`~torchtnt.framework.TrainUnit.train_step` and :meth:`~torchtnt.framework.EvalUnit.eval_step`.
         callbacks: an optional list of callbacks.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.init_fit_state` and :py:func:`~torchtnt.framework.fit` together.
+
+    .. code-block:: python
+
+      from torchtnt.framework import fit, init_fit_state
+
+      fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
+      train_dataloader = torch.utils.data.DataLoader(...)
+      eval_dataloader = torch.utils.data.DataLoader(...)
+      state = init_fit_state(train_dataloader=train_dataloader, eval_dataloader=eval_dataloader, max_epochs=4)
+      fit(state, fit_unit)
     """
     log_api_usage("fit")
     callbacks = callbacks or []
