@@ -46,13 +46,6 @@ TorchTNT
       utils/data
       utils/loggers
 
-.. toctree::
-   :maxdepth: 2
-   :caption: API
-
-   torchtnt.framework.rst
-   torchtnt.utils.rst
-
 .. fbcode::
 
    .. toctree::
