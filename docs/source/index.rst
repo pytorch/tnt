@@ -49,7 +49,7 @@ TorchTNT
       :caption: Framework (Meta)
       :glob:
 
-      meta/callbacks.rst
+      meta/framework.callbacks.rst
 
 .. fbcode::
 
@@ -58,4 +58,6 @@ TorchTNT
       :caption: Utils (Meta)
       :glob:
 
-      meta/torchtnt.meta.utils.rst
+      meta/utils.rst
+      meta/utils.data.rst
+      meta/utils.loggers.rst
