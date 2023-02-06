@@ -25,6 +25,7 @@ We offer several pre-written callbacks which are ready to be used out of the box
     LearningRateMonitor
     ModuleSummary
     PyTorchProfiler
+    SystemResourcesMonitor
     TensorBoardParameterMonitor
     TorchSnapshotSaver
     TQDMProgressBar
