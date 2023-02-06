@@ -35,13 +35,9 @@ class EntryPoint(Enum):
     - :py:func:`~torchtnt.framework.predict`
     """
 
-    # pyre-fixme[20]: Argument `value` expected.
     FIT = auto()
-    # pyre-fixme[20]: Argument `value` expected.
     TRAIN = auto()
-    # pyre-fixme[20]: Argument `value` expected.
     EVALUATE = auto()
-    # pyre-fixme[20]: Argument `value` expected.
     PREDICT = auto()
 
 
@@ -59,11 +55,8 @@ class ActivePhase(Enum):
     to determine within which of training, evaluation, or prediction the hook is being called.
     """
 
-    # pyre-fixme[20]: Argument `value` expected.
     TRAIN = auto()
-    # pyre-fixme[20]: Argument `value` expected.
     EVALUATE = auto()
-    # pyre-fixme[20]: Argument `value` expected.
     PREDICT = auto()
 
 
