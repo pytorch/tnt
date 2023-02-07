@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Predict &mdash; TorchTNT master documentation</title>
+  <title>PyTorchProfiler &mdash; TorchTNT master documentation</title>
   
 
   
@@ -26,32 +26,32 @@
 
   
 
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Fit" href="fit.html" />
-    <link rel="prev" title="Evaluate" href="eval.html" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="TensorBoardParameterMonitor" href="torchtnt.framework.callbacks.TensorBoardParameterMonitor.html" />
+    <link rel="prev" title="ModuleSummary" href="torchtnt.framework.callbacks.ModuleSummary.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
   
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="../../_static/js/modernizr.min.js"></script>
 
   <!-- Preload the theme fonts -->
 
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
 <!-- Preload the katex fonts -->
 
@@ -236,7 +236,7 @@
 
 
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -254,23 +254,19 @@
             
               <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../project_structure.html">Project Structure</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.framework.html">Framework</a></li>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.utils.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../train.html">Train</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../eval.html">Evaluate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fit.html">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../state.html">State</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../callbacks.html">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_unit.html">AutoUnit</a></li>
 </ul>
 
             
@@ -303,7 +299,7 @@
   <ul class="pytorch-breadcrumbs">
     
       <li>
-        <a href="index.html">
+        <a href="../../index.html">
           
             Docs
           
@@ -311,13 +307,15 @@
       </li>
 
         
-      <li>Predict</li>
+          <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
+        
+      <li>PyTorchProfiler</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/predict.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.PyTorchProfiler.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -343,48 +341,19 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="predict">
-<h1>Predict<a class="headerlink" href="#predict" title="Permalink to this heading">¶</a></h1>
-<p>Here we lay out the steps needed to configure and run your prediction loop.</p>
-<section id="predictunit">
-<h2>PredictUnit<a class="headerlink" href="#predictunit" title="Permalink to this heading">¶</a></h2>
-<p>In TorchTNT, <a class="reference internal" href="unit.html#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> is the interface that allows you to customize your prediction loop when run by <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict" title="torchtnt.framework.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>.
-To use, you must create a class which subclasses <a class="reference internal" href="unit.html#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a>.
-You must implement the <code class="docutils literal notranslate"><span class="pre">predict_step</span></code> method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
-Below is a simple example of a user’s subclass of <a class="reference internal" href="unit.html#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">predict_step</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">PredictUnit</span>
+  <section id="pytorchprofiler">
+<h1>PyTorchProfiler<a class="headerlink" href="#pytorchprofiler" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.PyTorchProfiler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></span><span class="sig-name descname"><span class="pre">PyTorchProfiler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profiler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/profiler.html#torch.profiler.profile" title="(in PyTorch v1.13)"><span class="pre">profile</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.PyTorchProfiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback which profiles user code using PyTorch Profiler: <a class="reference external" href="https://pytorch.org/docs/stable/profiler.html">https://pytorch.org/docs/stable/profiler.html</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>profiler</strong> – a torch.profiler.profile context manager which will be used</p>
+</dd>
+</dl>
+</dd></dl>
 
-<span class="k">class</span> <span class="nc">MyPredictUnit</span><span class="p">(</span><span class="n">PredictUnit</span><span class="p">[</span><span class="n">Batch</span><span class="p">]):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
-
-    <span class="k">def</span> <span class="nf">predict_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-
-<span class="n">predict_unit</span> <span class="o">=</span> <span class="n">MyPredictUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="predict-entry-point">
-<h2>Predict Entry Point<a class="headerlink" href="#predict-entry-point" title="Permalink to this heading">¶</a></h2>
-<p>To run your prediction loop, call the prediction loop entry point: <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict" title="torchtnt.framework.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a>.</p>
-<p>The <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict" title="torchtnt.framework.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a> entry point takes a <a class="reference internal" href="unit.html#torchtnt.framework.PredictUnit" title="torchtnt.framework.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> object, a <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object, and an optional list of callbacks.</p>
-<p>The <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object can be initialized with <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.init_predict_state" title="torchtnt.framework.init_predict_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_predict_state()</span></code></a>, which takes in a dataloader (can be <em>any</em> iterable, including PyTorch DataLoader, numpy, etc.) and some parameters to control the run duration of the loop.</p>
-<p>Below is an example of calling the <a class="reference internal" href="torchtnt.framework.html#torchtnt.framework.predict" title="torchtnt.framework.predict"><code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code></a> entry point with <code class="docutils literal notranslate"><span class="pre">MyPredictUnit</span></code> created above.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">init_predict_state</span><span class="p">,</span> <span class="n">predict</span>
-
-<span class="n">predict_unit</span> <span class="o">=</span> <span class="n">MyPredictUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=...</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=...</span><span class="p">)</span>
-<span class="n">dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">state</span> <span class="o">=</span> <span class="n">init_predict_state</span><span class="p">(</span><span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">max_steps_per_epoch</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-<span class="n">predict</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">predict_unit</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
 </section>
 
 
@@ -395,10 +364,10 @@ Below is a simple example of a user’s subclass of <a class="reference internal
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="fit.html" class="btn btn-neutral float-right" title="Fit" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.framework.callbacks.TensorBoardParameterMonitor.html" class="btn btn-neutral float-right" title="TensorBoardParameterMonitor" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="eval.html" class="btn btn-neutral" title="Evaluate" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.framework.callbacks.ModuleSummary.html" class="btn btn-neutral" title="ModuleSummary" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -430,11 +399,7 @@ Below is a simple example of a user’s subclass of <a class="reference internal
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Predict</a><ul>
-<li><a class="reference internal" href="#predictunit">PredictUnit</a></li>
-<li><a class="reference internal" href="#predict-entry-point">Predict Entry Point</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">PyTorchProfiler</a></li>
 </ul>
 
             </div>
@@ -449,21 +414,21 @@ Below is a simple example of a user’s subclass of <a class="reference internal
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/js/torchtnt.js"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+         <script src="../../_static/jquery.js"></script>
+         <script src="../../_static/underscore.js"></script>
+         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/js/torchtnt.js"></script>
      
 
   
 
-  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
-  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
-  <script type="text/javascript" src="_static/js/theme.js"></script>
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
   <script type="text/javascript">
       jQuery(function () {
@@ -568,7 +533,7 @@ Below is a simple example of a user’s subclass of <a class="reference internal
   <div class="cookie-banner-wrapper">
   <div class="container">
     <p class="gdpr-notice">To analyze traffic and optimize your experience, we serve cookies on this site. By clicking or navigating, you agree to allow our usage of cookies. As the current maintainers of this site, Facebook’s Cookies Policy applies. Learn more, including about available controls: <a href="https://www.facebook.com/policies/cookies/">Cookies Policy</a>.</p>
-    <img class="close-button" src="_static/images/pytorch-x.svg">
+    <img class="close-button" src="../../_static/images/pytorch-x.svg">
   </div>
 </div>
 
@@ -704,7 +669,7 @@ Below is a simple example of a user’s subclass of <a class="reference internal
 
   <!-- End Mobile Menu -->
 
-  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/anchor.min.js"></script>
 
   <script type="text/javascript">
     $(document).ready(function() {

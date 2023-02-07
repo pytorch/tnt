@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Unit" href="unit.html" />
+    <link rel="next" title="Unit" href="framework/unit.html" />
     <link rel="prev" title="Installation" href="installation.html" />
   <!-- Google Analytics -->
   
@@ -259,18 +259,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.framework.html">Framework</a></li>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.utils.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/train.html">Train</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/eval.html">Evaluate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/fit.html">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/state.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/callbacks.html">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="framework/auto_unit.html">AutoUnit</a></li>
 </ul>
 
             
@@ -347,8 +343,8 @@
 <h1>Project Structure<a class="headerlink" href="#project-structure" title="Permalink to this heading">¶</a></h1>
 <p>TorchTNT has two main components, which are the top-level modules of the repo:</p>
 <ol class="arabic simple">
-<li><p><a class="reference internal" href="torchtnt.framework.html#module-torchtnt.framework" title="torchtnt.framework"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.framework</span></code></a>: contains a lightweight training framework to simplify maintaining training, evaluation, and prediction loops.</p></li>
-<li><p><a class="reference internal" href="torchtnt.utils.html#module-torchtnt.utils" title="torchtnt.utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.utils</span></code></a>: contains a grab-bag of various independent, training-related utilities, including data related abstractions and wrappers around different publishers to simplify logging metrics.</p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.framework</span></code>: contains a lightweight training framework to simplify maintaining training, evaluation, and prediction loops.</p></li>
+<li><p><a class="reference internal" href="utils/utils.html#module-torchtnt.utils" title="torchtnt.utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.utils</span></code></a>: contains a grab-bag of various independent, training-related utilities, including data related abstractions and wrappers around different publishers to simplify logging metrics.</p></li>
 </ol>
 </section>
 
@@ -360,7 +356,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="unit.html" class="btn btn-neutral float-right" title="Unit" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="framework/unit.html" class="btn btn-neutral float-right" title="Unit" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>

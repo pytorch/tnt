@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Callbacks &mdash; TorchTNT master documentation</title>
+  <title>BaseCSVWriter &mdash; TorchTNT master documentation</title>
   
 
   
@@ -26,32 +26,32 @@
 
   
 
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="BaseCSVWriter" href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html" />
-    <link rel="prev" title="Fit" href="fit.html" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="GarbageCollector" href="torchtnt.framework.callbacks.GarbageCollector.html" />
+    <link rel="prev" title="Callbacks" href="../callbacks.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
   
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="../../_static/js/modernizr.min.js"></script>
 
   <!-- Preload the theme fonts -->
 
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
 <!-- Preload the katex fonts -->
 
@@ -236,7 +236,7 @@
 
 
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -254,23 +254,19 @@
             
               <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../project_structure.html">Project Structure</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.framework.html">Framework</a></li>
-<li class="toctree-l1"><a class="reference internal" href="torchtnt.utils.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../train.html">Train</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../eval.html">Evaluate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fit.html">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../state.html">State</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../callbacks.html">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_unit.html">AutoUnit</a></li>
 </ul>
 
             
@@ -303,7 +299,7 @@
   <ul class="pytorch-breadcrumbs">
     
       <li>
-        <a href="index.html">
+        <a href="../../index.html">
           
             Docs
           
@@ -311,13 +307,15 @@
       </li>
 
         
-      <li>Callbacks</li>
+          <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
+        
+      <li>BaseCSVWriter</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/callbacks.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.BaseCSVWriter.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -343,48 +341,30 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="module-torchtnt.framework.callback">
-<span id="callbacks"></span><h1>Callbacks<a class="headerlink" href="#module-torchtnt.framework.callback" title="Permalink to this heading">¶</a></h1>
+  <section id="basecsvwriter">
+<h1>BaseCSVWriter<a class="headerlink" href="#basecsvwriter" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callback.Callback">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callback.</span></span><span class="sig-name descname"><span class="pre">Callback</span></span><a class="headerlink" href="#torchtnt.framework.callback.Callback" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.BaseCSVWriter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></span><span class="sig-name descname"><span class="pre">BaseCSVWriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header_row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'\t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'predictions.csv'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.BaseCSVWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback to write prediction outputs to a CSV file.</p>
+<p>This callback provides an interface to simplify writing outputs during prediction
+into a CSV file. This callback must be extended with an implementation for
+<code class="docutils literal notranslate"><span class="pre">get_step_output_rows</span></code> to write the desired outputs as rows in the CSV file.</p>
+<p>By default, outputs at each step across all processes will be written into the same CSV file.
+The outputs in each row is a a list of strings, and should match
+the columns names defined in <code class="docutils literal notranslate"><span class="pre">header_row</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>header_row</strong> – columns of the CSV file</p></li>
+<li><p><strong>dir_path</strong> – directory path of where to save the CSV file</p></li>
+<li><p><strong>delimiter</strong> – separate columns in one row. Default is tab</p></li>
+<li><p><strong>filename</strong> – name of the file. Default filename is “predictions.csv”</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
-<section id="built-in-callbacks">
-<h2>Built-in callbacks<a class="headerlink" href="#built-in-callbacks" title="Permalink to this heading">¶</a></h2>
-<p>We offer several pre-written callbacks which are ready to be used out of the box:</p>
-<table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html#torchtnt.framework.callbacks.BaseCSVWriter" title="torchtnt.framework.callbacks.BaseCSVWriter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseCSVWriter</span></code></a></p></td>
-<td><p>A callback to write prediction outputs to a CSV file.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.GarbageCollector.html#torchtnt.framework.callbacks.GarbageCollector" title="torchtnt.framework.callbacks.GarbageCollector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GarbageCollector</span></code></a></p></td>
-<td><p>A callback that performs periodic synchronous garbage collection.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.Lambda.html#torchtnt.framework.callbacks.Lambda" title="torchtnt.framework.callbacks.Lambda"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Lambda</span></code></a></p></td>
-<td><p>A callback that accepts functions run during the training, evaluation, and prediction loops.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.LearningRateMonitor.html#torchtnt.framework.callbacks.LearningRateMonitor" title="torchtnt.framework.callbacks.LearningRateMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearningRateMonitor</span></code></a></p></td>
-<td><p>A callback which logs learning rate of tracked optimizers and learning rate schedulers.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary" title="torchtnt.framework.callbacks.ModuleSummary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModuleSummary</span></code></a></p></td>
-<td><p>A callback which generates and logs a summary of the modules.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler" title="torchtnt.framework.callbacks.PyTorchProfiler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PyTorchProfiler</span></code></a></p></td>
-<td><p>A callback which profiles user code using PyTorch Profiler: <a class="reference external" href="https://pytorch.org/docs/stable/profiler.html">https://pytorch.org/docs/stable/profiler.html</a></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.html#torchtnt.framework.callbacks.TensorBoardParameterMonitor" title="torchtnt.framework.callbacks.TensorBoardParameterMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorBoardParameterMonitor</span></code></a></p></td>
-<td><p>A callback which logs module parameters as histograms to TensorBoard.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a></p></td>
-<td><p>A callback which periodically saves the application state during training using TorchSnapshot: <a class="reference external" href="https://pytorch.org/torchsnapshot">https://pytorch.org/torchsnapshot</a>.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TQDMProgressBar.html#torchtnt.framework.callbacks.TQDMProgressBar" title="torchtnt.framework.callbacks.TQDMProgressBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TQDMProgressBar</span></code></a></p></td>
-<td><p>A callback for progress bar visualization in training, evaluation, and prediction.</p></td>
-</tr>
-</tbody>
-</table>
-</section>
 </section>
 
 
@@ -395,10 +375,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html" class="btn btn-neutral float-right" title="BaseCSVWriter" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.framework.callbacks.GarbageCollector.html" class="btn btn-neutral float-right" title="GarbageCollector" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="fit.html" class="btn btn-neutral" title="Fit" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="../callbacks.html" class="btn btn-neutral" title="Callbacks" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -430,10 +410,7 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Callbacks</a><ul>
-<li><a class="reference internal" href="#built-in-callbacks">Built-in callbacks</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">BaseCSVWriter</a></li>
 </ul>
 
             </div>
@@ -448,21 +425,21 @@
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/js/torchtnt.js"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+         <script src="../../_static/jquery.js"></script>
+         <script src="../../_static/underscore.js"></script>
+         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/js/torchtnt.js"></script>
      
 
   
 
-  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
-  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
-  <script type="text/javascript" src="_static/js/theme.js"></script>
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
   <script type="text/javascript">
       jQuery(function () {
@@ -567,7 +544,7 @@
   <div class="cookie-banner-wrapper">
   <div class="container">
     <p class="gdpr-notice">To analyze traffic and optimize your experience, we serve cookies on this site. By clicking or navigating, you agree to allow our usage of cookies. As the current maintainers of this site, Facebook’s Cookies Policy applies. Learn more, including about available controls: <a href="https://www.facebook.com/policies/cookies/">Cookies Policy</a>.</p>
-    <img class="close-button" src="_static/images/pytorch-x.svg">
+    <img class="close-button" src="../../_static/images/pytorch-x.svg">
   </div>
 </div>
 
@@ -703,7 +680,7 @@
 
   <!-- End Mobile Menu -->
 
-  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/anchor.min.js"></script>
 
   <script type="text/javascript">
     $(document).ready(function() {

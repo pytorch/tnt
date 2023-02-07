@@ -14,7 +14,7 @@ TorchTNT
       :caption: Getting Started (Meta)
       :glob:
 
-      meta/getting_started.rst
+      meta/getting_started
 
 .. toctree::
    :maxdepth: 1
@@ -27,20 +27,25 @@ TorchTNT
    :maxdepth: 1
    :caption: Framework
 
-   unit
-   train
-   eval
-   predict
-   fit
-   callbacks
-   auto_unit
+   framework/unit
+   framework/train
+   framework/eval
+   framework/predict
+   framework/fit
+   framework/state
+   framework/callbacks
+   framework/auto_unit
 
-.. toctree::
-   :maxdepth: 2
-   :caption: API
+.. fbcode::
 
-   torchtnt.framework.rst
-   torchtnt.utils.rst
+   .. toctree::
+      :maxdepth: 2
+      :caption: Utils
+      :glob:
+
+      utils/utils
+      utils/data
+      utils/loggers
 
 .. fbcode::
 
@@ -49,7 +54,7 @@ TorchTNT
       :caption: Framework (Meta)
       :glob:
 
-      meta/callbacks.rst
+      meta/framework/callbacks
 
 .. fbcode::
 
@@ -58,4 +63,6 @@ TorchTNT
       :caption: Utils (Meta)
       :glob:
 
-      meta/torchtnt.meta.utils.rst
+      meta/utils/utils
+      meta/utils/data
+      meta/utils/loggers

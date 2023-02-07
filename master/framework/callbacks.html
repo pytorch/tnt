@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModuleSummary &mdash; TorchTNT master documentation</title>
+  <title>Callbacks &mdash; TorchTNT master documentation</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="PyTorchProfiler" href="torchtnt.framework.callbacks.PyTorchProfiler.html" />
-    <link rel="prev" title="LearningRateMonitor" href="torchtnt.framework.callbacks.LearningRateMonitor.html" />
+    <link rel="next" title="BaseCSVWriter" href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html" />
+    <link rel="prev" title="State" href="state.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -259,18 +259,14 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fit.html">Fit</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../auto_unit.html">AutoUnit</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">API</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../torchtnt.framework.html">Framework</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../torchtnt.utils.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="state.html">State</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
 </ul>
 
             
@@ -311,15 +307,13 @@
       </li>
 
         
-          <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
-        
-      <li>ModuleSummary</li>
+      <li>Callbacks</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../_sources/generated/torchtnt.framework.callbacks.ModuleSummary.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
+            <a href="../_sources/framework/callbacks.rst.txt" rel="nofollow"><img src="../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -345,27 +339,48 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="modulesummary">
-<h1>ModuleSummary<a class="headerlink" href="#modulesummary" title="Permalink to this heading">¶</a></h1>
+  <section id="module-torchtnt.framework.callback">
+<span id="callbacks"></span><h1>Callbacks<a class="headerlink" href="#module-torchtnt.framework.callback" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.ModuleSummary">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></span><span class="sig-name descname"><span class="pre">ModuleSummary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">max_depth:</span> <span class="pre">~typing.Optional[int]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">process_fn:</span> <span class="pre">~typing.Callable[[~typing.List[~torcheval.tools.module_summary.ModuleSummary]],</span> <span class="pre">None]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_log_module_summary_tables&gt;,</span> <span class="pre">module_inputs:</span> <span class="pre">~typing.Optional[~typing.MutableMapping[str,</span> <span class="pre">~typing.Tuple[~typing.Tuple[~typing.Any,</span> <span class="pre">...],</span> <span class="pre">~typing.Dict[str,</span> <span class="pre">~typing.Any]]]]</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.ModuleSummary" title="Permalink to this definition">¶</a></dt>
-<dd><p>A callback which generates and logs a summary of the modules. Requires torcheval:
-<a class="reference external" href="https://pytorch.org/torcheval/stable/">https://pytorch.org/torcheval/stable/</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>max_depth</strong> – The maximum depth of module summaries to keep.</p></li>
-<li><p><strong>process_fn</strong> – Function to print the module summaries. Default is to log all module summary tables.</p></li>
-<li><p><strong>module_inputs</strong> – A mapping from module name to (args, kwargs) for that module. Useful when wanting FLOPS, activation sizes, etc.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – If torcheval is not installed.</p>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="torchtnt.framework.callback.Callback">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callback.</span></span><span class="sig-name descname"><span class="pre">Callback</span></span><a class="headerlink" href="#torchtnt.framework.callback.Callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
+<section id="built-in-callbacks">
+<h2>Built-in callbacks<a class="headerlink" href="#built-in-callbacks" title="Permalink to this heading">¶</a></h2>
+<p>We offer several pre-written callbacks which are ready to be used out of the box:</p>
+<table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html#torchtnt.framework.callbacks.BaseCSVWriter" title="torchtnt.framework.callbacks.BaseCSVWriter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseCSVWriter</span></code></a></p></td>
+<td><p>A callback to write prediction outputs to a CSV file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.GarbageCollector.html#torchtnt.framework.callbacks.GarbageCollector" title="torchtnt.framework.callbacks.GarbageCollector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GarbageCollector</span></code></a></p></td>
+<td><p>A callback that performs periodic synchronous garbage collection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.Lambda.html#torchtnt.framework.callbacks.Lambda" title="torchtnt.framework.callbacks.Lambda"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Lambda</span></code></a></p></td>
+<td><p>A callback that accepts functions run during the training, evaluation, and prediction loops.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.LearningRateMonitor.html#torchtnt.framework.callbacks.LearningRateMonitor" title="torchtnt.framework.callbacks.LearningRateMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LearningRateMonitor</span></code></a></p></td>
+<td><p>A callback which logs learning rate of tracked optimizers and learning rate schedulers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary" title="torchtnt.framework.callbacks.ModuleSummary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModuleSummary</span></code></a></p></td>
+<td><p>A callback which generates and logs a summary of the modules.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler" title="torchtnt.framework.callbacks.PyTorchProfiler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PyTorchProfiler</span></code></a></p></td>
+<td><p>A callback which profiles user code using PyTorch Profiler: <a class="reference external" href="https://pytorch.org/docs/stable/profiler.html">https://pytorch.org/docs/stable/profiler.html</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.html#torchtnt.framework.callbacks.TensorBoardParameterMonitor" title="torchtnt.framework.callbacks.TensorBoardParameterMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorBoardParameterMonitor</span></code></a></p></td>
+<td><p>A callback which logs module parameters as histograms to TensorBoard.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a></p></td>
+<td><p>A callback which periodically saves the application state during training using TorchSnapshot: <a class="reference external" href="https://pytorch.org/torchsnapshot">https://pytorch.org/torchsnapshot</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.framework.callbacks.TQDMProgressBar.html#torchtnt.framework.callbacks.TQDMProgressBar" title="torchtnt.framework.callbacks.TQDMProgressBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TQDMProgressBar</span></code></a></p></td>
+<td><p>A callback for progress bar visualization in training, evaluation, and prediction.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 
 
@@ -376,10 +391,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.framework.callbacks.PyTorchProfiler.html" class="btn btn-neutral float-right" title="PyTorchProfiler" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="generated/torchtnt.framework.callbacks.BaseCSVWriter.html" class="btn btn-neutral float-right" title="BaseCSVWriter" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.framework.callbacks.LearningRateMonitor.html" class="btn btn-neutral" title="LearningRateMonitor" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="state.html" class="btn btn-neutral" title="State" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -411,7 +426,10 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">ModuleSummary</a></li>
+<li><a class="reference internal" href="#">Callbacks</a><ul>
+<li><a class="reference internal" href="#built-in-callbacks">Built-in callbacks</a></li>
+</ul>
+</li>
 </ul>
 
             </div>
