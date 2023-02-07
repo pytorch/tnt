@@ -35,6 +35,17 @@ TorchTNT
    callbacks
    auto_unit
 
+.. fbcode::
+
+   .. toctree::
+      :maxdepth: 2
+      :caption: Utils
+      :glob:
+
+      utils/utils
+      utils/data
+      utils/loggers
+
 .. toctree::
    :maxdepth: 2
    :caption: API
