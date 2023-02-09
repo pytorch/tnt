@@ -4,14 +4,16 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Optional, Union
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 import psutil
-
 import torch
-
 from pyre_extensions import none_throws
-
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import PhaseState, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
