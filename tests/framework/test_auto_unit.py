@@ -56,6 +56,11 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             precision="fp16",
         )
+
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
+
         self.assertEqual(auto_unit.tracked_modules()["module"], my_module)
         self.assertTrue(
             isinstance(
@@ -76,7 +81,6 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             step_lr_interval="step",
         )
-        auto_unit.lr_scheduler = MagicMock()
 
         input_dim = 2
         dataset_len = 8
@@ -101,7 +105,6 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             step_lr_interval="epoch",
         )
-        auto_unit.lr_scheduler = MagicMock()
 
         input_dim = 2
         dataset_len = 8
@@ -127,6 +130,10 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             precision="fp16",
         )
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
+
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         auto_unit.train_step(state=MagicMock(), data=dummy_data)
         mock_autocast.assert_called_with(
@@ -147,6 +154,10 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             precision="bf16",
         )
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
+
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         auto_unit.train_step(state=MagicMock(), data=dummy_data)
         mock_autocast.assert_called_with(
@@ -214,6 +225,11 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             swa_params=SWAParams(epoch_start=1, anneal_epochs=5),
         )
+
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
+        auto_unit2.on_train_start(state)
 
         self.assertIsNone(auto_unit.swa_model)
         self.assertIsNotNone(auto_unit2.swa_model)
@@ -523,6 +539,8 @@ class TestAutoUnit(unittest.TestCase):
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
@@ -552,6 +570,8 @@ class TestAutoUnit(unittest.TestCase):
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
@@ -605,10 +625,14 @@ class TestAutoUnit(unittest.TestCase):
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2)
 
-        auto_train_unit = DummyAutoUnit(
+        auto_unit = DummyAutoUnit(
             module=my_module,
             device=device,
         )
+
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
 
@@ -617,8 +641,26 @@ class TestAutoUnit(unittest.TestCase):
         ) as move_data_to_device_mock:
             dummy_data = copy_data_to_device(dummy_data, device)
             move_data_to_device_mock.return_value = dummy_data
-            auto_train_unit.train_step(state=MagicMock(), data=dummy_data)
+            auto_unit.train_step(state=state, data=dummy_data)
             move_data_to_device_mock.assert_called_once()
+
+    def test_configure_optimizers_and_lr_scheduler(self) -> None:
+        """
+        Test configure_optimizers_and_lr_scheduler with a complex AutoUnit where configure_optimizers_and_lr_scheduler uses an attribute set in the init
+        """
+        my_module = torch.nn.Linear(2, 2)
+
+        auto_unit = DummyComplexAutoUnit(
+            lr=0.01,
+            module=my_module,
+        )
+
+        self.assertFalse(hasattr(auto_unit, "optimizer"))
+        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        # call on_train_start to configure optimizers
+        auto_unit.on_train_start(state)
+        # assert that the optimizer attribute was correctly initialized and set
+        self.assertTrue(hasattr(auto_unit, "optimizer"))
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
@@ -727,7 +769,25 @@ class DummyAutoUnit(AutoUnit[Batch]):
         self, module: torch.nn.Module
     ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
         my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
+        my_lr_scheduler = MagicMock()
+        return my_optimizer, my_lr_scheduler
+
+
+class DummyComplexAutoUnit(AutoUnit[Batch]):
+    def __init__(self, lr: float, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.lr = lr
+
+    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+        inputs, targets = data
+        outputs = self.module(inputs)
+        loss = torch.nn.functional.cross_entropy(outputs, targets)
+
+        return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=self.lr)
+        my_lr_scheduler = MagicMock()
         return my_optimizer, my_lr_scheduler

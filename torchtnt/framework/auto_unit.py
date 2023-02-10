@@ -218,31 +218,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             enabled=self.precision is not None,
         )
 
-        optimizer, lr_scheduler = self.configure_optimizers_and_lr_scheduler(
-            self.module
-        )
-        self.optimizer: torch.optim.optimizer.Optimizer = optimizer
-        self.lr_scheduler: TLRScheduler = lr_scheduler
-
-        self.swa_model: Optional[AveragedModel] = None
-        self.swa_scheduler: Optional[SWALR] = None
         self.swa_params: Optional[SWAParams] = swa_params
-        if swa_params:
-            if not swa_params.avg_fn:
-                # pyre-ignore: Unexpected keyword [28]
-                self.swa_model = AveragedModel(self.module, use_buffers=True)
-            else:
-                # pyre-ignore: Unexpected keyword [28]
-                self.swa_model = AveragedModel(
-                    self.module, avg_fn=swa_params.avg_fn, use_buffers=True
-                )
-
-            self.swa_scheduler = SWALR(
-                optimizer=self.optimizer,
-                swa_lr=swa_params.lr,
-                anneal_epochs=swa_params.anneal_epochs,
-                anneal_strategy=swa_params.anneal_strategy,
-            )
 
         if torchdynamo_params:
             if not is_torch_version_ge_1_13_1():
@@ -332,6 +308,39 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             A batch of data which is on the device
         """
         return copy_data_to_device(data, self.device)
+
+    def on_train_start(self, state: State) -> None:
+        """
+        Note that if implementing `on_train_start()`, you must call `super().on_train_start()`.
+        """
+        optimizer, lr_scheduler = self.configure_optimizers_and_lr_scheduler(
+            self.module
+        )
+        self.optimizer: torch.optim.optimizer.Optimizer = optimizer
+        self.lr_scheduler: TLRScheduler = lr_scheduler
+
+        self.swa_model: Optional[AveragedModel] = None
+        self.swa_scheduler: Optional[SWALR] = None
+
+        if self.swa_params:
+            if not self.swa_params.avg_fn:
+                # pyre-ignore: Unexpected keyword [28]
+                self.swa_model = AveragedModel(self.module, use_buffers=True)
+            else:
+                # pyre-ignore: Unexpected keyword [28]
+                self.swa_model = AveragedModel(
+                    self.module, avg_fn=self.swa_params.avg_fn, use_buffers=True
+                )
+
+            self.swa_scheduler = SWALR(
+                optimizer=self.optimizer,
+                # pyre-ignore: Undefined attribute [16]
+                swa_lr=self.swa_params.lr,
+                # pyre-ignore: Undefined attribute [16]
+                anneal_epochs=self.swa_params.anneal_epochs,
+                # pyre-ignore: Undefined attribute [16]
+                anneal_strategy=self.swa_params.anneal_strategy,
+            )
 
     def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         data = self.move_data_to_device(state, data)
