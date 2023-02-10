@@ -46,7 +46,7 @@ def prepare_model(input_dim: int, device: torch.device) -> nn.Module:
 
 def _generate_datapipe(num_samples: int, input_dim: int) -> ShufflerIterDataPipe:
     """
-    Returns a suffled datapipe of random inputs and labels.
+    Returns a shuffled datapipe of random inputs and labels.
     """
     data = IterableWrapper(
         [torch.rand(input_dim, input_dim) for _ in range(num_samples)]
