@@ -1,12 +1,37 @@
 Welcome to the TorchTNT documentation!
 ===========================================
 
-TNT is a library for PyTorch training tools and utilities.
+TNT is a library for PyTorch training tools and utilities. It has two main components, which are the top-level modules of the repo:
+
+1. :mod:`torchtnt.framework`: contains a lightweight training framework to simplify maintaining training, evaluation, and prediction loops.
+2. :mod:`torchtnt.utils`: contains a grab-bag of various independent, training-related utilities, including data related abstractions and wrappers around different publishers to simplify logging metrics.
+
+Installation
+--------------
+
+TNT can be installed with pip. To do so, run:
+
+.. code-block:: shell
+
+   pip install torchtnt
+
+If you run into issues, make sure that Pytorch is installed first.
+
+You can also install the latest version from master. Just run:
+
+.. code-block:: shell
+
+   pip install git+https://github.com/pytorch/tnt.git@master
+
+To update to the latest version from master:
+
+.. code-block:: shell
+
+   pip install --upgrade git+https://github.com/pytorch/tnt.git@master
 
 
-
-TorchTNT
------------------
+Documentation
+-----------
 .. fbcode::
 
    .. toctree::
@@ -15,13 +40,6 @@ TorchTNT
       :glob:
 
       meta/getting_started
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Overview
-
-   installation
-   project_structure
 
 .. toctree::
    :maxdepth: 1
