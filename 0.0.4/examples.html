@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Python Module Index &mdash; TorchTNT 0.0.6 documentation</title>
+  <title>Examples &mdash; TorchTNT 0.0.6 documentation</title>
   
 
   
@@ -33,13 +34,12 @@
   <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-
+    <link rel="next" title="Unit" href="framework/unit.html" />
+    <link rel="prev" title="Welcome to the TorchTNT documentation!" href="index.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
   
-
-
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -253,8 +253,8 @@
             
             
               <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul>
@@ -306,10 +306,14 @@
       </li>
 
         
-      <li>Python Module Index</li>
+      <li>Examples</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
+        
+            
+            <a href="_sources/examples.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+          
         
       </li>
     
@@ -334,50 +338,40 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-
-   <h1>Python Module Index</h1>
-
-   <div class="modindex-jumpbox">
-   <a href="#cap-t"><strong>t</strong></a>
-   </div>
-
-   <table class="indextable modindextable">
-     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
-     <tr class="cap" id="cap-t"><td></td><td>
-       <strong>t</strong></td><td></td></tr>
-     <tr>
-       <td><img src="_static/minus.png" class="toggler"
-              id="toggle-1" style="display: none" alt="-" /></td>
-       <td>
-       <code class="xref">torchtnt</code></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="framework/callbacks.html#module-torchtnt.framework.callback"><code class="xref">torchtnt.framework.callback</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="utils/utils.html#module-torchtnt.utils"><code class="xref">torchtnt.utils</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="utils/data.html#module-torchtnt.utils.data"><code class="xref">torchtnt.utils.data</code></a></td><td>
-       <em></em></td></tr>
-     <tr class="cg-1">
-       <td></td>
-       <td>&#160;&#160;&#160;
-       <a href="utils/loggers.html#module-torchtnt.utils.loggers"><code class="xref">torchtnt.utils.loggers</code></a></td><td>
-       <em></em></td></tr>
-   </table>
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">¶</a></h1>
+<section id="trainunit-example">
+<h2>TrainUnit Example<a class="headerlink" href="#trainunit-example" title="Permalink to this heading">¶</a></h2>
+<p>The TrainUnit example shows how to use the <a class="reference internal" href="framework/unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> to train a basic model.</p>
+<p>It can be found here: <a class="reference external" href="https://github.com/pytorch/tnt/blob/master/examples/train_unit_example.py">https://github.com/pytorch/tnt/blob/master/examples/train_unit_example.py</a></p>
+</section>
+<section id="autounit-example">
+<h2>AutoUnit Example<a class="headerlink" href="#autounit-example" title="Permalink to this heading">¶</a></h2>
+<p>The AutoUnit example shows how to use the <a class="reference internal" href="framework/auto_unit.html#torchtnt.framework.AutoUnit" title="torchtnt.framework.auto_unit.AutoUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoUnit</span></code></a> to train a basic model with
+less code, and more training features enabled out of the box.</p>
+<p>It can be found here: <a class="reference external" href="https://github.com/pytorch/tnt/blob/master/examples/auto_unit_example.py">https://github.com/pytorch/tnt/blob/master/examples/auto_unit_example.py</a></p>
+</section>
+<section id="torchdata-train-example">
+<h2>TorchData Train Example<a class="headerlink" href="#torchdata-train-example" title="Permalink to this heading">¶</a></h2>
+<p>The TorchData Train example shows how to use TorchData’s <a class="reference external" href="https://pytorch.org/data/main/torchdata.datapipes.iter.html">DataPipe</a> and <a class="reference external" href="https://pytorch.org/data/main/dataloader2.html">Dataloader2</a>. when training a basic model with TNT.</p>
+<p>It can be found here: <a class="reference external" href="https://github.com/pytorch/tnt/blob/master/examples/torchdata_train_example.py">https://github.com/pytorch/tnt/blob/master/examples/torchdata_train_example.py</a></p>
+</section>
+</section>
 
 
              </article>
              
             </div>
             <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="framework/unit.html" class="btn btn-neutral float-right" title="Unit" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to the TorchTNT documentation!" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
   
 
   
@@ -406,7 +400,15 @@
         <div class="pytorch-content-right" id="pytorch-content-right">
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
-              
+              <ul>
+<li><a class="reference internal" href="#">Examples</a><ul>
+<li><a class="reference internal" href="#trainunit-example">TrainUnit Example</a></li>
+<li><a class="reference internal" href="#autounit-example">AutoUnit Example</a></li>
+<li><a class="reference internal" href="#torchdata-train-example">TorchData Train Example</a></li>
+</ul>
+</li>
+</ul>
+
             </div>
           </div>
         </div>
