@@ -250,10 +250,9 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../project_structure.html">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul>
@@ -355,6 +354,21 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="torchtnt.utils.CPUStats.cpu_vm_percent">
 <span class="sig-name descname"><span class="pre">cpu_vm_percent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#torchtnt.utils.CPUStats.cpu_vm_percent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.CPUStats.worker_cpu_time_system">
+<span class="sig-name descname"><span class="pre">worker_cpu_time_system</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#torchtnt.utils.CPUStats.worker_cpu_time_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.CPUStats.worker_cpu_time_user">
+<span class="sig-name descname"><span class="pre">worker_cpu_time_user</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#torchtnt.utils.CPUStats.worker_cpu_time_user" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.CPUStats.worker_rss">
+<span class="sig-name descname"><span class="pre">worker_rss</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#torchtnt.utils.CPUStats.worker_rss" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -858,6 +872,13 @@ Returns 0 if neither condition is met.</p>
 <span class="s1">&#39;1.12.0&#39;</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.get_world_size">
+<span class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></span><span class="sig-name descname"><span class="pre">get_world_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#torchtnt.utils.get_world_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.
+Returns 1 if neither condition is met.</p>
 </dd></dl>
 
 <dl class="py function">
