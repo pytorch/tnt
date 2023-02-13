@@ -43,6 +43,12 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
+   :caption: Examples
+
+   examples
+
+.. toctree::
+   :maxdepth: 1
    :caption: Framework
 
    framework/unit
