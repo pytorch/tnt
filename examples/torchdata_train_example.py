@@ -70,14 +70,13 @@ def prepare_dataloader(
     Prepare the datapipe and instantiate the DataLoader2 for training.
     """
     # pin memory enables faster host to GPU copies
-    enable_pin_memory = device.type == "cuda"
+    # enable_pin_memory = device.type == "cuda"
+    # To be replaced by pin_memory DataPipe https://github.com/pytorch/data/issues/1013
 
     train_data_pipe = _generate_datapipe(num_samples, input_dim)
     dataloader = DataLoader2(
         datapipe=train_data_pipe,
-        reading_service=MultiProcessingReadingService(
-            num_workers=num_workers, pin_memory=enable_pin_memory
-        ),
+        reading_service=MultiProcessingReadingService(num_workers=num_workers),
     )
     return dataloader
 
