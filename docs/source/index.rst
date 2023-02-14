@@ -60,16 +60,13 @@ Documentation
    framework/callbacks
    framework/auto_unit
 
-.. fbcode::
+.. toctree::
+   :maxdepth: 2
+   :caption: Utils
 
-   .. toctree::
-      :maxdepth: 2
-      :caption: Utils
-      :glob:
-
-      utils/utils
-      utils/data
-      utils/loggers
+   utils/utils
+   utils/data
+   utils/loggers
 
 .. fbcode::
 
