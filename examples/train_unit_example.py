@@ -43,7 +43,6 @@ def prepare_module(input_dim: int, device: torch.device) -> nn.Module:
 
 def _generate_dataset(num_samples: int, input_dim: int) -> Dataset[Batch]:
     """Returns a dataset of random inputs and labels for binary classification."""
-    # TODO: use datapipes/dataloaderV2
     data = torch.randn(num_samples, input_dim)
     labels = torch.randint(low=0, high=2, size=(num_samples,))
     return TensorDataset(data, labels)
