@@ -22,19 +22,21 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class FileLogger(ABC):
+    """
+    Abstract file logger.
+
+    Args:
+            path (str): path to write logs to
+            steps_before_flushing: (int): Number of steps to store in log before flushing
+            log_all_ranks: (bool): Log all ranks if true, else log only on rank 0.
+    """
+
     def __init__(
         self,
         path: str,
         steps_before_flushing: int,
         log_all_ranks: bool,
     ) -> None:
-        """Abstract file logger. `CSVLogger` and `JSONLogger` are implementations of FileLogger.
-
-        Args:
-            path (str): path to write logs to
-            steps_before_flushing: (int): Number of steps to store in log before flushing
-            log_all_ranks: (bool): Log all ranks if true, else log only on rank 0.
-        """
         self._path: str = path
         self._rank: int = get_global_rank()
         self._log_all_ranks = log_all_ranks

@@ -20,7 +20,20 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 class TensorBoardLogger(MetricLogger):
     """
-    A simple logger for TensorBoard.
+    Simple logger for TensorBoard.
+
+    On construction, the logger creates a new events file that logs
+    will be written to.  If the environment variable `RANK` is defined,
+    logger will only log if RANK = 0.
+
+    NOTE: If using the logger with distributed training:
+    - This logger can call collective operations
+    - Logs will be written on rank 0 only
+    - Logger must be constructed synchronously *after* initializing distributed process group.
+
+    Args:
+        path (str): path to write logs to
+        *args, **kwargs: Extra arguments to pass to SummaryWriter
 
     Examples::
 
@@ -31,21 +44,6 @@ class TensorBoardLogger(MetricLogger):
     """
 
     def __init__(self, path: str, *args: Any, **kwargs: Any) -> None:
-        """Create a new TensorBoard logger.
-        On construction, the logger creates a new events file that logs
-        will be written to.  If the environment variable `RANK` is defined,
-        logger will only log if RANK = 0.
-
-        NOTE: If using the logger with distributed training:
-        - This logger can call collective operations
-        - Logs will be written on rank 0 only
-        - Logger must be constructed synchronously *after* initializing distributed process group.
-
-        Args:
-            path (str): path to write logs to
-            *args, **kwargs: Extra arguments to pass to SummaryWriter
-        """
-
         self._writer: Optional[SummaryWriter] = None
 
         self._rank: int = get_global_rank()

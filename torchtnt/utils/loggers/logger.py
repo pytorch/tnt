@@ -15,6 +15,10 @@ Scalar = Union[Tensor, ndarray, int, float]
 
 
 class MetricLogger(Protocol):
+    """
+    Abstract metric logger.
+    """
+
     def log(
         self,
         name: str,
