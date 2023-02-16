@@ -18,6 +18,7 @@ from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
+from torchtnt.framework.state import ActivePhase
 from torchtnt.utils import get_timer_summary, init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 from typing_extensions import Literal
@@ -65,13 +66,16 @@ class MyUnit(AutoUnit[Batch]):
         *,
         tb_logger: TensorBoardLogger,
         train_accuracy: BinaryAccuracy,
+        eval_accuracy: BinaryAccuracy,
         **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
     ):
         super().__init__(**kwargs)
         self.tb_logger = tb_logger
-        # create an accuracy Metric to compute the accuracy of training
+        # create accuracy metrics to compute the accuracy of training and evaluation
         self.train_accuracy = train_accuracy
-        self.loss = None
+        self.eval_accuracy = eval_accuracy
+        self.train_loss = None
+        self.eval_loss = None
 
     def configure_optimizers_and_lr_scheduler(
         self, module: torch.nn.Module
@@ -97,17 +101,25 @@ class MyUnit(AutoUnit[Batch]):
         loss: torch.Tensor,
         outputs: Any,
     ) -> None:
-        self.loss = loss
         _, targets = data
-        self.train_accuracy.update(outputs, targets)
+        if state.active_phase == ActivePhase.TRAIN:
+            self.train_accuracy.update(outputs, targets)
+            self.train_loss = loss
+        elif state.active_phase == ActivePhase.EVALUATE:
+            self.eval_accuracy.update(outputs, targets)
+            self.eval_loss = loss
 
     def log_metrics(
         self, state: State, step: int, interval: Literal["step", "epoch"]
     ) -> None:
-        self.tb_logger.log("loss", self.loss, step)
-
-        accuracy = self.train_accuracy.compute()
-        self.tb_logger.log("accuracy", accuracy, step)
+        if state.active_phase == ActivePhase.TRAIN:
+            accuracy = self.train_accuracy.compute()
+            self.tb_logger.log("train_accuracy", accuracy, step)
+            self.tb_logger.log("train_loss", self.train_loss, step)
+        elif state.active_phase == ActivePhase.EVALUATE:
+            accuracy = self.eval_accuracy.compute()
+            self.tb_logger.log("eval_accuracy", accuracy, step)
+            self.tb_logger.log("eval_loss", self.eval_loss, step)
 
     def on_train_epoch_end(self, state: State) -> None:
         super().on_train_epoch_end(state)
@@ -127,10 +139,12 @@ def main(args: Namespace) -> None:
 
     module = prepare_module(args.input_dim, device)
     train_accuracy = BinaryAccuracy(device=device)
+    eval_accuracy = BinaryAccuracy(device=device)
 
     my_unit = MyUnit(
         tb_logger=tb_logger,
         train_accuracy=train_accuracy,
+        eval_accuracy=eval_accuracy,
         module=module,
         device=device,
         strategy="ddp",
