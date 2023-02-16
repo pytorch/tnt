@@ -57,6 +57,9 @@ def init_from_env(
         pg_timeout (timedelta, optional): Timeout for operations executed against the process
                                           group. Default value equals 30 minutes
         float32_matmul_precision (str, optional): The setting for torch's precision of matrix multiplications.
+
+    Returns:
+        The current device.
     """
     device = torch.device("cpu") if device_type == "cpu" else get_device_from_env()
 
