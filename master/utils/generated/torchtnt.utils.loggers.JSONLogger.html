@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TensorBoardParameterMonitor &mdash; TorchTNT master documentation</title>
+  <title>JSONLogger &mdash; TorchTNT master documentation</title>
   
 
   
@@ -34,8 +34,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="TorchSnapshotSaver" href="torchtnt.framework.callbacks.TorchSnapshotSaver.html" />
-    <link rel="prev" title="SystemResourcesMonitor" href="torchtnt.framework.callbacks.SystemResourcesMonitor.html" />
+    <link rel="next" title="TensorBoardLogger" href="torchtnt.utils.loggers.TensorBoardLogger.html" />
+    <link rel="prev" title="InMemoryLogger" href="torchtnt.utils.loggers.InMemoryLogger.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -257,21 +257,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../fit.html">Fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../state.html">State</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../auto_unit.html">AutoUnit</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/train.html">Train</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/eval.html">Evaluate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/fit.html">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/state.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/callbacks.html">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../utils/utils.html">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utils/data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../utils/loggers.html">Loggers</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../loggers.html">Loggers</a></li>
 </ul>
 
             
@@ -312,15 +312,15 @@
       </li>
 
         
-          <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
+          <li><a href="../loggers.html">Loggers</a> &gt;</li>
         
-      <li>TensorBoardParameterMonitor</li>
+      <li>JSONLogger</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/utils/generated/torchtnt.utils.loggers.JSONLogger.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -346,23 +346,16 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="tensorboardparametermonitor">
-<h1>TensorBoardParameterMonitor<a class="headerlink" href="#tensorboardparametermonitor" title="Permalink to this heading">¶</a></h1>
+  <section id="jsonlogger">
+<h1>JSONLogger<a class="headerlink" href="#jsonlogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TensorBoardParameterMonitor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></span><span class="sig-name descname"><span class="pre">TensorBoardParameterMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger" title="torchtnt.utils.loggers.tensorboard.TensorBoardLogger"><span class="pre">TensorBoardLogger</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter" title="(in PyTorch v1.13)"><span class="pre">SummaryWriter</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.TensorBoardParameterMonitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>A callback which logs module parameters as histograms to TensorBoard.
-<a class="reference external" href="https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter">https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>logger</strong> – Either a <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.tensorboard.TensorBoardLogger</span></code>
-or a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.tensorboard.SummaryWriter</span></code> instance.</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TensorBoardParameterMonitor.on_train_epoch_end">
-<span class="sig-name descname"><span class="pre">on_train_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TensorBoardParameterMonitor.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after a train epoch ends.</p>
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.JSONLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></span><span class="sig-name descname"><span class="pre">JSONLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps_before_flushing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_all_ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.JSONLogger" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.JSONLogger.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.JSONLogger.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close log resource, flushing if necessary.
+Logs should not be written after <cite>close</cite> is called.</p>
 </dd></dl>
 
 </dd></dl>
@@ -377,10 +370,10 @@ or a <code class="xref py py-class docutils literal notranslate"><span class="pr
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.framework.callbacks.TorchSnapshotSaver.html" class="btn btn-neutral float-right" title="TorchSnapshotSaver" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.loggers.TensorBoardLogger.html" class="btn btn-neutral float-right" title="TensorBoardLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.framework.callbacks.SystemResourcesMonitor.html" class="btn btn-neutral" title="SystemResourcesMonitor" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.utils.loggers.InMemoryLogger.html" class="btn btn-neutral" title="InMemoryLogger" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -412,7 +405,7 @@ or a <code class="xref py py-class docutils literal notranslate"><span class="pr
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">TensorBoardParameterMonitor</a></li>
+<li><a class="reference internal" href="#">JSONLogger</a></li>
 </ul>
 
             </div>
