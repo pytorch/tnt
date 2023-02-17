@@ -18,16 +18,17 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class InMemoryLogger(MetricLogger):
-    def __init__(self) -> None:
-        """A simple logger that buffers data in-memory.
+    """
+    Simple logger that buffers data in-memory.
 
-        Example:
+    Example:
             from torchtnt.utils.loggers import InMemoryLogger
             logger = InMemoryLogger()
             logger.log("accuracy", 23.56, 10)
             logger.close()
-        """
+    """
 
+    def __init__(self) -> None:
         self._log_buffer: OrderedDict[int, Dict[str, float]] = OrderedDict()
         logger.info("Logging metrics in-memory")
         atexit.register(self.close)

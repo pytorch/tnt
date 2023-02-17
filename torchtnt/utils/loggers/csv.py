@@ -16,19 +16,21 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class CSVLogger(FileLogger, MetricLogger):
+    """
+    CSV file logger. CSV headers are time, step, and names passed to `log`.
+
+    Args:
+        path (str): path to write logs to
+        steps_before_flushing: (int, optional): Number of steps to buffer in logger before flushing
+        log_all_ranks: (bool, optional): Log all ranks if true, else log only on rank 0.
+    """
+
     def __init__(
         self,
         path: str,
         steps_before_flushing: int = 100,
         log_all_ranks: bool = False,
     ) -> None:
-        """Create a new CSV file logger. CSV headers are time, step, and names passed to `log`.
-
-        Args:
-            path (str): path to write logs to
-            steps_before_flushing: (int, optional): Number of steps to buffer in logger before flushing
-            log_all_ranks: (bool, optional): Log all ranks if true, else log only on rank 0.
-        """
         super().__init__(path, steps_before_flushing, log_all_ranks)
 
     def flush(self) -> None:
