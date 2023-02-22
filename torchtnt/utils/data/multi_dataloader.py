@@ -33,7 +33,7 @@ class MultiDataLoader:
         ignore_empty_data (bool): skip dataloaders which contain no data. It's False by default, and an exception is raised.
 
     Note:
-        TorchData (https://pytorch.org/data/beta/index.html) also has generic
+        `TorchData <https://pytorch.org/data/beta/index.html>`_ also has generic
         multi-data sources reading support to achieve the same functionality
         provided by MultiIterator.
         For example, `mux`, `mux_longest`, `cycle`, `zip` etc. Please refer
