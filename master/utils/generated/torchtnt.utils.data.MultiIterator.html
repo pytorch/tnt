@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to the TorchTNT documentation! &mdash; TorchTNT master documentation</title>
+  <title>MultiIterator &mdash; TorchTNT master documentation</title>
   
 
   
@@ -26,31 +26,32 @@
 
   
 
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/torchtnt.css" type="text/css" />
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Examples" href="examples.html" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="RandomizedBatchSamplerIterator" href="torchtnt.utils.data.RandomizedBatchSamplerIterator.html" />
+    <link rel="prev" title="MultiDataLoader" href="torchtnt.utils.data.MultiDataLoader.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
   
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="../../_static/js/modernizr.min.js"></script>
 
   <!-- Preload the theme fonts -->
 
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
-<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="../../_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
 <!-- Preload the katex fonts -->
 
@@ -235,7 +236,7 @@
 
 
 <div role="search">
-  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search Docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
@@ -253,24 +254,24 @@
             
               <p class="caption" role="heading"><span class="caption-text">Examples</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="framework/unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/fit.html">Fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/state.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/auto_unit.html">AutoUnit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/train.html">Train</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/eval.html">Evaluate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/fit.html">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/state.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/callbacks.html">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="utils/utils.html">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils/data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils/loggers.html">Loggers</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utils</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../data.html">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../loggers.html">Loggers</a></li>
 </ul>
 
             
@@ -303,7 +304,7 @@
   <ul class="pytorch-breadcrumbs">
     
       <li>
-        <a href="#">
+        <a href="../../index.html">
           
             Docs
           
@@ -311,13 +312,15 @@
       </li>
 
         
-      <li>Welcome to the TorchTNT documentation!</li>
+          <li><a href="../data.html">Data</a> &gt;</li>
+        
+      <li>MultiIterator</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="_sources/index.rst.txt" rel="nofollow"><img src="_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/utils/generated/torchtnt.utils.data.MultiIterator.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -343,71 +346,34 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="welcome-to-the-torchtnt-documentation">
-<h1>Welcome to the TorchTNT documentation!<a class="headerlink" href="#welcome-to-the-torchtnt-documentation" title="Permalink to this heading">¶</a></h1>
-<p>TNT is a library for PyTorch training tools and utilities. It has two main components, which are the top-level modules of the repo:</p>
-<ol class="arabic simple">
-<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.framework</span></code>: contains a lightweight training framework to simplify maintaining training, evaluation, and prediction loops.</p></li>
-<li><p><a class="reference internal" href="utils/utils.html#module-torchtnt.utils" title="torchtnt.utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">torchtnt.utils</span></code></a>: contains a grab-bag of various independent, training-related utilities, including data related abstractions and wrappers around different publishers to simplify logging metrics.</p></li>
-</ol>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h2>
-<p>TNT can be installed with pip. To do so, run:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torchtnt
-</pre></div>
-</div>
-<p>If you run into issues, make sure that Pytorch is installed first.</p>
-<p>You can also install the latest version from master. Just run:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/pytorch/tnt.git@master
-</pre></div>
-</div>
-<p>To update to the latest version from master:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>git+https://github.com/pytorch/tnt.git@master
-</pre></div>
-</div>
-</section>
-<section id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">¶</a></h2>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Examples</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+  <section id="multiiterator">
+<h1>MultiIterator<a class="headerlink" href="#multiiterator" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.data.MultiIterator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">MultiIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataIterationStrategy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.MultiIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>MultiIterator defines the iteration logic to get a batch, given
+batches from all individual dataloaders.
+iteration_strategy can include accompanying parameters for a particular
+iterator, like cycling order for the dataloaders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
+<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
+<li><p><strong>iteration_strategy</strong> (<em>DataIterationStrategy</em>) – A dataclass indicating how the dataloaders are iterated over.</p></li>
 </ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html">https://pytorch.org/data/beta/index.html</a>) also has generic
+multi-data sources reading support to achieve the same functionality
+provided by MultiIterator.
+For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer
+to the documentation for more details.</p>
 </div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Framework</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="framework/unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/fit.html">Fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/state.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="framework/auto_unit.html">AutoUnit</a></li>
-</ul>
-</div>
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="utils/utils.html">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils/data.html">Data</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html">AllDatasetBatchesIterator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils/generated/torchtnt.utils.data.CudaDataPrefetcher.html">CudaDataPrefetcher</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils/generated/torchtnt.utils.data.InOrderIterator.html">InOrderIterator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils/generated/torchtnt.utils.data.MultiDataLoader.html">MultiDataLoader</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils/generated/torchtnt.utils.data.MultiIterator.html">MultiIterator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils/generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.html">RandomizedBatchSamplerIterator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="utils/generated/torchtnt.utils.data.RoundRobinIterator.html">RoundRobinIterator</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="utils/loggers.html">Loggers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="utils/loggers.html#built-in-loggers">Built-in loggers</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
+</dd></dl>
+
 </section>
 
 
@@ -418,8 +384,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="examples.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.data.RandomizedBatchSamplerIterator.html" class="btn btn-neutral float-right" title="RandomizedBatchSamplerIterator" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
+      
+        <a href="torchtnt.utils.data.MultiDataLoader.html" class="btn btn-neutral" title="MultiDataLoader" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -451,13 +419,7 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Welcome to the TorchTNT documentation!</a><ul>
-<li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#documentation">Documentation</a><ul>
-</ul>
-</li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">MultiIterator</a></li>
 </ul>
 
             </div>
@@ -472,21 +434,21 @@
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/js/torchtnt.js"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+         <script src="../../_static/jquery.js"></script>
+         <script src="../../_static/underscore.js"></script>
+         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+         <script src="../../_static/doctools.js"></script>
+         <script src="../../_static/js/torchtnt.js"></script>
      
 
   
 
-  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
-  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
-  <script type="text/javascript" src="_static/js/theme.js"></script>
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
   <script type="text/javascript">
       jQuery(function () {
@@ -591,7 +553,7 @@
   <div class="cookie-banner-wrapper">
   <div class="container">
     <p class="gdpr-notice">To analyze traffic and optimize your experience, we serve cookies on this site. By clicking or navigating, you agree to allow our usage of cookies. As the current maintainers of this site, Facebook’s Cookies Policy applies. Learn more, including about available controls: <a href="https://www.facebook.com/policies/cookies/">Cookies Policy</a>.</p>
-    <img class="close-button" src="_static/images/pytorch-x.svg">
+    <img class="close-button" src="../../_static/images/pytorch-x.svg">
   </div>
 </div>
 
@@ -727,7 +689,7 @@
 
   <!-- End Mobile Menu -->
 
-  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+  <script type="text/javascript" src="../../_static/js/vendor/anchor.min.js"></script>
 
   <script type="text/javascript">
     $(document).ready(function() {
