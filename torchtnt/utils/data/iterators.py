@@ -282,7 +282,7 @@ class RandomizedBatchSampler(DataIterationStrategy):
 
 class RandomizedBatchSamplerIterator(MultiIterator):
     """RandomizedBatchSamplerIterator randomly samples from each dataset
-    using the provided weights
+    using the provided weights.
 
     By default, the iterator stops after all datasets are exhausted. This can be changed
     by setting another stopping mechanism.
@@ -436,7 +436,7 @@ class InOrder(DataIterationStrategy):
 
 
 class InOrderIterator(MultiIterator):
-    """InOrder iterator returns all batches from a single dataset
+    """InOrderIterator returns all batches from a single dataset
     till it is exhausted and then moves to the next one.
 
     By default, the order is same as the keys of the input

@@ -13,7 +13,7 @@ Batch = TypeVar("Batch")
 
 
 class CudaDataPrefetcher(Iterator[Batch]):
-    r"""An iterator that prefetches batches and moves them to the device.
+    r"""CudaDataPrefetcher prefetches batches and moves them to the device.
 
     This class can be used to interleave data loading, host-to-device copies, and computation more effectively.
 
