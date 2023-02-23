@@ -28,3 +28,10 @@ MNIST Example
 The MNIST example shows how to use TNT to train a convnet model on the MNIST dataset.
 
 It can be found here: https://github.com/pytorch/tnt/blob/master/examples/mnist/main.py
+
+
+MinGPT Example
+~~~~~~~~~~~~~~~~~~~~~
+The MinGPT example shows how to use the :class:`~torchtnt.framework.auto_unit.AutoUnit` to train a MinGPT model.
+
+It can be found here: https://github.com/pytorch/tnt/blob/master/examples/mingpt/main.py
