@@ -30,6 +30,7 @@ from torchtnt.framework.utils import (
     _run_callback_fn,
     _set_module_training_mode,
     _step_requires_iterator,
+    StatefulInt,
 )
 from torchtnt.utils import Timer
 from torchtnt.utils.test_utils import get_pet_launch_config
@@ -285,6 +286,15 @@ class UtilsTest(unittest.TestCase):
         self.assertFalse(
             _is_last_batch_in_epoch(p, max_steps_per_epoch=None, max_steps=None)
         )
+
+    def test_stateful_int(self) -> None:
+        v = StatefulInt(0)
+        v += 10
+        v -= 2
+        self.assertEqual(v.val, 8)
+        self.assertEqual(v.state_dict(), {"value": 8})
+        v.load_state_dict({"value": -4})
+        self.assertEqual(v.val, -4)
 
 
 class DummyCallback(Callback):

@@ -16,6 +16,7 @@ import typing_extensions
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.progress import Progress
 from torchtnt.framework.state import State
+from typing_extensions import Self
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -122,3 +123,30 @@ def _step_requires_iterator(step_func: Callable[[State, object], object]) -> boo
         return False
     annotated_type = annotations["data"]
     return typing_extensions.get_origin(annotated_type) is collections.abc.Iterator
+
+
+class StatefulInt:
+    """
+    This wrapper is useful if there are additional values related to training
+    progress that need to be saved during checkpointing.
+    """
+
+    def __init__(self, val: int) -> None:
+        self.val = val
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {"value": self.val}
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        self.val = state_dict["value"]
+
+    def __add__(self, other: int) -> Self:
+        self.val += other
+        return self
+
+    def __sub__(self, other: int) -> Self:
+        self.val -= other
+        return self
+
+    def __repr__(self) -> str:
+        return f"StatefulInt({self.val})"
