@@ -351,7 +351,13 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.InMemoryLogger">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></span><span class="sig-name descname"><span class="pre">InMemoryLogger</span></span><a class="headerlink" href="#torchtnt.utils.loggers.InMemoryLogger" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><p>Simple logger that buffers data in-memory.</p>
+<p class="rubric">Example</p>
+<p>from torchtnt.utils.loggers import InMemoryLogger
+logger = InMemoryLogger()
+logger.log(“accuracy”, 23.56, 10)
+logger.close()</p>
+<dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.InMemoryLogger.close">
 <span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.InMemoryLogger.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close log resource, flushing if necessary.
