@@ -210,6 +210,9 @@ class TestAutoUnit(unittest.TestCase):
         self.assertTrue(
             auto_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
         )
+        self.assertTrue(
+            "_num_optimizer_steps_completed" in auto_unit.tracked_misc_statefuls()
+        )
 
     def test_stochastic_weight_averaging_basic(self) -> None:
         """
