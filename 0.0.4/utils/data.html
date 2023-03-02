@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Data &mdash; TorchTNT 0.0.6 documentation</title>
+  <title>Data &mdash; TorchTNT 0.0.7 documentation</title>
   
 
   
@@ -34,6 +34,8 @@
   <link rel="stylesheet" href="../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="AllDatasetBatchesIterator" href="generated/torchtnt.utils.data.AllDatasetBatchesIterator.html" />
+    <link rel="prev" title="Utils" href="utils.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -222,7 +224,7 @@
               
               
                 <div class="version">
-                  0.0.6
+                  0.0.7
                 </div>
               
             
@@ -264,6 +266,12 @@
 <li class="toctree-l1"><a class="reference internal" href="../framework/state.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/callbacks.html">Callbacks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/auto_unit.html">AutoUnit</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Utils</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Utils</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loggers.html">Loggers</a></li>
 </ul>
 
             
@@ -338,296 +346,32 @@
               
   <section id="module-torchtnt.utils.data">
 <span id="data"></span><h1>Data<a class="headerlink" href="#module-torchtnt.utils.data" title="Permalink to this heading">¶</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.AllDatasetBatchesIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">AllDatasetBatchesIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AllDatasetBatches</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.AllDatasetBatchesIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>AllDatasetBatchesIterator returns a dict containing batches from all dataloaders.
-When the stopping mechanism is set to ALL_DATASETS_EXHAUSTED, it will skip over the
-finished datasets.</p>
-<p>This supports three stopping mechanisms:
-1. <cite>ALL_DATASETS_EXHAUSTED</cite>: Iterates till the largest dataset is exhausted,
-while skipping those that are done
-2. <cite>SMALLEST_DATASET_EXHAUSTED</cite>: Stops iteration once the smallest dataset
-has been exhausted
-3. <cite>RESTART_UNTIL_ALL_DATASETS_EXHAUSTED</cite>: Iterates until the largest dataset
-is exhausted, while restarting those that are done</p>
-<dl class="simple">
-<dt>Returns batches of the format: {</dt><dd><p>dataloader_1_name: batch_obtained_from_dataloader_1,
-dataloader_2_name: batch_obtained_from_dataloader_2,</p>
-</dd>
-</dl>
-<p>}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<em>AllDatasetBatches</em>) – A AllDatasetBatches dataclass indicating how the dataloaders are iterated over.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaders</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-<span class="go">    &#39;b&#39;: torch.utils.data.DataLoader(range(15), batch_size=5)}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">all_dataset_batch_strategy</span> <span class="o">=</span> <span class="n">AllDatasetBatches</span><span class="p">(</span>
-<span class="go">        stopping_mechanism=StoppingMechanism.ALL_DATASETS_EXHAUSTED</span>
-<span class="go">    )</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_iterator</span> <span class="o">=</span> <span class="n">AllDatasetBatchesIterator</span><span class="p">(</span><span class="n">loaders</span><span class="p">,</span> <span class="n">all_dataset_batch_strategy</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">combined_iterator</span><span class="p">:</span>
-<span class="go">        print(item)</span>
-<span class="go">{&#39;a&#39;: tensor([0, 1, 2, 3]), &#39;b&#39;: tensor([0, 1, 2, 3, 4])}</span>
-<span class="go">{&#39;b&#39;: tensor([5, 6, 7, 8, 9])}</span>
-<span class="go">{&#39;b&#39;: tensor([10, 11, 12, 13, 14])}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.CudaDataPrefetcher">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">CudaDataPrefetcher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_iterable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Batch</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" title="(in PyTorch v1.13)"><span class="pre">device</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_prefetch_batches</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.CudaDataPrefetcher" title="Permalink to this definition">¶</a></dt>
-<dd><p>An iterator that prefetches batches and moves them to the device.</p>
-<p>This class can be used to interleave data loading, host-to-device copies, and computation more effectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_iterable</strong> – an Iterable containing the data to use for CudaDataPrefetcher construction</p></li>
-<li><p><strong>device</strong> – the device to which data should be moved</p></li>
-<li><p><strong>num_prefetch_batches</strong> – number of batches to prefetch</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>We recommend users leverage memory pinning when constructing their dataloader:
-<a class="reference external" href="https://pytorch.org/docs/stable/data.html#memory-pinning">https://pytorch.org/docs/stable/data.html#memory-pinning</a>.</p>
-</div>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataloader</span> <span class="o">=</span> <span class="o">...</span>
-<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
-<span class="n">num_prefetch_batches</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="n">data_prefetcher</span> <span class="o">=</span> <span class="n">CudaDataPrefetcher</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">num_prefetch_batches</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">data_prefetcher</span><span class="p">:</span>
-    <span class="c1"># batch is already on device</span>
-    <span class="c1"># operate on batch</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.DataIterationStrategy">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">DataIterationStrategy</span></span><a class="headerlink" href="#torchtnt.utils.data.DataIterationStrategy" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.DataIterationStrategyRegistry">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">DataIterationStrategyRegistry</span></span><a class="headerlink" href="#torchtnt.utils.data.DataIterationStrategyRegistry" title="Permalink to this definition">¶</a></dt>
-<dd><p>A generic iterator registry.</p>
-<p>This will be used to provide default iterators.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="torchtnt.utils.data.DataIterationStrategyRegistry.REGISTRY">
-<span class="sig-name descname"><span class="pre">REGISTRY</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.RoundRobin'&gt;:</span> <span class="pre">&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.RoundRobinIterator'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.AllDatasetBatches'&gt;:</span> <span class="pre">&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.AllDatasetBatchesIterator'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.RandomizedBatchSampler'&gt;:</span> <span class="pre">&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.RandomizedBatchSamplerIterator'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.InOrder'&gt;:</span> <span class="pre">&lt;class</span> <span class="pre">'torchtnt.utils.data.iterators.InOrderIterator'&gt;}</span></em><a class="headerlink" href="#torchtnt.utils.data.DataIterationStrategyRegistry.REGISTRY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.data.DataIterationStrategyRegistry.get">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#torchtnt.utils.data.DataIterationStrategy" title="torchtnt.utils.data.iterators.DataIterationStrategy"><span class="pre">DataIterationStrategy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.utils.data.MultiIterator" title="torchtnt.utils.data.iterators.MultiIterator"><span class="pre">MultiIterator</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.data.DataIterationStrategyRegistry.get" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.InOrderIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">InOrderIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InOrder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.InOrderIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>InOrder iterator returns all batches from a single dataset
-till it is exhausted and then moves to the next one.</p>
-<p>By default, the order is same as the keys of the input
-dataloader dict. This can be overridden to provide custom order.
-Repetition is supported.</p>
-<p>Returns batches of the format: {dataloader_name: batch_from_dataloader}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<em>RandomizedBatchSampler</em>) – A RandomizedBatchSampler dataclass indicating how the dataloaders are iterated over.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaders</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-<span class="go">    &#39;b&#39;: torch.utils.data.DataLoader(range(15), batch_size=5)}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">in_order_strategy</span> <span class="o">=</span> <span class="n">InOrder</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_iterator</span> <span class="o">=</span> <span class="n">RandomizedBatchSamplerIterator</span><span class="p">(</span><span class="n">loaders</span><span class="p">,</span> <span class="n">in_order_strategy</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">combined_iterator</span><span class="p">:</span>
-<span class="go">        print(item)</span>
-<span class="go">{&#39;a&#39;: tensor([0, 1, 2, 3])}</span>
-<span class="go">{&#39;b&#39;: tensor([0, 1, 2, 3, 4])}</span>
-<span class="go">{&#39;b&#39;: tensor([5, 6, 7, 8, 9])}</span>
-<span class="go">{&#39;b&#39;: tensor([10, 11, 12, 13, 14])}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">MultiDataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#torchtnt.utils.data.DataIterationStrategy" title="torchtnt.utils.data.DataIterationStrategy"><span class="pre">DataIterationStrategy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterator_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.utils.data.MultiIterator" title="torchtnt.utils.data.MultiIterator"><span class="pre">MultiIterator</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_empty_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader" title="Permalink to this definition">¶</a></dt>
-<dd><p>MultiDataLoader cycles through individual dataloaders passed to it.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.individual_dataloaders">
-<span class="sig-name descname"><span class="pre">individual_dataloaders</span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.individual_dataloaders" title="Permalink to this definition">¶</a></dt>
-<dd><p>A dictionary of DataLoaders or Iterables with dataloader name as key</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Dict[str, Union[DataLoader, Iterable]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">and</span> <span class="pre">dataloader/iterable</span> <span class="pre">object</span> <span class="pre">as</span> <span class="pre">value.</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.iteration_strategy">
-<span class="sig-name descname"><span class="pre">iteration_strategy</span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.iteration_strategy" title="Permalink to this definition">¶</a></dt>
-<dd><p>A dataclass indicating how the dataloaders are iterated over.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#torchtnt.utils.data.DataIterationStrategy" title="torchtnt.utils.data.DataIterationStrategy">DataIterationStrategy</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.iterator_cls">
-<span class="sig-name descname"><span class="pre">iterator_cls</span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.iterator_cls" title="Permalink to this definition">¶</a></dt>
-<dd><p>A subclass of MultiIterator defining iteration logic. This is the type, not an object instance</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#torchtnt.utils.data.MultiIterator" title="torchtnt.utils.data.MultiIterator">MultiIterator</a>, optional</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.ignore_empty_data">
-<span class="sig-name descname"><span class="pre">ignore_empty_data</span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.ignore_empty_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>skip dataloaders which contain no data. It’s False by default, and an exception is raised.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html">https://pytorch.org/data/beta/index.html</a>) also has generic
-multi-data sources reading support to achieve the same functionality
-provided by MultiIterator.
-For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer
-to the documentation for more details.</p>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">MultiIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#torchtnt.utils.data.DataIterationStrategy" title="torchtnt.utils.data.DataIterationStrategy"><span class="pre">DataIterationStrategy</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.MultiIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>MultiIterator defines the iteration logic to get a batch, given
-batches from all individual dataloaders.
-iteration_strategy can include accompanying parameters for a particular
-iterator, like cycling order for the dataloaders.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<a class="reference internal" href="#torchtnt.utils.data.DataIterationStrategy" title="torchtnt.utils.data.DataIterationStrategy"><em>DataIterationStrategy</em></a>) – A dataclass indicating how the dataloaders are iterated over.</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html">https://pytorch.org/data/beta/index.html</a>) also has generic
-multi-data sources reading support to achieve the same functionality
-provided by MultiIterator.
-For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer
-to the documentation for more details.</p>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.RandomizedBatchSamplerIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">RandomizedBatchSamplerIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RandomizedBatchSampler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.RandomizedBatchSamplerIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>RandomizedBatchSamplerIterator randomly samples from each dataset
-using the provided weights</p>
-<p>By default, the iterator stops after all datasets are exhausted. This can be changed
-by setting another stopping mechanism.</p>
-<p>Returns batches of the format: {dataloader_name: batch_from_dataloader}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<em>RandomizedBatchSampler</em>) – A RandomizedBatchSampler dataclass indicating how the dataloaders are iterated over.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaders</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-<span class="go">    &#39;b&#39;: torch.utils.data.DataLoader(range(15), batch_size=5)}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">randomized_batch_sampler</span> <span class="o">=</span> <span class="n">RandomizedBatchSampler</span><span class="p">(</span>
-<span class="go">        stopping_mechanism=StoppingMechanism.ALL_DATASETS_EXHAUSTED</span>
-<span class="go">    )</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_iterator</span> <span class="o">=</span> <span class="n">RandomizedBatchSamplerIterator</span><span class="p">(</span><span class="n">loaders</span><span class="p">,</span> <span class="n">randomized_batch_sampler</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">combined_iterator</span><span class="p">:</span>
-<span class="go">        print(item)</span>
-<span class="go">{&#39;b&#39;: tensor([0, 1, 2, 3, 4])}</span>
-<span class="go">{&#39;b&#39;: tensor([5, 6, 7, 8, 9])}</span>
-<span class="go">{&#39;a&#39;: tensor([0, 1, 2, 3])}</span>
-<span class="go">{&#39;b&#39;: tensor([10, 11, 12, 13, 14])}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.RoundRobinIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">RoundRobinIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RoundRobin</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.RoundRobinIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>RoundRobinIterator cycles over the dataloader one by one.
-Iterating order can be defined via RobinRobin strategy.</p>
-<p>This supports two stopping mechanisms:
-1. ALL_DATASETS_EXHAUSTED: Iterates till the largest dataset is exhausted,
-while skipping those that are done
-2. SMALLEST_DATASET_EXHAUSTED: Stops iteration once the smallest dataset
-has been exhausted</p>
-<p>Returns batches of the format: {dataloader_name: batch_from_dataloader}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<em>RoundRobin</em>) – A RoundRobin dataclass indicating how the dataloaders are iterated over.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaders</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-<span class="go">    &#39;b&#39;: torch.utils.data.DataLoader(range(15), batch_size=5)}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">round_robin_strategy</span> <span class="o">=</span> <span class="n">RoundRobin</span><span class="p">(</span>
-<span class="go">        stopping_mechanism=StoppingMechanism.ALL_DATASETS_EXHAUSTED</span>
-<span class="go">    )</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_iterator</span> <span class="o">=</span> <span class="n">RoundRobinIterator</span><span class="p">(</span><span class="n">loaders</span><span class="p">,</span> <span class="n">round_robin_strategy</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">combined_iterator</span><span class="p">:</span>
-<span class="go">        print(item)</span>
-<span class="go">{&#39;a&#39;: tensor([0, 1, 2, 3])}</span>
-<span class="go">{&#39;b&#39;: tensor([0, 1, 2, 3, 4])}</span>
-<span class="go">{&#39;b&#39;: tensor([5, 6, 7, 8, 9])}</span>
-<span class="go">{&#39;b&#39;: tensor([10, 11, 12, 13, 14])}</span>
-</pre></div>
-</div>
-</dd></dl>
-
+<p>We offer several data-related abstractions that can help make data preparation easier:</p>
+<table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator" title="torchtnt.utils.data.AllDatasetBatchesIterator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AllDatasetBatchesIterator</span></code></a></p></td>
+<td><p>AllDatasetBatchesIterator returns a dict containing batches from all dataloaders.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.utils.data.CudaDataPrefetcher.html#torchtnt.utils.data.CudaDataPrefetcher" title="torchtnt.utils.data.CudaDataPrefetcher"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CudaDataPrefetcher</span></code></a></p></td>
+<td><p>CudaDataPrefetcher prefetches batches and moves them to the device.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.utils.data.InOrderIterator.html#torchtnt.utils.data.InOrderIterator" title="torchtnt.utils.data.InOrderIterator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InOrderIterator</span></code></a></p></td>
+<td><p>InOrderIterator returns all batches from a single dataset till it is exhausted and then moves to the next one.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.utils.data.MultiDataLoader.html#torchtnt.utils.data.MultiDataLoader" title="torchtnt.utils.data.MultiDataLoader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiDataLoader</span></code></a></p></td>
+<td><p>MultiDataLoader cycles through individual dataloaders passed to it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator" title="torchtnt.utils.data.MultiIterator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiIterator</span></code></a></p></td>
+<td><p>MultiIterator defines the iteration logic to get a batch, given batches from all individual dataloaders.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.html#torchtnt.utils.data.RandomizedBatchSamplerIterator" title="torchtnt.utils.data.RandomizedBatchSamplerIterator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RandomizedBatchSamplerIterator</span></code></a></p></td>
+<td><p>RandomizedBatchSamplerIterator randomly samples from each dataset using the provided weights.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.utils.data.RoundRobinIterator.html#torchtnt.utils.data.RoundRobinIterator" title="torchtnt.utils.data.RoundRobinIterator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RoundRobinIterator</span></code></a></p></td>
+<td><p>RoundRobinIterator cycles over the dataloader one by one.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 
 
@@ -635,6 +379,15 @@ has been exhausted</p>
              
             </div>
             <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="generated/torchtnt.utils.data.AllDatasetBatchesIterator.html" class="btn btn-neutral float-right" title="AllDatasetBatchesIterator" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="utils.html" class="btn btn-neutral" title="Utils" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
   
 
   

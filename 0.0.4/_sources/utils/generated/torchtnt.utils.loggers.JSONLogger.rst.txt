@@ -1,0 +1,10 @@
+﻿.. role:: hidden
+    :class: hidden-section
+.. currentmodule:: torchtnt.utils.loggers
+
+
+JSONLogger
+==========
+
+.. autoclass:: JSONLogger
+    :members:
