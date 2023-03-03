@@ -21,7 +21,6 @@ from torchtnt.framework.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
-from torchtnt.utils.timer import get_timer_summary
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -96,7 +95,6 @@ def predict(
         state._entry_point = EntryPoint.PREDICT
         _predict_impl(state, predict_unit, callbacks)
         logger.info("Finished predict")
-        logger.debug(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
@@ -124,19 +122,13 @@ def _predict_impl(
     tracked_modules = predict_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
-    with state.timer.time(
-        f"predict.{predict_unit.__class__.__name__}.on_predict_start"
-    ):
-        predict_unit.on_predict_start(state)
+    predict_unit.on_predict_start(state)
     _run_callback_fn(callbacks, "on_predict_start", state, predict_unit)
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if predict_state.progress.num_steps_completed_in_epoch == 0:
-        with state.timer.time(
-            f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_start"
-        ):
-            predict_unit.on_predict_epoch_start(state)
+        predict_unit.on_predict_epoch_start(state)
         _run_callback_fn(callbacks, "on_predict_epoch_start", state, predict_unit)
 
     data_iter = iter(predict_state.dataloader)
@@ -156,16 +148,10 @@ def _predict_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                with state.timer.time("predict.data_iter_next"):
-                    step_input = next(data_iter)
+                step_input = next(data_iter)
 
             _run_callback_fn(callbacks, "on_predict_step_start", state, predict_unit)
-            with state.timer.time(
-                f"predict.{predict_unit.__class__.__name__}.predict_step"
-            ):
-                predict_state._step_output = predict_unit.predict_step(
-                    state, step_input
-                )
+            predict_state._step_output = predict_unit.predict_step(state, step_input)
             predict_state.progress.increment_step()
             _run_callback_fn(callbacks, "on_predict_step_end", state, predict_unit)
 
@@ -185,14 +171,10 @@ def _predict_impl(
     # set progress counters for the next epoch
     predict_state.progress.increment_epoch()
 
-    with state.timer.time(
-        f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_end"
-    ):
-        predict_unit.on_predict_epoch_end(state)
+    predict_unit.on_predict_epoch_end(state)
     _run_callback_fn(callbacks, "on_predict_epoch_end", state, predict_unit)
 
-    with state.timer.time(f"predict.{predict_unit.__class__.__name__}.on_predict_end"):
-        predict_unit.on_predict_end(state)
+    predict_unit.on_predict_end(state)
     _run_callback_fn(callbacks, "on_predict_end", state, predict_unit)
 
     # Reset training mode for modules at the end of the epoch

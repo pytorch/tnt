@@ -99,8 +99,7 @@ def _run_callback_fn(
         fn = getattr(cb, fn_name)
         if not callable(fn):
             raise ValueError(f"Invalid callback method name provided: {fn_name}")
-        with state.timer.time(f"callback.{cb.name}.{fn_name}"):
-            fn(state, *args, **kwargs)
+        fn(state, *args, **kwargs)
 
 
 def log_api_usage(entry_point: str) -> None:

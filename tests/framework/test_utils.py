@@ -32,7 +32,6 @@ from torchtnt.framework.utils import (
     _step_requires_iterator,
     StatefulInt,
 )
-from torchtnt.utils import Timer
 from torchtnt.utils.test_utils import get_pet_launch_config
 
 
@@ -117,10 +116,8 @@ class UtilsTest(unittest.TestCase):
         """
         callback = DummyCallback("train")
         train_unit = MagicMock()
-        timer = Timer()
         dummy_train_state = State(
             entry_point=EntryPoint.TRAIN,
-            timer=timer,
             train_state=None,
         )
         self.assertEqual(callback.dummy_data, "train")
@@ -133,55 +130,30 @@ class UtilsTest(unittest.TestCase):
             ValueError("test"),
         )
         self.assertEqual(callback.dummy_data, "on_exception")
-        self.assertTrue(
-            "callback.DummyCallback.on_exception" in timer.recorded_durations.keys()
-        )
 
         _run_callback_fn([callback], "on_train_start", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_start")
-        self.assertTrue(
-            "callback.DummyCallback.on_train_start" in timer.recorded_durations.keys()
-        )
 
         _run_callback_fn(
             [callback], "on_train_epoch_start", dummy_train_state, train_unit
         )
         self.assertEqual(callback.dummy_data, "on_train_epoch_start")
-        self.assertTrue(
-            "callback.DummyCallback.on_train_epoch_start"
-            in timer.recorded_durations.keys()
-        )
 
         _run_callback_fn(
             [callback], "on_train_step_start", dummy_train_state, train_unit
         )
         self.assertEqual(callback.dummy_data, "on_train_step_start")
-        self.assertTrue(
-            "callback.DummyCallback.on_train_step_start"
-            in timer.recorded_durations.keys()
-        )
 
         _run_callback_fn([callback], "on_train_step_end", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_step_end")
-        self.assertTrue(
-            "callback.DummyCallback.on_train_step_end"
-            in timer.recorded_durations.keys()
-        )
 
         _run_callback_fn(
             [callback], "on_train_epoch_end", dummy_train_state, train_unit
         )
         self.assertEqual(callback.dummy_data, "on_train_epoch_end")
-        self.assertTrue(
-            "callback.DummyCallback.on_train_epoch_end"
-            in timer.recorded_durations.keys()
-        )
 
         _run_callback_fn([callback], "on_train_end", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_end")
-        self.assertTrue(
-            "callback.DummyCallback.on_train_end" in timer.recorded_durations.keys()
-        )
 
     def test_run_callback_fn_exception(self) -> None:
         """

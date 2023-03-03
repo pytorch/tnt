@@ -23,7 +23,6 @@ from torchtnt.framework.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
-from torchtnt.utils.timer import get_timer_summary
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -106,7 +105,6 @@ def train(
         state._entry_point = EntryPoint.TRAIN
         _train_impl(state, train_unit, callbacks)
         logger.info("Finished train")
-        logger.debug(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(f"Exception during train\n: {e}")
@@ -132,8 +130,7 @@ def _train_impl(
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
-    with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_start"):
-        train_unit.on_train_start(state)
+    train_unit.on_train_start(state)
     _run_callback_fn(callbacks, "on_train_start", state, train_unit)
 
     while not (
@@ -142,8 +139,7 @@ def _train_impl(
     ):
         _train_epoch_impl(state, train_unit, callbacks)
 
-    with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_end"):
-        train_unit.on_train_end(state)
+    train_unit.on_train_end(state)
     _run_callback_fn(callbacks, "on_train_end", state, train_unit)
 
     # Reset training mode for modules at the end of the epoch
@@ -186,7 +182,6 @@ def train_epoch(
             callbacks,
         )
         logger.info("Finished train")
-        logger.debug(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(f"Exception during train_epoch\n: {e}")
@@ -222,10 +217,7 @@ def _train_epoch_impl(
     # to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if train_state.progress.num_steps_completed_in_epoch == 0:
-        with state.timer.time(
-            f"train.{train_unit.__class__.__name__}.on_train_epoch_start"
-        ):
-            train_unit.on_train_epoch_start(state)
+        train_unit.on_train_epoch_start(state)
         _run_callback_fn(callbacks, "on_train_epoch_start", state, train_unit)
 
     _maybe_set_distributed_sampler_epoch(
@@ -267,12 +259,11 @@ def _train_epoch_impl(
             train_state._is_last_batch = True
 
         _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
-        with state.timer.time(f"train.{train_unit.__class__.__name__}.train_step"):
-            try:
-                train_state._step_output = train_unit.train_step(state, step_input)
-            except StopIteration:
-                # catch a StopIteration for the case where the train_step takes in an iterator
-                break
+        try:
+            train_state._step_output = train_unit.train_step(state, step_input)
+        except StopIteration:
+            # catch a StopIteration for the case where the train_step takes in an iterator
+            break
 
         train_state.progress.increment_step()
         _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
@@ -308,8 +299,7 @@ def _train_epoch_impl(
     # set progress counters for the next epoch
     train_state.progress.increment_epoch()
 
-    with state.timer.time(f"train.{train_unit.__class__.__name__}.on_train_epoch_end"):
-        train_unit.on_train_epoch_end(state)
+    train_unit.on_train_epoch_end(state)
     _run_callback_fn(callbacks, "on_train_epoch_end", state, train_unit)
 
     if (
