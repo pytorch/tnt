@@ -22,6 +22,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
+from torchtnt.framework.utils import StatefulInt
 from torchtnt.utils import (
     copy_data_to_device,
     init_from_env,
@@ -205,7 +206,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
                 f"gradient_accumulation_steps must be > 0. Got {gradient_accumulation_steps}"
             )
         self.gradient_accumulation_steps = gradient_accumulation_steps
-        self._num_optimizer_steps_completed: int = 0
+        self._num_optimizer_steps_completed: StatefulInt = StatefulInt(0)
 
         self.detect_anomaly = detect_anomaly
         self.clip_grad_norm = clip_grad_norm
@@ -502,7 +503,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
 
     @property
     def num_optimizer_steps_completed(self) -> int:
-        return self._num_optimizer_steps_completed
+        return self._num_optimizer_steps_completed.val
 
 
 def _convert_precision_str_to_dtype(precision: str) -> torch.dtype:
