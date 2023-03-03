@@ -292,6 +292,7 @@ def _train_epoch_impl(
                 train_unit,
                 callbacks,
             )
+            logger.info("Finished evaluation. Resuming training epoch")
 
         if not pass_data_iter_to_step:
             # pyre-ignore
