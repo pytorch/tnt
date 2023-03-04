@@ -20,13 +20,7 @@ from torchdata.dataloader2 import DataLoader2, MultiProcessingReadingService
 from torchdata.datapipes.iter import IterableWrapper
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import init_train_state, State, train, TrainUnit
-from torchtnt.utils import (
-    copy_data_to_device,
-    get_timer_summary,
-    init_from_env,
-    seed,
-    TLRScheduler,
-)
+from torchtnt.utils import copy_data_to_device, init_from_env, seed, TLRScheduler
 
 from torchtnt.utils.loggers import TensorBoardLogger
 
@@ -177,7 +171,6 @@ def main(argv: List[str]) -> None:
     )
 
     train(train_state, train_unit)
-    print(get_timer_summary(train_state.timer))
 
 
 def get_args(argv: List[str]) -> Namespace:

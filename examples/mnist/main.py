@@ -21,7 +21,6 @@ from torcheval.metrics import MulticlassAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
 from torchtnt.utils import copy_data_to_device, init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
-from torchtnt.utils.timer import get_timer_summary
 from torchvision import datasets, transforms
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -181,7 +180,6 @@ def main(argv: List[str]) -> None:
     )
 
     fit(state, my_unit)
-    print(get_timer_summary(state.timer))
 
     if args.save_model:
         torch.save(module.state_dict(), "mnist_cnn.pt")

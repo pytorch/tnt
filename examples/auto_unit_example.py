@@ -19,7 +19,7 @@ from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
 from torchtnt.framework.state import ActivePhase
-from torchtnt.utils import get_timer_summary, init_from_env, seed, TLRScheduler
+from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 from typing_extensions import Literal
 
@@ -168,7 +168,6 @@ def main(args: Namespace) -> None:
     )
 
     fit(state, my_unit)
-    print(get_timer_summary(state.timer))
 
 
 def get_args() -> Namespace:

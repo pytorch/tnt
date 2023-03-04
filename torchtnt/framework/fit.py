@@ -19,7 +19,6 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import _is_done, _run_callback_fn, log_api_usage
-from torchtnt.utils.timer import get_timer_summary
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -112,7 +111,6 @@ def fit(
     try:
         state._entry_point = EntryPoint.FIT
         _fit_impl(state, unit, callbacks)
-        logger.debug(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
@@ -144,8 +142,7 @@ def _fit_impl(
         f"evaluate_every_n_epochs={eval_state.evaluate_every_n_epochs} "
     )
 
-    with state.timer.time(f"train.{unit.__class__.__name__}.on_train_start"):
-        unit.on_train_start(state)
+    unit.on_train_start(state)
     _run_callback_fn(callbacks, "on_train_start", state, unit)
 
     while not (
@@ -154,6 +151,5 @@ def _fit_impl(
     ):
         _train_epoch_impl(state, unit, callbacks)
 
-    with state.timer.time(f"train.{unit.__class__.__name__}.on_train_end"):
-        unit.on_train_end(state)
+    unit.on_train_end(state)
     _run_callback_fn(callbacks, "on_train_end", state, unit)
