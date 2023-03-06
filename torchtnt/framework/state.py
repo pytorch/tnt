@@ -14,6 +14,7 @@ from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
 from torchtnt.framework.progress import Progress
+from torchtnt.utils import Timer
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -147,11 +148,13 @@ class State:
         self,
         *,
         entry_point: EntryPoint,
+        timer: Optional[Timer] = None,
         train_state: Optional[PhaseState] = None,
         eval_state: Optional[PhaseState] = None,
         predict_state: Optional[PhaseState] = None,
     ) -> None:
         self._entry_point = entry_point
+        self._timer: Timer = timer or Timer()
         self._train_state = train_state
         self._eval_state = eval_state
         self._predict_state = predict_state
@@ -167,6 +170,11 @@ class State:
     def active_phase(self) -> ActivePhase:
         """Current active phase of the loop. (One of TRAIN, EVALUATE, PREDICT)."""
         return self._active_phase
+
+    @property
+    def timer(self) -> Timer:
+        """A :class:`~torchtnt.framework.Timer` object which records latencies of key events during loop execution."""
+        return self._timer
 
     @property
     def train_state(self) -> Optional[PhaseState]:
