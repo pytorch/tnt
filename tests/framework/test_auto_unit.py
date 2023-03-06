@@ -21,6 +21,7 @@ if is_torch_version_geq_1_13():
 
 from parameterized import parameterized
 from torch.distributed import launcher
+from torch.distributed.elastic.multiprocessing.errors import ChildFailedError
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.framework._test_utils import (
@@ -31,6 +32,7 @@ from torchtnt.framework._test_utils import (
 from torchtnt.framework.auto_unit import (
     AutoUnit,
     DDPStrategy,
+    FSDPStrategy,
     SWAParams,
     TorchDynamoParams,
 )
@@ -563,11 +565,11 @@ class TestAutoUnit(unittest.TestCase):
         """
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2).to(device)
-        my_module = FSDP(my_module)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
             device=device,
+            strategy=FSDPStrategy(),
             gradient_accumulation_steps=2,
         )
 
@@ -598,15 +600,17 @@ class TestAutoUnit(unittest.TestCase):
         Test that a RuntimeError is thrown when using FSDP, fp16 precision, and PyTorch < v1.12
         """
         config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._test_fsdp_fp16_pytorch_version
-        )()
+        self.assertRaises(
+            ChildFailedError,
+            launcher.elastic_launch(
+                config, entrypoint=self._test_fsdp_fp16_pytorch_version
+            ),
+        )
 
     @staticmethod
     def _test_fsdp_fp16_pytorch_version() -> None:
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2).to(device)
-        my_module = FSDP(my_module)
 
         tc = unittest.TestCase()
         with patch(
@@ -618,6 +622,7 @@ class TestAutoUnit(unittest.TestCase):
             _ = DummyAutoUnit(
                 module=my_module,
                 device=device,
+                strategy=FSDPStrategy(),
                 precision="fp16",
             )
 
@@ -678,6 +683,22 @@ class TestAutoUnit(unittest.TestCase):
             config, entrypoint=self._test_stochastic_weight_averaging_with_ddp
         )()
 
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_auto_unit_fsdp(self) -> None:
+        """
+        Launch tests of FSDP strategy
+        """
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_fsdp_wrap)()
+        launcher.elastic_launch(
+            config, entrypoint=self._test_stochastic_weight_averaging_with_fsdp
+        )()
+
     @staticmethod
     def _test_ddp_wrap() -> None:
         """
@@ -694,6 +715,23 @@ class TestAutoUnit(unittest.TestCase):
         tc = unittest.TestCase()
 
         tc.assertTrue(isinstance(auto_ddp_unit.module, DDP))
+
+    @staticmethod
+    def _test_fsdp_wrap() -> None:
+        """
+        Test that the module is correctly wrapped in FSDP
+        """
+
+        my_module = torch.nn.Linear(2, 2)
+
+        auto_fsdp_unit = DummyAutoUnit(
+            module=my_module,
+            strategy=FSDPStrategy(),
+            gradient_accumulation_steps=2,
+        )
+        tc = unittest.TestCase()
+
+        tc.assertTrue(isinstance(auto_fsdp_unit.module, FSDP))
 
     @staticmethod
     def _test_stochastic_weight_averaging_with_ddp() -> None:
@@ -749,6 +787,39 @@ class TestAutoUnit(unittest.TestCase):
         )
         tc.assertTrue(torch.allclose(orig_module.l1.weight, swa_module.l1.weight))
         tc.assertTrue(torch.allclose(orig_module.l2.weight, swa_module.l2.weight))
+
+    @staticmethod
+    def _test_stochastic_weight_averaging_with_fsdp() -> None:
+        """
+        assert error on stochastic weight averaging test with fsdp
+        """
+
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.l1 = torch.nn.Linear(2, 2)
+                self.b1 = torch.nn.BatchNorm1d(2)
+                self.l2 = torch.nn.Linear(2, 2)
+
+            def forward(self, x):
+                x = self.l1(x)
+                x = self.b1(x)
+                x = self.l2(x)
+                return x
+
+        my_module = Net()
+        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
+
+        tc = unittest.TestCase()
+        with tc.assertRaisesRegex(
+            RuntimeError,
+            "Stochastic Weight Averaging is currently not supported with the FSDP strategy",
+        ):
+            _ = DummyAutoUnit(
+                module=my_module,
+                strategy=FSDPStrategy(),
+                swa_params=my_swa_params,
+            )
 
 
 Batch = Tuple[torch.tensor, torch.tensor]

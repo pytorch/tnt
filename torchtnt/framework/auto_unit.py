@@ -11,13 +11,19 @@
 import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
 from torch.distributed import ProcessGroup
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.fully_sharded_data_parallel import (
+    BackwardPrefetch,
+    CPUOffload,
+    MixedPrecision,
+    ShardingStrategy,
+)
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.framework.state import EntryPoint, State
@@ -58,6 +64,21 @@ class DDPStrategy(Strategy):
     check_reduction: bool = False
     gradient_as_bucket_view: bool = False
     static_graph: bool = False
+
+
+@dataclass
+class FSDPStrategy(Strategy):
+    """Dataclass representing the `FullyShardedDataParallel <https://pytorch.org/docs/stable/fsdp.html>`_ strategy"""
+
+    process_group: Optional[ProcessGroup] = None
+    sharding_strategy: Optional[ShardingStrategy] = None
+    cpu_offload: Optional[CPUOffload] = None
+    auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
+    backward_prefetch: Optional[BackwardPrefetch] = None
+    ignored_modules: Optional[Iterable[torch.nn.Module]] = None
+    sync_module_states: bool = False
+    forward_prefetch: bool = False
+    limit_all_gathers: bool = False
 
 
 @dataclass
@@ -134,6 +155,9 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/master/dynamo/
 
             Note:
+                Stochastic Weight Averaging is currently not supported with the FSDP strategy.
+
+            Note:
                 TorchDynamo support is only available in PyTorch 2.0 or higher.
     """
 
@@ -155,11 +179,9 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     ) -> None:
         super().__init__()
         self.device: torch.device = device or init_from_env()
-
+        module = module.to(self.device)  # move module to device
         if strategy:
             if isinstance(strategy, DDPStrategy):
-                # move module to device
-                module = module.to(self.device)
                 # wrap module in DDP
                 device_ids = None
                 if self.device.type == "cuda":
@@ -170,10 +192,31 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
                     rank_zero_warn(
                         "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
                     )
-
-        else:
-            # move module to device
-            module = module.to(self.device)
+            elif isinstance(strategy, FSDPStrategy):
+                if not is_torch_version_geq_1_12():
+                    raise RuntimeError(
+                        "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/"
+                    )
+                elif swa_params:
+                    raise RuntimeError(
+                        "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
+                    )
+                # wrap module in FSDP
+                if precision:
+                    if isinstance(precision, str):
+                        precision = _convert_precision_str_to_dtype(precision)
+                    module = FSDP(
+                        module,
+                        device_id=self.device,
+                        mixed_precision=MixedPrecision(
+                            param_dtype=precision,
+                            reduce_dtype=precision,
+                            buffer_dtype=precision,
+                        ),
+                        **asdict(strategy),
+                    )
+                else:
+                    module = FSDP(module, device_id=self.device, **asdict(strategy))
 
         self.module: torch.nn.Module = module
 
