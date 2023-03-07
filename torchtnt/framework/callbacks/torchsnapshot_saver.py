@@ -88,8 +88,11 @@ class TorchSnapshotSaver(Callback):
         train_state = none_throws(state.train_state)
 
         global_step = train_state.progress.num_steps_completed
-        every_n_train_steps = self._save_every_n_train_steps
-        if every_n_train_steps is None or global_step % every_n_train_steps != 0:
+        save_every_n_train_steps = self._save_every_n_train_steps
+        if (
+            save_every_n_train_steps is None
+            or global_step % save_every_n_train_steps != 0
+        ):
             return
 
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=True)
@@ -105,8 +108,8 @@ class TorchSnapshotSaver(Callback):
 
         train_progress = train_state.progress
         epoch = train_progress.num_epochs_completed
-        every_n_epochs = self._save_every_n_epochs
-        if every_n_epochs is None or epoch % every_n_epochs != 0:
+        save_every_n_epochs = self._save_every_n_epochs
+        if save_every_n_epochs is None or epoch % save_every_n_epochs != 0:
             return
 
         app_state = _get_app_state(
