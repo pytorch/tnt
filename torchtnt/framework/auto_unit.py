@@ -11,13 +11,19 @@
 import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
 from torch.distributed import ProcessGroup
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.fully_sharded_data_parallel import (
+    BackwardPrefetch,
+    CPUOffload,
+    MixedPrecision,
+    ShardingStrategy,
+)
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.framework.state import EntryPoint, State
@@ -58,6 +64,21 @@ class DDPStrategy(Strategy):
     check_reduction: bool = False
     gradient_as_bucket_view: bool = False
     static_graph: bool = False
+
+
+@dataclass
+class FSDPStrategy(Strategy):
+    """Dataclass representing the `FullyShardedDataParallel <https://pytorch.org/docs/stable/fsdp.html>`_ strategy"""
+
+    process_group: Optional[ProcessGroup] = None
+    sharding_strategy: Optional[ShardingStrategy] = None
+    cpu_offload: Optional[CPUOffload] = None
+    auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
+    backward_prefetch: Optional[BackwardPrefetch] = None
+    ignored_modules: Optional[Iterable[torch.nn.Module]] = None
+    sync_module_states: bool = False
+    forward_prefetch: bool = False
+    limit_all_gathers: bool = False
 
 
 @dataclass
@@ -134,6 +155,9 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/master/dynamo/
 
             Note:
+                Stochastic Weight Averaging is currently not supported with the FSDP strategy.
+
+            Note:
                 TorchDynamo support is only available in PyTorch 2.0 or higher.
     """
 
@@ -155,11 +179,16 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
     ) -> None:
         super().__init__()
         self.device: torch.device = device or init_from_env()
+        module = module.to(self.device)  # move module to device
+
+        self.precision: Optional[torch.dtype]
+        if isinstance(precision, str):
+            self.precision = _convert_precision_str_to_dtype(precision)
+        else:
+            self.precision = precision
 
         if strategy:
             if isinstance(strategy, DDPStrategy):
-                # move module to device
-                module = module.to(self.device)
                 # wrap module in DDP
                 device_ids = None
                 if self.device.type == "cuda":
@@ -170,10 +199,30 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
                     rank_zero_warn(
                         "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
                     )
+            elif isinstance(strategy, FSDPStrategy):
+                if not is_torch_version_geq_1_12():
+                    raise RuntimeError(
+                        "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/"
+                    )
+                elif swa_params:
+                    raise RuntimeError(
+                        "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
+                    )
+                mixed_precision = None
+                if self.precision:
+                    mixed_precision = MixedPrecision(
+                        param_dtype=self.precision,
+                        reduce_dtype=self.precision,
+                        buffer_dtype=self.precision,
+                    )
 
-        else:
-            # move module to device
-            module = module.to(self.device)
+                # wrap module in FSDP
+                module = FSDP(
+                    module,
+                    device_id=self.device,
+                    mixed_precision=mixed_precision,
+                    **asdict(strategy),
+                )
 
         self.module: torch.nn.Module = module
 
@@ -184,19 +233,9 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             )
         self.log_frequency_steps: int = log_frequency_steps
 
-        if not precision:
-            self.precision: Optional[torch.dtype] = None
-            self.grad_scaler: Optional[GradScaler] = None
-        else:
-            if isinstance(precision, str):
-                self.precision: Optional[torch.dtype] = _convert_precision_str_to_dtype(
-                    precision
-                )
-            else:
-                self.precision = precision
-
+        self.grad_scaler: Optional[GradScaler] = None
+        if self.precision:
             self.grad_scaler = _get_grad_scaler_from_precision(
-                # pyre-ignore
                 self.precision,
                 self.module,
             )
@@ -530,12 +569,6 @@ def _get_grad_scaler_from_precision(
 ) -> Optional[GradScaler]:
     if precision == torch.float16:
         if isinstance(module, FSDP):
-            if not is_torch_version_geq_1_12():
-                raise RuntimeError(
-                    "Using float16 precision with torch.distributed.fsdp.FullyShardedDataParallel requires "
-                    "torch.distributed.fsdp.sharded_grad_scaler.ShardedGradScaler from PyTorch 1.12. "
-                    "Please install PyTorch 1.12 or higher to continue: https://pytorch.org/get-started/locally/"
-                )
             from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
             return ShardedGradScaler()

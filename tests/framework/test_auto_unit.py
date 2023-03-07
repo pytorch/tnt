@@ -31,6 +31,7 @@ from torchtnt.framework._test_utils import (
 from torchtnt.framework.auto_unit import (
     AutoUnit,
     DDPStrategy,
+    FSDPStrategy,
     SWAParams,
     TorchDynamoParams,
 )
@@ -563,11 +564,11 @@ class TestAutoUnit(unittest.TestCase):
         """
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2).to(device)
-        my_module = FSDP(my_module)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
             device=device,
+            strategy=FSDPStrategy(),
             gradient_accumulation_steps=2,
         )
 
@@ -606,18 +607,18 @@ class TestAutoUnit(unittest.TestCase):
     def _test_fsdp_fp16_pytorch_version() -> None:
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2).to(device)
-        my_module = FSDP(my_module)
 
         tc = unittest.TestCase()
         with patch(
             "torchtnt.framework.auto_unit.is_torch_version_geq_1_12", return_value=False
         ), tc.assertRaisesRegex(
             RuntimeError,
-            "Using float16 precision with torch.distributed.fsdp.FullyShardedDataParallel requires torch.distributed.fsdp.sharded_grad_scaler.ShardedGradScaler from PyTorch 1.12.",
+            "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/",
         ):
             _ = DummyAutoUnit(
                 module=my_module,
                 device=device,
+                strategy=FSDPStrategy(),
                 precision="fp16",
             )
 
@@ -749,6 +750,72 @@ class TestAutoUnit(unittest.TestCase):
         )
         tc.assertTrue(torch.allclose(orig_module.l1.weight, swa_module.l1.weight))
         tc.assertTrue(torch.allclose(orig_module.l2.weight, swa_module.l2.weight))
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_auto_unit_fsdp(self) -> None:
+        """
+        Launch tests of FSDP strategy
+        """
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_fsdp_wrap)()
+        launcher.elastic_launch(
+            config, entrypoint=self._test_stochastic_weight_averaging_with_fsdp
+        )()
+
+    @staticmethod
+    def _test_fsdp_wrap() -> None:
+        """
+        Test that the module is correctly wrapped in FSDP
+        """
+
+        my_module = torch.nn.Linear(2, 2)
+
+        auto_fsdp_unit = DummyAutoUnit(
+            module=my_module,
+            strategy=FSDPStrategy(),
+            gradient_accumulation_steps=2,
+        )
+        tc = unittest.TestCase()
+
+        tc.assertTrue(isinstance(auto_fsdp_unit.module, FSDP))
+
+    @staticmethod
+    def _test_stochastic_weight_averaging_with_fsdp() -> None:
+        """
+        Test that a RuntimeError is thrown when attempting to use Stochastic Weight Averaging and FSDP
+        """
+
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.l1 = torch.nn.Linear(2, 2)
+                self.b1 = torch.nn.BatchNorm1d(2)
+                self.l2 = torch.nn.Linear(2, 2)
+
+            def forward(self, x):
+                x = self.l1(x)
+                x = self.b1(x)
+                x = self.l2(x)
+                return x
+
+        my_module = Net()
+        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
+
+        tc = unittest.TestCase()
+        with tc.assertRaisesRegex(
+            RuntimeError,
+            "Stochastic Weight Averaging is currently not supported with the FSDP strategy",
+        ):
+            _ = DummyAutoUnit(
+                module=my_module,
+                strategy=FSDPStrategy(),
+                swa_params=my_swa_params,
+            )
 
 
 Batch = Tuple[torch.tensor, torch.tensor]
