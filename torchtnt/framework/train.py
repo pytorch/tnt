@@ -284,6 +284,7 @@ def _train_epoch_impl(
                 callbacks,
             )
             logger.info("Finished evaluation. Resuming training epoch")
+            state._active_phase = ActivePhase.TRAIN
 
         if not pass_data_iter_to_step:
             # pyre-ignore
@@ -312,6 +313,7 @@ def _train_epoch_impl(
             train_unit,
             callbacks,
         )
+        state._active_phase = ActivePhase.TRAIN
 
     # Reset training mode for modules at the end of the epoch
     # This ensures that side-effects made by the loop are reset before

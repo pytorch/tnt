@@ -14,8 +14,8 @@ from torch import nn
 from torchtnt.framework._test_utils import DummyFitUnit, generate_random_dataloader
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.fit import fit, init_fit_state
-from torchtnt.framework.state import EntryPoint, State
-from torchtnt.framework.unit import EvalUnit, TrainUnit
+from torchtnt.framework.state import ActivePhase, EntryPoint, State
+from torchtnt.framework.unit import EvalUnit, TrainUnit, TTrainUnit
 
 
 class FitTest(unittest.TestCase):
@@ -277,3 +277,33 @@ class FitTest(unittest.TestCase):
         )
         self.assertEqual(callback_mock.on_eval_epoch_end.call_count, max_epochs)
         self.assertEqual(callback_mock.on_eval_end.call_count, max_epochs)
+
+    def test_fit_active_phase(self) -> None:
+        tc = unittest.TestCase()
+
+        class PhaseTestCallback(Callback):
+            def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
+                tc.assertEqual(state.active_phase, ActivePhase.TRAIN)
+
+            def on_train_end(self, state: State, unit: TTrainUnit) -> None:
+                tc.assertEqual(state.active_phase, ActivePhase.TRAIN)
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+        evaluate_every_n_steps = 2
+        evaluate_every_n_epochs = 1
+        max_epochs = 2
+
+        my_unit = DummyFitUnit(input_dim)
+
+        train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_fit_state(
+            train_dataloader=train_dl,
+            eval_dataloader=eval_dl,
+            evaluate_every_n_steps=evaluate_every_n_steps,
+            evaluate_every_n_epochs=evaluate_every_n_epochs,
+            max_epochs=max_epochs,
+        )
+        fit(state, my_unit, callbacks=[PhaseTestCallback()])
