@@ -64,7 +64,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         device: torch.device,
         train_accuracy: BinaryAccuracy,
         tb_logger: TensorBoardLogger,
-        log_frequency_steps: int,
+        log_every_n_steps: int,
     ) -> None:
         super().__init__()
         self.module = module
@@ -74,7 +74,7 @@ class MyTrainUnit(TrainUnit[Batch]):
 
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = train_accuracy
-        self.log_frequency_steps = log_frequency_steps
+        self.log_every_n_steps = log_every_n_steps
 
         self.tb_logger = tb_logger
 
@@ -94,7 +94,7 @@ class MyTrainUnit(TrainUnit[Batch]):
         # update metrics & logs
         self.train_accuracy.update(outputs, targets)
         step_count = state.train_state.progress.num_steps_completed
-        if (step_count + 1) % self.log_frequency_steps == 0:
+        if (step_count + 1) % self.log_every_n_steps == 0:
             acc = self.train_accuracy.compute()
             self.tb_logger.log("loss", loss, step_count)
             self.tb_logger.log("accuracy", acc, step_count)
@@ -141,7 +141,7 @@ def main(argv: List[str]) -> None:
         device,
         train_accuracy,
         tb_logger,
-        args.log_frequency_steps,
+        args.log_every_n_steps,
     )
     state = init_train_state(
         dataloader=dataloader,
@@ -166,7 +166,7 @@ def get_args(argv: List[str]) -> Namespace:
     parser.add_argument("--batch-size", type=int, default=32, help="batch size")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument(
-        "--log-frequency-steps", type=int, default=10, help="log every n steps"
+        "--log-every-n-steps", type=int, default=10, help="log every n steps"
     )
     return parser.parse_args(argv)
 

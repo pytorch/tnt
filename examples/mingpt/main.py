@@ -116,7 +116,7 @@ def main(args: Namespace) -> None:
         module=module,
         device=device,
         strategy="ddp",
-        log_frequency_steps=args.log_frequency_steps,
+        log_every_n_steps=args.log_every_n_steps,
         gradient_accumulation_steps=4,
         detect_anomaly=True,
         clip_grad_norm=args.clip_grad_norm,
@@ -153,7 +153,7 @@ def get_args() -> Namespace:
         "--clip-grad-norm", type=float, default=1.0, help="clip gradient norm"
     )
     parser.add_argument(
-        "--log-frequency-steps", type=int, default=10, help="log every n steps"
+        "--log-every-n-steps", type=int, default=10, help="log every n steps"
     )
 
     return parser.parse_args()
