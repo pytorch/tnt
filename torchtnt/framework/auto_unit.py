@@ -428,8 +428,9 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
 
             grad_scaler = self.grad_scaler
             if grad_scaler:
-                loss = grad_scaler.scale(loss)
-            loss.backward()
+                grad_scaler.scale(loss).backward()
+            else:
+                loss.backward()
         return loss, outputs
 
     def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
