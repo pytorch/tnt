@@ -166,7 +166,7 @@ def main(argv: List[str]) -> None:
         module=module,
         device=device,
         strategy="ddp",
-        log_frequency_steps=args.log_frequency_steps,
+        log_every_n_steps=args.log_every_n_steps,
         precision=args.precision,
         gradient_accumulation_steps=4,
         detect_anomaly=True,
@@ -234,7 +234,7 @@ def get_args(argv: List[str]) -> Namespace:
     )
 
     parser.add_argument(
-        "--log-frequency-steps", type=int, default=10, help="log every n steps"
+        "--log-every-n-steps", type=int, default=10, help="log every n steps"
     )
 
     parser.add_argument(
