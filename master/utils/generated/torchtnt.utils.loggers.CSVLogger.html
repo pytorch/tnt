@@ -6,8 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>CSVLogger &mdash; TorchTNT master documentation</title>
@@ -346,31 +345,35 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="csvlogger">
+  <div class="section" id="csvlogger">
 <h1>CSVLogger<a class="headerlink" href="#csvlogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.CSVLogger">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></span><span class="sig-name descname"><span class="pre">CSVLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps_before_flushing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_all_ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.CSVLogger" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">CSVLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">steps_before_flushing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em><span class="n"><span class="pre">log_all_ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.CSVLogger" title="Permalink to this definition">¶</a></dt>
 <dd><p>CSV file logger. CSV headers are time, step, and names passed to <cite>log</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – path to write logs to</p></li>
-<li><p><strong>steps_before_flushing</strong> – (int, optional): Number of steps to buffer in logger before flushing</p></li>
-<li><p><strong>log_all_ranks</strong> – (bool, optional): Log all ranks if true, else log only on rank 0.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (<em>str</em>) – path to write logs to</li>
+<li><strong>steps_before_flushing</strong> – (int, optional): Number of steps to buffer in logger before flushing</li>
+<li><strong>log_all_ranks</strong> – (bool, optional): Log all ranks if true, else log only on rank 0.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.CSVLogger.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.CSVLogger.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">close</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.CSVLogger.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close log resource, flushing if necessary.
 Logs should not be written after <cite>close</cite> is called.</p>
 </dd></dl>
 
 </dd></dl>
 
-</section>
+</div>
 
 
              </article>

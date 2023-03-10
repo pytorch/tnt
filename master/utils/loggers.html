@@ -6,8 +6,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Loggers &mdash; TorchTNT master documentation</title>
@@ -344,130 +343,150 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="module-torchtnt.utils.loggers">
+  <div class="section" id="module-torchtnt.utils.loggers">
 <span id="loggers"></span><h1>Loggers<a class="headerlink" href="#module-torchtnt.utils.loggers" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.FileLogger">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></span><span class="sig-name descname"><span class="pre">FileLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps_before_flushing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_all_ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">FileLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">steps_before_flushing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">log_all_ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract file logger.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – path to write logs to</p></li>
-<li><p><strong>steps_before_flushing</strong> – (int): Number of steps to store in log before flushing</p></li>
-<li><p><strong>log_all_ranks</strong> – (bool): Log all ranks if true, else log only on rank 0.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> (<em>str</em>) – path to write logs to</li>
+<li><strong>steps_before_flushing</strong> – (int): Number of steps to store in log before flushing</li>
+<li><strong>log_all_ranks</strong> – (bool): Log all ranks if true, else log only on rank 0.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.FileLogger.close">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.close" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">close</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.close" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.FileLogger.flush">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flush</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.flush" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">flush</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.flush" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.FileLogger.log">
-<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.log" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">log</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log scalar data to file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em>) – a unique name to group scalars</p></li>
-<li><p><strong>data</strong> (<em>float/int/Tensor</em>) – scalar data to log</p></li>
-<li><p><strong>step</strong> (<em>int</em>) – step value to record</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>string</em>) – a unique name to group scalars</li>
+<li><strong>data</strong> (<em>float/int/Tensor</em>) – scalar data to log</li>
+<li><strong>step</strong> (<em>int</em>) – step value to record</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.FileLogger.log_dict">
-<span class="sig-name descname"><span class="pre">log_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.log_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">log_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.log_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add multiple scalar values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>payload</strong> (<em>dict</em>) – dictionary of tag name and scalar value</p></li>
-<li><p><strong>step</strong> (<em>int</em>) – step value to record</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>payload</strong> (<em>dict</em>) – dictionary of tag name and scalar value</li>
+<li><strong>step</strong> (<em>int</em>) – step value to record</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.FileLogger.path">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.path" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">path</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#torchtnt.utils.loggers.FileLogger.path" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.MetricLogger">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></span><span class="sig-name descname"><span class="pre">MetricLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">MetricLogger</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract metric logger.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.MetricLogger.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">close</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close log resource, flushing if necessary.
 Logs should not be written after <cite>close</cite> is called.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.MetricLogger.log">
-<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger.log" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">log</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger.log" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log scalar data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>string</em>) – tag name used to group scalars</p></li>
-<li><p><strong>data</strong> (<em>float/int/Tensor</em>) – scalar data to log</p></li>
-<li><p><strong>step</strong> (<em>int</em>) – step value to record</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>string</em>) – tag name used to group scalars</li>
+<li><strong>data</strong> (<em>float/int/Tensor</em>) – scalar data to log</li>
+<li><strong>step</strong> (<em>int</em>) – step value to record</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.MetricLogger.log_dict">
-<span class="sig-name descname"><span class="pre">log_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger.log_dict" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">log_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v1.13)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.MetricLogger.log_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Log multiple scalar values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>payload</strong> (<em>dict</em>) – dictionary of tag name and scalar value</p></li>
-<li><p><strong>step</strong> (<em>int</em>) – step value to record</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>payload</strong> (<em>dict</em>) – dictionary of tag name and scalar value</li>
+<li><strong>step</strong> (<em>int</em>) – step value to record</li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<section id="built-in-loggers">
-<h2>Built-in loggers<a class="headerlink" href="#built-in-loggers" title="Permalink to this heading">¶</a></h2>
-<p>Loggers are wrappers around different publishers to simplify logging metrics. While users can create their own loggers by subclassing the loggers above, we also offer the following loggers out of the box:</p>
-<table class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.utils.loggers.CSVLogger.html#torchtnt.utils.loggers.CSVLogger" title="torchtnt.utils.loggers.CSVLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CSVLogger</span></code></a></p></td>
-<td><p>CSV file logger.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.utils.loggers.InMemoryLogger.html#torchtnt.utils.loggers.InMemoryLogger" title="torchtnt.utils.loggers.InMemoryLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemoryLogger</span></code></a></p></td>
-<td><p>Simple logger that buffers data in-memory.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchtnt.utils.loggers.JSONLogger.html#torchtnt.utils.loggers.JSONLogger" title="torchtnt.utils.loggers.JSONLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JSONLogger</span></code></a></p></td>
-<td><p>JSON file logger.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger" title="torchtnt.utils.loggers.TensorBoardLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorBoardLogger</span></code></a></p></td>
-<td><p>Simple logger for TensorBoard.</p></td>
+</td>
 </tr>
 </tbody>
 </table>
-</section>
-</section>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="built-in-loggers">
+<h2>Built-in loggers<a class="headerlink" href="#built-in-loggers" title="Permalink to this heading">¶</a></h2>
+<p>Loggers are wrappers around different publishers to simplify logging metrics. While users can create their own loggers by subclassing the loggers above, we also offer the following loggers out of the box:</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.utils.loggers.CSVLogger.html#torchtnt.utils.loggers.CSVLogger" title="torchtnt.utils.loggers.CSVLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CSVLogger</span></code></a></td>
+<td>CSV file logger.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.utils.loggers.InMemoryLogger.html#torchtnt.utils.loggers.InMemoryLogger" title="torchtnt.utils.loggers.InMemoryLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InMemoryLogger</span></code></a></td>
+<td>Simple logger that buffers data in-memory.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.utils.loggers.JSONLogger.html#torchtnt.utils.loggers.JSONLogger" title="torchtnt.utils.loggers.JSONLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JSONLogger</span></code></a></td>
+<td>JSON file logger.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger" title="torchtnt.utils.loggers.TensorBoardLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorBoardLogger</span></code></a></td>
+<td>Simple logger for TensorBoard.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 
 
              </article>
