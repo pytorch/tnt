@@ -21,6 +21,7 @@ import os
 import sys
 
 import pytorch_sphinx_theme
+from sphinx.writers.html import HTMLTranslator
 from torchtnt import __version__
 
 sys.path.append(os.path.abspath("./ext"))
@@ -93,6 +94,15 @@ html_js_files = [
 ]
 
 
+class PatchedHTMLTranslator(HTMLTranslator):
+    def visit_reference(self, node):
+        if node.get("newtab") or not (
+            node.get("target") or node.get("internal") or "refuri" not in node
+        ):
+            node["target"] = "_blank"
+        super().visit_reference(node)
+
+
 def setup(app):
     # NOTE: in Sphinx 1.8+ `html_css_files` is an official configuration value
     # and can be moved outside of this function (and the setup(app) function
@@ -105,6 +115,7 @@ def setup(app):
     )  # noqa B009
     for css_file in html_css_files:
         add_css(css_file)
+    app.set_translator("html", PatchedHTMLTranslator)
 
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
