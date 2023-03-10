@@ -47,6 +47,15 @@ Documentation
 
    examples
 
+.. fbcode::
+
+   .. toctree::
+      :maxdepth: 2
+      :caption: Examples (Meta)
+      :glob:
+
+      meta/examples
+
 .. toctree::
    :maxdepth: 1
    :caption: Framework
