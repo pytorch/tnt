@@ -290,13 +290,6 @@ def _train_epoch_impl(
             # pyre-ignore
             step_input = next_step_input
 
-    # Possibly warn about an empty dataloader
-    any_steps_completed = (
-        abs(train_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch) > 0
-    )
-    if not any_steps_completed:
-        logger.warning("No steps completed during train epoch!")
-
     # set progress counters for the next epoch
     train_state.progress.increment_epoch()
 
