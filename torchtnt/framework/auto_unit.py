@@ -14,6 +14,8 @@ from dataclasses import asdict, dataclass
 from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
 
 import torch
+import torch.distributed as dist
+
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
 from torch.distributed import ProcessGroup
@@ -53,7 +55,10 @@ class Strategy:
 
 @dataclass
 class DDPStrategy(Strategy):
-    """Dataclass representing the `DistributedDataParallel <https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html>`_ strategy"""
+    """
+    Dataclass representing the `DistributedDataParallel <https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html>`_ strategy.
+    Includes params for registering `DDP communication hooks <https://pytorch.org/docs/stable/ddp_comm_hooks.html>`_.
+    """
 
     output_device: Optional[Union[int, torch.device]] = None
     dim: int = 0
@@ -64,6 +69,12 @@ class DDPStrategy(Strategy):
     check_reduction: bool = False
     gradient_as_bucket_view: bool = False
     static_graph: bool = False
+
+    # DDP Comm Hook params
+    comm_state: Optional[object] = None
+    comm_hook: Optional[
+        Callable[[object, dist.GradBucket], torch.futures.Future[torch.Tensor]]
+    ] = None
 
 
 @dataclass
@@ -193,11 +204,19 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
                 device_ids = None
                 if self.device.type == "cuda":
                     device_ids = [self.device.index]
-                module = DDP(module, device_ids=device_ids, **asdict(strategy))
+                params_dict = asdict(strategy)
+                # remove ddp comm hook variables from params dict
+                del params_dict["comm_state"]
+                del params_dict["comm_hook"]
+                module = DDP(module, device_ids=device_ids, **params_dict)
                 if torchdynamo_params:
                     # TODO: Add support for dynamo and DDP
                     rank_zero_warn(
                         "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
+                    )
+                if strategy.comm_hook:
+                    module.register_comm_hook(
+                        state=strategy.comm_state, hook=strategy.comm_hook
                     )
             elif isinstance(strategy, FSDPStrategy):
                 if not is_torch_version_geq_1_12():

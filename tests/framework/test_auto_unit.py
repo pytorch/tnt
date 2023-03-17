@@ -20,7 +20,7 @@ if is_torch_version_geq_1_13():
     import torch._dynamo
 
 from parameterized import parameterized
-from torch.distributed import launcher
+from torch.distributed import GradBucket, launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.framework._test_utils import (
@@ -676,6 +676,7 @@ class TestAutoUnit(unittest.TestCase):
         launcher.elastic_launch(
             config, entrypoint=self._test_stochastic_weight_averaging_with_ddp
         )()
+        launcher.elastic_launch(config, entrypoint=self._test_ddp_comm_hook)()
 
     @staticmethod
     def _test_ddp_wrap() -> None:
@@ -748,6 +749,53 @@ class TestAutoUnit(unittest.TestCase):
         )
         tc.assertTrue(torch.allclose(orig_module.l1.weight, swa_module.l1.weight))
         tc.assertTrue(torch.allclose(orig_module.l2.weight, swa_module.l2.weight))
+
+    @staticmethod
+    def _test_ddp_comm_hook() -> None:
+        """
+        Test communication hook for DDP
+        """
+        custom_noop_hook_called = False
+
+        def custom_noop_hook(
+            _: Any, bucket: GradBucket
+        ) -> torch.futures.Future[torch.Tensor]:
+            nonlocal custom_noop_hook_called
+
+            fut: torch.futures.Future[torch.Tensor] = torch.futures.Future()
+            fut.set_result(bucket.buffer())
+            custom_noop_hook_called = True
+            return fut
+
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.l1 = torch.nn.Linear(2, 2)
+                self.b1 = torch.nn.BatchNorm1d(2)
+                self.l2 = torch.nn.Linear(2, 2)
+
+            def forward(self, x):
+                x = self.l1(x)
+                x = self.b1(x)
+                x = self.l2(x)
+                return x
+
+        my_module = Net()
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            strategy=DDPStrategy(comm_hook=custom_noop_hook),
+        )
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 2
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, auto_unit)
+
+        tc = unittest.TestCase()
+        tc.assertTrue(custom_noop_hook_called)
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
