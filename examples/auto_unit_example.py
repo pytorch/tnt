@@ -191,8 +191,7 @@ def get_args() -> Namespace:
         "--precision",
         type=str,
         default=None,
-        help="fp16 or bf16",
-        choices=["fp16", "bf16"],
+        help="fp16, bf16, or fp32",
     )
     return parser.parse_args()
 

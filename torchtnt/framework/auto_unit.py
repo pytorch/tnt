@@ -563,7 +563,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         return self._num_optimizer_steps_completed.val
 
 
-def _convert_precision_str_to_dtype(precision: str) -> torch.dtype:
+def _convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:
     """
     Converts precision as a string to a torch.dtype
 
@@ -574,10 +574,14 @@ def _convert_precision_str_to_dtype(precision: str) -> torch.dtype:
         ValueError if an invalid precision string is passed.
 
     """
-    string_to_dtype_mapping = {"fp16": torch.float16, "bf16": torch.bfloat16}
+    string_to_dtype_mapping = {
+        "fp16": torch.float16,
+        "bf16": torch.bfloat16,
+        "fp32": None,
+    }
     if precision not in string_to_dtype_mapping.keys():
         raise ValueError(
-            f"Precision {precision} not supported. Please use one of `fp16` or `bf16`"
+            f"Precision {precision} not supported. Please use one of {list(string_to_dtype_mapping.keys())}"
         )
     return string_to_dtype_mapping[precision]
 

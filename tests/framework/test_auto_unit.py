@@ -171,10 +171,10 @@ class TestAutoUnit(unittest.TestCase):
         """
         my_module = torch.nn.Linear(2, 2)
 
-        with self.assertRaisesRegex(ValueError, "Precision f16 not supported"):
+        with self.assertRaisesRegex(ValueError, "Precision foo not supported"):
             _ = DummyAutoUnit(
                 module=my_module,
-                precision="f16",
+                precision="foo",
             )
 
     @parameterized.expand(
