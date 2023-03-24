@@ -228,7 +228,6 @@ def _train_epoch_impl(
     step_input = data_iter
 
     pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
-    prev_steps_in_epoch = train_state.progress.num_steps_completed_in_epoch
 
     # Prefetch each batch while iterating over the data, so that we can set the
     # _is_last_batch field on the train_state and pass that metadata to the user
