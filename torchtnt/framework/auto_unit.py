@@ -9,7 +9,7 @@
 # pyre-ignore-all-errors[3]
 
 import contextlib
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
 
@@ -129,7 +129,22 @@ TSelf = TypeVar("TSelf", bound="AutoUnit")
 TData = TypeVar("TData")
 
 
-class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
+class _ConfigureOptimizersCaller(ABCMeta):
+    def __call__(self, *args, **kwargs):
+        x = super().__call__(*args, **kwargs)
+        if x.training:
+            x.optimizer, x.lr_scheduler = x.configure_optimizers_and_lr_scheduler(
+                x.module
+            )
+        return x
+
+
+class AutoUnit(
+    TrainUnit[TData],
+    EvalUnit[TData],
+    PredictUnit[Any],
+    metaclass=_ConfigureOptimizersCaller,
+):
     """
     The AutoUnit is a convenience for users who are training with stochastic gradient descent and would like to have model optimization
     and data parallel replication handled for them.
@@ -164,6 +179,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
         torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/master/dynamo/
+        training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
             Note:
                 Stochastic Weight Averaging is currently not supported with the FSDP strategy.
@@ -187,6 +203,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_value: Optional[float] = None,
         swa_params: Optional[SWAParams] = None,
         torchdynamo_params: Optional[TorchDynamoParams] = None,
+        training: bool = True,
     ) -> None:
         super().__init__()
         self.device: torch.device = device or init_from_env()
@@ -291,6 +308,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             )
             self.module = _dynamo_wrapper(self.module, torchdynamo_params)
 
+        self.training = training
         # TODO: Make AutoTrainUnit work when data type is Iterator
 
     @abstractmethod
@@ -370,12 +388,6 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         """
         Note that if implementing `on_train_start()`, you must call `super().on_train_start()`.
         """
-        optimizer, lr_scheduler = self.configure_optimizers_and_lr_scheduler(
-            self.module
-        )
-        self.optimizer: torch.optim.optimizer.Optimizer = optimizer
-        self.lr_scheduler: TLRScheduler = lr_scheduler
-
         self.swa_model: Optional[AveragedModel] = None
         self.swa_scheduler: Optional[SWALR] = None
 

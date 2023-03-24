@@ -58,10 +58,6 @@ class TestAutoUnit(unittest.TestCase):
             precision="fp16",
         )
 
-        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
-        # call on_train_start to configure optimizers
-        auto_unit.on_train_start(state)
-
         self.assertEqual(auto_unit.tracked_modules()["module"], my_module)
         self.assertTrue(
             isinstance(
@@ -131,9 +127,6 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             precision="fp16",
         )
-        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
-        # call on_train_start to configure optimizers
-        auto_unit.on_train_start(state)
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         auto_unit.train_step(state=MagicMock(), data=dummy_data)
@@ -155,9 +148,6 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             precision="bf16",
         )
-        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
-        # call on_train_start to configure optimizers
-        auto_unit.on_train_start(state)
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         auto_unit.train_step(state=MagicMock(), data=dummy_data)
@@ -541,8 +531,6 @@ class TestAutoUnit(unittest.TestCase):
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
-        # call on_train_start to configure optimizers
-        auto_unit.on_train_start(state)
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
@@ -572,8 +560,6 @@ class TestAutoUnit(unittest.TestCase):
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
-        # call on_train_start to configure optimizers
-        auto_unit.on_train_start(state)
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
@@ -633,8 +619,6 @@ class TestAutoUnit(unittest.TestCase):
         )
 
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
-        # call on_train_start to configure optimizers
-        auto_unit.on_train_start(state)
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
 
@@ -657,12 +641,28 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
         )
 
-        self.assertFalse(hasattr(auto_unit, "optimizer"))
-        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
-        # call on_train_start to configure optimizers
-        auto_unit.on_train_start(state)
         # assert that the optimizer attribute was correctly initialized and set
         self.assertTrue(hasattr(auto_unit, "optimizer"))
+        self.assertTrue(hasattr(auto_unit, "lr_scheduler"))
+
+    def test_configure_optimizers_and_lr_scheduler_called_once(self) -> None:
+        """
+        Test configure_optimizers_and_lr_scheduler is called exactly once
+        """
+        my_module = torch.nn.Linear(2, 2)
+
+        with patch.object(
+            DummyComplexAutoUnit, "configure_optimizers_and_lr_scheduler"
+        ) as configure_optimizers_and_lr_scheduler_mock:
+            configure_optimizers_and_lr_scheduler_mock.return_value = (
+                MagicMock(),
+                MagicMock(),
+            )
+            _ = DummyComplexAutoUnit(
+                lr=0.01,
+                module=my_module,
+            )
+            self.assertEqual(configure_optimizers_and_lr_scheduler_mock.call_count, 1)
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
