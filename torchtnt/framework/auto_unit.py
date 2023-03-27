@@ -9,7 +9,7 @@
 # pyre-ignore-all-errors[3]
 
 import contextlib
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass
 from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
 
@@ -129,7 +129,45 @@ TSelf = TypeVar("TSelf", bound="AutoUnit")
 TData = TypeVar("TData")
 
 
-class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
+class _ConfigureOptimizersCaller(ABCMeta):
+    def __call__(self, *args, **kwargs):
+        x = super().__call__(*args, **kwargs)
+        x.optimizer = None
+        x.lr_scheduler = None
+        x.swa_model = None
+        x.swa_scheduler = None
+
+        if x.training:
+            x.optimizer, x.lr_scheduler = x.configure_optimizers_and_lr_scheduler(
+                x.module
+            )
+
+            if x.swa_params:
+                if not x.swa_params.avg_fn:
+                    # pyre-ignore: Unexpected keyword [28]
+                    x.swa_model = AveragedModel(x.module, use_buffers=True)
+                else:
+                    # pyre-ignore: Unexpected keyword [28]
+                    x.swa_model = AveragedModel(
+                        x.module, avg_fn=x.swa_params.avg_fn, use_buffers=True
+                    )
+
+                x.swa_scheduler = SWALR(
+                    optimizer=x.optimizer,
+                    swa_lr=x.swa_params.lr,
+                    anneal_epochs=x.swa_params.anneal_epochs,
+                    anneal_strategy=x.swa_params.anneal_strategy,
+                )
+
+        return x
+
+
+class AutoUnit(
+    TrainUnit[TData],
+    EvalUnit[TData],
+    PredictUnit[Any],
+    metaclass=_ConfigureOptimizersCaller,
+):
     """
     The AutoUnit is a convenience for users who are training with stochastic gradient descent and would like to have model optimization
     and data parallel replication handled for them.
@@ -164,6 +202,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
         torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/master/dynamo/
+        training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
             Note:
                 Stochastic Weight Averaging is currently not supported with the FSDP strategy.
@@ -187,6 +226,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
         clip_grad_value: Optional[float] = None,
         swa_params: Optional[SWAParams] = None,
         torchdynamo_params: Optional[TorchDynamoParams] = None,
+        training: bool = True,
     ) -> None:
         super().__init__()
         self.device: torch.device = device or init_from_env()
@@ -291,6 +331,7 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             )
             self.module = _dynamo_wrapper(self.module, torchdynamo_params)
 
+        self.training = training
         # TODO: Make AutoTrainUnit work when data type is Iterator
 
     @abstractmethod
@@ -365,39 +406,6 @@ class AutoUnit(TrainUnit[TData], EvalUnit[TData], PredictUnit[Any], ABC):
             A batch of data which is on the device
         """
         return copy_data_to_device(data, self.device)
-
-    def on_train_start(self, state: State) -> None:
-        """
-        Note that if implementing `on_train_start()`, you must call `super().on_train_start()`.
-        """
-        optimizer, lr_scheduler = self.configure_optimizers_and_lr_scheduler(
-            self.module
-        )
-        self.optimizer: torch.optim.optimizer.Optimizer = optimizer
-        self.lr_scheduler: TLRScheduler = lr_scheduler
-
-        self.swa_model: Optional[AveragedModel] = None
-        self.swa_scheduler: Optional[SWALR] = None
-
-        if self.swa_params:
-            if not self.swa_params.avg_fn:
-                # pyre-ignore: Unexpected keyword [28]
-                self.swa_model = AveragedModel(self.module, use_buffers=True)
-            else:
-                # pyre-ignore: Unexpected keyword [28]
-                self.swa_model = AveragedModel(
-                    self.module, avg_fn=self.swa_params.avg_fn, use_buffers=True
-                )
-
-            self.swa_scheduler = SWALR(
-                optimizer=self.optimizer,
-                # pyre-ignore: Undefined attribute [16]
-                swa_lr=self.swa_params.lr,
-                # pyre-ignore: Undefined attribute [16]
-                anneal_epochs=self.swa_params.anneal_epochs,
-                # pyre-ignore: Undefined attribute [16]
-                anneal_strategy=self.swa_params.anneal_strategy,
-            )
 
     def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         data = self.move_data_to_device(state, data)
