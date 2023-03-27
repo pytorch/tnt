@@ -12,6 +12,13 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 import torch
 import torch.nn as nn
 import typing_extensions
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
+from torchtnt.utils.version import is_torch_version_geq_2_0
+
+if is_torch_version_geq_2_0():
+    from torch.distributed._composable_state import _get_module_state
+    from torch.distributed.fsdp._common_utils import _FSDPState
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.progress import Progress
@@ -122,6 +129,19 @@ def _step_requires_iterator(step_func: Callable[[State, object], object]) -> boo
         return False
     annotated_type = annotations["data"]
     return typing_extensions.get_origin(annotated_type) is collections.abc.Iterator
+
+
+def _is_fsdp_module(module: torch.nn.Module) -> bool:
+    if isinstance(module, FSDP):
+        return True
+
+    if is_torch_version_geq_2_0():
+        # Also check for composable FSDP API
+        maybe_composable_state = _get_module_state(module)
+        if maybe_composable_state is not None:
+            return isinstance(maybe_composable_state, _FSDPState)
+
+    return False
 
 
 class StatefulInt:

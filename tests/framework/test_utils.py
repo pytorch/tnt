@@ -9,9 +9,17 @@ import unittest
 from typing import Iterator, Union
 from unittest.mock import MagicMock
 
-import torch.distributed as dist
+import torch
 
+import torch.distributed as dist
 from torch import nn
+
+from torchtnt.utils.version import is_torch_version_geq_2_0
+
+if is_torch_version_geq_2_0():
+    from torch.distributed._composable import fully_shard
+
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
 from torch.utils.data import DataLoader
 
@@ -24,6 +32,7 @@ from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.framework.utils import (
     _is_done,
     _is_epoch_done,
+    _is_fsdp_module,
     _is_last_batch_in_epoch,
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
@@ -36,6 +45,28 @@ from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class UtilsTest(unittest.TestCase):
+    @staticmethod
+    def _test_is_fsdp_module() -> None:
+        dist.init_process_group("gloo")
+        model = nn.Linear(1, 1)
+        assert not _is_fsdp_module(model)
+        model = FSDP(nn.Linear(1, 1))
+        assert _is_fsdp_module(model)
+        if is_torch_version_geq_2_0():
+            fully_shard(model)
+            assert _is_fsdp_module(model)
+
+    @unittest.skipUnless(
+        dist.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=torch.cuda.is_available() and torch.cuda.device_count() > 2,
+        reason="This test needs 2 GPUs to run.",
+    )
+    def test_is_fsdp_module(self) -> None:
+        config = get_pet_launch_config(2)
+        dist.launcher.elastic_launch(config, entrypoint=self._test_is_fsdp_module)()
+
     def test_maybe_set_distributed_sampler_epoch(self) -> None:
         config = get_pet_launch_config(3)
         result = dist.launcher.elastic_launch(

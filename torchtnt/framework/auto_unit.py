@@ -30,7 +30,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
-from torchtnt.framework.utils import StatefulInt
+from torchtnt.framework.utils import _is_fsdp_module, StatefulInt
 from torchtnt.utils import (
     copy_data_to_device,
     init_from_env,
@@ -437,8 +437,10 @@ class AutoUnit(
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
         # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
         maybe_no_sync = (
+            # pyre-ignore[29]
             self.module.no_sync()
-            if not should_update_weights and isinstance(self.module, (DDP, FSDP))
+            if not should_update_weights
+            and (isinstance(self.module, DDP) or _is_fsdp_module(self.module))
             else contextlib.nullcontext()
         )
 
@@ -470,8 +472,13 @@ class AutoUnit(
 
         # gradient norm clipping
         if clip_grad_norm:
-            if isinstance(self.module, FSDP):
-                self.module.clip_grad_norm_(max_norm=clip_grad_norm)
+            if _is_fsdp_module(self.module):
+                if isinstance(self.module, FSDP):
+                    self.module.clip_grad_norm_(max_norm=clip_grad_norm)
+                else:
+                    raise RuntimeError(
+                        "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
+                    )
             else:
                 torch.nn.utils.clip_grad_norm_(
                     parameters=self.module.parameters(),
@@ -598,7 +605,7 @@ def _get_grad_scaler_from_precision(
     precision: torch.dtype, module: torch.nn.Module
 ) -> Optional[GradScaler]:
     if precision == torch.float16:
-        if isinstance(module, FSDP):
+        if _is_fsdp_module(module):
             from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
             return ShardedGradScaler()
