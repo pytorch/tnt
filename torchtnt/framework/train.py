@@ -9,6 +9,7 @@ from typing import Iterable, List, Optional
 
 import torch
 from pyre_extensions import none_throws
+from torch.profiler import record_function
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.evaluate import _evaluate_impl
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
@@ -224,7 +225,8 @@ def _train_epoch_impl(
         train_state.dataloader, train_state.progress.num_epochs_completed
     )
 
-    data_iter = iter(train_state.dataloader)
+    with record_function(__name__ + ".iter(dataloader)"):
+        data_iter = iter(train_state.dataloader)
     step_input = data_iter
 
     pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
@@ -245,7 +247,8 @@ def _train_epoch_impl(
         try:
             # get the next batch from the data iterator
             if not pass_data_iter_to_step:
-                next_step_input = next(data_iter)
+                with record_function(__name__ + ".next(data_iter)"):
+                    next_step_input = next(data_iter)
 
             # update train_state._is_last_batch
             train_state._is_last_batch = _is_last_batch_in_epoch(
@@ -259,7 +262,8 @@ def _train_epoch_impl(
 
         _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
         try:
-            train_state._step_output = train_unit.train_step(state, step_input)
+            with record_function(__name__ + ".train_step"):
+                train_state._step_output = train_unit.train_step(state, step_input)
         except StopIteration:
             # catch a StopIteration for the case where the train_step takes in an iterator
             break

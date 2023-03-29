@@ -28,6 +28,7 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 )
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
+from torch.profiler import record_function
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 from torchtnt.framework.utils import _is_fsdp_module, StatefulInt
@@ -408,7 +409,8 @@ class AutoUnit(
         return copy_data_to_device(data, self.device)
 
     def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
-        data = self.move_data_to_device(state, data)
+        with record_function(__name__ + ".move_data_to_device"):
+            data = self.move_data_to_device(state, data)
 
         train_state = none_throws(state.train_state)
         should_update_weights = (
@@ -421,8 +423,9 @@ class AutoUnit(
         self.update_metrics(state, data, loss, outputs)
 
         if should_update_weights:
-            # TODO try to use dynamo here
-            self._run_optimizer_lr_scheduler_step(state)
+            with record_function(__name__ + "._run_optimizer_lr_scheduler_step"):
+                # TODO try to use dynamo here
+                self._run_optimizer_lr_scheduler_step(state)
 
             # log metrics only after an optimizer step
             if self.num_optimizer_steps_completed % self.log_every_n_steps == 0:
@@ -447,8 +450,9 @@ class AutoUnit(
         # if detect_anomaly is true, run forward and backward pass in detect_anomaly context
         with maybe_no_sync, torch.autograd.set_detect_anomaly(self.detect_anomaly):
             with self.maybe_autocast_precision:
-                # users must override this
-                loss, outputs = self.compute_loss(state, data)
+                with record_function(__name__ + ".compute_loss"):
+                    # users must override this
+                    loss, outputs = self.compute_loss(state, data)
 
             # normalize loss to account for gradient accumulation
             loss = loss / self.gradient_accumulation_steps
