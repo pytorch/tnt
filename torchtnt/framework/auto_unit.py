@@ -432,7 +432,7 @@ class AutoUnit(
     def _forward_and_backward(
         self, state: State, data: TData, should_update_weights: bool
     ) -> Tuple[torch.Tensor, Any]:
-        # if using gradient accumulation and DDP or FSDP, when in a step where we will not update the weights,
+        # if using gradient accumulation with either DDP or FSDP, when in a step where we will not update the weights,
         # run forward and backward in no_sync context
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
         # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
