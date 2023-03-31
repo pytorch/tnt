@@ -20,9 +20,10 @@ if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
     from torch.distributed.fsdp._common_utils import _FSDPState
 
+from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.progress import Progress
-from torchtnt.framework.state import State
+from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from typing_extensions import Self
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -142,6 +143,20 @@ def _is_fsdp_module(module: torch.nn.Module) -> bool:
             return isinstance(maybe_composable_state, _FSDPState)
 
     return False
+
+
+def get_current_progress(state: State) -> Progress:
+    """
+    If state's entry point is fit, returns train progress. During fit, we want to return training progress even during eval, so that metrics can be compared easily across train and eval.
+    Otherwise, checks the active phase, and returns the corresponding progress class.
+    """
+    if state.entry_point == EntryPoint.FIT or state.active_phase == ActivePhase.TRAIN:
+        return none_throws(state.train_state).progress
+
+    if state.active_phase == ActivePhase.EVALUATE:
+        return none_throws(state.eval_state).progress
+    else:
+        return none_throws(state.predict_state).progress
 
 
 class StatefulInt:

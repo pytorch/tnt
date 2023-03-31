@@ -27,7 +27,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torchtnt.framework._test_utils import generate_random_dataset
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.progress import Progress
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.framework.utils import (
     _is_done,
@@ -39,6 +39,7 @@ from torchtnt.framework.utils import (
     _run_callback_fn,
     _set_module_training_mode,
     _step_requires_iterator,
+    get_current_progress,
     StatefulInt,
 )
 from torchtnt.utils.test_utils import get_pet_launch_config
@@ -288,6 +289,45 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertFalse(
             _is_last_batch_in_epoch(p, max_steps_per_epoch=None, max_steps=None)
+        )
+
+    def test_get_current_progress(self) -> None:
+        train_state = PhaseState(
+            dataloader=[], progress=Progress(num_steps_completed=0)
+        )
+        eval_state = PhaseState(dataloader=[], progress=Progress(num_steps_completed=1))
+        predict_state = PhaseState(
+            dataloader=[], progress=Progress(num_steps_completed=2)
+        )
+        state = State(
+            entry_point=EntryPoint.TRAIN,
+            train_state=train_state,
+            eval_state=eval_state,
+            predict_state=predict_state,
+        )
+
+        progress = get_current_progress(state)
+        self.assertEqual(
+            progress.num_steps_completed, train_state.progress.num_steps_completed
+        )
+
+        state._active_phase = ActivePhase.EVALUATE
+        progress = get_current_progress(state)
+        self.assertEqual(
+            progress.num_steps_completed, eval_state.progress.num_steps_completed
+        )
+
+        state._active_phase = ActivePhase.PREDICT
+        progress = get_current_progress(state)
+        self.assertEqual(
+            progress.num_steps_completed, predict_state.progress.num_steps_completed
+        )
+
+        state._entry_point = EntryPoint.FIT
+        state._active_phase = ActivePhase.EVALUATE
+        progress = get_current_progress(state)
+        self.assertEqual(
+            progress.num_steps_completed, train_state.progress.num_steps_completed
         )
 
     def test_stateful_int(self) -> None:
