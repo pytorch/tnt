@@ -423,9 +423,8 @@ class AutoUnit(
         self.update_metrics(state, data, loss, outputs)
 
         if should_update_weights:
-            with record_function(__name__ + "._run_optimizer_lr_scheduler_step"):
-                # TODO try to use dynamo here
-                self._run_optimizer_lr_scheduler_step(state)
+            # TODO try to use dynamo here
+            self._run_optimizer_lr_scheduler_step(state)
 
             # log metrics only after an optimizer step
             if self.num_optimizer_steps_completed % self.log_every_n_steps == 0:
@@ -458,10 +457,11 @@ class AutoUnit(
             loss = loss / self.gradient_accumulation_steps
 
             grad_scaler = self.grad_scaler
-            if grad_scaler:
-                grad_scaler.scale(loss).backward()
-            else:
-                loss.backward()
+            with record_function(__name__ + ".backward"):
+                if grad_scaler:
+                    grad_scaler.scale(loss).backward()
+                else:
+                    loss.backward()
         return loss, outputs
 
     def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
@@ -495,13 +495,13 @@ class AutoUnit(
                 clip_value=clip_grad_value,
             )
 
-        # optimizer step
-        if grad_scaler:
-            grad_scaler.step(self.optimizer)
-            # update the scale for next iteration
-            grad_scaler.update()
-        else:
-            self.optimizer.step()
+        with record_function(__name__ + ".optimizer_step"):
+            if grad_scaler:
+                grad_scaler.step(self.optimizer)
+                # update the scale for next iteration
+                grad_scaler.update()
+            else:
+                self.optimizer.step()
 
         self._num_optimizer_steps_completed += 1
 
@@ -516,7 +516,8 @@ class AutoUnit(
         ):
             lr_scheduler = self.lr_scheduler
             if lr_scheduler and self.step_lr_interval == "step":
-                lr_scheduler.step()
+                with record_function(__name__ + ".lr_scheduler_step"):
+                    lr_scheduler.step()
 
     def on_train_epoch_end(self, state: State) -> None:
         # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
@@ -532,7 +533,8 @@ class AutoUnit(
             none_throws(self.swa_scheduler).step()
         elif self.lr_scheduler and self.step_lr_interval == "epoch":
             # optionally step lr scheduler
-            self.lr_scheduler.step()
+            with record_function(__name__ + ".lr_scheduler_step"):
+                self.lr_scheduler.step()
 
         # users can override this, by default this is a no-op
         self.log_metrics(state, self.num_optimizer_steps_completed, "epoch")
