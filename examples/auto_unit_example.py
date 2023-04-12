@@ -18,10 +18,9 @@ from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
-from torchtnt.framework.state import ActivePhase
+from torchtnt.framework.utils import get_current_progress
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
-from typing_extensions import Literal
 
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -67,6 +66,7 @@ class MyUnit(AutoUnit[Batch]):
         tb_logger: TensorBoardLogger,
         train_accuracy: BinaryAccuracy,
         eval_accuracy: BinaryAccuracy,
+        log_every_n_steps: int,
         **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
     ):
         super().__init__(**kwargs)
@@ -74,8 +74,7 @@ class MyUnit(AutoUnit[Batch]):
         # create accuracy metrics to compute the accuracy of training and evaluation
         self.train_accuracy = train_accuracy
         self.eval_accuracy = eval_accuracy
-        self.train_loss = None
-        self.eval_loss = None
+        self.log_every_n_steps = log_every_n_steps
 
     def configure_optimizers_and_lr_scheduler(
         self, module: torch.nn.Module
@@ -94,32 +93,37 @@ class MyUnit(AutoUnit[Batch]):
 
         return loss, outputs
 
-    def update_metrics(
+    def on_train_step_end(
         self,
         state: State,
         data: Batch,
+        step: int,
         loss: torch.Tensor,
         outputs: Any,
     ) -> None:
         _, targets = data
-        if state.active_phase == ActivePhase.TRAIN:
-            self.train_accuracy.update(outputs, targets)
-            self.train_loss = loss
-        elif state.active_phase == ActivePhase.EVALUATE:
-            self.eval_accuracy.update(outputs, targets)
-            self.eval_loss = loss
-
-    def log_metrics(
-        self, state: State, step: int, interval: Literal["step", "epoch"]
-    ) -> None:
-        if state.active_phase == ActivePhase.TRAIN:
+        self.train_accuracy.update(outputs, targets)
+        if step % self.log_every_n_steps == 0:
             accuracy = self.train_accuracy.compute()
             self.tb_logger.log("train_accuracy", accuracy, step)
-            self.tb_logger.log("train_loss", self.train_loss, step)
-        elif state.active_phase == ActivePhase.EVALUATE:
-            accuracy = self.eval_accuracy.compute()
-            self.tb_logger.log("eval_accuracy", accuracy, step)
-            self.tb_logger.log("eval_loss", self.eval_loss, step)
+            self.tb_logger.log("train_loss", loss, step)
+
+    def on_eval_step_end(
+        self,
+        state: State,
+        data: Batch,
+        step: int,
+        loss: torch.Tensor,
+        outputs: Any,
+    ) -> None:
+        _, targets = data
+        self.eval_accuracy.update(outputs, targets)
+
+    def on_eval_end(self, state: State) -> None:
+        step = get_current_progress(state).num_steps_completed
+        accuracy = self.eval_accuracy.compute()
+        self.tb_logger.log("eval_accuracy", accuracy, step)
+        self.eval_accuracy.reset()
 
     def on_train_epoch_end(self, state: State) -> None:
         super().on_train_epoch_end(state)

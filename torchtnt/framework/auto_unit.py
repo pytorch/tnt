@@ -29,9 +29,9 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torch.profiler import record_function
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
-from torchtnt.framework.utils import _is_fsdp_module, StatefulInt
+from torchtnt.framework.utils import _is_fsdp_module, get_current_progress, StatefulInt
 from torchtnt.utils import (
     copy_data_to_device,
     init_from_env,
@@ -185,7 +185,13 @@ class AutoUnit(
 
     For the ``predict_step`` it only runs forward.
 
-    To benefit from the AutoUnit, the user must subclass it and implement the ``compute_loss`` method, and optionally the ``update_metrics`` and ``log_metrics`` methods.
+    To benefit from the AutoUnit, the user must subclass it and implement the ``compute_loss`` and ``configure_optimizers_and_lr_scheduler`` methods.
+    Additionally, the AutoUnit offers these optional hooks:
+
+    - ``on_train_step_end``
+    - ``on_eval_step_end``
+    - ``on_predict_step_end``
+
     Then use with the :py:func:`~torchtnt.framework.train`, :py:func:`~torchtnt.framework.evaluate`, :py:func:`~torchtnt.framework.predict`, or :py:func:`~torchtnt.framework.fit` entry point as normal.
 
     For more advanced customization, directly use the :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, and :class:`~torchtnt.framework.unit.PredictUnit` interfaces.
@@ -365,35 +371,6 @@ class AutoUnit(
         """
         ...
 
-    def update_metrics(
-        self, state: State, data: TData, loss: torch.Tensor, outputs: Any
-    ) -> None:
-        """
-        The user should implement this method with code to update metrics. This will be called every ``train_step``/``eval_step``.
-
-        Args:
-            state: a State object which is passed from the ``train_step``/``eval_step``
-            data: a batch of data which is passed from the ``train_step``/``eval_step``
-            outputs: the outputs of the model forward pass
-        """
-        pass
-
-    def log_metrics(
-        self, state: State, step: int, interval: Literal["step", "epoch"]
-    ) -> None:
-        """
-        The user should implement this method with their code to log metrics. This will be called:
-
-        - every ``train_step`` based on ``log_every_n_steps`` and how many parameter updates have been run on the model
-        - in ``on_train_epoch_end`` and ``on_eval_epoch_end``
-
-        Args:
-            state: a State object which is passed from ``train_step``/``on_train_epoch_end``/``on_eval_epoch_end``
-            step: how many steps have been completed (i.e. how many parameter updates have been run on the model)
-            interval: whether ``log_metrics`` is called at the end of a step or at the end of an epoch
-        """
-        pass
-
     def move_data_to_device(self, state: State, data: TData) -> TData:
         """
         The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``/``eval_step``/``predict_step``.
@@ -419,16 +396,13 @@ class AutoUnit(
 
         loss, outputs = self._forward_and_backward(state, data, should_update_weights)
 
-        # users can override this, by default this is a no-op
-        self.update_metrics(state, data, loss, outputs)
-
         if should_update_weights:
             # TODO try to use dynamo here
             self._run_optimizer_lr_scheduler_step(state)
 
-            # log metrics only after an optimizer step
-            if self.num_optimizer_steps_completed % self.log_every_n_steps == 0:
-                self.log_metrics(state, self.num_optimizer_steps_completed - 1, "step")
+        step = get_current_progress(state).num_steps_completed
+        # users can override this, by default this is a no-op
+        self.on_train_step_end(state, data, step, loss, outputs)
         return loss, outputs
 
     def _forward_and_backward(
@@ -465,7 +439,7 @@ class AutoUnit(
         return loss, outputs
 
     def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
-        """Runs the optimizer step, sets gradients to zero, runs lr scheduler step, and calls `log_metrics`"""
+        """Runs the optimizer step, sets gradients to zero, and runs lr scheduler step."""
         # optimizer step
         grad_scaler = self.grad_scaler
         clip_grad_norm = self.clip_grad_norm
@@ -519,9 +493,24 @@ class AutoUnit(
                 with record_function(__name__ + ".lr_scheduler_step"):
                     lr_scheduler.step()
 
+    def on_train_step_end(
+        self, state: State, data: TData, step: int, loss: torch.Tensor, outputs: Any
+    ) -> None:
+        """
+        This will be called at the end of every ``train_step`` before returning. The user can implement this method with code to update and log their metrics,
+        or do anything else.
+
+        Args:
+            state: a State object which is passed from the ``train_step``
+            data: a batch of data which is passed from the ``train_step``
+            step: how many ``train_step``s have been completed
+            loss: the loss computed in the ``compute_loss`` function
+            outputs: the outputs of the model forward pass
+        """
+        pass
+
     def on_train_epoch_end(self, state: State) -> None:
         # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
-
         train_state = none_throws(state.train_state)
 
         if (
@@ -535,9 +524,6 @@ class AutoUnit(
             # optionally step lr scheduler
             with record_function(__name__ + ".lr_scheduler_step"):
                 self.lr_scheduler.step()
-
-        # users can override this, by default this is a no-op
-        self.log_metrics(state, self.num_optimizer_steps_completed, "epoch")
 
     def on_train_end(self, state: State) -> None:
         """
@@ -555,29 +541,52 @@ class AutoUnit(
             # users must override this
             loss, outputs = self.compute_loss(state, data)
 
+        step = get_current_progress(state).num_steps_completed
         # users can override this, by default this is a no-op
-        self.update_metrics(state, data, loss, outputs)
+        self.on_eval_step_end(state, data, step, loss, outputs)
         return loss, outputs
 
-    def on_eval_epoch_end(self, state: State) -> None:
-        # note: if user wants to override on_eval_epoch_end themselves, they should remember to call up to this method via super().on_eval_epoch_end()
-        if state.entry_point == EntryPoint.FIT:
-            # if in fit, use the number of optimizer steps completed
-            # users can override this, by default this is a no-op
-            self.log_metrics(state, self.num_optimizer_steps_completed, "epoch")
-        else:
-            eval_state = none_throws(state.eval_state)
+    def on_eval_step_end(
+        self, state: State, data: TData, step: int, loss: torch.Tensor, outputs: Any
+    ) -> None:
+        """
+        This will be called at the end of every ``eval_step`` before returning. The user can implement this method with code to update and log their metrics,
+        or do anything else.
 
-            # if in evaluate, use the number of eval steps completed
-            # users can override this, by default this is a no-op
-            self.log_metrics(state, eval_state.progress.num_steps_completed, "epoch")
+        Args:
+            state: a State object which is passed from the ``eval_step``
+            data: a batch of data which is passed from the ``eval_step``
+            step: how many steps have been completed (``train_step``s when running fit and ``eval_step``s when running evaluation)
+            loss: the loss computed in the ``compute_loss`` function
+            outputs: the outputs of the model forward pass
+        """
+        pass
 
     def predict_step(self, state: State, data: Any) -> Any:
         data = self.move_data_to_device(state, data)
 
         with self.maybe_autocast_precision:
             outputs = self.module(data)
+
+        step = get_current_progress(state).num_steps_completed
+        # users can override this, by default this is a no-op
+        self.on_predict_step_end(state, data, step, outputs)
         return outputs
+
+    def on_predict_step_end(
+        self, state: State, data: TData, step: int, outputs: Any
+    ) -> None:
+        """
+        This will be called at the end of every ``predict_step`` before returning. The user can implement this method with code to update and log their metrics,
+        or do anything else.
+
+        Args:
+            state: a State object which is passed from the ``predict_step``
+            data: a batch of data which is passed from the ``predict_step``
+            step: how many ``predict_step``s have been completed
+            outputs: the outputs of the model forward pass
+        """
+        pass
 
     @property
     def num_optimizer_steps_completed(self) -> int:
