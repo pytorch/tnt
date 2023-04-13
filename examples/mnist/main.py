@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 from argparse import Namespace
-from typing import Any, Dict, List, Literal, Tuple
+from typing import Any, Dict, List, Tuple
 
 import torch
 import torch.nn as nn
@@ -19,7 +19,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torcheval.metrics import MulticlassAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
-from torchtnt.utils import copy_data_to_device, init_from_env, seed, TLRScheduler
+from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 from torchvision import datasets, transforms
 
@@ -58,6 +58,7 @@ class MyUnit(AutoUnit[Batch]):
         *,
         tb_logger: TensorBoardLogger,
         train_accuracy: MulticlassAccuracy,
+        log_every_n_steps: int,
         lr: float,
         gamma: float,
         **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
@@ -69,7 +70,7 @@ class MyUnit(AutoUnit[Batch]):
 
         # create an accuracy Metric to compute the accuracy of training
         self.train_accuracy = train_accuracy
-        self.loss = None
+        self.log_every_n_steps = log_every_n_steps
 
     def configure_optimizers_and_lr_scheduler(
         self, module: torch.nn.Module
@@ -86,38 +87,32 @@ class MyUnit(AutoUnit[Batch]):
 
         return loss, outputs
 
-    def update_metrics(
-        self,
-        state: State,
-        data: Batch,
-        loss: torch.Tensor,
-        outputs: Any,
+    def on_train_step_end(
+        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
     ) -> None:
-        self.loss = loss
         _, targets = data
         self.train_accuracy.update(outputs, targets)
-
-    def log_metrics(
-        self, state: State, step: int, interval: Literal["step", "epoch"]
-    ) -> None:
-        self.tb_logger.log("loss", self.loss, step)
-
-        accuracy = self.train_accuracy.compute()
-        self.tb_logger.log("accuracy", accuracy, step)
+        if step % self.log_every_n_steps == 0:
+            accuracy = self.train_accuracy.compute()
+            self.tb_logger.log("accuracy", accuracy, step)
+            self.tb_logger.log("loss", loss, step)
 
     def on_train_epoch_end(self, state: State) -> None:
         super().on_train_epoch_end(state)
         # reset the metric every epoch
         self.train_accuracy.reset()
 
-    def eval_step(self, state: State, data: Batch) -> None:
-        step_count = state.eval_state.progress.num_steps_completed
-        data = copy_data_to_device(data, self.device)
-        inputs, targets = data
+    def on_eval_step_end(
+        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+    ) -> None:
+        # step_count = state.eval_state.progress.num_steps_completed
+        # data = copy_data_to_device(data, self.device)
+        # inputs, targets = data
 
-        outputs = self.module(inputs)
-        loss = torch.nn.functional.nll_loss(outputs, targets)
-        self.tb_logger.log("evaluation loss", loss, step_count)
+        # outputs = self.module(inputs)
+        # loss = torch.nn.functional.nll_loss(outputs, targets)
+        if step % self.log_every_n_steps == 0:
+            self.tb_logger.log("evaluation loss", loss, step)
 
 
 def main(argv: List[str]) -> None:
@@ -161,12 +156,12 @@ def main(argv: List[str]) -> None:
     my_unit = MyUnit(
         tb_logger=tb_logger,
         train_accuracy=train_accuracy,
+        log_every_n_steps=args.log_every_n_steps,
         lr=args.lr,
         gamma=args.gamma,
         module=module,
         device=device,
         strategy="ddp",
-        log_every_n_steps=args.log_every_n_steps,
         precision=args.precision,
         gradient_accumulation_steps=4,
         detect_anomaly=True,
@@ -176,7 +171,8 @@ def main(argv: List[str]) -> None:
     state = init_fit_state(
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
-        max_epochs=args.epochs,
+        max_epochs=args.max_epochs,
+        max_train_steps_per_epoch=args.max_train_steps_per_epoch,
     )
 
     fit(state, my_unit)
@@ -206,7 +202,7 @@ def get_args(argv: List[str]) -> Namespace:
         help="input batch size for testing (default: 1000)",
     )
     parser.add_argument(
-        "--epochs",
+        "--max-epochs",
         type=int,
         default=14,
         metavar="N",
@@ -246,10 +242,10 @@ def get_args(argv: List[str]) -> Namespace:
     )
 
     parser.add_argument(
-        "--eval_max_steps_per_epoch",
+        "--max-train-steps-per-epoch",
         type=int,
         default=20,
-        help="the max number of steps to run per epoch for evaluation",
+        help="the max number of steps to run per epoch for training",
     )
 
     return parser.parse_args(argv)
