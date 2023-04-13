@@ -432,18 +432,6 @@ class TestAutoUnit(unittest.TestCase):
             },
         )
 
-    def test_log_every_n_steps_exception(self) -> None:
-        """
-        Test that an exception is raised when log_every_n_steps is < 1
-        """
-        my_module = torch.nn.Linear(2, 2)
-
-        with self.assertRaisesRegex(ValueError, "log_every_n_steps must be > 0. Got 0"):
-            _ = DummyAutoUnit(
-                module=my_module,
-                log_every_n_steps=0,
-            )
-
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )

@@ -201,7 +201,6 @@ class AutoUnit(
         device: the device to be used.
         strategy: the data parallelization strategy to be used
         step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
-        log_every_n_steps: how often to log in terms of steps (parameter updates) during training.
         precision: the precision to use in training, as either a string or a torch.dtype.
         gradient_accumulation_steps: how many batches to accumulate gradients over.
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
@@ -225,7 +224,6 @@ class AutoUnit(
         device: Optional[torch.device] = None,
         strategy: Optional[Strategy] = None,
         step_lr_interval: Literal["step", "epoch"] = "epoch",
-        log_every_n_steps: int = 1000,
         precision: Optional[Union[str, torch.dtype]] = None,
         gradient_accumulation_steps: int = 1,
         detect_anomaly: bool = False,
@@ -293,9 +291,6 @@ class AutoUnit(
         self.module: torch.nn.Module = module
 
         self.step_lr_interval = step_lr_interval
-        if not log_every_n_steps > 0:
-            raise ValueError(f"log_every_n_steps must be > 0. Got {log_every_n_steps}")
-        self.log_every_n_steps: int = log_every_n_steps
 
         self.grad_scaler: Optional[GradScaler] = None
         if self.precision:
