@@ -8,7 +8,7 @@ import argparse
 import logging
 import tempfile
 from argparse import Namespace
-from typing import Any, Dict, Literal, Tuple
+from typing import Any, Dict, Tuple
 
 import torch
 from libfb.py import parutil
@@ -58,12 +58,13 @@ class MinGPTUnit(AutoUnit):
         self,
         tb_logger: TensorBoardLogger,
         opt_cfg: OptimizerConfig,
+        log_every_n_steps: int,
         **kwargs: Dict[str, Any],
     ) -> None:
         super().__init__(**kwargs)
         self.tb_logger = tb_logger
-        self.loss = None
         self.opt_cfg = opt_cfg
+        self.log_every_n_steps = log_every_n_steps
 
     def configure_optimizers_and_lr_scheduler(
         self, module
@@ -73,13 +74,14 @@ class MinGPTUnit(AutoUnit):
 
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         input, target = data
-        outputs, self.loss = self.module(input, target)
-        return self.loss, outputs
+        outputs, loss = self.module(input, target)
+        return loss, outputs
 
-    def log_metrics(
-        self, state: State, step: int, interval: Literal["step", "epoch"]
+    def on_train_step_end(
+        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
     ) -> None:
-        self.tb_logger.log("loss", self.loss, step)
+        if step % self.log_every_n_steps == 0:
+            self.tb_logger.log("loss", loss, step)
 
 
 def main(args: Namespace) -> None:
