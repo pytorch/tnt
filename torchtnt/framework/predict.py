@@ -45,12 +45,12 @@ def init_predict_state(
 
     .. code-block:: python
 
-      from torchtnt.framework import init_predict_state, predict
+        from torchtnt.framework import init_predict_state, predict
 
-      predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
-      dataloader = torch.utils.data.DataLoader(...)
-      state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
-      predict(state, predict_unit)
+        predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
+        dataloader = torch.utils.data.DataLoader(...)
+        state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
+        predict(state, predict_unit)
 
     """
 
@@ -82,12 +82,47 @@ def predict(
 
     .. code-block:: python
 
-      from torchtnt.framework import init_predict_state, predict
+        from torchtnt.framework import init_predict_state, predict
 
-      predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
-      dataloader = torch.utils.data.DataLoader(...)
-      state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
-      predict(state, predict_unit)
+        predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
+        dataloader = torch.utils.data.DataLoader(...)
+        state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
+        predict(state, predict_unit)
+
+    Below is pseudocode of what the :py:func:`~torchtnt.framework.predict` entry point does.
+
+    .. code-block:: python
+
+        model.eval()
+        predict_unit.on_predict_start(state)
+        for cb in callbacks:
+            cb.on_predict_start(state, predict_unit)
+        while num_steps_completed_in_epoch < max_steps_completed_in_epoch:
+            predict_unit.on_predict_epoch_start(state)
+            for cb in callbacks:
+                cb.on_predict_epoch_start(state, predict_unit)
+
+            try:
+                data = next(dataloader)
+                for cb in callbacks:
+                    cb.on_predict_step_start(state, predict_unit)
+                predict_unit.predict_step(state, data)
+                for cb in callbacks:
+                    cb.on_predict_step_end(state, predict_unit)
+                state.increment_step()
+
+            except StopIteration:
+                break
+
+            predict_unit.on_predict_epoch_end(state)
+            for cb in callbacks:
+                cb.on_predict_epoch_end(state, predict_unit)
+
+        state.increment_epoch()
+
+        predict_unit.on_predict_end(state)
+        for cb in callbacks:
+            cb.on_predict_end(state, predict_unit)
     """
     log_api_usage("predict")
     callbacks = callbacks or []
