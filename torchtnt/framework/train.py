@@ -52,12 +52,12 @@ def init_train_state(
 
     .. code-block:: python
 
-      from torchtnt.framework import init_train_state, train
+        from torchtnt.framework import init_train_state, train
 
-      train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
-      dataloader = torch.utils.data.DataLoader(...)
-      state = init_train_state(dataloader=dataloader, max_epochs=4)
-      train(state, train_unit)
+        train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
+        dataloader = torch.utils.data.DataLoader(...)
+        state = init_train_state(dataloader=dataloader, max_epochs=4)
+        train(state, train_unit)
 
     """
 
@@ -92,13 +92,48 @@ def train(
 
     .. code-block:: python
 
-      from torchtnt.framework import init_train_state, train
+        from torchtnt.framework import init_train_state, train
 
-      train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
-      dataloader = torch.utils.data.DataLoader(...)
-      state = init_train_state(dataloader=dataloader, max_epochs=4)
-      train(state, train_unit)
+        train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
+        dataloader = torch.utils.data.DataLoader(...)
+        state = init_train_state(dataloader=dataloader, max_epochs=4)
+        train(state, train_unit)
 
+    Below is pseudocode of what the :py:func:`~torchtnt.framework.train` entry point does.
+
+    .. code-block:: python
+
+        model.train()
+        train_unit.on_train_start(state)
+        for cb in callbacks:
+            cb.on_train_start(state, train_unit)
+        while num_epochs_completed < max_epochs and num_steps_completed < max_steps:
+            while num_steps_completed_in_epoch < max_steps_completed_in_epoch:
+                train_unit.on_train_epoch_start(state)
+                for cb in callbacks:
+                    cb.on_train_epoch_start(state, train_unit)
+
+                try:
+                    data = next(dataloader)
+                    for cb in callbacks:
+                        cb.on_train_step_start(state, train_unit)
+                    train_unit.train_step(state, data)
+                    for cb in callbacks:
+                        cb.on_train_step_end(state, train_unit)
+                    state.increment_step()
+
+                except StopIteration:
+                    break
+
+                train_unit.on_train_epoch_end(state)
+                for cb in callbacks:
+                    cb.on_train_epoch_end(state, train_unit)
+
+            state.increment_epoch()
+
+        train_unit.on_train_end(state)
+        for cb in callbacks:
+            cb.on_train_end(state, train_unit)
     """
     log_api_usage("train")
     callbacks = callbacks or []
