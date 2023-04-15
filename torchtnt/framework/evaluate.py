@@ -45,12 +45,12 @@ def init_eval_state(
 
     .. code-block:: python
 
-      from torchtnt.framework import init_eval_state, evaluate
+        from torchtnt.framework import init_eval_state, evaluate
 
-      eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
-      dataloader = torch.utils.data.DataLoader(...)
-      state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
-      evaluate(state, eval_unit)
+        eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
+        dataloader = torch.utils.data.DataLoader(...)
+        state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
+        evaluate(state, eval_unit)
     """
 
     return State(
@@ -81,12 +81,47 @@ def evaluate(
 
     .. code-block:: python
 
-      from torchtnt.framework import init_eval_state, evaluate
+        from torchtnt.framework import init_eval_state, evaluate
 
-      eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
-      dataloader = torch.utils.data.DataLoader(...)
-      state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
-      evaluate(state, eval_unit)
+        eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
+        dataloader = torch.utils.data.DataLoader(...)
+        state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
+        evaluate(state, eval_unit)
+
+    Below is pseudocode of what the :py:func:`~torchtnt.framework.evaluate` entry point does.
+
+    .. code-block:: python
+
+        model.eval()
+        eval_unit.on_eval_start(state)
+        for cb in callbacks:
+            cb.on_eval_start(state, eval_unit)
+        while num_steps_completed_in_epoch < max_steps_completed_in_epoch:
+            eval_unit.on_eval_epoch_start(state)
+            for cb in callbacks:
+                cb.on_eval_epoch_start(state, eval_unit)
+
+            try:
+                data = next(dataloader)
+                for cb in callbacks:
+                    cb.on_eval_step_start(state, eval_unit)
+                eval_unit.eval_step(state, data)
+                for cb in callbacks:
+                    cb.on_eval_step_end(state, eval_unit)
+                state.increment_step()
+
+            except StopIteration:
+                break
+
+            eval_unit.on_eval_epoch_end(state)
+            for cb in callbacks:
+                cb.on_eval_epoch_end(state, eval_unit)
+
+        state.increment_epoch()
+
+        eval_unit.on_eval_end(state)
+        for cb in callbacks:
+            cb.on_eval_end(state, eval_unit)
     """
     log_api_usage("evaluate")
     callbacks = callbacks or []
