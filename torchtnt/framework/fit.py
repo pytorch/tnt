@@ -53,13 +53,13 @@ def init_fit_state(
 
     .. code-block:: python
 
-      from torchtnt.framework import fit, init_fit_state
+        from torchtnt.framework import fit, init_fit_state
 
-      fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
-      train_dataloader = torch.utils.data.DataLoader(...)
-      eval_dataloader = torch.utils.data.DataLoader(...)
-      state = init_fit_state(train_dataloader=train_dataloader, eval_dataloader=eval_dataloader, max_epochs=4)
-      fit(state, fit_unit)
+        fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
+        train_dataloader = torch.utils.data.DataLoader(...)
+        eval_dataloader = torch.utils.data.DataLoader(...)
+        state = init_fit_state(train_dataloader=train_dataloader, eval_dataloader=eval_dataloader, max_epochs=4)
+        fit(state, fit_unit)
     """
 
     return State(
@@ -97,13 +97,54 @@ def fit(
 
     .. code-block:: python
 
-      from torchtnt.framework import fit, init_fit_state
+        from torchtnt.framework import fit, init_fit_state
 
-      fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
-      train_dataloader = torch.utils.data.DataLoader(...)
-      eval_dataloader = torch.utils.data.DataLoader(...)
-      state = init_fit_state(train_dataloader=train_dataloader, eval_dataloader=eval_dataloader, max_epochs=4)
-      fit(state, fit_unit)
+        fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
+        train_dataloader = torch.utils.data.DataLoader(...)
+        eval_dataloader = torch.utils.data.DataLoader(...)
+        state = init_fit_state(train_dataloader=train_dataloader, eval_dataloader=eval_dataloader, max_epochs=4)
+        fit(state, fit_unit)
+
+    Below is pseudocode of what the :py:func:`~torchtnt.framework.fit` entry point does.
+
+    .. code-block:: python
+
+        model.train()
+        fit_unit.on_train_start(state)
+        for cb in callbacks:
+            cb.on_train_start(state, fit_unit)
+        while num_epochs_completed < max_epochs and num_steps_completed < max_steps:
+            while num_steps_completed_in_epoch < max_steps_completed_in_epoch:
+                fit_unit.on_train_epoch_start(state)
+                for cb in callbacks:
+                    cb.on_train_epoch_start(state, fit_unit)
+
+                try:
+                    data = next(train_dataloader)
+                    for cb in callbacks:
+                        cb.on_train_step_start(state, fit_unit)
+                    fit_unit.train_step(state, data)
+                    for cb in callbacks:
+                        cb.on_train_step_end(state, fit_unit)
+                    state.increment_step()
+
+                    if num_steps_completed_in_epoch % evaluate_every_n_steps == 0:
+                        evaluate(state, fit_unit)
+
+                except StopIteration:
+                    break
+
+                fit_unit.on_train_epoch_end(state)
+                for cb in callbacks:
+                    cb.on_train_epoch_end(state, fit_unit)
+
+            state.increment_epoch()
+            if num_epochs_completed % evaluate_every_n_epochs == 0:
+                evaluate(state, fit_unit)
+
+        fit_unit.on_train_end(state)
+        for cb in callbacks:
+            cb.on_train_end(state, fit_unit)
     """
     log_api_usage("fit")
     callbacks = callbacks or []
