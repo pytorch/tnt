@@ -4,6 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+from .cuda import record_data_in_stream
 from .device import (
     copy_data_to_device,
     CPUStats,
@@ -54,6 +55,7 @@ from .version import (
 )
 
 __all__ = [
+    "record_data_in_stream",
     "copy_data_to_device",
     "CPUStats",
     "get_device_from_env",
