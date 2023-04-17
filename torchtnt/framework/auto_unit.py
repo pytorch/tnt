@@ -226,7 +226,7 @@ class AutoUnit(
         step_lr_interval: Literal["step", "epoch"] = "epoch",
         precision: Optional[Union[str, torch.dtype]] = None,
         gradient_accumulation_steps: int = 1,
-        detect_anomaly: bool = False,
+        detect_anomaly: Optional[bool] = None,
         clip_grad_norm: Optional[float] = None,
         clip_grad_value: Optional[float] = None,
         swa_params: Optional[SWAParams] = None,
@@ -327,10 +327,6 @@ class AutoUnit(
                 )
             # pyre-ignore
             self.compute_loss = _dynamo_wrapper(self.compute_loss, torchdynamo_params)
-            # pyre-ignore
-            self._forward_and_backward = _dynamo_wrapper(
-                self._forward_and_backward, torchdynamo_params
-            )
             self.module = _dynamo_wrapper(self.module, torchdynamo_params)
 
         self.training = training
@@ -416,7 +412,13 @@ class AutoUnit(
         )
 
         # if detect_anomaly is true, run forward and backward pass in detect_anomaly context
-        with maybe_no_sync, torch.autograd.set_detect_anomaly(self.detect_anomaly):
+        detect_anomaly = self.detect_anomaly
+        maybe_detect_anomaly = (
+            torch.autograd.set_detect_anomaly(detect_anomaly)
+            if detect_anomaly is not None
+            else contextlib.nullcontext()
+        )
+        with maybe_no_sync, maybe_detect_anomaly:
             with self.maybe_autocast_precision:
                 with record_function(__name__ + ".compute_loss"):
                     # users must override this
