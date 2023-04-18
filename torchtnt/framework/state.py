@@ -91,7 +91,6 @@ class PhaseState:
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
         self._step_output: Any = None
-        self._is_last_batch: bool = False  # only used for train
 
     @property
     def dataloader(self) -> Iterable[Any]:
@@ -132,11 +131,6 @@ class PhaseState:
     def step_output(self) -> Any:
         """Output of the last step."""
         return self._step_output
-
-    @property
-    def is_last_batch(self) -> bool:
-        """Returns true if current batch of data is the last batch."""
-        return self._is_last_batch
 
 
 class State:
