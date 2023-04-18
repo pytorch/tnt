@@ -19,6 +19,7 @@ from torchtnt.utils.device import (
     get_device_from_env,
     get_nvidia_smi_gpu_stats,
     get_psutil_cpu_stats,
+    record_data_in_stream,
 )
 
 
@@ -293,3 +294,57 @@ class DeviceTest(unittest.TestCase):
         self.assertGreaterEqual(gpu_stats["memory_free_mb"], 0)
         self.assertGreaterEqual(gpu_stats["temperature_gpu_celsius"], 0)
         self.assertGreaterEqual(gpu_stats["temperature_memory_celsius"], 0)
+
+    @unittest.skipUnless(
+        condition=(cuda_available), reason="This test must run on a GPU host."
+    )
+    def test_record_data_in_stream_dict(self) -> None:
+        curr_stream = torch.cuda.current_stream()
+        a = torch.tensor([1, 2, 3])
+        b = torch.tensor([4, 5, 6])
+        data = {"a": a, "b": b}
+
+        with mock.patch.object(
+            a, "record_stream"
+        ) as mock_record_stream_a, mock.patch.object(
+            b, "record_stream"
+        ) as mock_record_stream_b:
+            record_data_in_stream(data, curr_stream)
+            mock_record_stream_a.assert_called_once()
+            mock_record_stream_b.assert_called_once()
+
+    @unittest.skipUnless(
+        condition=(cuda_available), reason="This test must run on a GPU host."
+    )
+    def test_record_data_in_stream_tuple(self) -> None:
+        curr_stream = torch.cuda.current_stream()
+        a = torch.tensor([1, 2, 3])
+        b = torch.tensor([4, 5, 6])
+        data = (a, b)
+
+        with mock.patch.object(
+            a, "record_stream"
+        ) as mock_record_stream_a, mock.patch.object(
+            b, "record_stream"
+        ) as mock_record_stream_b:
+            record_data_in_stream(data, curr_stream)
+            mock_record_stream_a.assert_called_once()
+            mock_record_stream_b.assert_called_once()
+
+    @unittest.skipUnless(
+        condition=(cuda_available), reason="This test must run on a GPU host."
+    )
+    def test_record_data_in_stream_list(self) -> None:
+        curr_stream = torch.cuda.current_stream()
+        a = torch.tensor([1, 2, 3])
+        b = torch.tensor([4, 5, 6])
+        data = [a, b]
+
+        with mock.patch.object(
+            a, "record_stream"
+        ) as mock_record_stream_a, mock.patch.object(
+            b, "record_stream"
+        ) as mock_record_stream_b:
+            record_data_in_stream(data, curr_stream)
+            mock_record_stream_a.assert_called_once()
+            mock_record_stream_b.assert_called_once()
