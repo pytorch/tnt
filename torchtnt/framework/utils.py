@@ -47,17 +47,6 @@ def _is_epoch_done(
     )
 
 
-def _is_last_batch_in_epoch(
-    progress: Progress, max_steps_per_epoch: Optional[int], max_steps: Optional[int]
-) -> bool:
-    return (
-        max_steps is not None and progress.num_steps_completed >= max_steps - 1
-    ) or (
-        max_steps_per_epoch is not None
-        and progress.num_steps_completed_in_epoch >= max_steps_per_epoch - 1
-    )
-
-
 def _maybe_set_distributed_sampler_epoch(
     # pyre-ignore: Missing parameter annotation [2]
     dataloader: Iterable[Any],

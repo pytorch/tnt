@@ -11,7 +11,7 @@
 import contextlib
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Iterable, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Iterable, Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
 import torch.distributed as dist
@@ -33,13 +33,13 @@ from torchtnt.framework.state import State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 from torchtnt.framework.utils import _is_fsdp_module, get_current_progress, StatefulInt
 from torchtnt.utils import (
-    copy_data_to_device,
     init_from_env,
     is_torch_version_geq_1_12,
     TLRScheduler,
     transfer_batch_norm_stats,
     transfer_weights,
 )
+from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.rank_zero_log import rank_zero_warn
 from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
@@ -330,7 +330,17 @@ class AutoUnit(
             self.module = _dynamo_wrapper(self.module, torchdynamo_params)
 
         self.training = training
-        # TODO: Make AutoTrainUnit work when data type is Iterator
+
+        # cuda stream to use for moving data to device
+        self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
+            torch.cuda.Stream() if self.device.type == "cuda" else None
+        )
+        # the next batch which has been prefetched and is ready to be used
+        self._next_batch: Optional[TData] = None
+        # whether the next batch has been prefetched and is ready to be used
+        self._prefetched: bool = False
+        # whether the current batch is the last train batch
+        self._is_last_train_batch: bool = False
 
     @abstractmethod
     def configure_optimizers_and_lr_scheduler(
@@ -367,6 +377,8 @@ class AutoUnit(
         The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``/``eval_step``/``predict_step``.
         By default this uses the utility function :py:func:`~torchtnt.utils.copy_data_to_device`.
 
+        If on GPU, this method will be called on a separate CUDA stream.
+
         Args:
             state: a State object which is passed from the ``train_step``/``eval_step``/``predict_step``
             data: a batch of data which is passed from the ``train_step``/``eval_step``/``predict_step``
@@ -374,18 +386,60 @@ class AutoUnit(
         Returns:
             A batch of data which is on the device
         """
-        return copy_data_to_device(data, self.device)
+        non_blocking = (
+            True if self.device.type == "cuda" and self._prefetched else False
+        )
+        return copy_data_to_device(data, self.device, non_blocking=non_blocking)
 
-    def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
-        with record_function(__name__ + ".move_data_to_device"):
-            data = self.move_data_to_device(state, data)
+    def prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
+        """Prefetch the next batch on a separate CUDA stream."""
+        try:
+            with record_function(__name__ + ".next(data_iter)"):
+                next_batch = next(data_iter)
+        except StopIteration:
+            self._next_batch = None
+            self._is_last_train_batch = True
+            return
 
+        # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
+        with torch.cuda.stream(self._prefetch_stream), record_function(
+            __name__ + ".move_data_to_device"
+        ):
+            self._next_batch = self.move_data_to_device(state, next_batch)
+
+    def train_step(
+        self, state: State, data: Iterator[TData]
+    ) -> Tuple[torch.Tensor, Any]:
         train_state = none_throws(state.train_state)
+        if not self._prefetched:
+            self.prefetch_next_batch(state, data)
+            self._prefetched = True
+
+        if self._prefetch_stream:
+            with record_function(__name__ + ".wait_stream"):
+                # wait on the CUDA stream to complete the host to device copy
+                torch.cuda.current_stream().wait_stream(self._prefetch_stream)
+
+        # get the next batch which was stored by prefetch_next_batch
+        batch = self._next_batch
+        if not batch:
+            self._prefetched = False
+            self._is_last_train_batch = False
+            raise StopIteration
+
+        if self._prefetch_stream:
+            with record_function(__name__ + ".record_data_in_stream"):
+                # record the batch in the current stream
+                record_data_in_stream(batch, torch.cuda.current_stream())
+
+        # prefetch the next batch
+        self.prefetch_next_batch(state, data)
+
         should_update_weights = (
             train_state.progress.num_steps_completed_in_epoch + 1
-        ) % self.gradient_accumulation_steps == 0 or train_state.is_last_batch
+        ) % self.gradient_accumulation_steps == 0 or self._is_last_train_batch
 
-        loss, outputs = self._forward_and_backward(state, data, should_update_weights)
+        loss, outputs = self._forward_and_backward(state, batch, should_update_weights)
 
         if should_update_weights:
             # TODO try to use dynamo here
@@ -393,7 +447,7 @@ class AutoUnit(
 
         step = get_current_progress(state).num_steps_completed
         # users can override this, by default this is a no-op
-        self.on_train_step_end(state, data, step, loss, outputs)
+        self.on_train_step_end(state, batch, step, loss, outputs)
         return loss, outputs
 
     def _forward_and_backward(
@@ -507,7 +561,9 @@ class AutoUnit(
         pass
 
     def on_train_epoch_end(self, state: State) -> None:
-        # note: if user wants to override on_train_epoch_end themselves, they should remember to call up to this method via super().on_train_epoch_end()
+        """
+        Note: if overriding ``on_train_epoch_end``, remember to call ``super().on_train_epoch_end()``
+        """
         train_state = none_throws(state.train_state)
 
         if (
