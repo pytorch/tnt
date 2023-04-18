@@ -207,7 +207,7 @@ class AutoUnit(
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
-        torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/master/dynamo/
+        torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/stable/dynamo/index.html
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
             Note:
