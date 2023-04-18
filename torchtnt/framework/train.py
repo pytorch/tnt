@@ -16,7 +16,7 @@ from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TTrainData, TTrainUnit
 from torchtnt.framework.utils import (
     _is_done,
-    _is_last_batch_in_epoch,
+    _is_epoch_done,
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _run_callback_fn,
@@ -265,68 +265,53 @@ def _train_epoch_impl(
     step_input = data_iter
 
     pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
+    prev_steps_in_epoch = train_state.progress.num_steps_completed_in_epoch
 
-    # Prefetch each batch while iterating over the data, so that we can set the
-    # _is_last_batch field on the train_state and pass that metadata to the user
-    if not pass_data_iter_to_step:
+    while not (
+        state.should_stop
+        or _is_epoch_done(
+            train_state.progress, train_state.max_steps_per_epoch, train_state.max_steps
+        )
+    ):
         try:
-            # get the first batch from the data iterator
-            step_input = next(data_iter)
-        except StopIteration:
-            raise RuntimeError("Dataloader is empty")
-
-    # set is_last_batch to False before starting the loop. it will only be modified inside the loop
-    train_state._is_last_batch = False
-
-    while not state.should_stop and not train_state.is_last_batch:
-        try:
-            # get the next batch from the data iterator
             if not pass_data_iter_to_step:
+                # get the next batch from the data iterator
                 with record_function(__name__ + ".next(data_iter)"):
-                    next_step_input = next(data_iter)
+                    step_input = next(data_iter)
 
-            # update train_state._is_last_batch
-            train_state._is_last_batch = _is_last_batch_in_epoch(
-                train_state.progress,
-                train_state.max_steps_per_epoch,
-                train_state.max_steps,
-            )
-
-        except StopIteration:
-            train_state._is_last_batch = True
-
-        _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
-        try:
+            _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
             with record_function(__name__ + ".train_step"):
                 train_state._step_output = train_unit.train_step(state, step_input)
+            train_state.progress.increment_step()
+            _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
+
+            # clear step_output to avoid retaining extra memory
+            train_state._step_output = None
+
+            if (
+                evaluate_every_n_steps
+                and train_state.progress.num_steps_completed_in_epoch
+                % evaluate_every_n_steps
+                == 0
+            ):
+                _evaluate_impl(
+                    state,
+                    # pyre-ignore: Incompatible parameter type [6]
+                    train_unit,
+                    callbacks,
+                )
+                logger.info("Finished evaluation. Resuming training epoch")
+                state._active_phase = ActivePhase.TRAIN
+
         except StopIteration:
-            # catch a StopIteration for the case where the train_step takes in an iterator
             break
 
-        train_state.progress.increment_step()
-        _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
-
-        # clear step_output to avoid retaining extra memory
-        train_state._step_output = None
-
-        if (
-            evaluate_every_n_steps
-            and train_state.progress.num_steps_completed_in_epoch
-            % evaluate_every_n_steps
-            == 0
-        ):
-            _evaluate_impl(
-                state,
-                # pyre-ignore: Incompatible parameter type [6]
-                train_unit,
-                callbacks,
-            )
-            logger.info("Finished evaluation. Resuming training epoch")
-            state._active_phase = ActivePhase.TRAIN
-
-        if not pass_data_iter_to_step:
-            # pyre-ignore
-            step_input = next_step_input
+    # Possibly warn about an empty dataloader
+    any_steps_completed = (
+        abs(train_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch) > 0
+    )
+    if not any_steps_completed:
+        logger.warning("No steps completed during train epoch!")
 
     # set progress counters for the next epoch
     train_state.progress.increment_epoch()

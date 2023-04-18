@@ -127,9 +127,9 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             precision="fp16",
         )
-
-        dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
-        auto_unit.train_step(state=MagicMock(), data=dummy_data)
+        dummy_iterable = [(torch.ones(2, 2), torch.ones(2, 2))]
+        state = init_train_state(dataloader=dummy_iterable)
+        auto_unit.train_step(state=state, data=iter(dummy_iterable))
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.float16, enabled=True
         )
@@ -148,9 +148,9 @@ class TestAutoUnit(unittest.TestCase):
             module=my_module,
             precision="bf16",
         )
-
-        dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
-        auto_unit.train_step(state=MagicMock(), data=dummy_data)
+        dummy_iterable = [(torch.ones(2, 2), torch.ones(2, 2))]
+        state = init_train_state(dataloader=dummy_iterable)
+        auto_unit.train_step(state=state, data=iter(dummy_iterable))
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.bfloat16, enabled=True
         )
@@ -512,18 +512,20 @@ class TestAutoUnit(unittest.TestCase):
             gradient_accumulation_steps=2,
         )
 
-        dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
+        dummy_iterator = iter(
+            [(torch.ones(2, 2), torch.ones(2, 2)), (torch.ones(2, 2), torch.ones(2, 2))]
+        )
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_data)
-            no_sync_mock.assert_called()
+            auto_unit.train_step(state=state, data=dummy_iterator)
+            no_sync_mock.assert_called_once()
 
         state.train_state.progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_data)
+            auto_unit.train_step(state=state, data=dummy_iterator)
             no_sync_mock.assert_not_called()
 
     @staticmethod
@@ -541,18 +543,20 @@ class TestAutoUnit(unittest.TestCase):
             gradient_accumulation_steps=2,
         )
 
-        dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
+        dummy_iterator = iter(
+            [(torch.ones(2, 2), torch.ones(2, 2)), (torch.ones(2, 2), torch.ones(2, 2))]
+        )
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_data)
-            no_sync_mock.assert_called()
+            auto_unit.train_step(state=state, data=dummy_iterator)
+            no_sync_mock.assert_called_once()
 
         state.train_state.progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_data)
+            auto_unit.train_step(state=state, data=dummy_iterator)
             no_sync_mock.assert_not_called()
 
     @unittest.skipUnless(
@@ -604,13 +608,14 @@ class TestAutoUnit(unittest.TestCase):
         state = init_train_state(dataloader=MagicMock(), max_epochs=1)
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
+        data_iter = iter([dummy_data])
 
         with patch.object(
             DummyAutoUnit, "move_data_to_device"
         ) as move_data_to_device_mock:
             dummy_data = copy_data_to_device(dummy_data, device)
             move_data_to_device_mock.return_value = dummy_data
-            auto_unit.train_step(state=state, data=dummy_data)
+            auto_unit.train_step(state=state, data=data_iter)
             move_data_to_device_mock.assert_called_once()
 
     def test_configure_optimizers_and_lr_scheduler(self) -> None:
@@ -845,6 +850,26 @@ class TestAutoUnit(unittest.TestCase):
                 swa_params=my_swa_params,
             )
 
+    def test_is_last_batch(self) -> None:
+        """
+        Test that is_last_batch is set correctly.
+        """
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+        max_epochs = 3
+        expected_steps_per_epoch = dataset_len / batch_size
+        my_module = torch.nn.Linear(input_dim, 2)
+
+        my_unit = LastBatchAutoUnit(
+            module=my_module,
+            expected_steps_per_epoch=expected_steps_per_epoch,
+        )
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        train(state, my_unit)
+
 
 Batch = Tuple[torch.tensor, torch.tensor]
 
@@ -887,5 +912,34 @@ class DummyComplexAutoUnit(AutoUnit[Batch]):
         self, module: torch.nn.Module
     ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
         my_optimizer = torch.optim.SGD(module.parameters(), lr=self.lr)
+        my_lr_scheduler = MagicMock()
+        return my_optimizer, my_lr_scheduler
+
+
+class LastBatchAutoUnit(AutoUnit[Batch]):
+    def __init__(self, module: torch.nn.Module, expected_steps_per_epoch: int) -> None:
+        super().__init__(module=module)
+        self.expected_steps_per_epoch = expected_steps_per_epoch
+        self.loss_fn = torch.nn.CrossEntropyLoss()
+
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        tc = unittest.TestCase()
+        tc.assertEqual(
+            self._is_last_train_batch,
+            state.train_state.progress.num_steps_completed_in_epoch + 1
+            == self.expected_steps_per_epoch,
+        )
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
         my_lr_scheduler = MagicMock()
         return my_optimizer, my_lr_scheduler
