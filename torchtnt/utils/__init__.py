@@ -12,6 +12,7 @@ from .device import (
     get_psutil_cpu_stats,
     GPUStats,
     maybe_enable_tf32,
+    record_data_in_stream,
 )
 from .distributed import (
     all_gather_tensors,
@@ -61,6 +62,7 @@ __all__ = [
     "get_psutil_cpu_stats",
     "GPUStats",
     "maybe_enable_tf32",
+    "record_data_in_stream",
     "all_gather_tensors",
     "get_global_rank",
     "get_process_group_backend_from_device",
