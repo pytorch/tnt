@@ -53,7 +53,7 @@ def _extract_lr(unit: TTrainUnit) -> Dict[str, float]:
     for name, optim in optimizers.items():
         _extract_lr_from_optimizer(optim, f"optimizers/{name}", lr_stats)
 
-    # go through track schedulers
+    # go through tracked LR schedulers
     lr_schedulers = unit.tracked_lr_schedulers()
     for name, lr_scheduler in lr_schedulers.items():
         _extract_lr_from_optimizer(
