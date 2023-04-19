@@ -49,7 +49,7 @@ TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
 
 @dataclass
 class Strategy:
-    """Dataclass representing the parallelization strategy for the AutoParallelUnit"""
+    """Dataclass representing the parallelization strategy for the AutoUnit"""
 
     pass
 
@@ -199,7 +199,7 @@ class AutoUnit(
     Args:
         module: module to be used during training.
         device: the device to be used.
-        strategy: the data parallelization strategy to be used
+        strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.
         step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
         precision: the precision to use in training, as either a string or a torch.dtype.
         gradient_accumulation_steps: how many batches to accumulate gradients over.
@@ -222,7 +222,7 @@ class AutoUnit(
         *,
         module: torch.nn.Module,
         device: Optional[torch.device] = None,
-        strategy: Optional[Strategy] = None,
+        strategy: Optional[Union[Strategy, str]] = None,
         step_lr_interval: Literal["step", "epoch"] = "epoch",
         precision: Optional[Union[str, torch.dtype]] = None,
         gradient_accumulation_steps: int = 1,
@@ -244,6 +244,9 @@ class AutoUnit(
             self.precision = precision
 
         if strategy:
+            if isinstance(strategy, str):
+                strategy = _convert_str_to_strategy(strategy)
+
             if isinstance(strategy, DDPStrategy):
                 # wrap module in DDP
                 device_ids = None
@@ -667,6 +670,29 @@ def _convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:
             f"Precision {precision} not supported. Please use one of {list(string_to_dtype_mapping.keys())}"
         )
     return string_to_dtype_mapping[precision]
+
+
+def _convert_str_to_strategy(strategy: str):
+    """
+    Converts strategy as a string to a default instance of the Strategy dataclass.
+
+    Args:
+        strategy: string specifying the distributed strategy to use
+
+    Raises:
+        ValueError if an invalid strategy string is passed.
+
+    """
+    string_to_strategy_mapping = {
+        "ddp": DDPStrategy(),
+        "fsdp": FSDPStrategy(),
+    }
+
+    if strategy not in string_to_strategy_mapping:
+        raise ValueError(
+            f"Strategy {strategy} not supported. Please use one of {list(string_to_strategy_mapping.keys())}"
+        )
+    return string_to_strategy_mapping[strategy]
 
 
 def _get_grad_scaler_from_precision(

@@ -660,6 +660,7 @@ class TestAutoUnit(unittest.TestCase):
         """
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._test_ddp_wrap)()
+        launcher.elastic_launch(config, entrypoint=self._test_ddp_wrap_string)()
         launcher.elastic_launch(
             config, entrypoint=self._test_stochastic_weight_averaging_with_ddp
         )()
@@ -676,6 +677,23 @@ class TestAutoUnit(unittest.TestCase):
         auto_ddp_unit = DummyAutoUnit(
             module=my_module,
             strategy=DDPStrategy(),
+            gradient_accumulation_steps=2,
+        )
+        tc = unittest.TestCase()
+
+        tc.assertTrue(isinstance(auto_ddp_unit.module, DDP))
+
+    @staticmethod
+    def _test_ddp_wrap_string() -> None:
+        """
+        Test that the module is correctly wrapped in DDP when passing "ddp" as a string
+        """
+
+        my_module = torch.nn.Linear(2, 2)
+
+        auto_ddp_unit = DummyAutoUnit(
+            module=my_module,
+            strategy="ddp",
             gradient_accumulation_steps=2,
         )
         tc = unittest.TestCase()
@@ -784,6 +802,18 @@ class TestAutoUnit(unittest.TestCase):
         tc = unittest.TestCase()
         tc.assertTrue(custom_noop_hook_called)
 
+    def test_strategy_invalid_str(self) -> None:
+        """
+        Test that an exception is raised with an invalid strategy string
+        """
+        my_module = torch.nn.Linear(2, 2)
+
+        with self.assertRaisesRegex(ValueError, "Strategy foo not supported"):
+            _ = DummyAutoUnit(
+                module=my_module,
+                strategy="foo",
+            )
+
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -796,6 +826,7 @@ class TestAutoUnit(unittest.TestCase):
         """
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._test_fsdp_wrap)()
+        launcher.elastic_launch(config, entrypoint=self._test_fsdp_wrap_string)()
         launcher.elastic_launch(
             config, entrypoint=self._test_stochastic_weight_averaging_with_fsdp
         )()
@@ -811,6 +842,23 @@ class TestAutoUnit(unittest.TestCase):
         auto_fsdp_unit = DummyAutoUnit(
             module=my_module,
             strategy=FSDPStrategy(),
+            gradient_accumulation_steps=2,
+        )
+        tc = unittest.TestCase()
+
+        tc.assertTrue(isinstance(auto_fsdp_unit.module, FSDP))
+
+    @staticmethod
+    def _test_fsdp_wrap_string() -> None:
+        """
+        Test that the module is correctly wrapped in FSDP when passing "fsdp" as a string
+        """
+
+        my_module = torch.nn.Linear(2, 2)
+
+        auto_fsdp_unit = DummyAutoUnit(
+            module=my_module,
+            strategy="fsdp",
             gradient_accumulation_steps=2,
         )
         tc = unittest.TestCase()
