@@ -672,7 +672,7 @@ def _convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:
     return string_to_dtype_mapping[precision]
 
 
-def _convert_str_to_strategy(strategy: str):
+def _convert_str_to_strategy(strategy: str) -> Union[DDPStrategy, FSDPStrategy]:
     """
     Converts strategy as a string to a default instance of the Strategy dataclass.
 
