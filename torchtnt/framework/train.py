@@ -15,6 +15,7 @@ from torchtnt.framework.evaluate import _evaluate_impl
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TTrainData, TTrainUnit
 from torchtnt.framework.utils import (
+    _get_timing_context,
     _is_done,
     _is_epoch_done,
     _maybe_set_distributed_sampler_epoch,
@@ -24,6 +25,7 @@ from torchtnt.framework.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
+from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -34,6 +36,7 @@ def init_train_state(
     max_epochs: Optional[int] = None,
     max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
+    auto_timing: bool = False,
 ) -> State:
     """
     ``init_train_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for training. This :class:`~torchtnt.framework.State` object
@@ -44,6 +47,7 @@ def init_train_state(
         max_epochs: the max number of epochs to run. ``None`` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
+        auto_timing: whether to automatically time the train loop, using the state's timer (enabling auto_timing may degrade performance).
 
     Returns:
         An initialized state object containing metadata.
@@ -69,6 +73,7 @@ def init_train_state(
             max_steps=max_steps,
             max_steps_per_epoch=max_steps_per_epoch,
         ),
+        timer=None if not auto_timing else Timer(),
     )
 
 
@@ -141,6 +146,8 @@ def train(
         state._entry_point = EntryPoint.TRAIN
         _train_impl(state, train_unit, callbacks)
         logger.info("Finished train")
+        if state.timer:
+            logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(f"Exception during train\n: {e}")
@@ -166,7 +173,10 @@ def _train_impl(
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
-    train_unit.on_train_start(state)
+    with _get_timing_context(
+        state, f"train.{train_unit.__class__.__name__}.on_train_start"
+    ):
+        train_unit.on_train_start(state)
     _run_callback_fn(callbacks, "on_train_start", state, train_unit)
 
     while not (
@@ -175,7 +185,10 @@ def _train_impl(
     ):
         _train_epoch_impl(state, train_unit, callbacks)
 
-    train_unit.on_train_end(state)
+    with _get_timing_context(
+        state, f"train.{train_unit.__class__.__name__}.on_train_end"
+    ):
+        train_unit.on_train_end(state)
     _run_callback_fn(callbacks, "on_train_end", state, train_unit)
 
     # Reset training mode for modules at the end of the epoch
@@ -218,6 +231,8 @@ def train_epoch(
             callbacks,
         )
         logger.info("Finished train")
+        if state.timer:
+            logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(f"Exception during train_epoch\n: {e}")
@@ -253,7 +268,10 @@ def _train_epoch_impl(
     # to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if train_state.progress.num_steps_completed_in_epoch == 0:
-        train_unit.on_train_epoch_start(state)
+        with _get_timing_context(
+            state, f"train.{train_unit.__class__.__name__}.on_train_epoch_start"
+        ):
+            train_unit.on_train_epoch_start(state)
         _run_callback_fn(callbacks, "on_train_epoch_start", state, train_unit)
 
     _maybe_set_distributed_sampler_epoch(
@@ -280,7 +298,9 @@ def _train_epoch_impl(
                     step_input = next(data_iter)
 
             _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
-            with record_function(__name__ + ".train_step"):
+            with _get_timing_context(
+                state, f"train.{train_unit.__class__.__name__}.train_step"
+            ), record_function(__name__ + ".train_step"):
                 train_state._step_output = train_unit.train_step(state, step_input)
             train_state.progress.increment_step()
             _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
@@ -316,7 +336,10 @@ def _train_epoch_impl(
     # set progress counters for the next epoch
     train_state.progress.increment_epoch()
 
-    train_unit.on_train_epoch_end(state)
+    with _get_timing_context(
+        state, f"train.{train_unit.__class__.__name__}.on_train_epoch_end"
+    ):
+        train_unit.on_train_epoch_end(state)
     _run_callback_fn(callbacks, "on_train_epoch_end", state, train_unit)
 
     if (

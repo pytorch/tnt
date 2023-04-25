@@ -19,6 +19,9 @@ from torchtnt.utils.version import is_torch_version_geq_2_0
 if is_torch_version_geq_2_0():
     from torch.distributed._composable import fully_shard
 
+import contextlib
+import time
+
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
 from torch.utils.data import DataLoader
@@ -30,6 +33,7 @@ from torchtnt.framework.progress import Progress
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.framework.utils import (
+    _get_timing_context,
     _is_done,
     _is_epoch_done,
     _is_fsdp_module,
@@ -42,6 +46,7 @@ from torchtnt.framework.utils import (
     StatefulInt,
 )
 from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.timer import Timer
 
 
 class UtilsTest(unittest.TestCase):
@@ -147,8 +152,10 @@ class UtilsTest(unittest.TestCase):
         """
         callback = DummyCallback("train")
         train_unit = MagicMock()
+        timer = Timer()
         dummy_train_state = State(
             entry_point=EntryPoint.TRAIN,
+            timer=timer,
             train_state=None,
         )
         self.assertEqual(callback.dummy_data, "train")
@@ -161,30 +168,55 @@ class UtilsTest(unittest.TestCase):
             ValueError("test"),
         )
         self.assertEqual(callback.dummy_data, "on_exception")
+        self.assertTrue(
+            "callback.DummyCallback.on_exception" in timer.recorded_durations.keys()
+        )
 
         _run_callback_fn([callback], "on_train_start", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_start")
+        self.assertTrue(
+            "callback.DummyCallback.on_train_start" in timer.recorded_durations.keys()
+        )
 
         _run_callback_fn(
             [callback], "on_train_epoch_start", dummy_train_state, train_unit
         )
         self.assertEqual(callback.dummy_data, "on_train_epoch_start")
+        self.assertTrue(
+            "callback.DummyCallback.on_train_epoch_start"
+            in timer.recorded_durations.keys()
+        )
 
         _run_callback_fn(
             [callback], "on_train_step_start", dummy_train_state, train_unit
         )
         self.assertEqual(callback.dummy_data, "on_train_step_start")
+        self.assertTrue(
+            "callback.DummyCallback.on_train_step_start"
+            in timer.recorded_durations.keys()
+        )
 
         _run_callback_fn([callback], "on_train_step_end", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_step_end")
+        self.assertTrue(
+            "callback.DummyCallback.on_train_step_end"
+            in timer.recorded_durations.keys()
+        )
 
         _run_callback_fn(
             [callback], "on_train_epoch_end", dummy_train_state, train_unit
         )
         self.assertEqual(callback.dummy_data, "on_train_epoch_end")
+        self.assertTrue(
+            "callback.DummyCallback.on_train_epoch_end"
+            in timer.recorded_durations.keys()
+        )
 
         _run_callback_fn([callback], "on_train_end", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_end")
+        self.assertTrue(
+            "callback.DummyCallback.on_train_end" in timer.recorded_durations.keys()
+        )
 
     def test_run_callback_fn_exception(self) -> None:
         """
@@ -295,6 +327,19 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(
             progress.num_steps_completed, train_state.progress.num_steps_completed
         )
+
+    def test_get_timing_context(self) -> None:
+        state = MagicMock()
+        state.timer = None
+
+        ctx = _get_timing_context(state, "a")
+        self.assertEqual(type(ctx), contextlib.nullcontext)
+
+        state.timer = Timer()
+        ctx = _get_timing_context(state, "a")
+        with ctx:
+            time.sleep(1)
+        self.assertTrue("a" in state.timer.recorded_durations.keys())
 
     def test_stateful_int(self) -> None:
         v = StatefulInt(0)

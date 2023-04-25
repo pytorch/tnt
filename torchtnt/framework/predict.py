@@ -14,6 +14,7 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TPredictData, TPredictUnit
 from torchtnt.framework.utils import (
+    _get_timing_context,
     _is_epoch_done,
     _reset_module_training_mode,
     _run_callback_fn,
@@ -21,6 +22,7 @@ from torchtnt.framework.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
+from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ def init_predict_state(
     *,
     dataloader: Iterable[TPredictData],
     max_steps_per_epoch: Optional[int] = None,
+    auto_timing: bool = False,
 ) -> State:
     """
     ``init_predict_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for prediction. This :class:`~torchtnt.framework.State` object
@@ -37,6 +40,7 @@ def init_predict_state(
     Args:
         dataloader: dataloader to be used during prediction, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
+        auto_timing: whether to automatically time the train loop, using the state's timer (enabling auto_timing may degrade performance).
 
     Returns:
         An initialized state object containing metadata.
@@ -60,6 +64,7 @@ def init_predict_state(
             dataloader=dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
         ),
+        timer=None if not auto_timing else Timer(),
     )
 
 
@@ -130,6 +135,8 @@ def predict(
         state._entry_point = EntryPoint.PREDICT
         _predict_impl(state, predict_unit, callbacks)
         logger.info("Finished predict")
+        if state.timer:
+            logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
@@ -157,13 +164,19 @@ def _predict_impl(
     tracked_modules = predict_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
-    predict_unit.on_predict_start(state)
+    with _get_timing_context(
+        state, f"predict.{predict_unit.__class__.__name__}.on_predict_start"
+    ):
+        predict_unit.on_predict_start(state)
     _run_callback_fn(callbacks, "on_predict_start", state, predict_unit)
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if predict_state.progress.num_steps_completed_in_epoch == 0:
-        predict_unit.on_predict_epoch_start(state)
+        with _get_timing_context(
+            state, f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_start"
+        ):
+            predict_unit.on_predict_epoch_start(state)
         _run_callback_fn(callbacks, "on_predict_epoch_start", state, predict_unit)
 
     data_iter = iter(predict_state.dataloader)
@@ -183,10 +196,16 @@ def _predict_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                step_input = next(data_iter)
+                with _get_timing_context(state, "predict.data_iter_next"):
+                    step_input = next(data_iter)
 
             _run_callback_fn(callbacks, "on_predict_step_start", state, predict_unit)
-            predict_state._step_output = predict_unit.predict_step(state, step_input)
+            with _get_timing_context(
+                state, f"predict.{predict_unit.__class__.__name__}.predict_step"
+            ):
+                predict_state._step_output = predict_unit.predict_step(
+                    state, step_input
+                )
             predict_state.progress.increment_step()
             _run_callback_fn(callbacks, "on_predict_step_end", state, predict_unit)
 
@@ -206,10 +225,16 @@ def _predict_impl(
     # set progress counters for the next epoch
     predict_state.progress.increment_epoch()
 
-    predict_unit.on_predict_epoch_end(state)
+    with _get_timing_context(
+        state, f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_end"
+    ):
+        predict_unit.on_predict_epoch_end(state)
     _run_callback_fn(callbacks, "on_predict_epoch_end", state, predict_unit)
 
-    predict_unit.on_predict_end(state)
+    with _get_timing_context(
+        state, f"predict.{predict_unit.__class__.__name__}.on_predict_end"
+    ):
+        predict_unit.on_predict_end(state)
     _run_callback_fn(callbacks, "on_predict_end", state, predict_unit)
 
     # Reset training mode for modules at the end of the epoch

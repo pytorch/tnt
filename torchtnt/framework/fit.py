@@ -18,7 +18,13 @@ from torchtnt.framework.unit import (
     TTrainData,
     TTrainUnit,
 )
-from torchtnt.framework.utils import _is_done, _run_callback_fn, log_api_usage
+from torchtnt.framework.utils import (
+    _get_timing_context,
+    _is_done,
+    _run_callback_fn,
+    log_api_usage,
+)
+from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -32,6 +38,7 @@ def init_fit_state(
     max_eval_steps_per_epoch: Optional[int] = None,
     evaluate_every_n_steps: Optional[int] = None,
     evaluate_every_n_epochs: Optional[int] = 1,
+    auto_timing: bool = False,
 ) -> State:
     """
     ``init_fit_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for fitting. This :class:`~torchtnt.framework.State` object
@@ -45,6 +52,7 @@ def init_fit_state(
         max_train_steps_per_epoch: the max number of steps to run per epoch for training. None means train until the dataloader is exhausted.
         evaluate_every_n_steps: how often to run the evaluation loop in terms of training steps.
         evaluate_every_n_epochs: how often to run the evaluation loop in terms of training epochs.
+        auto_timing: whether to automatically time the train loop, using the state's timer (enabling auto_timing may degrade performance).
 
     Returns:
         An initialized state object containing metadata.
@@ -76,11 +84,15 @@ def init_fit_state(
             evaluate_every_n_steps=evaluate_every_n_steps,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
         ),
+        timer=None if not auto_timing else Timer(),
     )
 
 
 def fit(
-    state: State, unit: TTrainUnit, *, callbacks: Optional[List[Callback]] = None
+    state: State,
+    unit: TTrainUnit,
+    *,
+    callbacks: Optional[List[Callback]] = None,
 ) -> None:
     """
     The ``fit`` entry point interleaves training and evaluation loops.  It takes in a :class:`~torchtnt.framework.State` object, an object which subclasses both :class:`~torchtnt.framework.TrainUnit` and :class:`~torchtnt.framework.EvalUnit`,
@@ -92,6 +104,7 @@ def fit(
         unit: an instance that subclasses both :class:`~torchtnt.framework.unit.TrainUnit` and :class:`~torchtnt.framework.unit.EvalUnit`,
          implementing :meth:`~torchtnt.framework.TrainUnit.train_step` and :meth:`~torchtnt.framework.EvalUnit.eval_step`.
         callbacks: an optional list of callbacks.
+        auto_timing: whether to automatically time the fit loop, using the state's timer (enabling auto_timing may degrade performance).
 
     Below is an example of calling :py:func:`~torchtnt.framework.init_fit_state` and :py:func:`~torchtnt.framework.fit` together.
 
@@ -152,6 +165,8 @@ def fit(
     try:
         state._entry_point = EntryPoint.FIT
         _fit_impl(state, unit, callbacks)
+        if state.timer:
+            logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
@@ -183,7 +198,8 @@ def _fit_impl(
         f"evaluate_every_n_epochs={eval_state.evaluate_every_n_epochs} "
     )
 
-    unit.on_train_start(state)
+    with _get_timing_context(state, f"train.{unit.__class__.__name__}.on_train_start"):
+        unit.on_train_start(state)
     _run_callback_fn(callbacks, "on_train_start", state, unit)
 
     while not (
@@ -192,5 +208,6 @@ def _fit_impl(
     ):
         _train_epoch_impl(state, unit, callbacks)
 
-    unit.on_train_end(state)
+    with _get_timing_context(state, f"train.{unit.__class__.__name__}.on_train_end"):
+        unit.on_train_end(state)
     _run_callback_fn(callbacks, "on_train_end", state, unit)

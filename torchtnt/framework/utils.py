@@ -7,7 +7,7 @@
 import collections
 import inspect
 import logging
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, ContextManager, Dict, Iterable, List, Optional
 
 import torch
 import torch.nn as nn
@@ -19,6 +19,8 @@ from torchtnt.utils.version import is_torch_version_geq_2_0
 if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
     from torch.distributed.fsdp._common_utils import _FSDPState
+
+import contextlib
 
 from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
@@ -85,6 +87,10 @@ def _reset_module_training_mode(
             module.train(prior_modes[name])
 
 
+def _get_timing_context(state: State, event_name: str) -> ContextManager:
+    return state.timer.time(event_name) if state.timer else contextlib.nullcontext()
+
+
 def _run_callback_fn(
     callbacks: List[Callback],
     fn_name: str,
@@ -96,7 +102,8 @@ def _run_callback_fn(
         fn = getattr(cb, fn_name)
         if not callable(fn):
             raise ValueError(f"Invalid callback method name provided: {fn_name}")
-        fn(state, *args, **kwargs)
+        with _get_timing_context(state, f"callback.{cb.name}.{fn_name}"):
+            fn(state, *args, **kwargs)
 
 
 def log_api_usage(entry_point: str) -> None:
