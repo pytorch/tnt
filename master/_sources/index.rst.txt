@@ -40,6 +40,7 @@ Documentation
       :glob:
 
       meta/getting_started
+      meta/migrating
 
 .. toctree::
    :maxdepth: 1
