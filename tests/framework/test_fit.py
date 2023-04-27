@@ -310,7 +310,7 @@ class FitTest(unittest.TestCase):
 
     def test_fit_auto_timing(self) -> None:
         """
-        Test fit timing in predict
+        Test auto timing in fit
         """
 
         input_dim = 2

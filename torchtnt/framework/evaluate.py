@@ -40,7 +40,7 @@ def init_eval_state(
     Args:
         dataloader: dataloader to be used during evaluation, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
-        auto_timing: whether to automatically time the train loop, using the state's timer (enabling auto_timing may degrade performance).
+        auto_timing: whether to automatically time the evaluation loop, using the state's timer (enabling auto_timing may degrade performance).
 
     Returns:
         An initialized state object containing metadata.

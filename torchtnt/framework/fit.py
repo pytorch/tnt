@@ -104,7 +104,6 @@ def fit(
         unit: an instance that subclasses both :class:`~torchtnt.framework.unit.TrainUnit` and :class:`~torchtnt.framework.unit.EvalUnit`,
          implementing :meth:`~torchtnt.framework.TrainUnit.train_step` and :meth:`~torchtnt.framework.EvalUnit.eval_step`.
         callbacks: an optional list of callbacks.
-        auto_timing: whether to automatically time the fit loop, using the state's timer (enabling auto_timing may degrade performance).
 
     Below is an example of calling :py:func:`~torchtnt.framework.init_fit_state` and :py:func:`~torchtnt.framework.fit` together.
 
