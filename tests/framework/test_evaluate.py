@@ -166,6 +166,44 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(callback_mock.on_eval_epoch_end.call_count, 1)
         self.assertEqual(callback_mock.on_eval_end.call_count, 1)
 
+    def test_evaluate_auto_timing(self) -> None:
+        """
+        Test auto timing in evaluate
+        """
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        state = init_eval_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+        )
+        evaluate(
+            state,
+            DummyEvalUnit(input_dim=input_dim),
+        )
+        self.assertIsNone(state.timer)
+
+        state = init_eval_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            auto_timing=True,
+        )
+        evaluate(state, DummyEvalUnit(input_dim=input_dim))
+        for k in [
+            "eval.DummyEvalUnit.on_eval_start",
+            "eval.DummyEvalUnit.on_eval_epoch_start",
+            "eval.data_iter_next",
+            "eval.DummyEvalUnit.eval_step",
+            "eval.DummyEvalUnit.on_eval_epoch_end",
+            "eval.DummyEvalUnit.on_eval_end",
+        ]:
+            self.assertTrue(k in state.timer.recorded_durations.keys())
+
 
 class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:

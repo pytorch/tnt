@@ -174,6 +174,41 @@ class PredictTest(unittest.TestCase):
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
+    def test_predict_auto_timing(self) -> None:
+        """
+        Test auto timing in predict
+        """
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        state = init_predict_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+        )
+        predict(state, DummyPredictUnit(input_dim=input_dim))
+        self.assertIsNone(state.timer)
+
+        state = init_predict_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            auto_timing=True,
+        )
+        predict(state, DummyPredictUnit(input_dim=input_dim))
+        for k in [
+            "predict.DummyPredictUnit.on_predict_start",
+            "predict.DummyPredictUnit.on_predict_epoch_start",
+            "predict.data_iter_next",
+            "predict.DummyPredictUnit.predict_step",
+            "predict.DummyPredictUnit.on_predict_epoch_end",
+            "predict.DummyPredictUnit.on_predict_end",
+        ]:
+            self.assertTrue(k in state.timer.recorded_durations.keys())
+
 
 class StopPredictUnit(PredictUnit[Tuple[torch.Tensor, torch.Tensor]]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:

@@ -307,3 +307,45 @@ class FitTest(unittest.TestCase):
             max_epochs=max_epochs,
         )
         fit(state, my_unit, callbacks=[PhaseTestCallback()])
+
+    def test_fit_auto_timing(self) -> None:
+        """
+        Test fit timing in predict
+        """
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+        max_epochs = 1
+        evaluate_every_n_epochs = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        state = init_fit_state(
+            train_dataloader=dataloader,
+            eval_dataloader=dataloader,
+            max_train_steps_per_epoch=max_steps_per_epoch,
+            max_epochs=max_epochs,
+            evaluate_every_n_epochs=evaluate_every_n_epochs,
+        )
+        fit(
+            state,
+            DummyFitUnit(input_dim=input_dim),
+        )
+        self.assertIsNone(state.timer)
+
+        state = init_fit_state(
+            train_dataloader=dataloader,
+            eval_dataloader=dataloader,
+            max_train_steps_per_epoch=max_steps_per_epoch,
+            max_epochs=max_epochs,
+            evaluate_every_n_epochs=evaluate_every_n_epochs,
+            auto_timing=True,
+        )
+        fit(state, DummyFitUnit(input_dim=input_dim))
+        for k in [
+            "train.DummyFitUnit.on_train_start",
+            "train.DummyFitUnit.on_train_end",
+        ]:
+            self.assertTrue(k in state.timer.recorded_durations.keys())

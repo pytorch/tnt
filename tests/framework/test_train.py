@@ -258,6 +258,40 @@ class TrainTest(unittest.TestCase):
             my_unit.train_step.call_count, max_epochs * expected_steps_per_epoch
         )
 
+    def test_train_auto_timing(self) -> None:
+        """
+        Test auto timing in train
+        """
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+        max_epochs = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        state = init_train_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            max_epochs=max_epochs,
+        )
+        train(state, DummyTrainUnit(input_dim=input_dim))
+        self.assertIsNone(state.timer)
+
+        state = init_train_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            max_epochs=max_epochs,
+            auto_timing=True,
+        )
+        train(state, DummyTrainUnit(input_dim=input_dim))
+        for k in [
+            "train.DummyTrainUnit.on_train_start",
+            "train.DummyTrainUnit.on_train_end",
+        ]:
+            self.assertTrue(k in state.timer.recorded_durations.keys())
+
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 

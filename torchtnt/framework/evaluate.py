@@ -14,6 +14,7 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TEvalData, TEvalUnit
 from torchtnt.framework.utils import (
+    _get_timing_context,
     _is_epoch_done,
     _reset_module_training_mode,
     _run_callback_fn,
@@ -21,6 +22,7 @@ from torchtnt.framework.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
+from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ def init_eval_state(
     *,
     dataloader: Iterable[TEvalData],
     max_steps_per_epoch: Optional[int] = None,
+    auto_timing: bool = False,
 ) -> State:
     """
     ``init_eval_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for evaluation. This :class:`~torchtnt.framework.State` object
@@ -37,6 +40,7 @@ def init_eval_state(
     Args:
         dataloader: dataloader to be used during evaluation, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
+        auto_timing: whether to automatically time the train loop, using the state's timer (enabling auto_timing may degrade performance).
 
     Returns:
         An initialized state object containing metadata.
@@ -59,6 +63,7 @@ def init_eval_state(
             dataloader=dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
         ),
+        timer=None if not auto_timing else Timer(),
     )
 
 
@@ -129,6 +134,8 @@ def evaluate(
         state._entry_point = EntryPoint.EVALUATE
         _evaluate_impl(state, eval_unit, callbacks)
         logger.info("Finished evaluation")
+        if state.timer:
+            logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
@@ -156,13 +163,19 @@ def _evaluate_impl(
     tracked_modules = eval_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
-    eval_unit.on_eval_start(state)
+    with _get_timing_context(
+        state, f"eval.{eval_unit.__class__.__name__}.on_eval_start"
+    ):
+        eval_unit.on_eval_start(state)
     _run_callback_fn(callbacks, "on_eval_start", state, eval_unit)
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if eval_state.progress.num_steps_completed_in_epoch == 0:
-        eval_unit.on_eval_epoch_start(state)
+        with _get_timing_context(
+            state, f"eval.{eval_unit.__class__.__name__}.on_eval_epoch_start"
+        ):
+            eval_unit.on_eval_epoch_start(state)
         _run_callback_fn(callbacks, "on_eval_epoch_start", state, eval_unit)
 
     data_iter = iter(eval_state.dataloader)
@@ -180,12 +193,21 @@ def _evaluate_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                step_input = next(data_iter)
+                with _get_timing_context(state, "eval.data_iter_next"):
+                    step_input = next(data_iter)
             _run_callback_fn(callbacks, "on_eval_step_start", state, eval_unit)
-            eval_state._step_output = eval_unit.eval_step(state, step_input)
+            with _get_timing_context(
+                state, f"eval.{eval_unit.__class__.__name__}.eval_step"
+            ):
+                eval_state._step_output = eval_unit.eval_step(state, step_input)
 
             eval_state.progress.increment_step()
-            _run_callback_fn(callbacks, "on_eval_step_end", state, eval_unit)
+            _run_callback_fn(
+                callbacks,
+                "on_eval_step_end",
+                state,
+                eval_unit,
+            )
             # clear step_output to avoid retaining extra memory
             eval_state._step_output = None
         except StopIteration:
@@ -201,10 +223,14 @@ def _evaluate_impl(
     # set progress counters for the next epoch
     eval_state.progress.increment_epoch()
 
-    eval_unit.on_eval_epoch_end(state)
+    with _get_timing_context(
+        state, f"eval.{eval_unit.__class__.__name__}.on_eval_epoch_end"
+    ):
+        eval_unit.on_eval_epoch_end(state)
     _run_callback_fn(callbacks, "on_eval_epoch_end", state, eval_unit)
 
-    eval_unit.on_eval_end(state)
+    with _get_timing_context(state, f"eval.{eval_unit.__class__.__name__}.on_eval_end"):
+        eval_unit.on_eval_end(state)
     _run_callback_fn(callbacks, "on_eval_end", state, eval_unit)
 
     # Reset training mode for modules at the end of the epoch
