@@ -29,7 +29,7 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torch.profiler import record_function
-from torchtnt.framework.state import State
+from torchtnt.framework.state import ActivePhase, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 from torchtnt.framework.utils import _is_fsdp_module, get_current_progress, StatefulInt
 from torchtnt.utils import (
@@ -390,7 +390,11 @@ class AutoUnit(
             A batch of data which is on the device
         """
         non_blocking = (
-            True if self.device.type == "cuda" and self._prefetched else False
+            True
+            if state.active_phase == ActivePhase.TRAIN
+            and self.device.type == "cuda"
+            and self._prefetched
+            else False
         )
         return copy_data_to_device(data, self.device, non_blocking=non_blocking)
 
