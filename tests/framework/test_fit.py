@@ -5,6 +5,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import math
 import unittest
 from typing import Tuple
 from unittest.mock import MagicMock
@@ -73,21 +74,19 @@ class FitTest(unittest.TestCase):
 
     def test_fit_evaluate_every_n_steps(self) -> None:
         """
-        Test fit entry point with evaluate_every_n_steps=2
+        Test fit entry point with evaluate_every_n_steps=5
         """
         input_dim = 2
         train_dataset_len = 16
         eval_dataset_len = 4
         batch_size = 2
         max_epochs = 3
-        evaluate_every_n_steps = 2
+        evaluate_every_n_steps = 5
         expected_train_steps_per_epoch = train_dataset_len / batch_size
+        expected_total_train_steps = expected_train_steps_per_epoch * max_epochs
         expected_eval_steps_per_epoch = eval_dataset_len / batch_size
-        expected_num_evaluate_calls_per_train_epoch = (
-            expected_train_steps_per_epoch / evaluate_every_n_steps
-        )
-        expected_num_evaluate_calls = (
-            expected_num_evaluate_calls_per_train_epoch * max_epochs
+        expected_num_evaluate_calls = math.floor(
+            expected_total_train_steps / evaluate_every_n_steps
         )
 
         my_unit = DummyFitUnit(input_dim=input_dim)

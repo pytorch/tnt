@@ -310,8 +310,7 @@ def _train_epoch_impl(
 
             if (
                 evaluate_every_n_steps
-                and train_state.progress.num_steps_completed_in_epoch
-                % evaluate_every_n_steps
+                and train_state.progress.num_steps_completed % evaluate_every_n_steps
                 == 0
             ):
                 _evaluate_impl(
