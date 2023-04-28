@@ -119,44 +119,28 @@ def fit(
 
     Below is pseudocode of what the :py:func:`~torchtnt.framework.fit` entry point does.
 
-    .. code-block:: python
+    .. code-block:: text
 
-        model.train()
-        fit_unit.on_train_start(state)
-        for cb in callbacks:
-            cb.on_train_start(state, fit_unit)
-        while num_epochs_completed < max_epochs and num_steps_completed < max_steps:
-            while num_steps_completed_in_epoch < max_steps_completed_in_epoch:
-                fit_unit.on_train_epoch_start(state)
-                for cb in callbacks:
-                    cb.on_train_epoch_start(state, fit_unit)
-
+        set unit's tracked modules to train mode
+        call on_train_start on unit first and then callbacks
+        while training is not done:
+            while epoch is not done:
+                call on_train_epoch_start on unit first and then callbacks
                 try:
-                    data = next(train_dataloader)
-                    for cb in callbacks:
-                        cb.on_train_step_start(state, fit_unit)
-                    fit_unit.train_step(state, data)
-                    for cb in callbacks:
-                        cb.on_train_step_end(state, fit_unit)
-                    state.increment_step()
-
-                    if num_steps_completed_in_epoch % evaluate_every_n_steps == 0:
-                        evaluate(state, fit_unit)
-
+                    data = next(dataloader)
+                    call on_train_step_start on callbacks
+                    call train_step on unit
+                    increment step counter
+                    call on_train_step_end on callbacks
+                    if should evaluate after this step:
+                        run eval loops
                 except StopIteration:
                     break
-
-                fit_unit.on_train_epoch_end(state)
-                for cb in callbacks:
-                    cb.on_train_epoch_end(state, fit_unit)
-
-            state.increment_epoch()
-            if num_epochs_completed % evaluate_every_n_epochs == 0:
-                evaluate(state, fit_unit)
-
-        fit_unit.on_train_end(state)
-        for cb in callbacks:
-            cb.on_train_end(state, fit_unit)
+            increment epoch counter
+            call on_train_epoch_end on unit first and then callbacks
+            if should evaluate after this epoch:
+                run eval loop
+        call on_train_end on unit first and then callbacks
     """
     log_api_usage("fit")
     callbacks = callbacks or []
