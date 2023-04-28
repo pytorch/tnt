@@ -95,38 +95,23 @@ def evaluate(
 
     Below is pseudocode of what the :py:func:`~torchtnt.framework.evaluate` entry point does.
 
-    .. code-block:: python
+    .. code-block:: text
 
-        model.eval()
-        eval_unit.on_eval_start(state)
-        for cb in callbacks:
-            cb.on_eval_start(state, eval_unit)
-        while num_steps_completed_in_epoch < max_steps_completed_in_epoch:
-            eval_unit.on_eval_epoch_start(state)
-            for cb in callbacks:
-                cb.on_eval_epoch_start(state, eval_unit)
-
+        set unit's tracked modules to eval mode
+        call on_eval_start on unit first and then callbacks
+        while not done:
+            call on_eval_epoch_start on unit first and then callbacks
             try:
                 data = next(dataloader)
-                for cb in callbacks:
-                    cb.on_eval_step_start(state, eval_unit)
-                eval_unit.eval_step(state, data)
-                for cb in callbacks:
-                    cb.on_eval_step_end(state, eval_unit)
-                state.increment_step()
-
+                call on_eval_step_start on callbacks
+                call eval_step on unit
+                increment step counter
+                call on_eval_step_end on callbacks
             except StopIteration:
                 break
-
-            eval_unit.on_eval_epoch_end(state)
-            for cb in callbacks:
-                cb.on_eval_epoch_end(state, eval_unit)
-
-        state.increment_epoch()
-
-        eval_unit.on_eval_end(state)
-        for cb in callbacks:
-            cb.on_eval_end(state, eval_unit)
+        increment epoch counter
+        call on_eval_epoch_end on unit first and then callbacks
+        call on_eval_end on unit first and then callbacks
     """
     log_api_usage("evaluate")
     callbacks = callbacks or []
