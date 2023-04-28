@@ -349,7 +349,7 @@
 <h2>Evaluate Entry Point<a class="headerlink" href="#evaluate-entry-point" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.framework.init_eval_state">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.framework.</span></code><code class="sig-name descname"><span class="pre">init_eval_state</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">max_steps_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></span><a class="headerlink" href="#torchtnt.framework.init_eval_state" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">torchtnt.framework.</span></code><code class="sig-name descname"><span class="pre">init_eval_state</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">max_steps_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">auto_timing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></span><a class="headerlink" href="#torchtnt.framework.init_eval_state" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">init_eval_state</span></code> is a helper function that initializes a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object for evaluation. This <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object
 can then be passed to the <a class="reference internal" href="#torchtnt.framework.evaluate" title="torchtnt.framework.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a> entry point.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -359,6 +359,7 @@ can then be passed to the <a class="reference internal" href="#torchtnt.framewor
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>dataloader</strong> – dataloader to be used during evaluation, which can be <em>any</em> iterable, including PyTorch DataLoader, DataLoader2, etc.</li>
 <li><strong>max_steps_per_epoch</strong> – the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.</li>
+<li><strong>auto_timing</strong> – whether to automatically time the evaluation loop, using the state’s timer (enabling auto_timing may degrade performance).</li>
 </ul>
 </td>
 </tr>
@@ -403,6 +404,24 @@ and runs the evaluation loop. The <a class="reference internal" href="state.html
 <span class="n">dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">state</span> <span class="o">=</span> <span class="n">init_eval_state</span><span class="p">(</span><span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">max_steps_per_epoch</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 <span class="n">evaluate</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">eval_unit</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Below is pseudocode of what the <a class="reference internal" href="#torchtnt.framework.evaluate" title="torchtnt.framework.evaluate"><code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code></a> entry point does.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>set unit&#39;s tracked modules to eval mode
+call on_eval_start on unit first and then callbacks
+while not done:
+    call on_eval_epoch_start on unit first and then callbacks
+    try:
+        data = next(dataloader)
+        call on_eval_step_start on callbacks
+        call eval_step on unit
+        increment step counter
+        call on_eval_step_end on callbacks
+    except StopIteration:
+        break
+increment epoch counter
+call on_eval_epoch_end on unit first and then callbacks
+call on_eval_end on unit first and then callbacks
 </pre></div>
 </div>
 </dd></dl>

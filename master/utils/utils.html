@@ -1078,6 +1078,33 @@ bytes) are appended.</li>
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.record_data_in_stream">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">record_data_in_stream</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em>, <em><span class="n"><span class="pre">stream</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.cuda.Stream.html#torch.cuda.Stream" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Stream</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.record_data_in_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>As mentioned in
+<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.Tensor.record_stream.html" target="_blank">https://pytorch.org/docs/stable/generated/torch.Tensor.record_stream.html</a>, PyTorch
+uses the “caching allocator” for memory allocation for tensors. When a tensor is
+freed, its memory is likely to be reused by newly constructed tensors. By default,
+this allocator traces whether a tensor is still in use by only the CUDA stream where
+it was created. When a tensor is used by additional CUDA streams, we need to call
+<cite>record_stream</cite> to tell the allocator about these streams. Otherwise, the allocator
+might free the underlying memory of the tensor once it is no longer used by the
+creator stream. This is a notable programming trick when we write programs using
+multiple CUDA streams.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> – The data on which to call record_stream</li>
+<li><strong>stream</strong> – The CUDA stream with which to call record_stream</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.seed">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">seed</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">deterministic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.seed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that sets seed for pseudo-random number generators across commonly used libraries.</p>

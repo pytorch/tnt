@@ -388,8 +388,8 @@ Modified by the framework, read-only for the user.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="torchtnt.framework.State.timer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">timer</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../utils/utils.html#torchtnt.utils.Timer" title="torchtnt.utils.timer.Timer"><span class="pre">Timer</span></a></em><a class="headerlink" href="#torchtnt.framework.State.timer" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Timer</span></code> object which records latencies of key events during loop execution.</p>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">timer</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../utils/utils.html#torchtnt.utils.Timer" title="torchtnt.utils.timer.Timer"><span class="pre">Timer</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.framework.State.timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Timer</span></code> object which can be used for debugging to record latencies of key events during loop execution.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -423,12 +423,6 @@ Modified by the framework, read-only for the user.</p>
 <dt class="sig sig-object py" id="torchtnt.framework.PhaseState.evaluate_every_n_steps">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">evaluate_every_n_steps</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.framework.PhaseState.evaluate_every_n_steps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Frequency with which to evaluate in terms of training steps, when running <a class="reference internal" href="fit.html#torchtnt.framework.fit" title="torchtnt.framework.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a>. Defined by the user.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="torchtnt.framework.PhaseState.is_last_batch">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">is_last_batch</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#torchtnt.framework.PhaseState.is_last_batch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns true if current batch of data is the last batch.</p>
 </dd></dl>
 
 <dl class="py property">
