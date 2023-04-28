@@ -106,39 +106,24 @@ def train(
 
     Below is pseudocode of what the :py:func:`~torchtnt.framework.train` entry point does.
 
-    .. code-block:: python
+    .. code-block:: text
 
-        model.train()
-        train_unit.on_train_start(state)
-        for cb in callbacks:
-            cb.on_train_start(state, train_unit)
-        while num_epochs_completed < max_epochs and num_steps_completed < max_steps:
-            while num_steps_completed_in_epoch < max_steps_completed_in_epoch:
-                train_unit.on_train_epoch_start(state)
-                for cb in callbacks:
-                    cb.on_train_epoch_start(state, train_unit)
-
+        set unit's tracked modules to train mode
+        call on_train_start on unit first and then callbacks
+        while training is not done:
+            while epoch is not done:
+                call on_train_epoch_start on unit first and then callbacks
                 try:
                     data = next(dataloader)
-                    for cb in callbacks:
-                        cb.on_train_step_start(state, train_unit)
-                    train_unit.train_step(state, data)
-                    for cb in callbacks:
-                        cb.on_train_step_end(state, train_unit)
-                    state.increment_step()
-
+                    call on_train_step_start on callbacks
+                    call train_step on unit
+                    increment step counter
+                    call on_train_step_end on callbacks
                 except StopIteration:
                     break
-
-                train_unit.on_train_epoch_end(state)
-                for cb in callbacks:
-                    cb.on_train_epoch_end(state, train_unit)
-
-            state.increment_epoch()
-
-        train_unit.on_train_end(state)
-        for cb in callbacks:
-            cb.on_train_end(state, train_unit)
+            increment epoch counter
+            call on_train_epoch_end on unit first and then callbacks
+        call on_train_end on unit first and then callbacks
     """
     log_api_usage("train")
     callbacks = callbacks or []
