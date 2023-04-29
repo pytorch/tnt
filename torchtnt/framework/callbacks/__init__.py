@@ -14,7 +14,7 @@ from .system_resources_monitor import SystemResourcesMonitor
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
 from .torchsnapshot_saver import TorchSnapshotSaver
 from .tqdm_progress_bar import TQDMProgressBar
-
+from .train_progress_monitor import TrainProgressMonitor
 
 __all__ = [
     "BaseCSVWriter",
@@ -27,4 +27,5 @@ __all__ = [
     "TensorBoardParameterMonitor",
     "TorchSnapshotSaver",
     "TQDMProgressBar",
+    "TrainProgressMonitor",
 ]
