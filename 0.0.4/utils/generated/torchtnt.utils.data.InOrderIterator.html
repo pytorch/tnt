@@ -6,11 +6,10 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InOrderIterator &mdash; TorchTNT 0.0.7 documentation</title>
+  <title>InOrderIterator &mdash; TorchTNT 0.1.0 documentation</title>
   
 
   
@@ -224,7 +223,7 @@
               
               
                 <div class="version">
-                  0.0.7
+                  0.1.0
                 </div>
               
             
@@ -346,26 +345,30 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="inorderiterator">
+  <div class="section" id="inorderiterator">
 <h1>InOrderIterator<a class="headerlink" href="#inorderiterator" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.data.InOrderIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">InOrderIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InOrder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.InOrderIterator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">InOrderIterator</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">InOrder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.InOrderIterator" title="Permalink to this definition">¶</a></dt>
 <dd><p>InOrderIterator returns all batches from a single dataset
 till it is exhausted and then moves to the next one.</p>
 <p>By default, the order is same as the keys of the input
 dataloader dict. This can be overridden to provide custom order.
 Repetition is supported.</p>
 <p>Returns batches of the format: {dataloader_name: batch_from_dataloader}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<em>RandomizedBatchSampler</em>) – A RandomizedBatchSampler dataclass indicating how the dataloaders are iterated over.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</li>
+<li><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </li>
+<li><strong>iteration_strategy</strong> (<em>RandomizedBatchSampler</em>) – A RandomizedBatchSampler dataclass indicating how the dataloaders are iterated over.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaders</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
 <span class="go">    &#39;b&#39;: torch.utils.data.DataLoader(range(15), batch_size=5)}</span>
@@ -381,7 +384,7 @@ Repetition is supported.</p>
 </div>
 </dd></dl>
 
-</section>
+</div>
 
 
              </article>

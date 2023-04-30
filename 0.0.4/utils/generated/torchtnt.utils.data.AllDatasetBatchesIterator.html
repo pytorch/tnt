@@ -6,11 +6,10 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AllDatasetBatchesIterator &mdash; TorchTNT 0.0.7 documentation</title>
+  <title>AllDatasetBatchesIterator &mdash; TorchTNT 0.1.0 documentation</title>
   
 
   
@@ -224,7 +223,7 @@
               
               
                 <div class="version">
-                  0.0.7
+                  0.1.0
                 </div>
               
             
@@ -346,11 +345,11 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="alldatasetbatchesiterator">
+  <div class="section" id="alldatasetbatchesiterator">
 <h1>AllDatasetBatchesIterator<a class="headerlink" href="#alldatasetbatchesiterator" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.data.AllDatasetBatchesIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">AllDatasetBatchesIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AllDatasetBatches</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.AllDatasetBatchesIterator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">AllDatasetBatchesIterator</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AllDatasetBatches</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.AllDatasetBatchesIterator" title="Permalink to this definition">¶</a></dt>
 <dd><p>AllDatasetBatchesIterator returns a dict containing batches from all dataloaders.
 When the stopping mechanism is set to ALL_DATASETS_EXHAUSTED, it will skip over the
 finished datasets.</p>
@@ -361,21 +360,24 @@ while skipping those that are done
 has been exhausted
 3. <cite>RESTART_UNTIL_ALL_DATASETS_EXHAUSTED</cite>: Iterates until the largest dataset
 is exhausted, while restarting those that are done</p>
-<dl class="simple">
-<dt>Returns batches of the format: {</dt><dd><p>dataloader_1_name: batch_obtained_from_dataloader_1,
-dataloader_2_name: batch_obtained_from_dataloader_2,</p>
-</dd>
+<dl class="docutils">
+<dt>Returns batches of the format: {</dt><dd>dataloader_1_name: batch_obtained_from_dataloader_1,
+dataloader_2_name: batch_obtained_from_dataloader_2,</dd>
 </dl>
 <p>}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<em>AllDatasetBatches</em>) – A AllDatasetBatches dataclass indicating how the dataloaders are iterated over.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</li>
+<li><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </li>
+<li><strong>iteration_strategy</strong> (<em>AllDatasetBatches</em>) – A AllDatasetBatches dataclass indicating how the dataloaders are iterated over.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaders</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
 <span class="go">    &#39;b&#39;: torch.utils.data.DataLoader(range(15), batch_size=5)}</span>
@@ -392,7 +394,7 @@ dataloader_2_name: batch_obtained_from_dataloader_2,</p>
 </div>
 </dd></dl>
 
-</section>
+</div>
 
 
              </article>

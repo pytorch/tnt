@@ -29,3 +29,4 @@ We offer several pre-written callbacks which are ready to be used out of the box
     TensorBoardParameterMonitor
     TorchSnapshotSaver
     TQDMProgressBar
+    TrainProgressMonitor

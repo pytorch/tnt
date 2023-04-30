@@ -6,11 +6,10 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MultiIterator &mdash; TorchTNT 0.0.7 documentation</title>
+  <title>MultiIterator &mdash; TorchTNT 0.1.0 documentation</title>
   
 
   
@@ -224,7 +223,7 @@
               
               
                 <div class="version">
-                  0.0.7
+                  0.1.0
                 </div>
               
             
@@ -346,27 +345,31 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <section id="multiiterator">
+  <div class="section" id="multiiterator">
 <h1>MultiIterator<a class="headerlink" href="#multiiterator" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.data.MultiIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></span><span class="sig-name descname"><span class="pre">MultiIterator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataIterationStrategy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.MultiIterator" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">MultiIterator</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataIterationStrategy</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.MultiIterator" title="Permalink to this definition">¶</a></dt>
 <dd><p>MultiIterator defines the iteration logic to get a batch, given
 batches from all individual dataloaders.
 iteration_strategy can include accompanying parameters for a particular
 iterator, like cycling order for the dataloaders.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</p></li>
-<li><p><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </p></li>
-<li><p><strong>iteration_strategy</strong> (<em>DataIterationStrategy</em>) – A dataclass indicating how the dataloaders are iterated over.</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</li>
+<li><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </li>
+<li><strong>iteration_strategy</strong> (<em>DataIterationStrategy</em>) – A dataclass indicating how the dataloaders are iterated over.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html">https://pytorch.org/data/beta/index.html</a>) also has generic
+<p class="first admonition-title">Note</p>
+<p class="last">TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html" target="_blank">https://pytorch.org/data/beta/index.html</a>) also has generic
 multi-data sources reading support to achieve the same functionality
 provided by MultiIterator.
 For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer
@@ -374,7 +377,7 @@ to the documentation for more details.</p>
 </div>
 </dd></dl>
 
-</section>
+</div>
 
 
              </article>

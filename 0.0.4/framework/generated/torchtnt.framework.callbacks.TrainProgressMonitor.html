@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RandomizedBatchSamplerIterator &mdash; TorchTNT 0.1.0 documentation</title>
+  <title>TrainProgressMonitor &mdash; TorchTNT 0.1.0 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="RoundRobinIterator" href="torchtnt.utils.data.RoundRobinIterator.html" />
-    <link rel="prev" title="MultiIterator" href="torchtnt.utils.data.MultiIterator.html" />
+    <link rel="next" title="AutoUnit" href="../auto_unit.html" />
+    <link rel="prev" title="TQDMProgressBar" href="torchtnt.framework.callbacks.TQDMProgressBar.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -256,21 +256,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/unit.html">Unit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/train.html">Train</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/eval.html">Evaluate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/predict.html">Predict</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/fit.html">Fit</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/state.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/auto_unit.html">AutoUnit</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../train.html">Train</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../eval.html">Evaluate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../predict.html">Predict</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fit.html">Fit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../state.html">State</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../callbacks.html">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utils</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../loggers.html">Loggers</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../utils/utils.html">Utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utils/data.html">Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utils/loggers.html">Loggers</a></li>
 </ul>
 
             
@@ -311,15 +311,15 @@
       </li>
 
         
-          <li><a href="../data.html">Data</a> &gt;</li>
+          <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
         
-      <li>RandomizedBatchSamplerIterator</li>
+      <li>TrainProgressMonitor</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/utils/generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.TrainProgressMonitor.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -345,44 +345,34 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="randomizedbatchsampleriterator">
-<h1>RandomizedBatchSamplerIterator<a class="headerlink" href="#randomizedbatchsampleriterator" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="trainprogressmonitor">
+<h1>TrainProgressMonitor<a class="headerlink" href="#trainprogressmonitor" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.data.RandomizedBatchSamplerIterator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">RandomizedBatchSamplerIterator</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RandomizedBatchSampler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.RandomizedBatchSamplerIterator" title="Permalink to this definition">¶</a></dt>
-<dd><p>RandomizedBatchSamplerIterator randomly samples from each dataset
-using the provided weights.</p>
-<p>By default, the iterator stops after all datasets are exhausted. This can be changed
-by setting another stopping mechanism.</p>
-<p>Returns batches of the format: {dataloader_name: batch_from_dataloader}</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TrainProgressMonitor</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">loggers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/loggers.html#torchtnt.utils.loggers.MetricLogger" title="torchtnt.utils.loggers.logger.MetricLogger"><span class="pre">MetricLogger</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/loggers.html#torchtnt.utils.loggers.MetricLogger" title="torchtnt.utils.loggers.logger.MetricLogger"><span class="pre">MetricLogger</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback which logs training progress in terms of steps vs epochs. This is helpful to visualize when the end of data occurs across epochs, especially for iterable datasets.
+This callback writes to the logger at the beginning of training, and at the end of every epoch.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</li>
-<li><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </li>
-<li><strong>iteration_strategy</strong> (<em>RandomizedBatchSampler</em>) – A RandomizedBatchSampler dataclass indicating how the dataloaders are iterated over.</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loggers</strong> – Either a <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code> or</td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaders</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
-<span class="go">    &#39;b&#39;: torch.utils.data.DataLoader(range(15), batch_size=5)}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">randomized_batch_sampler</span> <span class="o">=</span> <span class="n">RandomizedBatchSampler</span><span class="p">(</span>
-<span class="go">        stopping_mechanism=StoppingMechanism.ALL_DATASETS_EXHAUSTED</span>
-<span class="go">    )</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">combined_iterator</span> <span class="o">=</span> <span class="n">RandomizedBatchSamplerIterator</span><span class="p">(</span><span class="n">loaders</span><span class="p">,</span> <span class="n">randomized_batch_sampler</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">combined_iterator</span><span class="p">:</span>
-<span class="go">        print(item)</span>
-<span class="go">{&#39;b&#39;: tensor([0, 1, 2, 3, 4])}</span>
-<span class="go">{&#39;b&#39;: tensor([5, 6, 7, 8, 9])}</span>
-<span class="go">{&#39;a&#39;: tensor([0, 1, 2, 3])}</span>
-<span class="go">{&#39;b&#39;: tensor([10, 11, 12, 13, 14])}</span>
-</pre></div>
-</div>
+<p>:param list of <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor.on_train_epoch_end">
+<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after a train epoch ends.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor.on_train_start">
+<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called before training starts.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -395,10 +385,10 @@ by setting another stopping mechanism.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.utils.data.RoundRobinIterator.html" class="btn btn-neutral float-right" title="RoundRobinIterator" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="../auto_unit.html" class="btn btn-neutral float-right" title="AutoUnit" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.utils.data.MultiIterator.html" class="btn btn-neutral" title="MultiIterator" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.framework.callbacks.TQDMProgressBar.html" class="btn btn-neutral" title="TQDMProgressBar" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -430,7 +420,7 @@ by setting another stopping mechanism.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">RandomizedBatchSamplerIterator</a></li>
+<li><a class="reference internal" href="#">TrainProgressMonitor</a></li>
 </ul>
 
             </div>

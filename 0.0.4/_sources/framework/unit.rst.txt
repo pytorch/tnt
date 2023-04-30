@@ -2,8 +2,7 @@ Unit
 =========
 .. currentmodule:: torchtnt.framework
 
-The Unit concept represents the primary place to organize your model code in TorchTNT. TorchTNT offers three different types of Unit classes for training, evaluation, and prediction. These interfaces are mutually exclusive and can be combined as needed.
-for example in the case of fitting (interleaving training and prediction).
+The Unit concept represents the primary place to organize your model code in TorchTNT. TorchTNT offers three different types of Unit classes for training, evaluation, and prediction. These interfaces are mutually exclusive and can be combined as needed, e.g. in the case of fitting (interleaving training and evaluation).
 
 TrainUnit
 ~~~~~~~~~~~~~~~~~
