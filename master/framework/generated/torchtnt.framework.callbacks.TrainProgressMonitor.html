@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TQDMProgressBar &mdash; TorchTNT master documentation</title>
+  <title>TrainProgressMonitor &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="TrainProgressMonitor" href="torchtnt.framework.callbacks.TrainProgressMonitor.html" />
-    <link rel="prev" title="TorchSnapshotSaver" href="torchtnt.framework.callbacks.TorchSnapshotSaver.html" />
+    <link rel="next" title="AutoUnit" href="../auto_unit.html" />
+    <link rel="prev" title="TQDMProgressBar" href="torchtnt.framework.callbacks.TQDMProgressBar.html" />
   <!-- Google Analytics -->
   
   <!-- End Google Analytics -->
@@ -313,13 +313,13 @@
         
           <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
         
-      <li>TQDMProgressBar</li>
+      <li>TrainProgressMonitor</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.TQDMProgressBar.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.TrainProgressMonitor.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -345,73 +345,32 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="tqdmprogressbar">
-<h1>TQDMProgressBar<a class="headerlink" href="#tqdmprogressbar" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="trainprogressmonitor">
+<h1>TrainProgressMonitor<a class="headerlink" href="#trainprogressmonitor" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TQDMProgressBar</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">refresh_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar" title="Permalink to this definition">¶</a></dt>
-<dd><p>A callback for progress bar visualization in training, evaluation, and prediction.
-It is initialized only on rank 0 in distributed environments.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TrainProgressMonitor</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">loggers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/loggers.html#torchtnt.utils.loggers.MetricLogger" title="torchtnt.utils.loggers.logger.MetricLogger"><span class="pre">MetricLogger</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/loggers.html#torchtnt.utils.loggers.MetricLogger" title="torchtnt.utils.loggers.logger.MetricLogger"><span class="pre">MetricLogger</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback which logs training progress in terms of steps vs epochs. This is helpful to visualize when the end of data occurs across epochs, especially for iterable datasets.
+This callback writes to the logger at the beginning of training, and at the end of every epoch.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>refresh_rate</strong> – Determines at which rate (in number of steps) the progress bars get updated.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loggers</strong> – Either a <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code> or</td>
 </tr>
 </tbody>
 </table>
+<p>:param list of <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code>:</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_eval_epoch_end">
-<code class="sig-name descname"><span class="pre">on_eval_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><span class="pre">EvalUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_eval_epoch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after an eval epoch ends.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_eval_epoch_start">
-<code class="sig-name descname"><span class="pre">on_eval_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><span class="pre">EvalUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_eval_epoch_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called before a new eval epoch starts.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_eval_step_end">
-<code class="sig-name descname"><span class="pre">on_eval_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><span class="pre">EvalUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_eval_step_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after an eval step ends.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_predict_epoch_end">
-<code class="sig-name descname"><span class="pre">on_predict_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><span class="pre">PredictUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_predict_epoch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after a predict epoch ends.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_predict_epoch_start">
-<code class="sig-name descname"><span class="pre">on_predict_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><span class="pre">PredictUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_predict_epoch_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called before a new predict epoch starts.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_predict_step_end">
-<code class="sig-name descname"><span class="pre">on_predict_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><span class="pre">PredictUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_predict_step_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after a predict step ends.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_train_epoch_end">
-<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor.on_train_epoch_end">
+<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after a train epoch ends.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_train_epoch_start">
-<code class="sig-name descname"><span class="pre">on_train_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_train_epoch_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called before a new train epoch starts.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar.on_train_step_end">
-<code class="sig-name descname"><span class="pre">on_train_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar.on_train_step_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after a train step ends.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor.on_train_start">
+<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called before training starts.</p>
 </dd></dl>
 
 </dd></dl>
@@ -426,10 +385,10 @@ It is initialized only on rank 0 in distributed environments.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.framework.callbacks.TrainProgressMonitor.html" class="btn btn-neutral float-right" title="TrainProgressMonitor" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="../auto_unit.html" class="btn btn-neutral float-right" title="AutoUnit" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.framework.callbacks.TorchSnapshotSaver.html" class="btn btn-neutral" title="TorchSnapshotSaver" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.framework.callbacks.TQDMProgressBar.html" class="btn btn-neutral" title="TQDMProgressBar" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -461,7 +420,7 @@ It is initialized only on rank 0 in distributed environments.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">TQDMProgressBar</a></li>
+<li><a class="reference internal" href="#">TrainProgressMonitor</a></li>
 </ul>
 
             </div>
