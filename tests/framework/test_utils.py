@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Iterator, Union
+from typing import Any, Iterator, Tuple, Union
 from unittest.mock import MagicMock
 
 import torch
@@ -22,17 +22,24 @@ if is_torch_version_geq_2_0():
 import contextlib
 import time
 
+from torch.distributed import launcher
+
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.optim.lr_scheduler import ExponentialLR
 
 from torch.utils.data import DataLoader
 
 from torch.utils.data.distributed import DistributedSampler
+from torchtnt.framework import AutoUnit
 from torchtnt.framework._test_utils import generate_random_dataset
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.progress import Progress
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.framework.utils import (
+    _construct_tracked_optimizers_and_schedulers,
+    _find_optimizers_for_module,
+    _FSDPOptimizerWrapper,
     _get_timing_context,
     _is_done,
     _is_epoch_done,
@@ -45,11 +52,15 @@ from torchtnt.framework.utils import (
     get_current_progress,
     StatefulInt,
 )
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.test_utils import get_pet_launch_config
 from torchtnt.utils.timer import Timer
 
 
 class UtilsTest(unittest.TestCase):
+    cuda_available = torch.cuda.is_available()
+
     @staticmethod
     def _test_is_fsdp_module() -> None:
         dist.init_process_group("gloo")
@@ -341,6 +352,73 @@ class UtilsTest(unittest.TestCase):
             time.sleep(1)
         self.assertTrue("a" in state.timer.recorded_durations.keys())
 
+    def test_find_optimizers_for_module(self) -> None:
+        module1 = torch.nn.Linear(10, 10)
+        module2 = torch.nn.Linear(10, 10)
+        optim1 = torch.optim.Adam(module1.parameters())
+        optim2 = torch.optim.Adagrad(module2.parameters())
+
+        opts = {"optim1": optim1, "optim2": optim2}
+        optimizers = _find_optimizers_for_module(module1, opts)
+        optim_name, _ = optimizers[0]
+        self.assertEqual(optim_name, "optim1")
+        optimizers = _find_optimizers_for_module(module2, opts)
+        optim_name, _ = optimizers[0]
+        self.assertEqual(optim_name, "optim2")
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_find_optimizers_for_FSDP_module(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(
+            config, entrypoint=self._find_optimizers_for_FSDP_module
+        )()
+
+    @staticmethod
+    def _find_optimizers_for_FSDP_module() -> None:
+        device = init_from_env()
+        module1 = FSDP(torch.nn.Linear(10, 10).to(device))
+        module2 = torch.nn.Linear(10, 10)
+        optim1 = torch.optim.Adam(module1.parameters())
+        optim2 = torch.optim.Adagrad(module2.parameters())
+
+        opts = {"optim1": optim1, "optim2": optim2}
+        optim_list = _find_optimizers_for_module(module1, opts)
+        optim_name, _ = optim_list[0]
+
+        tc = unittest.TestCase()
+        tc.assertEqual(optim_name, "optim1")
+        optim_list = _find_optimizers_for_module(module2, opts)
+        optim_name, _ = optim_list[0]
+        tc.assertEqual(optim_name, "optim2")
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_construct_tracked_optimizers_and_schedulers(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._construct_optimizers)()
+
+    @staticmethod
+    def _construct_optimizers() -> None:
+        device = init_from_env()
+        module = torch.nn.Linear(10, 10)
+
+        auto_unit = DummyAutoUnit(module=module, device=device, strategy="fsdp")
+
+        result = _construct_tracked_optimizers_and_schedulers(auto_unit)
+        tc = unittest.TestCase()
+        tc.assertTrue(isinstance(result["optim"], _FSDPOptimizerWrapper))
+        tc.assertTrue(isinstance(result["optim2"], torch.optim.Optimizer))
+        tc.assertTrue(isinstance(result["lr_scheduler"], TLRScheduler))
+
     def test_stateful_int(self) -> None:
         v = StatefulInt(0)
         v += 10
@@ -349,6 +427,31 @@ class UtilsTest(unittest.TestCase):
         self.assertEqual(v.state_dict(), {"value": 8})
         v.load_state_dict({"value": -4})
         self.assertEqual(v.val, -4)
+
+
+Batch = Tuple[torch.tensor, torch.tensor]
+
+
+class DummyAutoUnit(AutoUnit[Batch]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.module2 = torch.nn.Linear(10, 10).to(self.device)
+        self.optim = torch.optim.SGD(self.module.parameters(), lr=0.01)
+        self.optim2 = torch.optim.Adam(self.module2.parameters())
+
+    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+        inputs, targets = data
+        outputs = self.module(inputs)
+        loss = torch.nn.functional.cross_entropy(outputs, targets)
+
+        return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = self.optim
+        my_lr_scheduler = ExponentialLR(my_optimizer, gamma=0.9)
+        return my_optimizer, my_lr_scheduler
 
 
 class DummyCallback(Callback):
