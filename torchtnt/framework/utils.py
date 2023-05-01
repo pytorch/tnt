@@ -7,12 +7,25 @@
 import collections
 import inspect
 import logging
-from typing import Any, Callable, ContextManager, Dict, Iterable, List, Optional
+from typing import (
+    Any,
+    Callable,
+    ContextManager,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import torch
 import torch.nn as nn
 import typing_extensions
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel,
+    FullyShardedDataParallel as FSDP,
+)
 
 from torchtnt.utils.version import is_torch_version_geq_2_0
 
@@ -26,6 +39,8 @@ from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.progress import Progress
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
+from torchtnt.framework.unit import AppStateMixin
+from torchtnt.utils.lr_scheduler import TLRScheduler
 from typing_extensions import Self
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -139,6 +154,99 @@ def _is_fsdp_module(module: torch.nn.Module) -> bool:
             return isinstance(maybe_composable_state, _FSDPState)
 
     return False
+
+
+class _FSDPOptimizerWrapper:
+    """
+    Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.
+    """
+
+    def __init__(
+        self, module: torch.nn.Module, optimizer: torch.optim.Optimizer
+    ) -> None:
+        self.module = module
+        self.optimizer = optimizer
+
+    def state_dict(self) -> Dict[str, Any]:
+        optim_state_dict = FullyShardedDataParallel.optim_state_dict(
+            self.module, self.optimizer
+        )
+        return optim_state_dict
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        optim_state_dict = FullyShardedDataParallel.optim_state_dict_to_load(
+            self.module, self.optimizer, state_dict
+        )
+        self.optimizer.load_state_dict(optim_state_dict)
+
+
+def _construct_tracked_optimizers(
+    unit: AppStateMixin,
+) -> Dict[str, Union[torch.optim.Optimizer, _FSDPOptimizerWrapper]]:
+    """
+    Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in _FSDPOptimizerWrapper.
+    """
+    fsdp_tracked_optimizers: Dict[str, _FSDPOptimizerWrapper] = {}
+    for module in unit.tracked_modules().values():
+        if _is_fsdp_module(module):
+            # find optimizers for module, if exists
+            optimizer_list = _find_optimizers_for_module(
+                module, unit.tracked_optimizers()
+            )
+            for optim_name, optimizer in optimizer_list:
+                fsdp_tracked_optimizers[optim_name] = _FSDPOptimizerWrapper(
+                    module, optimizer
+                )
+
+    # construct custom tracked optimizers with FSDP optimizers
+    tracked_optimizers: Dict[
+        str, Union[torch.optim.Optimizer, _FSDPOptimizerWrapper]
+    ] = {
+        key: value
+        for key, value in unit.tracked_optimizers().items()
+        if key not in fsdp_tracked_optimizers
+    }
+    tracked_optimizers.update(fsdp_tracked_optimizers)
+    return tracked_optimizers
+
+
+def _construct_tracked_optimizers_and_schedulers(
+    unit: AppStateMixin,
+) -> Dict[str, Union[torch.optim.Optimizer, _FSDPOptimizerWrapper, TLRScheduler]]:
+    """
+    Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in _FSDPOptimizerWrapper.
+    """
+    # construct custom tracked optimizers with FSDP optimizers
+    tracked_optimizers_and_schedulers = _construct_tracked_optimizers(unit)
+
+    # add schedulers
+    for lr_scheduler_attrib_name, lr_scheduler in unit.tracked_lr_schedulers().items():
+        if lr_scheduler_attrib_name in tracked_optimizers_and_schedulers:
+            _logger.warning(
+                f'Key collision "{lr_scheduler_attrib_name}" detected between LR Scheduler and optimizer attribute names. Please ensure there are no identical attribute names, as they will override each other.'
+            )
+        # pyre-ignore: Incompatible parameter type [6]: In call `dict.__setitem__`, for 2nd positional argument, expected `Optimizer` but got `str`.
+        tracked_optimizers_and_schedulers[lr_scheduler_attrib_name] = lr_scheduler
+
+    # pyre-ignore: Incompatible return type [7]
+    return tracked_optimizers_and_schedulers
+
+
+def _find_optimizers_for_module(
+    module: torch.nn.Module, optimizers: Dict[str, torch.optim.Optimizer]
+) -> List[Tuple[str, torch.optim.Optimizer]]:
+    """
+    Given a module, returns a list of optimizers that are associated with it.
+    """
+    optimizer_list = []
+    module_params = [param.data_ptr() for param in module.parameters()]
+    for optim_name, optimizer in optimizers.items():
+        optimizer_params = [
+            param.data_ptr() for param in optimizer.param_groups[0]["params"]
+        ]
+        if all(module_param in optimizer_params for module_param in module_params):
+            optimizer_list.append((optim_name, optimizer))
+    return optimizer_list
 
 
 def get_current_progress(state: State) -> Progress:
