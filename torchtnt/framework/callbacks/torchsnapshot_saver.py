@@ -8,6 +8,8 @@ import logging
 import os
 from typing import Dict, List, Optional, Set, Union
 
+import torch.distributed as dist
+
 from pyre_extensions import none_throws
 from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 
@@ -19,7 +21,7 @@ from torchtnt.framework.unit import (
     TPredictUnit,
     TTrainUnit,
 )
-from torchtnt.utils import rank_zero_info, rank_zero_warn
+from torchtnt.utils import get_global_rank, rank_zero_info, rank_zero_warn
 
 try:
     import torchsnapshot
@@ -53,6 +55,8 @@ class TorchSnapshotSaver(Callback):
         save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
         replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
             For more information, see https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take .
+
+            Note: If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks
     """
 
     def __init__(
@@ -74,10 +78,29 @@ class TorchSnapshotSaver(Callback):
             )
         self._save_every_n_epochs = save_every_n_epochs
         self._save_every_n_train_steps = save_every_n_train_steps
-        self._dirpath: str = dirpath
+        self._sync_dirpath_to_all_ranks(dirpath)
         self._replicated: Set[str] = set(replicated or [])
 
         self._prev_snapshot: Optional[PendingSnapshot] = None
+
+    def _sync_dirpath_to_all_ranks(self, dirpath: str) -> None:
+        if not (dist.is_available() and dist.is_initialized()):
+            self._dirpath: str = dirpath
+            return
+
+        dirpath_container = [dirpath] if get_global_rank() == 0 else [""]
+        # broadcast directory from global rank 0
+        dist.broadcast_object_list(dirpath_container, src=0)
+        updated_dirpath = dirpath_container[0]
+        if updated_dirpath != dirpath:
+            logger.info(f"Updating dirpath to match rank 0: {updated_dirpath}")
+
+        self._dirpath: str = updated_dirpath
+
+    @property
+    def dirpath(self) -> str:
+        """Returns parent directory to save to."""
+        return self._dirpath
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         """Validate there's no key collision for the app state."""

@@ -7,14 +7,21 @@
 
 import math
 import os
+import shutil
 import tempfile
 import time
 import unittest
 from typing import List
 
+import torch
+from torch.distributed import launcher
+
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.callbacks import Lambda, TorchSnapshotSaver
 from torchtnt.framework.train import init_train_state, train
+from torchtnt.utils import get_global_rank
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
@@ -121,6 +128,31 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             # so the first snapshot's progress will be equal to save_every_n_train_steps
             self.assertNotEqual(restored_num_steps_completed, end_num_steps_completed)
             self.assertEqual(restored_num_steps_completed, save_every_n_train_steps)
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_directory_sync_collective(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._directory_sync_collective)()
+
+    @staticmethod
+    def _directory_sync_collective() -> None:
+        init_from_env()
+        try:
+            if get_global_rank() == 0:
+                temp_dir = tempfile.mkdtemp()
+            else:
+                temp_dir = "foo"
+
+            snapshot_cb = TorchSnapshotSaver(temp_dir)
+            dirpath = snapshot_cb.dirpath
+            tc = unittest.TestCase()
+            tc.assertTrue("tmp" in dirpath)
+            tc.assertFalse("foo" in dirpath)
+        finally:
+            if get_global_rank() == 0:
+                shutil.rmtree(temp_dir)  # delete temp directory
 
     def test_saver_invalid_args(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
