@@ -6,7 +6,7 @@
 
 import logging
 import os
-from typing import Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import torch.distributed as dist
 
@@ -17,10 +17,12 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import (
     _Stateful as StatefulProtocol,
+    AppStateMixin,
     TEvalUnit,
     TPredictUnit,
     TTrainUnit,
 )
+from torchtnt.framework.utils import _construct_tracked_optimizers
 from torchtnt.utils import get_global_rank, rank_zero_info, rank_zero_warn
 
 try:
@@ -104,7 +106,7 @@ class TorchSnapshotSaver(Callback):
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         """Validate there's no key collision for the app state."""
-        app_state = unit.app_state()
+        app_state = _app_state(unit)
         _check_app_state_collision(app_state)
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
@@ -204,7 +206,7 @@ class TorchSnapshotSaver(Callback):
         """
 
         _validate_snapshot_available()
-        app_state = unit.app_state()
+        app_state = _app_state(unit)
         _check_app_state_collision(app_state)
 
         snapshot = torchsnapshot.Snapshot(path)
@@ -248,13 +250,21 @@ def _get_snapshot_save_path(dirpath: str, epoch: int, step: int) -> str:
     return os.path.join(dirpath, f"epoch_{epoch}_step_{step}")
 
 
+def _app_state(unit: AppStateMixin) -> Dict[str, Any]:
+    """Join together all of the tracked stateful entities to simplify registration of snapshottable states, deals with FSDP case"""
+    app_state = unit.app_state()
+    tracked_optimizers = _construct_tracked_optimizers(unit)  # handles fsdp
+    app_state.update(tracked_optimizers)
+    return app_state
+
+
 def _get_app_state(
     state: State, unit: TTrainUnit, replicated: Set[str], *, intra_epoch: bool
 ) -> Dict[str, _TStateful]:
     train_state = none_throws(state.train_state)
 
     train_progress = train_state.progress
-    app_state = unit.app_state()
+    app_state = _app_state(unit)
 
     rng_state = torchsnapshot.RNGState()
     app_state[_RNG_STATE_KEY] = rng_state
