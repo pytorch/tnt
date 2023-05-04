@@ -95,7 +95,7 @@ class TorchSnapshotSaver(Callback):
         dist.broadcast_object_list(dirpath_container, src=0)
         updated_dirpath = dirpath_container[0]
         if updated_dirpath != dirpath:
-            logger.info(f"Updating dirpath to match rank 0: {updated_dirpath}")
+            logger.warning(f"Updating dirpath to match rank 0: {updated_dirpath}")
 
         self._dirpath: str = updated_dirpath
 
