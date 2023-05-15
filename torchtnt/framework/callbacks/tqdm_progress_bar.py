@@ -140,7 +140,9 @@ def _create_progress_bar(
         max_steps=max_steps,
         max_steps_per_epoch=max_steps_per_epoch,
     )
-    return tqdm(desc=f"{desc} {current_epoch}", total=total)
+    return tqdm(
+        desc=f"{desc} {current_epoch}", total=total, initial=num_steps_completed
+    )
 
 
 def _update_progress_bar(

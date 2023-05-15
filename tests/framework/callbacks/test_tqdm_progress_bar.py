@@ -111,6 +111,32 @@ class TQDMProgressBarTest(unittest.TestCase):
         progress_bar.on_predict_epoch_start(state, my_unit)
         self.assertEqual(progress_bar._predict_progress_bar.total, expected_total)
 
+    def test_progress_bar_mid_progress(self) -> None:
+        """
+        Test TQDMProgressBar callback when progress already has occurred (can occur when loading checkpoint)
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 1
+        expected_total = dataset_len / batch_size
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = State(
+            entry_point=EntryPoint.PREDICT,
+            predict_state=PhaseState(
+                dataloader=dataloader,
+                max_epochs=max_epochs,
+            ),
+        )
+        state.predict_state.progress._num_steps_completed = 2
+
+        my_unit = MagicMock(spec=DummyPredictUnit)
+        progress_bar = TQDMProgressBar()
+        progress_bar.on_predict_epoch_start(state, my_unit)
+        self.assertEqual(progress_bar._predict_progress_bar.total, expected_total)
+        self.assertEqual(progress_bar._predict_progress_bar.n, 2)
+
     def test_estimated_steps_in_epoch(self) -> None:
         """
         Test TQDMProgressBar's _estimate_steps_in_epoch function
