@@ -133,6 +133,32 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             self.assertNotEqual(restored_num_steps_completed, end_num_steps_completed)
             self.assertEqual(restored_num_steps_completed, save_every_n_train_steps)
 
+    def test_save_on_train_end(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 2
+
+        expected_path = (
+            f"epoch_{max_epochs}_step_{max_epochs * (dataset_len // batch_size)}"
+        )
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.assertFalse(os.path.exists(os.path.join(temp_dir, expected_path)))
+            snapshot_cb = TorchSnapshotSaver(
+                temp_dir,
+                replicated=["**"],
+            )
+            train(state, my_unit, callbacks=[snapshot_cb])
+
+            expected_path = (
+                f"epoch_{max_epochs}_step_{max_epochs * (dataset_len // batch_size)}"
+            )
+            self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
+
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
