@@ -91,6 +91,32 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 os.path.exists(expected_path) and os.path.isdir(expected_path)
             )
 
+    def test_save_on_train_end(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 3
+        expected_steps_per_epoch = math.ceil(dataset_len / batch_size)
+        save_every_n_train_epochs = 2
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            expected_path = os.path.join(
+                temp_dir,
+                f"epoch_{max_epochs}_step_{expected_steps_per_epoch * (max_epochs)}",
+            )
+            snapshot = TorchSnapshotSaver(
+                temp_dir,
+                save_every_n_epochs=save_every_n_train_epochs,
+                replicated=["**"],
+            )
+            train(state, my_unit, callbacks=[snapshot])
+            self.assertTrue(
+                os.path.exists(expected_path) and os.path.isdir(expected_path)
+            )
+
     def test_save_restore(self) -> None:
         input_dim = 2
         dataset_len = 10
