@@ -169,6 +169,7 @@ def main(args: Namespace) -> None:
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         max_epochs=args.max_epochs,
+        auto_timing=True,
     )
 
     fit(state, my_unit)

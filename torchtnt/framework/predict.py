@@ -22,6 +22,7 @@ from torchtnt.framework.utils import (
     _step_requires_iterator,
     log_api_usage,
 )
+from torchtnt.utils.rank_zero_log import rank_zero_info
 from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ def predict(
         _predict_impl(state, predict_unit, callbacks)
         logger.info("Finished predict")
         if state.timer:
-            logger.info(get_timer_summary(state.timer))
+            rank_zero_info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)

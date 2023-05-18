@@ -24,6 +24,7 @@ from torchtnt.framework.utils import (
     _run_callback_fn,
     log_api_usage,
 )
+from torchtnt.utils.rank_zero_log import rank_zero_info
 from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -149,7 +150,7 @@ def fit(
         state._entry_point = EntryPoint.FIT
         _fit_impl(state, unit, callbacks)
         if state.timer:
-            logger.info(get_timer_summary(state.timer))
+            rank_zero_info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
