@@ -35,3 +35,10 @@ MinGPT Example
 The MinGPT example shows how to use the :class:`~torchtnt.framework.auto_unit.AutoUnit` to train a MinGPT model.
 
 It can be found here: https://github.com/pytorch/tnt/blob/master/examples/mingpt/main.py
+
+
+TorchRec Example
+~~~~~~~~~~~~~~~~~~~~~
+The TorchRec example shows how to use :class:`~torchtnt.framework.auto_unit.TrainUnit` with `TorchRec <https://github.com/pytorch/torchrec>`.
+
+It can be found here: https://github.com/pytorch/tnt/blob/master/examples/torchrec/main.py
