@@ -239,8 +239,6 @@ class AutoUnit(
     ) -> None:
         super().__init__()
         self.device: torch.device = device or init_from_env()
-        module = module.to(self.device)  # move module to device
-
         self.precision: Optional[torch.dtype]
         if isinstance(precision, str):
             self.precision = _convert_precision_str_to_dtype(precision)
@@ -260,6 +258,7 @@ class AutoUnit(
                 # remove ddp comm hook variables from params dict
                 del params_dict["comm_state"]
                 del params_dict["comm_hook"]
+                module = module.to(device)
                 module = DDP(module, device_ids=device_ids, **params_dict)
                 if torchdynamo_params:
                     # TODO: Add support for dynamo and DDP
@@ -294,6 +293,8 @@ class AutoUnit(
                     mixed_precision=mixed_precision,
                     **asdict(strategy),
                 )
+        else:
+            module = module.to(device)
 
         self.module: torch.nn.Module = module
 
