@@ -48,7 +48,11 @@ class PGWrapper:
     def barrier(self) -> None:
         if self.pg is None:
             return
-        dist.barrier(group=self.pg)
+        backend = dist.get_backend(group=self.pg)
+        if backend == dist.Backend.NCCL:
+            dist.barrier(group=self.pg, device_ids=[torch.cuda.current_device()])
+        else:
+            dist.barrier(group=self.pg)
 
     def broadcast_object_list(self, obj_list: List[Any], src: int = 0) -> None:
         if self.pg is None:
