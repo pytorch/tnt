@@ -95,6 +95,7 @@ class FSDPStrategy(Strategy):
     sync_module_states: bool = False
     forward_prefetch: bool = False
     limit_all_gathers: bool = False
+    use_orig_params: bool = False
 
 
 @dataclass
