@@ -343,8 +343,8 @@ class FitTest(unittest.TestCase):
             auto_timing=True,
         )
         fit(state, DummyFitUnit(input_dim=input_dim))
-        for k in [
-            "train.DummyFitUnit.on_train_start",
-            "train.DummyFitUnit.on_train_end",
-        ]:
+        for k in (
+            "DummyFitUnit.on_train_start",
+            "DummyFitUnit.on_train_end",
+        ):
             self.assertTrue(k in state.timer.recorded_durations.keys())

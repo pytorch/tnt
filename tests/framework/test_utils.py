@@ -7,7 +7,7 @@
 
 import unittest
 from typing import Any, Iterator, Tuple, Union
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import torch
 
@@ -19,7 +19,6 @@ from torchtnt.utils.version import is_torch_version_geq_2_0
 if is_torch_version_geq_2_0():
     from torch.distributed._composable import fully_shard
 
-import contextlib
 import time
 
 from torch.distributed import launcher
@@ -179,14 +178,12 @@ class UtilsTest(unittest.TestCase):
             ValueError("test"),
         )
         self.assertEqual(callback.dummy_data, "on_exception")
-        self.assertTrue(
-            "callback.DummyCallback.on_exception" in timer.recorded_durations.keys()
-        )
+        self.assertTrue("DummyCallback.on_exception" in timer.recorded_durations.keys())
 
         _run_callback_fn([callback], "on_train_start", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_start")
         self.assertTrue(
-            "callback.DummyCallback.on_train_start" in timer.recorded_durations.keys()
+            "DummyCallback.on_train_start" in timer.recorded_durations.keys()
         )
 
         _run_callback_fn(
@@ -194,8 +191,7 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertEqual(callback.dummy_data, "on_train_epoch_start")
         self.assertTrue(
-            "callback.DummyCallback.on_train_epoch_start"
-            in timer.recorded_durations.keys()
+            "DummyCallback.on_train_epoch_start" in timer.recorded_durations.keys()
         )
 
         _run_callback_fn(
@@ -203,15 +199,13 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertEqual(callback.dummy_data, "on_train_step_start")
         self.assertTrue(
-            "callback.DummyCallback.on_train_step_start"
-            in timer.recorded_durations.keys()
+            "DummyCallback.on_train_step_start" in timer.recorded_durations.keys()
         )
 
         _run_callback_fn([callback], "on_train_step_end", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_step_end")
         self.assertTrue(
-            "callback.DummyCallback.on_train_step_end"
-            in timer.recorded_durations.keys()
+            "DummyCallback.on_train_step_end" in timer.recorded_durations.keys()
         )
 
         _run_callback_fn(
@@ -219,15 +213,12 @@ class UtilsTest(unittest.TestCase):
         )
         self.assertEqual(callback.dummy_data, "on_train_epoch_end")
         self.assertTrue(
-            "callback.DummyCallback.on_train_epoch_end"
-            in timer.recorded_durations.keys()
+            "DummyCallback.on_train_epoch_end" in timer.recorded_durations.keys()
         )
 
         _run_callback_fn([callback], "on_train_end", dummy_train_state, train_unit)
         self.assertEqual(callback.dummy_data, "on_train_end")
-        self.assertTrue(
-            "callback.DummyCallback.on_train_end" in timer.recorded_durations.keys()
-        )
+        self.assertTrue("DummyCallback.on_train_end" in timer.recorded_durations.keys())
 
     def test_run_callback_fn_exception(self) -> None:
         """
@@ -339,18 +330,30 @@ class UtilsTest(unittest.TestCase):
             progress.num_steps_completed, train_state.progress.num_steps_completed
         )
 
-    def test_get_timing_context(self) -> None:
+    @patch("torchtnt.framework.utils.record_function")
+    def test_get_timing_context(self, mock_record_function) -> None:
         state = MagicMock()
         state.timer = None
 
         ctx = _get_timing_context(state, "a")
-        self.assertEqual(type(ctx), contextlib.nullcontext)
-
-        state.timer = Timer()
-        ctx = _get_timing_context(state, "a")
         with ctx:
             time.sleep(1)
-        self.assertTrue("a" in state.timer.recorded_durations.keys())
+        mock_record_function.assert_called_with("a")
+
+        state.timer = Timer()
+        ctx = _get_timing_context(state, "b")
+        with ctx:
+            time.sleep(1)
+        self.assertTrue("b" in state.timer.recorded_durations.keys())
+        mock_record_function.assert_called_with("b")
+
+        state.timer = Timer()
+        ctx = _get_timing_context(state, "c", skip_timer=True)
+        with ctx:
+            time.sleep(1)
+        # "c" should not be in the recorded_durations because we set skip_timer to True
+        self.assertFalse("c" in state.timer.recorded_durations.keys())
+        mock_record_function.assert_called_with("c")
 
     def test_find_optimizers_for_module(self) -> None:
         module1 = torch.nn.Linear(10, 10)

@@ -286,10 +286,11 @@ class TrainTest(unittest.TestCase):
             auto_timing=True,
         )
         train(state, DummyTrainUnit(input_dim=input_dim))
-        for k in [
-            "train.DummyTrainUnit.on_train_start",
-            "train.DummyTrainUnit.on_train_end",
-        ]:
+        for k in (
+            "DummyTrainUnit.on_train_start",
+            "DummyTrainUnit.on_train_end",
+            "train.next(data_iter)",
+        ):
             self.assertTrue(k in state.timer.recorded_durations.keys())
 
 

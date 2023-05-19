@@ -199,14 +199,14 @@ class PredictTest(unittest.TestCase):
             auto_timing=True,
         )
         predict(state, DummyPredictUnit(input_dim=input_dim))
-        for k in [
-            "predict.DummyPredictUnit.on_predict_start",
-            "predict.DummyPredictUnit.on_predict_epoch_start",
-            "predict.data_iter_next",
-            "predict.DummyPredictUnit.predict_step",
-            "predict.DummyPredictUnit.on_predict_epoch_end",
-            "predict.DummyPredictUnit.on_predict_end",
-        ]:
+        for k in (
+            "DummyPredictUnit.on_predict_start",
+            "DummyPredictUnit.on_predict_epoch_start",
+            "predict.next(data_iter)",
+            "DummyPredictUnit.predict_step",
+            "DummyPredictUnit.on_predict_epoch_end",
+            "DummyPredictUnit.on_predict_end",
+        ):
             self.assertTrue(k in state.timer.recorded_durations.keys())
 
 

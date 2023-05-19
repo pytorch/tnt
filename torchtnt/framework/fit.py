@@ -181,7 +181,7 @@ def _fit_impl(
         f"evaluate_every_n_epochs={eval_state.evaluate_every_n_epochs} "
     )
 
-    with _get_timing_context(state, f"train.{unit.__class__.__name__}.on_train_start"):
+    with _get_timing_context(state, f"{unit.__class__.__name__}.on_train_start"):
         unit.on_train_start(state)
     _run_callback_fn(callbacks, "on_train_start", state, unit)
 
@@ -191,6 +191,6 @@ def _fit_impl(
     ):
         _train_epoch_impl(state, unit, callbacks)
 
-    with _get_timing_context(state, f"train.{unit.__class__.__name__}.on_train_end"):
+    with _get_timing_context(state, f"{unit.__class__.__name__}.on_train_end"):
         unit.on_train_end(state)
     _run_callback_fn(callbacks, "on_train_end", state, unit)

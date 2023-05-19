@@ -5,19 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 import collections
+import contextlib
 import inspect
 import logging
-from typing import (
-    Any,
-    Callable,
-    ContextManager,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from contextlib import contextmanager
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -26,14 +18,13 @@ from torch.distributed.fsdp import (
     FullyShardedDataParallel,
     FullyShardedDataParallel as FSDP,
 )
-
+from torch.profiler import record_function
 from torchtnt.utils.version import is_torch_version_geq_2_0
 
 if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
     from torch.distributed.fsdp._common_utils import _FSDPState
 
-import contextlib
 
 from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
@@ -102,8 +93,18 @@ def _reset_module_training_mode(
             module.train(prior_modes[name])
 
 
-def _get_timing_context(state: State, event_name: str) -> ContextManager:
-    return state.timer.time(event_name) if state.timer else contextlib.nullcontext()
+@contextmanager
+# pyre-fixme[3]: Return type must be annotated.
+def _get_timing_context(state: State, event_name: str, skip_timer: bool = False):
+    """Returns a context manager that records an event to a :class:`~torchtnt.utils.timer.Timer` and to PyTorch Profiler."""
+    timer_context = (
+        state.timer.time(event_name)
+        if state.timer and not skip_timer
+        else contextlib.nullcontext()
+    )
+    profiler_context = record_function(event_name)
+    with timer_context, profiler_context:
+        yield (timer_context, profiler_context)
 
 
 def _run_callback_fn(
@@ -117,7 +118,7 @@ def _run_callback_fn(
         fn = getattr(cb, fn_name)
         if not callable(fn):
             raise ValueError(f"Invalid callback method name provided: {fn_name}")
-        with _get_timing_context(state, f"callback.{cb.name}.{fn_name}"):
+        with _get_timing_context(state, f"{cb.name}.{fn_name}"):
             fn(state, *args, **kwargs)
 
 

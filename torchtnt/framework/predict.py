@@ -9,6 +9,7 @@ from typing import Iterable, List, Optional
 
 import torch
 from pyre_extensions import none_throws
+from torchtnt.framework import AutoUnit
 from torchtnt.framework.callback import Callback
 
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
@@ -150,7 +151,7 @@ def _predict_impl(
     prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
     with _get_timing_context(
-        state, f"predict.{predict_unit.__class__.__name__}.on_predict_start"
+        state, f"{predict_unit.__class__.__name__}.on_predict_start"
     ):
         predict_unit.on_predict_start(state)
     _run_callback_fn(callbacks, "on_predict_start", state, predict_unit)
@@ -159,15 +160,17 @@ def _predict_impl(
     # in the case of resuming from a checkpoint mid-epoch
     if predict_state.progress.num_steps_completed_in_epoch == 0:
         with _get_timing_context(
-            state, f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_start"
+            state, f"{predict_unit.__class__.__name__}.on_predict_epoch_start"
         ):
             predict_unit.on_predict_epoch_start(state)
         _run_callback_fn(callbacks, "on_predict_epoch_start", state, predict_unit)
 
-    data_iter = iter(predict_state.dataloader)
+    with _get_timing_context(state, "predict.iter(dataloader)"):
+        data_iter = iter(predict_state.dataloader)
     step_input = data_iter
 
     pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
+    is_auto_unit = isinstance(predict_unit, AutoUnit)
     prev_steps_in_epoch = predict_state.progress.num_steps_completed_in_epoch
 
     while not (
@@ -181,12 +184,15 @@ def _predict_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                with _get_timing_context(state, "predict.data_iter_next"):
+                with _get_timing_context(state, "predict.next(data_iter)"):
                     step_input = next(data_iter)
 
             _run_callback_fn(callbacks, "on_predict_step_start", state, predict_unit)
             with _get_timing_context(
-                state, f"predict.{predict_unit.__class__.__name__}.predict_step"
+                state,
+                f"{predict_unit.__class__.__name__}.predict_step",
+                skip_timer=is_auto_unit,
+                # skip timer if predict_unit is a subclass of AutoUnit because we have additional timing in the AutoUnit and all timing should be mutually exclusive
             ):
                 predict_state._step_output = predict_unit.predict_step(
                     state, step_input
@@ -211,13 +217,13 @@ def _predict_impl(
     predict_state.progress.increment_epoch()
 
     with _get_timing_context(
-        state, f"predict.{predict_unit.__class__.__name__}.on_predict_epoch_end"
+        state, f"{predict_unit.__class__.__name__}.on_predict_epoch_end"
     ):
         predict_unit.on_predict_epoch_end(state)
     _run_callback_fn(callbacks, "on_predict_epoch_end", state, predict_unit)
 
     with _get_timing_context(
-        state, f"predict.{predict_unit.__class__.__name__}.on_predict_end"
+        state, f"{predict_unit.__class__.__name__}.on_predict_end"
     ):
         predict_unit.on_predict_end(state)
     _run_callback_fn(callbacks, "on_predict_end", state, predict_unit)

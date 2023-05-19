@@ -194,14 +194,14 @@ class EvaluateTest(unittest.TestCase):
             auto_timing=True,
         )
         evaluate(state, DummyEvalUnit(input_dim=input_dim))
-        for k in [
-            "eval.DummyEvalUnit.on_eval_start",
-            "eval.DummyEvalUnit.on_eval_epoch_start",
-            "eval.data_iter_next",
-            "eval.DummyEvalUnit.eval_step",
-            "eval.DummyEvalUnit.on_eval_epoch_end",
-            "eval.DummyEvalUnit.on_eval_end",
-        ]:
+        for k in (
+            "DummyEvalUnit.on_eval_start",
+            "DummyEvalUnit.on_eval_epoch_start",
+            "evaluate.next(data_iter)",
+            "DummyEvalUnit.eval_step",
+            "DummyEvalUnit.on_eval_epoch_end",
+            "DummyEvalUnit.on_eval_end",
+        ):
             self.assertTrue(k in state.timer.recorded_durations.keys())
 
 

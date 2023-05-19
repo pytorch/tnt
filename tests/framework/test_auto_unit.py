@@ -918,6 +918,50 @@ class TestAutoUnit(unittest.TestCase):
         state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
         train(state, my_unit)
 
+    def test_auto_unit_timing(self) -> None:
+        """
+        Test auto timing in AutoUnit
+        """
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+        max_epochs = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        my_module = torch.nn.Linear(2, 2)
+
+        state = init_train_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            max_epochs=max_epochs,
+        )
+        train(state, DummyAutoUnit(module=my_module))
+        self.assertIsNone(state.timer)
+
+        state = init_train_state(
+            dataloader=dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            max_epochs=max_epochs,
+            auto_timing=True,
+        )
+        train(state, DummyAutoUnit(module=my_module))
+        for k in (
+            "DummyAutoUnit.on_train_start",
+            "DummyAutoUnit.on_train_end",
+            "DummyAutoUnit.compute_loss",
+            "DummyAutoUnit.next(data_iter)",
+            "DummyAutoUnit.backward",
+        ):
+            self.assertTrue(k in state.timer.recorded_durations.keys())
+
+        # train_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's train_step
+        self.assertFalse(
+            "DummyAutoUnit.train_step" in state.timer.recorded_durations.keys()
+        )
+
 
 Batch = Tuple[torch.tensor, torch.tensor]
 
