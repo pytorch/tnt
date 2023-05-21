@@ -6,6 +6,7 @@
 
 from .device import (
     copy_data_to_device,
+    copy_list_tensors_to_device,
     CPUStats,
     get_device_from_env,
     get_nvidia_smi_gpu_stats,
@@ -56,6 +57,7 @@ from .version import (
 
 __all__ = [
     "copy_data_to_device",
+    "copy_list_tensors_to_device",
     "CPUStats",
     "get_device_from_env",
     "get_nvidia_smi_gpu_stats",

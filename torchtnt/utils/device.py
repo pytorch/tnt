@@ -10,7 +10,7 @@ import shutil
 import subprocess
 from collections import defaultdict
 from dataclasses import fields, is_dataclass
-from typing import Any, Dict, Mapping, TypeVar
+from typing import Any, Dict, List, Mapping, TypeVar
 
 import torch
 from torchtnt.utils.version import is_torch_version_geq_1_12
@@ -121,6 +121,35 @@ def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any
     elif isinstance(data, _CopyableData):
         return data.to(device, *args, **kwargs)
     return data
+
+
+def copy_list_tensors_to_device(
+    datae: List[torch.Tensor], device: torch.device, *args: Any, **kwargs: Any
+) -> List[torch.Tensor]:
+    """Function that recursively a list of Tensors to a torch.device. This has better performance than copy_data_to_device.
+
+    Args:
+        data: The data to copy to device
+        device: The device to which the data should be copied
+        args: positional arguments that will be passed to the `to` call
+        kwargs: keyword arguments that will be passed to the `to` call
+
+    Returns:
+        The data on the correct device
+    """
+
+    return [
+        d.view_as(data.size())
+        for (d, data) in zip(
+            torch.split_with_sizes(
+                torch.cat([data.reshape(-1) for data in datae]).to(
+                    device, *args, **kwargs
+                ),
+                [data.numel() for data in datae],
+            ),
+            datae,
+        )
+    ]
 
 
 def record_data_in_stream(data: T, stream: torch.cuda.streams.Stream) -> None:
