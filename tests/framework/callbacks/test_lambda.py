@@ -8,7 +8,7 @@
 import unittest
 from functools import partial
 from inspect import getmembers, isfunction
-from typing import Tuple
+from typing import Set, Tuple
 
 import torch
 from torchtnt.framework._test_utils import (
@@ -36,7 +36,7 @@ class DummyTrainExceptUnit(TrainUnit[Batch]):
         raise RuntimeError("testing")
 
 
-def _get_members_in_different_name(cls: Callback, phase: str):
+def _get_members_in_different_name(cls: Callback, phase: str) -> Set[str]:
     # retrieve Callback in different phases, including: train, predict, fit, eval
     return {
         h
@@ -57,7 +57,7 @@ class LambdaTest(unittest.TestCase):
         )
         checker = set()
 
-        def call(hook, *_, **__):
+        def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
         hooks = _get_members_in_different_name(Callback, "train")
@@ -81,7 +81,7 @@ class LambdaTest(unittest.TestCase):
         )
         checker = set()
 
-        def call(hook, *_, **__):
+        def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
         hooks = _get_members_in_different_name(Callback, "eval")
@@ -100,7 +100,7 @@ class LambdaTest(unittest.TestCase):
         max_steps_per_epoch = 6
         checker = set()
 
-        def call(hook, *_, **__):
+        def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
         hooks = _get_members_in_different_name(Callback, "predict")
@@ -126,7 +126,7 @@ class LambdaTest(unittest.TestCase):
         )
         checker = set()
 
-        def call(hook, *_, **__):
+        def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
         # with on_exception, training will not be ended
