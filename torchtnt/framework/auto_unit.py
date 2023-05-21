@@ -259,7 +259,7 @@ class AutoUnit(
                 # remove ddp comm hook variables from params dict
                 del params_dict["comm_state"]
                 del params_dict["comm_hook"]
-                module = module.to(device)
+                module = module.to(self.device)
                 module = DDP(module, device_ids=device_ids, **params_dict)
                 if torchdynamo_params:
                     # TODO: Add support for dynamo and DDP
@@ -295,7 +295,7 @@ class AutoUnit(
                     **asdict(strategy),
                 )
         else:
-            module = module.to(device)
+            module = module.to(self.device)
 
         self.module: torch.nn.Module = module
 
