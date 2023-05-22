@@ -62,13 +62,13 @@ Documentation
    :caption: Framework
 
    framework/unit
+   framework/auto_unit
    framework/train
    framework/eval
    framework/predict
    framework/fit
    framework/state
    framework/callbacks
-   framework/auto_unit
 
 .. toctree::
    :maxdepth: 2
