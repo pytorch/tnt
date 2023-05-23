@@ -38,7 +38,7 @@ class TQDMProgressBar(Callback):
             train_state.dataloader,
             desc="Train Epoch",
             num_epochs_completed=train_state.progress.num_epochs_completed,
-            num_steps_completed=train_state.progress.num_steps_completed,
+            num_steps_completed=train_state.progress.num_steps_completed_in_epoch,
             max_steps=train_state.max_steps,
             max_steps_per_epoch=train_state.max_steps_per_epoch,
         )
@@ -48,7 +48,7 @@ class TQDMProgressBar(Callback):
         if self._train_progress_bar is not None:
             _update_progress_bar(
                 self._train_progress_bar,
-                train_state.progress.num_steps_completed,
+                train_state.progress.num_steps_completed_in_epoch,
                 self._refresh_rate,
             )
 
@@ -57,7 +57,7 @@ class TQDMProgressBar(Callback):
         if self._train_progress_bar is not None:
             _close_progress_bar(
                 self._train_progress_bar,
-                train_state.progress.num_steps_completed,
+                train_state.progress.num_steps_completed_in_epoch,
                 self._refresh_rate,
             )
 
@@ -67,7 +67,7 @@ class TQDMProgressBar(Callback):
             eval_state.dataloader,
             desc="Eval Epoch",
             num_epochs_completed=eval_state.progress.num_epochs_completed,
-            num_steps_completed=eval_state.progress.num_steps_completed,
+            num_steps_completed=eval_state.progress.num_steps_completed_in_epoch,
             max_steps=eval_state.max_steps,
             max_steps_per_epoch=eval_state.max_steps_per_epoch,
         )
@@ -77,7 +77,7 @@ class TQDMProgressBar(Callback):
         if self._eval_progress_bar is not None:
             _update_progress_bar(
                 self._eval_progress_bar,
-                eval_state.progress.num_steps_completed,
+                eval_state.progress.num_steps_completed_in_epoch,
                 self._refresh_rate,
             )
 
@@ -86,7 +86,7 @@ class TQDMProgressBar(Callback):
         if self._eval_progress_bar is not None and state.eval_state:
             _close_progress_bar(
                 self._eval_progress_bar,
-                eval_state.progress.num_steps_completed,
+                eval_state.progress.num_steps_completed_in_epoch,
                 self._refresh_rate,
             )
 
@@ -106,7 +106,7 @@ class TQDMProgressBar(Callback):
         if self._predict_progress_bar is not None:
             _update_progress_bar(
                 self._predict_progress_bar,
-                predict_state.progress.num_steps_completed,
+                predict_state.progress.num_steps_completed_in_epoch,
                 self._refresh_rate,
             )
 
@@ -115,7 +115,7 @@ class TQDMProgressBar(Callback):
         if self._predict_progress_bar is not None:
             _close_progress_bar(
                 self._predict_progress_bar,
-                predict_state.progress.num_steps_completed,
+                predict_state.progress.num_steps_completed_in_epoch,
                 self._refresh_rate,
             )
 
