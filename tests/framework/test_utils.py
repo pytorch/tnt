@@ -29,10 +29,9 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 
 from torch.utils.data.distributed import DistributedSampler
-from torchtnt.framework import AutoUnit
 from torchtnt.framework._test_utils import generate_random_dataset
+from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.progress import Progress
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.framework.utils import (
@@ -53,6 +52,7 @@ from torchtnt.framework.utils import (
 )
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.progress import Progress
 from torchtnt.utils.test_utils import get_pet_launch_config
 from torchtnt.utils.timer import Timer
 

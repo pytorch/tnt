@@ -7,8 +7,9 @@
 
 import unittest
 
-from torchtnt.framework.progress import Progress
 from torchtnt.framework.state import _check_loop_condition, PhaseState
+
+from torchtnt.utils.progress import Progress
 
 
 class StateTest(unittest.TestCase):

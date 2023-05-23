@@ -29,6 +29,7 @@ from .lr_scheduler import TLRScheduler
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
 from .misc import days_to_secs, transfer_batch_norm_stats, transfer_weights
 from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
+from .progress import Progress
 from .rank_zero_log import (
     rank_zero_critical,
     rank_zero_debug,
@@ -79,6 +80,7 @@ __all__ = [
     "is_out_of_cpu_memory",
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
+    "Progress",
     "rank_zero_critical",
     "rank_zero_debug",
     "rank_zero_error",

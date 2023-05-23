@@ -13,7 +13,7 @@ import logging
 from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
-from torchtnt.framework.progress import Progress
+from torchtnt.utils.progress import Progress
 from torchtnt.utils.timer import Timer
 
 _logger: logging.Logger = logging.getLogger(__name__)

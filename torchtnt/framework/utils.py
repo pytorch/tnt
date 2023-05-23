@@ -28,10 +28,10 @@ if is_torch_version_geq_2_0():
 
 from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.progress import Progress
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.progress import Progress
 from typing_extensions import Self
 
 _logger: logging.Logger = logging.getLogger(__name__)

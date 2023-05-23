@@ -36,12 +36,12 @@ class Progress:
         return self._num_steps_completed_in_epoch
 
     def increment_step(self) -> None:
-        """Method called by framework to increment the step count. Not intended to be called by user."""
+        """Increment the step counts completed and completed within the epoch."""
         self._num_steps_completed += 1
         self._num_steps_completed_in_epoch += 1
 
     def increment_epoch(self) -> None:
-        """Method called by framework to increment the epoch count. Not intended to be called by user."""
+        """Increment the epochs completed and resets the steps completed within the epoch."""
         self._num_epochs_completed += 1
         self._num_steps_completed_in_epoch = 0
 

@@ -7,7 +7,7 @@
 
 import unittest
 
-from torchtnt.framework.progress import Progress
+from torchtnt.utils.progress import Progress
 
 
 class ProgressTest(unittest.TestCase):
