@@ -381,7 +381,9 @@ class AutoUnit(
         """
         ...
 
-    def move_data_to_device(self, state: State, data: TData) -> TData:
+    def move_data_to_device(
+        self, state: State, data: TData, non_blocking: bool
+    ) -> TData:
         """
         The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``/``eval_step``/``predict_step``.
         By default this uses the utility function :py:func:`~torchtnt.utils.copy_data_to_device`.
@@ -391,17 +393,11 @@ class AutoUnit(
         Args:
             state: a State object which is passed from the ``train_step``/``eval_step``/``predict_step``
             data: a batch of data which is passed from the ``train_step``/``eval_step``/``predict_step``
+            non_blocking: parameter to pass to ``torch.tensor.to``
 
         Returns:
             A batch of data which is on the device
         """
-        non_blocking = (
-            True
-            if state.active_phase == ActivePhase.TRAIN
-            and self.device.type == "cuda"
-            and self._prefetched
-            else False
-        )
         return copy_data_to_device(data, self.device, non_blocking=non_blocking)
 
     def prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
@@ -416,11 +412,21 @@ class AutoUnit(
             self._is_last_train_batch = True
             return
 
+        non_blocking = (
+            True
+            if state.active_phase == ActivePhase.TRAIN
+            and self.device.type == "cuda"
+            and self._prefetched
+            else False
+        )
+
         # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
         with torch.cuda.stream(self._prefetch_stream), _get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
         ):
-            self._next_batch = self.move_data_to_device(state, next_batch)
+            self._next_batch = self.move_data_to_device(
+                state, next_batch, non_blocking=non_blocking
+            )
 
     def train_step(
         self, state: State, data: Iterator[TData]
@@ -614,7 +620,7 @@ class AutoUnit(
         with _get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
         ):
-            data = self.move_data_to_device(state, data)
+            data = self.move_data_to_device(state, data, non_blocking=False)
 
         with self.maybe_autocast_precision:
             # users must override this
@@ -647,7 +653,7 @@ class AutoUnit(
         with _get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
         ):
-            data = self.move_data_to_device(state, data)
+            data = self.move_data_to_device(state, data, non_blocking=False)
 
         with self.maybe_autocast_precision:
             with _get_timing_context(state, f"{self.__class__.__name__}.module(data)"):
