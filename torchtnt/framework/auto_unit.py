@@ -508,10 +508,13 @@ class AutoUnit(
             loss = loss / self.gradient_accumulation_steps
 
             if self.grad_scaler:
-                loss = self.grad_scaler.scale(loss)
+                scaled_loss = self.grad_scaler.scale(loss)
+                with _get_timing_context(state, f"{self.__class__.__name__}.backward"):
+                    scaled_loss.backward()
+            else:
+                with _get_timing_context(state, f"{self.__class__.__name__}.backward"):
+                    loss.backward()
 
-            with _get_timing_context(state, f"{self.__class__.__name__}.backward"):
-                loss.backward()
         return loss, outputs
 
     def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
