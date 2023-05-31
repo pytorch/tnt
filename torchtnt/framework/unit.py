@@ -108,7 +108,7 @@ class AppStateMixin:
     ) -> None:
         if tracked_objects is None:
             raise AttributeError(
-                "cannot assign parameter before _AppStateMixin.__init__() call"
+                "Please call super().__init__() in your Unit before setting attributes."
             )
         _remove_from_dicts(
             name,
