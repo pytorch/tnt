@@ -23,7 +23,7 @@ from .distributed import (
     sync_bool,
 )
 from .early_stop_checker import EarlyStopChecker
-from .env import init_from_env
+from .env import init_from_env, seed
 from .fsspec import get_filesystem
 from .lr_scheduler import TLRScheduler
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
@@ -38,7 +38,6 @@ from .rank_zero_log import (
     rank_zero_print,
     rank_zero_warn,
 )
-from .seed import seed
 from .timer import FullSyncPeriodicTimer, get_timer_summary, Timer
 from .version import (
     get_python_version,
@@ -72,6 +71,7 @@ __all__ = [
     "sync_bool",
     "EarlyStopChecker",
     "init_from_env",
+    "seed",
     "get_filesystem",
     "get_tensor_size_bytes_map",
     "measure_rss_deltas",
@@ -87,7 +87,6 @@ __all__ = [
     "rank_zero_info",
     "rank_zero_print",
     "rank_zero_warn",
-    "seed",
     "FullSyncPeriodicTimer",
     "get_timer_summary",
     "transfer_batch_norm_stats",
