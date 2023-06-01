@@ -215,11 +215,12 @@ class AutoUnit(
         torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/stable/dynamo/index.html
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
-            Note:
-                Stochastic Weight Averaging is currently not supported with the FSDP strategy.
+    Note:
+        Stochastic Weight Averaging is currently not supported with the FSDP strategy.
 
-            Note:
-                TorchDynamo support is only available in PyTorch 2.0 or higher.
+    Note:
+        TorchDynamo support is only available in PyTorch 2.0 or higher.
+
     """
 
     def __init__(
