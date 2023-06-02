@@ -181,7 +181,10 @@ def _estimated_steps_in_epoch(
 
     total = float("inf")
     if isinstance(dataloader, Sized):
-        total = len(dataloader)
+        try:
+            total = len(dataloader)
+        except NotImplementedError:
+            pass
 
     if max_steps_per_epoch and max_steps:
         total = min(total, max_steps_per_epoch, max_steps - num_steps_completed)
