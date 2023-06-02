@@ -26,14 +26,17 @@ class TensorBoardLogger(MetricLogger):
     will be written to.  If the environment variable `RANK` is defined,
     logger will only log if RANK = 0.
 
-    NOTE: If using the logger with distributed training:
-    - This logger can call collective operations
-    - Logs will be written on rank 0 only
-    - Logger must be constructed synchronously *after* initializing distributed process group.
+    Note:
+        If using this logger with distributed training:
+
+        - This logger can call collective operations
+        - Logs will be written on rank 0 only
+        - Logger must be constructed synchronously *after* initializing the distributed process group.
 
     Args:
         path (str): path to write logs to
-        *args, **kwargs: Extra arguments to pass to SummaryWriter
+        *args: Extra positional arguments to pass to SummaryWriter
+        **kwargs: Extra keyword arguments to pass to SummaryWriter
 
     Examples::
 
