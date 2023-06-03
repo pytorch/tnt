@@ -202,7 +202,7 @@ class TorchSnapshotSaver(Callback):
     def restore(
         path: str,
         state: State,
-        unit: TTrainUnit,
+        unit: AppStateMixin,
         *,
         restore_train_progress: bool = True,
         restore_train_dataloader: bool = True,
@@ -270,7 +270,7 @@ def _app_state(unit: AppStateMixin) -> Dict[str, Any]:
 
 
 def _get_app_state(
-    state: State, unit: TTrainUnit, replicated: Set[str], *, intra_epoch: bool
+    state: State, unit: AppStateMixin, replicated: Set[str], *, intra_epoch: bool
 ) -> Dict[str, _TStateful]:
     train_state = none_throws(state.train_state)
 
