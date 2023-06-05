@@ -104,8 +104,7 @@ def _dump_snapshot(save_dir: str, snapshot: Dict[str, Any]) -> None:
     with fs.open(os.path.join(save_dir, "trace_plot.html"), "w") as f:
         f.write(torch.cuda._memory_viz.trace_plot(snapshot))
     with fs.open(os.path.join(save_dir, "segment_plot.html"), "w") as f:
-        # pyre-ignore [16]: Module `torch.cuda` has no attribute `_memory_vis``
-        f.write(torch.cuda._memory_vis.segment_plot(snapshot))
+        f.write(torch.cuda._memory_viz.segment_plot(snapshot))
 
 
 def attach_oom_observer(output_dir: str, trace_max_entries: int = 1000000) -> None:
