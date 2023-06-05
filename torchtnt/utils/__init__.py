@@ -28,7 +28,13 @@ from .fsspec import get_filesystem
 from .lr_scheduler import TLRScheduler
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
 from .misc import days_to_secs, transfer_batch_norm_stats, transfer_weights
-from .oom import is_out_of_cpu_memory, is_out_of_cuda_memory, is_out_of_memory_error
+from .oom import (
+    attach_oom_observer,
+    is_out_of_cpu_memory,
+    is_out_of_cuda_memory,
+    is_out_of_memory_error,
+    log_memory_snapshot,
+)
 from .progress import Progress
 from .rank_zero_log import (
     rank_zero_critical,
@@ -77,9 +83,11 @@ __all__ = [
     "measure_rss_deltas",
     "RSSProfiler",
     "days_to_secs",
+    "attach_oom_observer",
     "is_out_of_cpu_memory",
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
+    "log_memory_snapshot",
     "Progress",
     "rank_zero_critical",
     "rank_zero_debug",
