@@ -31,6 +31,9 @@ class GarbageCollector(Callback):
     Synchronizing the garbage collection can lead to a performance improvement.
     The frequency of garbage collection must be tuned based on the application at hand.
 
+    By default, this callback does generation 1 collection every step. This can free up
+    some objects to be reaped with minimal overhead compared to the full garbage collection.
+
     Args:
         step_interval: number of steps to run before each collection
     """
@@ -42,6 +45,8 @@ class GarbageCollector(Callback):
         gc.disable()
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
+        gc.collect(generation=1)
+
         train_state = none_throws(state.train_state)
         if train_state.progress.num_steps_completed % self._step_interval == 0:
             gc.collect()
@@ -53,6 +58,7 @@ class GarbageCollector(Callback):
         gc.disable()
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
+        gc.collect(generation=1)
         eval_state = none_throws(state.eval_state)
         if eval_state.progress.num_steps_completed % self._step_interval == 0:
             gc.collect()
@@ -64,6 +70,7 @@ class GarbageCollector(Callback):
         gc.disable()
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
+        gc.collect(generation=1)
         predict_state = none_throws(state.predict_state)
         if predict_state.progress.num_steps_completed % self._step_interval == 0:
             gc.collect()
