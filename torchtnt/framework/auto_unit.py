@@ -11,6 +11,7 @@
 import contextlib
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass
+from functools import partial
 from typing import Any, Callable, Iterable, Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
@@ -19,6 +20,12 @@ import torch.distributed as dist
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
 from torch.distributed import ProcessGroup
+
+from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
+    apply_activation_checkpointing,
+    checkpoint_wrapper,
+    CheckpointImpl,
+)
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     BackwardPrefetch,
@@ -130,6 +137,20 @@ class TorchDynamoParams:
     backend: str
 
 
+@dataclass
+class ActivationCheckpointParams:
+    """
+    Dataclass to store parameters for activation checkpointing.
+
+    Args:
+        checkpoint_impl: type of checkpointing implementation to use
+        check_fn: A lambda function which will be passed to each child submodule and return ``True`` or ``False`` depending on whether the submodule should be wrapped.
+    """
+
+    checkpoint_impl: CheckpointImpl
+    check_fn: Optional[Callable[[torch.nn.Module], bool]]
+
+
 # pyre-ignore: Invalid type parameters [24]
 TSelf = TypeVar("TSelf", bound="AutoUnit")
 TData = TypeVar("TData")
@@ -213,6 +234,7 @@ class AutoUnit(
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
         torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/stable/dynamo/index.html
+        activation_checkpoint_params: params for enabling activation checkpointing
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
     Note:
@@ -237,6 +259,7 @@ class AutoUnit(
         clip_grad_value: Optional[float] = None,
         swa_params: Optional[SWAParams] = None,
         torchdynamo_params: Optional[TorchDynamoParams] = None,
+        activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
         training: bool = True,
     ) -> None:
         super().__init__()
@@ -297,6 +320,19 @@ class AutoUnit(
                 )
         else:
             module = module.to(self.device)
+
+        if activation_checkpoint_params:
+            checkpoint_impl = activation_checkpoint_params.checkpoint_impl
+            check_fn = activation_checkpoint_params.check_fn
+            custom_checkpoint_wrapper = partial(
+                checkpoint_wrapper,
+                checkpoint_impl=checkpoint_impl,
+            )
+            apply_activation_checkpointing(
+                module,
+                checkpoint_wrapper_fn=custom_checkpoint_wrapper,
+                check_fn=check_fn,
+            )
 
         self.module: torch.nn.Module = module
 
