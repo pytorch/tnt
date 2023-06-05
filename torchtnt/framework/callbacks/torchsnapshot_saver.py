@@ -51,6 +51,8 @@ class TorchSnapshotSaver(Callback):
 
     If used with :func:`torchtnt.framework.fit`, this class will also save the evaluation progress state.
 
+    Checkpoints will be saved under ``dirpath/epoch_{epoch}_step_{step}`` where step is the *total* number of training steps completed across all epochs.
+
     Args:
         dirpath: Parent directory to save snapshots to.
         save_every_n_train_steps: Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.
@@ -112,11 +114,11 @@ class TorchSnapshotSaver(Callback):
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         train_state = none_throws(state.train_state)
 
-        global_step = train_state.progress.num_steps_completed
+        num_steps_completed = train_state.progress.num_steps_completed
         save_every_n_train_steps = self._save_every_n_train_steps
         if (
             save_every_n_train_steps is None
-            or global_step % save_every_n_train_steps != 0
+            or num_steps_completed % save_every_n_train_steps != 0
         ):
             return
 
@@ -125,7 +127,9 @@ class TorchSnapshotSaver(Callback):
         # save snapshot to predetermined path
         # TODO: discuss whether this path should be customized
         epoch = train_state.progress.num_epochs_completed
-        snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
+        snapshot_path = _get_snapshot_save_path(
+            self._dirpath, epoch, num_steps_completed
+        )
         self._async_snapshot(snapshot_path, app_state, wait=False)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
@@ -143,20 +147,24 @@ class TorchSnapshotSaver(Callback):
 
         # save snapshot to predetermined path
         # TODO: discuss whether this path should be customized
-        global_step = train_progress.num_steps_completed
-        snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
+        num_steps_completed = train_progress.num_steps_completed
+        snapshot_path = _get_snapshot_save_path(
+            self._dirpath, epoch, num_steps_completed
+        )
         self._async_snapshot(snapshot_path, app_state, wait=True)
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         train_state = none_throws(state.train_state)
-        global_step = train_state.progress.num_steps_completed
+        num_steps_completed = train_state.progress.num_steps_completed
 
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
 
         # save snapshot to predetermined path
         # TODO: discuss whether this path should be customized
         epoch = train_state.progress.num_epochs_completed
-        snapshot_path = _get_snapshot_save_path(self._dirpath, epoch, global_step)
+        snapshot_path = _get_snapshot_save_path(
+            self._dirpath, epoch, num_steps_completed
+        )
         self._async_snapshot(snapshot_path, app_state, wait=False)
 
         self._wait()
