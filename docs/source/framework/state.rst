@@ -11,9 +11,3 @@ PhaseState
 .. autoclass:: PhaseState
    :members:
    :undoc-members:
-
-Progress
-~~~~~~~~~~~~~~~~~
-.. autoclass:: Progress
-   :members:
-   :undoc-members:
