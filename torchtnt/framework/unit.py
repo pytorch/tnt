@@ -202,7 +202,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
               self.lr_scheduler = lr_scheduler
 
           def train_step(self, state: State, data: Batch) -> None:
-               inputs, targets = data
+              inputs, targets = data
               outputs = self.module(inputs)
               loss = torch.nn.functional.binary_cross_entropy_with_logits(outputs, targets)
               loss.backward()
