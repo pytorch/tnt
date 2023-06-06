@@ -30,7 +30,7 @@ class PGWrapper:
     """
 
     def __init__(self, pg: Optional[dist.ProcessGroup]) -> None:
-        if pg is None and dist.is_initialized():
+        if pg is None and dist.is_available() and dist.is_initialized():
             self.pg: Optional[dist.ProcessGroup] = dist.group.WORLD
         else:
             self.pg: Optional[dist.ProcessGroup] = pg
@@ -104,7 +104,7 @@ def get_global_rank() -> int:
     Get rank using torch.distributed if available. Otherwise, the RANK env var instead if initialized.
     Returns 0 if neither condition is met.
     """
-    if dist.is_initialized():
+    if dist.is_available() and dist.is_initialized():
         return dist.get_rank()
 
     environ_rank = os.environ.get("RANK", "")
@@ -134,7 +134,7 @@ def get_world_size() -> int:
     Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.
     Returns 1 if neither condition is met.
     """
-    if dist.is_initialized():
+    if dist.is_available() and dist.is_initialized():
         return dist.get_world_size()
 
     world_size = os.environ.get("WORLD_SIZE", "")
