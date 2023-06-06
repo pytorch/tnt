@@ -16,6 +16,7 @@ from .device import (
 )
 from .distributed import (
     all_gather_tensors,
+    barrier,
     get_global_rank,
     get_local_rank,
     get_process_group_backend_from_device,
@@ -71,6 +72,7 @@ __all__ = [
     "maybe_enable_tf32",
     "record_data_in_stream",
     "all_gather_tensors",
+    "barrier",
     "get_global_rank",
     "get_local_rank",
     "get_process_group_backend_from_device",

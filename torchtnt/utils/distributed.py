@@ -144,6 +144,21 @@ def get_world_size() -> int:
     return 1
 
 
+def barrier() -> None:
+    """
+    Add a synchronization point across all processes when using distributed.
+    If torch.distributed is initialized, this function will invoke a barrier across the global process group.
+    For more granular process group wrapping, please refer to :class:`~torchtnt.utils.PGWrapper`.
+    """
+    if not (dist.is_available() and dist.is_initialized()):
+        return
+    backend = dist.get_backend()
+    if backend == dist.Backend.NCCL:
+        dist.barrier(device_ids=[torch.cuda.current_device()])
+    else:
+        dist.barrier()
+
+
 def get_process_group_backend_from_device(device: torch.device) -> str:
     """Function that gets the default process group backend from the device."""
     return "nccl" if device.type == "cuda" else "gloo"
