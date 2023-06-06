@@ -69,9 +69,10 @@ class Strategy:
 class DDPStrategy(Strategy):
     """
     Dataclass representing the `DistributedDataParallel <https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html>`_ strategy.
-    Includes params for registering `DDP communication hooks <https://pytorch.org/docs/stable/ddp_comm_hooks.html>`_.
+    Includes params for registering `DDP communication hooks <https://pytorch.org/docs/stable/ddp_comm_hooks.html>`_ and `syncing batch norm <https://pytorch.org/docs/stable/generated/torch.nn.SyncBatchNorm.html>`_.
     """
 
+    # DDP Constructor params
     output_device: Optional[Union[int, torch.device]] = None
     dim: int = 0
     broadcast_buffers: bool = True
@@ -87,6 +88,9 @@ class DDPStrategy(Strategy):
     comm_hook: Optional[
         Callable[[object, dist.GradBucket], torch.futures.Future[torch.Tensor]]
     ] = None
+
+    # SyncBatchNorm params
+    sync_batchnorm: bool = True
 
 
 @dataclass
@@ -284,6 +288,17 @@ class AutoUnit(
                 del params_dict["comm_state"]
                 del params_dict["comm_hook"]
                 module = module.to(self.device)
+
+                # remove sync batch norm from params dict before converting module
+                del params_dict["sync_batchnorm"]
+                if strategy.sync_batchnorm:
+                    if self.device.type == "cuda":
+                        module = torch.nn.SyncBatchNorm.convert_sync_batchnorm(module)
+                    else:
+                        rank_zero_warn(
+                            f"SyncBatchNorm layers only work with GPU modules. Skipping the conversion because the device type is {self.device.type}."
+                        )
+
                 module = DDP(module, device_ids=device_ids, **params_dict)
                 if torchdynamo_params:
                     # TODO: Add support for dynamo and DDP
