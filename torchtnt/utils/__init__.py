@@ -17,6 +17,7 @@ from .device import (
 from .distributed import (
     all_gather_tensors,
     get_global_rank,
+    get_local_rank,
     get_process_group_backend_from_device,
     get_world_size,
     PGWrapper,
@@ -71,6 +72,7 @@ __all__ = [
     "record_data_in_stream",
     "all_gather_tensors",
     "get_global_rank",
+    "get_local_rank",
     "get_process_group_backend_from_device",
     "get_world_size",
     "PGWrapper",

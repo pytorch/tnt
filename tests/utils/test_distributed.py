@@ -5,6 +5,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import unittest
 from typing import Optional
 from unittest.mock import patch
@@ -16,6 +17,7 @@ from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.distributed import (
     all_gather_tensors,
     get_global_rank,
+    get_local_rank,
     get_process_group_backend_from_device,
     get_world_size,
     rank_zero_fn,
@@ -70,6 +72,21 @@ class DistributedTest(unittest.TestCase):
 
     def test_get_global_rank_single(self) -> None:
         self.assertEqual(get_global_rank(), 0)
+
+    def test_get_local_rank_single(self) -> None:
+        self.assertEqual(get_local_rank(), 0)
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_get_local_rank(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_get_local_rank)()
+
+    @staticmethod
+    def _test_get_local_rank() -> None:
+        # when launched on a single node, these should be equal
+        assert get_local_rank() == get_global_rank()
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
