@@ -406,7 +406,7 @@ class AutoUnit(
     @abstractmethod
     def configure_optimizers_and_lr_scheduler(
         self, module: torch.nn.Module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+    ) -> Tuple[torch.optim.Optimizer, Optional[TLRScheduler]]:
         """
         The user should implement this method with their optimizer and learning rate scheduler construction code. This will be called upon initialization of
         the AutoUnit.

@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 from argparse import Namespace
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -75,7 +75,7 @@ class MyUnit(AutoUnit[Batch]):
 
     def configure_optimizers_and_lr_scheduler(
         self, module: torch.nn.Module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+    ) -> Tuple[torch.optim.Optimizer, Optional[TLRScheduler]]:
         optimizer = Adadelta(module.parameters(), lr=self.lr)
         lr_scheduler = StepLR(optimizer, step_size=1, gamma=self.gamma)
         return optimizer, lr_scheduler

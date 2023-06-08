@@ -8,7 +8,7 @@ import argparse
 import logging
 import tempfile
 from argparse import Namespace
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 from libfb.py import parutil
@@ -68,7 +68,7 @@ class MinGPTUnit(AutoUnit):
 
     def configure_optimizers_and_lr_scheduler(
         self, module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+    ) -> Tuple[torch.optim.Optimizer, Optional[TLRScheduler]]:
         optimizer = create_optimizer(module, self.opt_cfg)
         return optimizer, None
 

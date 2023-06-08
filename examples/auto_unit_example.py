@@ -10,7 +10,7 @@ import logging
 import tempfile
 import uuid
 from argparse import Namespace
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -78,7 +78,7 @@ class MyUnit(AutoUnit[Batch]):
 
     def configure_optimizers_and_lr_scheduler(
         self, module: torch.nn.Module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+    ) -> Tuple[torch.optim.Optimizer, Optional[TLRScheduler]]:
         optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
         return optimizer, lr_scheduler
