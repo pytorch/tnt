@@ -430,6 +430,9 @@ class AutoUnit(
 
         Returns:
             Tuple containing the loss and the output of the model
+
+        Note:
+            The module's forward pass must be run as part of this method.
         """
         ...
 
@@ -454,9 +457,11 @@ class AutoUnit(
 
     def prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
         """Prefetch the next batch on a separate CUDA stream."""
+
+        phase = state.active_phase.name.lower()
         try:
             with _get_timing_context(
-                state, f"{self.__class__.__name__}.next(data_iter)"
+                state, f"{self.__class__.__name__}.{phase}.next(data_iter)"
             ):
                 next_batch = next(data_iter)
         except StopIteration:
@@ -474,7 +479,7 @@ class AutoUnit(
 
         # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
         with torch.cuda.stream(self._prefetch_stream), _get_timing_context(
-            state, f"{self.__class__.__name__}.move_data_to_device"
+            state, f"{self.__class__.__name__}.{phase}.move_data_to_device"
         ):
             self._next_batch = self.move_data_to_device(
                 state, next_batch, non_blocking=non_blocking
@@ -514,15 +519,18 @@ class AutoUnit(
             train_state.progress.num_steps_completed_in_epoch + 1
         ) % self.gradient_accumulation_steps == 0 or self._is_last_train_batch
 
+        # for pyre, assign to local variable
+        module = self.module
+
         # if using gradient accumulation with either DDP or FSDP, when in a step where we will not update the weights,
         # run forward and backward in no_sync context
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
         # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
         maybe_no_sync = (
             # pyre-ignore[29]
-            self.module.no_sync()
+            module.no_sync()
             if not should_update_weights
-            and (isinstance(self.module, DDP) or _is_fsdp_module(self.module))
+            and (isinstance(module, DDP) or _is_fsdp_module(module))
             else contextlib.nullcontext()
         )
 
@@ -561,29 +569,41 @@ class AutoUnit(
             clip_grad_value = self.clip_grad_value
             if grad_scaler and (clip_grad_norm or clip_grad_value):
                 # unscale the gradients of optimizer's assigned params in-place in preparation for gradient clipping
-                grad_scaler.unscale_(self.optimizer)
+                with _get_timing_context(
+                    state, f"{self.__class__.__name__}.grad_unscale"
+                ):
+                    grad_scaler.unscale_(self.optimizer)
 
             # gradient norm clipping
             if clip_grad_norm:
-                if _is_fsdp_module(self.module):
-                    if isinstance(self.module, FSDP):
-                        self.module.clip_grad_norm_(max_norm=clip_grad_norm)
+                if _is_fsdp_module(module):
+                    if isinstance(module, FSDP):
+                        with _get_timing_context(
+                            state, f"{self.__class__.__name__}.clip_grad_norm"
+                        ):
+                            module.clip_grad_norm_(max_norm=clip_grad_norm)
                     else:
                         raise RuntimeError(
                             "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
                         )
                 else:
-                    torch.nn.utils.clip_grad_norm_(
-                        parameters=self.module.parameters(),
-                        max_norm=clip_grad_norm,
-                    )
+                    with _get_timing_context(
+                        state, f"{self.__class__.__name__}.clip_grad_norm"
+                    ):
+                        torch.nn.utils.clip_grad_norm_(
+                            parameters=module.parameters(),
+                            max_norm=clip_grad_norm,
+                        )
 
             # gradient value clipping
             if clip_grad_value:
-                torch.nn.utils.clip_grad_value_(
-                    parameters=self.module.parameters(),
-                    clip_value=clip_grad_value,
-                )
+                with _get_timing_context(
+                    state, f"{self.__class__.__name__}.clip_grad_value"
+                ):
+                    torch.nn.utils.clip_grad_value_(
+                        parameters=module.parameters(),
+                        clip_value=clip_grad_value,
+                    )
 
             with _get_timing_context(
                 state, f"{self.__class__.__name__}.optimizer_step"
@@ -598,7 +618,10 @@ class AutoUnit(
             self._num_optimizer_steps_completed += 1
 
             # sets gradients to zero
-            self.optimizer.zero_grad(set_to_none=True)
+            with _get_timing_context(
+                state, f"{self.__class__.__name__}.optimizer_zero_grad"
+            ):
+                self.optimizer.zero_grad(set_to_none=True)
 
             # optionally step lr scheduler if SWA not in use
             train_state = none_throws(state.train_state)
@@ -647,8 +670,14 @@ class AutoUnit(
             and self.swa_params
             and train_state.progress.num_epochs_completed >= self.swa_params.epoch_start
         ):
-            self.swa_model.update_parameters(self.module)
-            none_throws(self.swa_scheduler).step()
+            with _get_timing_context(
+                state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
+            ):
+                self.swa_model.update_parameters(self.module)
+            with _get_timing_context(
+                state, f"{self.__class__.__name__}.stochastic_weight_avg_step"
+            ):
+                none_throws(self.swa_scheduler).step()
         elif self.lr_scheduler and self.step_lr_interval == "epoch":
             # optionally step lr scheduler
             with _get_timing_context(
@@ -662,8 +691,16 @@ class AutoUnit(
         """
         swa_model = self.swa_model
         if swa_model:
-            transfer_weights(swa_model, self.module)
-            transfer_batch_norm_stats(swa_model, self.module)
+            with _get_timing_context(
+                state,
+                f"{self.__class__.__name__}.stochastic_weight_avg_transfer_weights",
+            ):
+                transfer_weights(swa_model, self.module)
+            with _get_timing_context(
+                state,
+                f"{self.__class__.__name__}.stochastic_weight_avg_transfer_batch_norm_stats",
+            ):
+                transfer_batch_norm_stats(swa_model, self.module)
 
     def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         with _get_timing_context(
@@ -705,7 +742,7 @@ class AutoUnit(
             data = self.move_data_to_device(state, data, non_blocking=False)
 
         with self.maybe_autocast_precision:
-            with _get_timing_context(state, f"{self.__class__.__name__}.module(data)"):
+            with _get_timing_context(state, f"{self.__class__.__name__}.forward"):
                 outputs = self.module(data)
 
         step = get_current_progress(state).num_steps_completed
