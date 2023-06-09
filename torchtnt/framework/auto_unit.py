@@ -267,6 +267,17 @@ class AutoUnit(
         training: bool = True,
     ) -> None:
         super().__init__()
+
+        if not gradient_accumulation_steps > 0:
+            raise ValueError(
+                f"gradient_accumulation_steps must be > 0. Got {gradient_accumulation_steps}"
+            )
+        if torchdynamo_params and not is_torch_version_ge_1_13_1():
+            raise RuntimeError(
+                "TorchDynamo support is available only in PyTorch 2.0 or higher. "
+                "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
+            )
+
         self.device: torch.device = device or init_from_env()
         self.precision: Optional[torch.dtype]
         if isinstance(precision, str):
@@ -277,61 +288,11 @@ class AutoUnit(
         if strategy:
             if isinstance(strategy, str):
                 strategy = _convert_str_to_strategy(strategy)
-
             if isinstance(strategy, DDPStrategy):
-                # wrap module in DDP
-                device_ids = None
-                if self.device.type == "cuda":
-                    device_ids = [self.device.index]
-                params_dict = asdict(strategy)
-                # remove ddp comm hook variables from params dict
-                del params_dict["comm_state"]
-                del params_dict["comm_hook"]
-                module = module.to(self.device)
-
-                # remove sync batch norm from params dict before converting module
-                del params_dict["sync_batchnorm"]
-                if strategy.sync_batchnorm:
-                    if self.device.type == "cuda":
-                        module = torch.nn.SyncBatchNorm.convert_sync_batchnorm(module)
-                    else:
-                        rank_zero_warn(
-                            f"SyncBatchNorm layers only work with GPU modules. Skipping the conversion because the device type is {self.device.type}."
-                        )
-
-                module = DDP(module, device_ids=device_ids, **params_dict)
-                if torchdynamo_params:
-                    # TODO: Add support for dynamo and DDP
-                    rank_zero_warn(
-                        "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
-                    )
-                if strategy.comm_hook:
-                    module.register_comm_hook(
-                        state=strategy.comm_state, hook=strategy.comm_hook
-                    )
+                module = _prepare_ddp(module, strategy, self.device, torchdynamo_params)
             elif isinstance(strategy, FSDPStrategy):
-                if not is_torch_version_geq_1_12():
-                    raise RuntimeError(
-                        "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/"
-                    )
-                elif swa_params:
-                    raise RuntimeError(
-                        "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
-                    )
-                mixed_precision = None
-                if self.precision:
-                    mixed_precision = MixedPrecision(
-                        param_dtype=self.precision,
-                        reduce_dtype=self.precision,
-                        buffer_dtype=self.precision,
-                    )
-
-                # wrap module in FSDP
-                module = FSDP(
-                    module,
-                    device_id=self.device,
-                    mixed_precision=mixed_precision,
-                    **asdict(strategy),
+                module = _prepare_fsdp(
+                    module, strategy, self.device, swa_params, self.precision
                 )
         else:
             module = module.to(self.device)
@@ -360,10 +321,6 @@ class AutoUnit(
                 self.module,
             )
 
-        if not gradient_accumulation_steps > 0:
-            raise ValueError(
-                f"gradient_accumulation_steps must be > 0. Got {gradient_accumulation_steps}"
-            )
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self._num_optimizer_steps_completed: StatefulInt = StatefulInt(0)
 
@@ -381,11 +338,6 @@ class AutoUnit(
         self.swa_params: Optional[SWAParams] = swa_params
 
         if torchdynamo_params:
-            if not is_torch_version_ge_1_13_1():
-                raise RuntimeError(
-                    "TorchDynamo support is available only in PyTorch 2.0 or higher. "
-                    "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
-                )
             # pyre-ignore
             self.compute_loss = _dynamo_wrapper(self.compute_loss, torchdynamo_params)
             self.module = _dynamo_wrapper(self.module, torchdynamo_params)
@@ -845,3 +797,73 @@ def _dynamo_wrapper(fn: Callable, torchdynamo_params: TorchDynamoParams):
         raise RuntimeError(
             f"The following error encountered when calling torch.compile for dynamo: {e}"
         ) from e
+
+
+def _prepare_ddp(
+    module: torch.nn.Module,
+    strategy: DDPStrategy,
+    device: torch.device,
+    torchdynamo_params: Optional[TorchDynamoParams],
+) -> DDP:
+    # wrap module in DDP
+    device_ids = None
+    if device.type == "cuda":
+        device_ids = [device.index]
+    params_dict = asdict(strategy)
+    # remove ddp comm hook variables from params dict
+    del params_dict["comm_state"]
+    del params_dict["comm_hook"]
+    module = module.to(device)
+
+    # remove sync batch norm from params dict before converting module
+    del params_dict["sync_batchnorm"]
+    if strategy.sync_batchnorm:
+        if device.type == "cuda":
+            module = torch.nn.SyncBatchNorm.convert_sync_batchnorm(module)
+        else:
+            rank_zero_warn(
+                f"SyncBatchNorm layers only work with GPU modules. Skipping the conversion because the device type is {device.type}."
+            )
+
+    module = DDP(module, device_ids=device_ids, **params_dict)
+    if torchdynamo_params:
+        # TODO: Add support for dynamo and DDP
+        rank_zero_warn(
+            "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
+        )
+    if strategy.comm_hook:
+        module.register_comm_hook(state=strategy.comm_state, hook=strategy.comm_hook)
+    return module
+
+
+def _prepare_fsdp(
+    module: torch.nn.Module,
+    strategy: FSDPStrategy,
+    device: torch.device,
+    swa_params: Optional[SWAParams],
+    precision: Optional[torch.dtype],
+) -> FSDP:
+    if not is_torch_version_geq_1_12():
+        raise RuntimeError(
+            "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/"
+        )
+    elif swa_params:
+        raise RuntimeError(
+            "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
+        )
+    mixed_precision = None
+    if precision:
+        mixed_precision = MixedPrecision(
+            param_dtype=precision,
+            reduce_dtype=precision,
+            buffer_dtype=precision,
+        )
+
+    # wrap module in FSDP
+    module = FSDP(
+        module,
+        device_id=device,
+        mixed_precision=mixed_precision,
+        **asdict(strategy),
+    )
+    return module
