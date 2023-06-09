@@ -514,21 +514,6 @@ class AutoUnit(
             train_state.progress.num_steps_completed_in_epoch + 1
         ) % self.gradient_accumulation_steps == 0 or self._is_last_train_batch
 
-        loss, outputs = self._forward_and_backward(state, batch, should_update_weights)
-
-        if should_update_weights:
-            # TODO try to use dynamo here
-            self._run_optimizer_lr_scheduler_step(state)
-
-        step = get_current_progress(state).num_steps_completed
-        # users can override this, by default this is a no-op
-        with _get_timing_context(state, f"{self.__class__.__name__}.on_train_step_end"):
-            self.on_train_step_end(state, batch, step, loss, outputs)
-        return loss, outputs
-
-    def _forward_and_backward(
-        self, state: State, data: TData, should_update_weights: bool
-    ) -> Tuple[torch.Tensor, Any]:
         # if using gradient accumulation with either DDP or FSDP, when in a step where we will not update the weights,
         # run forward and backward in no_sync context
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
@@ -548,83 +533,92 @@ class AutoUnit(
             if detect_anomaly is not None
             else contextlib.nullcontext()
         )
+
+        grad_scaler = self.grad_scaler
         with maybe_no_sync, maybe_detect_anomaly:
             with self.maybe_autocast_precision:
                 with _get_timing_context(
                     state, f"{self.__class__.__name__}.compute_loss"
                 ):
-                    # users must override this
-                    loss, outputs = self.compute_loss(state, data)
+                    # Run the forward pass and compute the loss
+                    loss, outputs = self.compute_loss(state, batch)
 
             # normalize loss to account for gradient accumulation
             loss = loss / self.gradient_accumulation_steps
 
-            if self.grad_scaler:
-                scaled_loss = self.grad_scaler.scale(loss)
+            if grad_scaler:
+                scaled_loss = grad_scaler.scale(loss)
                 with _get_timing_context(state, f"{self.__class__.__name__}.backward"):
                     scaled_loss.backward()
             else:
                 with _get_timing_context(state, f"{self.__class__.__name__}.backward"):
                     loss.backward()
 
-        return loss, outputs
+        if should_update_weights:
+            # Run gradient clipping, optimizer step, and zero_grad
+            # TODO try to use dynamo here
+            clip_grad_norm = self.clip_grad_norm
+            clip_grad_value = self.clip_grad_value
+            if grad_scaler and (clip_grad_norm or clip_grad_value):
+                # unscale the gradients of optimizer's assigned params in-place in preparation for gradient clipping
+                grad_scaler.unscale_(self.optimizer)
 
-    def _run_optimizer_lr_scheduler_step(self, state: State) -> None:
-        """Runs the optimizer step, sets gradients to zero, and runs lr scheduler step."""
-        # optimizer step
-        grad_scaler = self.grad_scaler
-        clip_grad_norm = self.clip_grad_norm
-        clip_grad_value = self.clip_grad_value
-        if grad_scaler and (clip_grad_norm or clip_grad_value):
-            # unscale the gradients of optimizer's assigned params in-place in preparation for gradient clipping
-            grad_scaler.unscale_(self.optimizer)
-
-        # gradient norm clipping
-        if clip_grad_norm:
-            if _is_fsdp_module(self.module):
-                if isinstance(self.module, FSDP):
-                    self.module.clip_grad_norm_(max_norm=clip_grad_norm)
+            # gradient norm clipping
+            if clip_grad_norm:
+                if _is_fsdp_module(self.module):
+                    if isinstance(self.module, FSDP):
+                        self.module.clip_grad_norm_(max_norm=clip_grad_norm)
+                    else:
+                        raise RuntimeError(
+                            "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
+                        )
                 else:
-                    raise RuntimeError(
-                        "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
+                    torch.nn.utils.clip_grad_norm_(
+                        parameters=self.module.parameters(),
+                        max_norm=clip_grad_norm,
                     )
-            else:
-                torch.nn.utils.clip_grad_norm_(
+
+            # gradient value clipping
+            if clip_grad_value:
+                torch.nn.utils.clip_grad_value_(
                     parameters=self.module.parameters(),
-                    max_norm=clip_grad_norm,
+                    clip_value=clip_grad_value,
                 )
-        # gradient value clipping
-        if clip_grad_value:
-            torch.nn.utils.clip_grad_value_(
-                parameters=self.module.parameters(),
-                clip_value=clip_grad_value,
-            )
 
-        with _get_timing_context(state, f"{self.__class__.__name__}.optimizer_step"):
-            if grad_scaler:
-                grad_scaler.step(self.optimizer)
-                # update the scale for next iteration
-                grad_scaler.update()
-            else:
-                self.optimizer.step()
+            with _get_timing_context(
+                state, f"{self.__class__.__name__}.optimizer_step"
+            ):
+                if grad_scaler:
+                    grad_scaler.step(self.optimizer)
+                    # update the scale for next iteration
+                    grad_scaler.update()
+                else:
+                    self.optimizer.step()
 
-        self._num_optimizer_steps_completed += 1
+            self._num_optimizer_steps_completed += 1
 
-        # sets gradients to zero
-        self.optimizer.zero_grad(set_to_none=True)
+            # sets gradients to zero
+            self.optimizer.zero_grad(set_to_none=True)
 
-        # optionally step lr scheduler if SWA not in use
-        train_state = none_throws(state.train_state)
-        if (
-            self.swa_params is None
-            or train_state.progress.num_epochs_completed < self.swa_params.epoch_start
-        ):
-            lr_scheduler = self.lr_scheduler
-            if lr_scheduler and self.step_lr_interval == "step":
-                with _get_timing_context(
-                    state, f"{self.__class__.__name__}.lr_scheduler_step"
-                ):
-                    lr_scheduler.step()
+            # optionally step lr scheduler if SWA not in use
+            train_state = none_throws(state.train_state)
+            if (
+                self.swa_params is None
+                or train_state.progress.num_epochs_completed
+                < self.swa_params.epoch_start
+            ):
+                lr_scheduler = self.lr_scheduler
+                if lr_scheduler and self.step_lr_interval == "step":
+                    with _get_timing_context(
+                        state, f"{self.__class__.__name__}.lr_scheduler_step"
+                    ):
+                        lr_scheduler.step()
+
+        step = get_current_progress(state).num_steps_completed
+        # users can override this, by default this is a no-op
+        with _get_timing_context(state, f"{self.__class__.__name__}.on_train_step_end"):
+            self.on_train_step_end(state, batch, step, loss, outputs)
+        return loss, outputs
 
     def on_train_step_end(
         self, state: State, data: TData, step: int, loss: torch.Tensor, outputs: Any
