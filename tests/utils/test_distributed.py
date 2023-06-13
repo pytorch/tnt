@@ -16,6 +16,7 @@ import torch.distributed.launcher as launcher
 from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.distributed import (
     all_gather_tensors,
+    destroy_process_group,
     get_global_rank,
     get_local_rank,
     get_process_group_backend_from_device,
@@ -87,6 +88,21 @@ class DistributedTest(unittest.TestCase):
     def _test_get_local_rank() -> None:
         # when launched on a single node, these should be equal
         assert get_local_rank() == get_global_rank()
+
+    @staticmethod
+    def _destroy_process_group() -> None:
+        dist.init_process_group("gloo")
+        destroy_process_group()
+        assert not torch.distributed.is_initialized()
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_destroy_process_group(self) -> None:
+        # should be a no-op if dist is not initialized
+        destroy_process_group()
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._destroy_process_group)()
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"

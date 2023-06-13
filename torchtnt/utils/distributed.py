@@ -159,6 +159,12 @@ def barrier() -> None:
         dist.barrier()
 
 
+def destroy_process_group() -> None:
+    """Destroy the global process group, if one is already initialized."""
+    if dist.is_available() and dist.is_initialized():
+        dist.destroy_process_group()
+
+
 def get_process_group_backend_from_device(device: torch.device) -> str:
     """Function that gets the default process group backend from the device."""
     return "nccl" if device.type == "cuda" else "gloo"
