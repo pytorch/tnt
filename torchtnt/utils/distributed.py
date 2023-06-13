@@ -8,6 +8,9 @@
 # pyre-ignore-all-errors[2]: Parameter must have a type that does not contain `Any`
 
 import os
+import socket
+import tempfile
+from contextlib import closing
 from functools import wraps
 from typing import Any, Callable, List, Optional, TypeVar, Union
 
@@ -168,6 +171,86 @@ def destroy_process_group() -> None:
 def get_process_group_backend_from_device(device: torch.device) -> str:
     """Function that gets the default process group backend from the device."""
     return "nccl" if device.type == "cuda" else "gloo"
+
+
+def _get_free_port() -> int:
+    if socket.has_ipv6:
+        family = socket.AF_INET6
+        address = "localhost6"
+    else:
+        family = socket.AF_INET
+        address = "localhost4"
+    with socket.socket(family, socket.SOCK_STREAM) as s:
+        s.bind((address, 0))
+        s.listen(0)
+        with closing(s):
+            sockname = s.getsockname()
+            port_port = sockname[1]
+            return port_port
+
+
+def _validate_global_rank_world_size(world_size: int, rank: int) -> None:
+    if world_size < 1:
+        raise ValueError(
+            f"Invalid world_size value provided: {world_size}. Value must be greater than 0."
+        )
+    if rank < 0:
+        raise ValueError(
+            f"Invalid rank value provided: {rank}. Value must be greater than non-negative."
+        )
+    if rank >= world_size:
+        raise ValueError(
+            f"Invalid rank and world_size values provided: rank={rank}, world_size={world_size}. Rank must be less than world_size."
+        )
+
+
+def get_file_init_method(
+    *,
+    world_size: Optional[int] = None,
+    rank: Optional[int] = None,
+    filename: Optional[str] = None,
+) -> str:
+    """Gets init method for the TCP protocol for the distributed environment.
+    For more information, see here: https://pytorch.org/docs/stable/distributed.html#shared-file-system-initialization
+
+    Args:
+        world_size: global number of workers. If ``None``, the default is fetched using :function:`get_world_size`.
+        rank: Global rank of the worker calling the function. If ``None``, the default is fetched using :function:`get_global_rank`.
+        filename: The filename to use for synchronization. If ``None``, a new temporary file is used.
+    """
+    world_size = world_size if world_size is not None else get_world_size()
+    rank = rank if rank is not None else get_global_rank()
+    _validate_global_rank_world_size(world_size, rank)
+    if filename is None:
+        with tempfile.NamedTemporaryFile() as tmp_file:
+            filename = tmp_file.name
+    init_method = f"file://{filename}?world_size={world_size}&rank={rank}"
+    return init_method
+
+
+def get_tcp_init_method(
+    *,
+    world_size: Optional[int] = None,
+    rank: Optional[int] = None,
+    hostname: Optional[str] = None,
+    port: Optional[int] = None,
+) -> str:
+    """Gets init method for the TCP protocol for the distributed environment.
+    For more information, see here: https://pytorch.org/docs/stable/distributed.html#tcp-initialization.
+
+    Args:
+        world_size: global number of workers. If ``None``, the default is fetched using :function:`get_world_size`.
+        rank: Global rank of the worker calling the function. If ``None``, the default is fetched using :function:`get_global_rank`.
+        hostname: an address that belongs to the rank 0 process. If ``None``, then ``localhost`` is used.
+        port: A free port to use for communication. If ``None``, this port is automatically selected.
+    """
+    world_size = world_size if world_size is not None else get_world_size()
+    rank = rank if rank is not None else get_global_rank()
+    _validate_global_rank_world_size(world_size, rank)
+    host_addr = hostname if hostname is not None else "localhost"
+    host_port = port if port is not None else _get_free_port()
+    init_method = f"tcp://{host_addr}:{host_port}?world_size={world_size}&rank={rank}"
+    return init_method
 
 
 def _simple_all_gather_tensors(
