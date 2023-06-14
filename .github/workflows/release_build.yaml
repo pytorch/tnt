@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8, 3.9]
     steps:
       - name: Check out repo
         uses: actions/checkout@v2
@@ -46,7 +46,7 @@ jobs:
         with:
           miniconda-version: "latest"
           activate-environment: test
-          python-version: 3.7
+          python-version: 3.8
       - name: Install dependencies
         shell: bash -l {0}
         run: |
