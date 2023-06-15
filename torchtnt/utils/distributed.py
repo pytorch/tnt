@@ -256,7 +256,10 @@ def get_tcp_init_method(
 def _simple_all_gather_tensors(
     result: Tensor, group: Optional[dist.ProcessGroup], world_size: int
 ) -> List[Tensor]:
-    gathered_result = [torch.zeros_like(result) for _ in range(world_size)]
+    stacked_result_sizes = [world_size] + list(result.size())
+    gathered_result = list(
+        torch.zeros(stacked_result_sizes, dtype=result.dtype, device=result.device)
+    )
     dist.all_gather(gathered_result, result, group)
     return gathered_result
 
@@ -291,7 +294,12 @@ def all_gather_tensors(
 
     # gather sizes of all tensors
     local_size = torch.tensor(result.shape, device=result.device)
-    local_sizes = [torch.zeros_like(local_size) for _ in range(world_size)]
+    stacked_local_size = [world_size] + list(local_size.size())
+    local_sizes = list(
+        torch.zeros(
+            stacked_local_size, dtype=local_size.dtype, device=local_size.device
+        )
+    )
     dist.all_gather(local_sizes, local_size, group=group)
 
     # if the backend is NCCL, we can gather the differently sized tensors without padding
@@ -301,8 +309,10 @@ def all_gather_tensors(
         return gathered_result
 
     # if shapes are all the same, then do a simple gather:
-    max_size = torch.stack(local_sizes).max(dim=0).values
-    all_sizes_equal = all(all(ls == max_size) for ls in local_sizes)
+    stacked_sizes = torch.stack(local_sizes)
+    max_size = stacked_sizes.max(dim=0).values
+    min_size = stacked_sizes.min(dim=0).values
+    all_sizes_equal = torch.equal(max_size, min_size)
     if all_sizes_equal:
         return _simple_all_gather_tensors(result, group, world_size)
 
@@ -313,7 +323,14 @@ def all_gather_tensors(
         pad_dims.append(0)
         pad_dims.append(val.item())
     result_padded = F.pad(result, pad_dims)
-    gathered_result = [torch.zeros_like(result_padded) for _ in range(world_size)]
+    stacked_result_padded = [world_size] + list(result_padded.size())
+    gathered_result = list(
+        torch.zeros(
+            stacked_result_padded,
+            dtype=result_padded.dtype,
+            device=result_padded.device,
+        )
+    )
     dist.all_gather(gathered_result, result_padded, group)
     for idx, item_size in enumerate(local_sizes):
         slice_param = [slice(dim_size) for dim_size in item_size]
