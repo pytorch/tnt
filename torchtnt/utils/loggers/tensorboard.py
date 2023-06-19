@@ -41,7 +41,7 @@ class TensorBoardLogger(MetricLogger):
     Examples::
 
         from torchtnt.utils.loggers import TensorBoardLogger
-        logger = TensorBoardLogger()
+        logger = TensorBoardLogger(path="tmp/tb_logs")
         logger.log("accuracy", 23.56, 10)
         logger.close()
     """
