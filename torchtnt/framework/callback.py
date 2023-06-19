@@ -13,8 +13,9 @@ from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 class Callback:
     """
     A Callback is an optional extension that can be used to supplement your loop with additional functionality. Good candidates
-    for such logic are ones that can be re-used across units. To write your own callback, subclass the Callback class and add
-    your own code into the hooks.
+    for such logic are ones that can be re-used across units. Callbacks are generally not intended for modeling code; this should go
+    in your `Unit <https://www.internalfb.com/intern/staticdocs/torchtnt/framework/unit.html>`_. To write your own callback,
+    subclass the Callback class and add your own code into the hooks.
 
     Below is an example of a basic callback which prints a message at various points during execution.
 
