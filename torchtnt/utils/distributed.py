@@ -8,9 +8,7 @@
 # pyre-ignore-all-errors[2]: Parameter must have a type that does not contain `Any`
 
 import os
-import socket
 import tempfile
-from contextlib import closing
 from functools import wraps
 from typing import Any, Callable, List, Optional, TypeVar, Union
 
@@ -18,7 +16,7 @@ import torch
 import torch.distributed as dist
 import torch.nn.functional as F
 from torch import Tensor
-
+from torch.distributed.elastic.utils.distributed import get_free_port
 from typing_extensions import Literal
 
 
@@ -173,22 +171,6 @@ def get_process_group_backend_from_device(device: torch.device) -> str:
     return "nccl" if device.type == "cuda" else "gloo"
 
 
-def _get_free_port() -> int:
-    if socket.has_ipv6:
-        family = socket.AF_INET6
-        address = "localhost6"
-    else:
-        family = socket.AF_INET
-        address = "localhost4"
-    with socket.socket(family, socket.SOCK_STREAM) as s:
-        s.bind((address, 0))
-        s.listen(0)
-        with closing(s):
-            sockname = s.getsockname()
-            port_port = sockname[1]
-            return port_port
-
-
 def _validate_global_rank_world_size(world_size: int, rank: int) -> None:
     if world_size < 1:
         raise ValueError(
@@ -248,7 +230,7 @@ def get_tcp_init_method(
     rank = rank if rank is not None else get_global_rank()
     _validate_global_rank_world_size(world_size, rank)
     host_addr = hostname if hostname is not None else "localhost"
-    host_port = port if port is not None else _get_free_port()
+    host_port = port if port is not None else get_free_port()
     init_method = f"tcp://{host_addr}:{host_port}?world_size={world_size}&rank={rank}"
     return init_method
 
