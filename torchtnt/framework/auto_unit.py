@@ -36,7 +36,7 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.framework.state import ActivePhase, State
-from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
+from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
 from torchtnt.framework.utils import (
     _get_timing_context,
     _is_fsdp_module,
@@ -193,6 +193,191 @@ class _ConfigureOptimizersCaller(ABCMeta):
         return x
 
 
+class AutoPredictUnit(PredictUnit[TPredictData]):
+    def __init__(
+        self,
+        *,
+        module: torch.nn.Module,
+        device: Optional[torch.device] = None,
+        strategy: Optional[Union[Strategy, str]] = None,
+        precision: Optional[Union[str, torch.dtype]] = None,
+        torchdynamo_params: Optional[TorchDynamoParams] = None,
+    ) -> None:
+        """
+        AutoPredictUnit is a convenience for users who are running inference and would like to have certain features handled for them, such as:
+        - Moving data to the correct device.
+        - Running inference under a mixed precision context.
+        - Handling data parallel replication, especially if the module cannot fit on a single device using FullyShardedDataParallel.
+        - Profiling the data transfer to device and forward pass.
+        - Interleaving moving the next batch to the device with running the module's forward pass on the current batch.
+
+        Additionally, the AutoPredictUnit offers an optional hook ``on_predict_step_end`` to further post-process module outputs if desired.
+
+        Then use with the :py:func:`~torchtnt.framework.predict` entry point.
+
+        For more advanced customization, directly use the :class:`~torchtnt.framework.unit.PredictUnit` interface.
+
+        Args:
+            module: module to be used during prediction.
+            device: the device to be used.
+            precision: the precision to use in training, as either a string or a torch.dtype.
+            strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.
+            torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/stable/dynamo/index.html
+
+        Note:
+            TorchDynamo support is only available in PyTorch 2.0 or higher.
+        """
+        if torchdynamo_params:
+            _validate_torchdynamo_available()
+
+        super().__init__()
+
+        self.device: torch.device = device or init_from_env()
+        self.precision: Optional[torch.dtype]
+        if isinstance(precision, str):
+            self.precision = _convert_precision_str_to_dtype(precision)
+        else:
+            self.precision = precision
+
+        # create autocast context based on precision and device type
+        self.maybe_autocast_precision = torch.autocast(
+            device_type=self.device.type,
+            dtype=self.precision,
+            enabled=self.precision is not None,
+        )
+        if strategy:
+            if isinstance(strategy, str):
+                strategy = _convert_str_to_strategy(strategy)
+            if isinstance(strategy, DDPStrategy):
+                module = _prepare_ddp(module, strategy, self.device, torchdynamo_params)
+            elif isinstance(strategy, FSDPStrategy):
+                module = _prepare_fsdp(
+                    module,
+                    strategy,
+                    self.device,
+                    None,  # SWA params
+                    self.precision,
+                )
+        else:
+            module = module.to(self.device)
+        if torchdynamo_params:
+            module = _dynamo_wrapper(module, torchdynamo_params)
+        self.module: torch.nn.Module = module
+
+        # cuda stream to use for moving data to device
+        self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
+            torch.cuda.Stream() if self.device.type == "cuda" else None
+        )
+        # the next batch which has been prefetched and is ready to be used
+        self._next_batch: Optional[TPredictData] = None
+
+        # whether the next batch has been prefetched and is ready to be used
+        self._prefetched: bool = False
+
+    def predict_step(self, state: State, data: Iterator[TPredictData]) -> Any:
+        batch = self._get_next_batch(state, data)
+
+        with self.maybe_autocast_precision:
+            with _get_timing_context(state, f"{self.__class__.__name__}.forward"):
+                outputs = self.module(batch)
+
+        step = get_current_progress(state).num_steps_completed
+        with _get_timing_context(
+            state, f"{self.__class__.__name__}.on_predict_step_end"
+        ):
+            self.on_predict_step_end(state, batch, step, outputs)
+        return outputs
+
+    def on_predict_step_end(
+        self, state: State, data: TPredictData, step: int, outputs: Any
+    ) -> None:
+        """
+        This will be called at the end of every ``predict_step`` before returning. The user can implement this method with code to update and log their metrics,
+        or do anything else.
+
+        Args:
+            state: a State object which is passed from the ``predict_step``
+            data: a batch of data which is passed from the ``predict_step``
+            step: how many ``predict_step``s have been completed
+            outputs: the outputs of the model forward pass
+        """
+        pass
+
+    def move_data_to_device(
+        self, state: State, data: TPredictData, non_blocking: bool
+    ) -> TPredictData:
+        """
+        The user can override this method with custom code to copy data to device. This will be called at the start of every ``predict_step``.
+        By default this uses the utility function :py:func:`~torchtnt.utils.copy_data_to_device`.
+
+        If on GPU, this method will be called on a separate CUDA stream.
+
+        Args:
+            state: a State object which is passed from the ``predict_step``
+            data: a batch of data which is passed from the ``predict_step``
+            non_blocking: parameter to pass to ``torch.tensor.to``
+
+        Returns:
+            A batch of data which is on the device
+        """
+        return copy_data_to_device(data, self.device, non_blocking=non_blocking)
+
+    def _get_next_batch(
+        self, state: State, data: Iterator[TPredictData]
+    ) -> TPredictData:
+        if not self._prefetched:
+            self._prefetch_next_batch(state, data)
+            self._prefetched = True
+
+        if self._prefetch_stream:
+            with _get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
+                # wait on the CUDA stream to complete the host to device copy
+                torch.cuda.current_stream().wait_stream(self._prefetch_stream)
+
+        # get the next batch which was stored by _prefetch_next_batch
+        batch = self._next_batch
+        if batch is None:
+            self._prefetched = False
+            raise StopIteration
+
+        if self._prefetch_stream:
+            with _get_timing_context(
+                state, f"{self.__class__.__name__}.record_data_in_stream"
+            ):
+                # record the batch in the current stream
+                record_data_in_stream(batch, torch.cuda.current_stream())
+
+        # kick off prefetching the next batch
+        self._prefetch_next_batch(state, data)
+        return batch
+
+    def _prefetch_next_batch(
+        self, state: State, data_iter: Iterator[TPredictData]
+    ) -> None:
+        """Prefetch the next batch on a separate CUDA stream."""
+
+        try:
+            with _get_timing_context(
+                state, f"{self.__class__.__name__}.next(data_iter)"
+            ):
+                next_batch = next(data_iter)
+        except StopIteration:
+            self._next_batch = None
+            return
+
+        non_blocking = (
+            True if self.device.type == "cuda" and self._prefetched else False
+        )
+
+        # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
+        with torch.cuda.stream(self._prefetch_stream), _get_timing_context(
+            state, f"{self.__class__.__name__}.move_data_to_device"
+        ):
+            self._next_batch = self.move_data_to_device(
+                state, next_batch, non_blocking=non_blocking
+            )
+
+
 class AutoUnit(
     TrainUnit[TData],
     EvalUnit[TData],
@@ -272,11 +457,8 @@ class AutoUnit(
             raise ValueError(
                 f"gradient_accumulation_steps must be > 0. Got {gradient_accumulation_steps}"
             )
-        if torchdynamo_params and not is_torch_version_ge_1_13_1():
-            raise RuntimeError(
-                "TorchDynamo support is available only in PyTorch 2.0 or higher. "
-                "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
-            )
+        if torchdynamo_params:
+            _validate_torchdynamo_available()
 
         self.device: torch.device = device or init_from_env()
         self.precision: Optional[torch.dtype]
@@ -449,7 +631,7 @@ class AutoUnit(
 
         # get the next batch which was stored by prefetch_next_batch
         batch = self._next_batch
-        if not batch:
+        if batch is None:
             self._prefetched = False
             self._is_last_train_batch = False
             raise StopIteration
@@ -729,6 +911,14 @@ class AutoUnit(
     @property
     def num_optimizer_steps_completed(self) -> int:
         return self._num_optimizer_steps_completed.val
+
+
+def _validate_torchdynamo_available() -> None:
+    if not is_torch_version_ge_1_13_1():
+        raise RuntimeError(
+            "TorchDynamo support is available only in PyTorch 2.0 or higher. "
+            "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
+        )
 
 
 def _convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:

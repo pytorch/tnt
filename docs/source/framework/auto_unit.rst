@@ -5,3 +5,7 @@ AutoUnit
 .. autoclass:: AutoUnit
    :members:
    :undoc-members:
+
+.. autoclass:: AutoPredictUnit
+   :members:
+   :undoc-members:
