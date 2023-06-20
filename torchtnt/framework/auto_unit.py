@@ -589,7 +589,7 @@ class AutoUnit(
         """
         return copy_data_to_device(data, self.device, non_blocking=non_blocking)
 
-    def prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
+    def _prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
         """Prefetch the next batch on a separate CUDA stream."""
 
         phase = state.active_phase.name.lower()
@@ -621,7 +621,7 @@ class AutoUnit(
 
     def _get_next_batch(self, state: State, data: Iterator[TData]) -> TData:
         if not self._prefetched:
-            self.prefetch_next_batch(state, data)
+            self._prefetch_next_batch(state, data)
             self._prefetched = True
 
         if self._prefetch_stream:
@@ -629,7 +629,7 @@ class AutoUnit(
                 # wait on the CUDA stream to complete the host to device copy
                 torch.cuda.current_stream().wait_stream(self._prefetch_stream)
 
-        # get the next batch which was stored by prefetch_next_batch
+        # get the next batch which was stored by _prefetch_next_batch
         batch = self._next_batch
         if batch is None:
             self._prefetched = False
@@ -644,7 +644,7 @@ class AutoUnit(
                 record_data_in_stream(batch, torch.cuda.current_stream())
 
         # prefetch the next batch
-        self.prefetch_next_batch(state, data)
+        self._prefetch_next_batch(state, data)
 
         return batch
 
