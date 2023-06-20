@@ -56,18 +56,33 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            precision="fp16",
         )
 
         self.assertEqual(auto_unit.tracked_modules()["module"], my_module)
+        for key in ("module", "optimizer", "lr_scheduler"):
+            self.assertIn(key, auto_unit.app_state())
+
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_app_state_mixin_grad_scaler(self) -> None:
+        """
+        Test that grad_scaler is added to the AutoUnit tracked_misc_statefuls when using fp16 precision
+        """
+        my_module = torch.nn.Linear(2, 2)
+
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            precision="fp16",
+        )
+
         self.assertTrue(
             isinstance(
                 auto_unit.tracked_misc_statefuls()["grad_scaler"],
                 torch.cuda.amp.GradScaler,
             )
         )
-        for key in ("module", "optimizer", "lr_scheduler", "grad_scaler"):
-            self.assertIn(key, auto_unit.app_state())
+        self.assertIn("grad_scaler", auto_unit.app_state())
 
     def test_lr_scheduler_step(self) -> None:
         """
