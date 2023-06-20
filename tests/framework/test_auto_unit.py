@@ -29,6 +29,7 @@ from torchtnt.framework._test_utils import (
 )
 
 from torchtnt.framework.auto_unit import (
+    AutoPredictUnit,
     AutoUnit,
     DDPStrategy,
     FSDPStrategy,
@@ -948,6 +949,7 @@ class TestAutoUnit(unittest.TestCase):
             auto_timing=True,
         )
         train(state, DummyAutoUnit(module=my_module))
+        recorded_timer_keys = state.timer.recorded_durations.keys()
         for k in (
             "DummyAutoUnit.on_train_start",
             "DummyAutoUnit.on_train_epoch_start",
@@ -963,12 +965,10 @@ class TestAutoUnit(unittest.TestCase):
             "DummyAutoUnit.on_train_epoch_end",
             "DummyAutoUnit.on_train_end",
         ):
-            self.assertTrue(k in state.timer.recorded_durations.keys())
+            self.assertIn(k, recorded_timer_keys)
 
         # train_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's train_step
-        self.assertFalse(
-            "DummyAutoUnit.train_step" in state.timer.recorded_durations.keys()
-        )
+        self.assertNotIn("DummyAutoUnit.train_step", recorded_timer_keys)
 
     def test_auto_unit_timing_eval(self) -> None:
         """
@@ -996,6 +996,7 @@ class TestAutoUnit(unittest.TestCase):
             auto_timing=True,
         )
         evaluate(state, DummyAutoUnit(module=my_module))
+        recorded_timer_keys = state.timer.recorded_durations.keys()
         for k in (
             "DummyAutoUnit.on_eval_start",
             "DummyAutoUnit.on_eval_epoch_start",
@@ -1007,12 +1008,10 @@ class TestAutoUnit(unittest.TestCase):
             "DummyAutoUnit.on_eval_epoch_end",
             "DummyAutoUnit.on_eval_end",
         ):
-            self.assertTrue(k in state.timer.recorded_durations.keys())
+            self.assertIn(k, recorded_timer_keys)
 
-        # train_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's train_step
-        self.assertFalse(
-            "DummyAutoUnit.eval_step" in state.timer.recorded_durations.keys()
-        )
+        # eval_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's eval_step
+        self.assertNotIn("DummyAutoUnit.eval_step", recorded_timer_keys)
 
     def test_auto_unit_timing_predict(self) -> None:
         """
@@ -1039,6 +1038,7 @@ class TestAutoUnit(unittest.TestCase):
             dataloader=predict_dl, max_steps_per_epoch=1, auto_timing=True
         )
         predict(state, auto_unit)
+        recorded_timer_keys = state.timer.recorded_durations.keys()
         for k in (
             "DummyAutoUnit.on_predict_start",
             "DummyAutoUnit.on_predict_epoch_start",
@@ -1050,12 +1050,49 @@ class TestAutoUnit(unittest.TestCase):
             "DummyAutoUnit.on_predict_epoch_end",
             "DummyAutoUnit.on_predict_end",
         ):
-            self.assertTrue(k in state.timer.recorded_durations.keys())
+            self.assertIn(k, recorded_timer_keys)
 
-        # train_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's train_step
-        self.assertFalse(
-            "DummyAutoUnit.predict_step" in state.timer.recorded_durations.keys()
+        # predict_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's predict_step
+        self.assertNotIn("DummyAutoUnit.predict_step", recorded_timer_keys)
+
+    def test_auto_predict_unit_timing_predict(self) -> None:
+        """
+        Test auto timing in AutoUnit for predict
+        """
+        my_module = torch.nn.Linear(2, 2)
+        auto_unit = AutoPredictUnit(module=my_module)
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+
+        predict_dl = generate_random_iterable_dataloader(
+            dataset_len, input_dim, batch_size
         )
+        state = init_predict_state(dataloader=predict_dl, max_steps_per_epoch=1)
+        predict(state, auto_unit)
+        self.assertIsNone(state.timer)
+
+        state = init_predict_state(
+            dataloader=predict_dl, max_steps_per_epoch=1, auto_timing=True
+        )
+        predict(state, auto_unit)
+        recorded_timer_keys = state.timer.recorded_durations.keys()
+        for k in (
+            "AutoPredictUnit.on_predict_start",
+            "AutoPredictUnit.on_predict_epoch_start",
+            "predict.iter(dataloader)",
+            "AutoPredictUnit.next(data_iter)",
+            "AutoPredictUnit.move_data_to_device",
+            "AutoPredictUnit.forward",
+            "AutoPredictUnit.on_predict_step_end",
+            "AutoPredictUnit.on_predict_epoch_end",
+            "AutoPredictUnit.on_predict_end",
+        ):
+            self.assertIn(k, recorded_timer_keys)
+
+        # predict_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's predict_step
+        self.assertNotIn("AutoPredictUnit.predict_step", recorded_timer_keys)
 
 
 Batch = Tuple[torch.tensor, torch.tensor]

@@ -9,7 +9,7 @@ from typing import Iterable, List, Optional
 
 import torch
 from pyre_extensions import none_throws
-from torchtnt.framework import AutoUnit
+from torchtnt.framework.auto_unit import AutoPredictUnit, AutoUnit
 from torchtnt.framework.callback import Callback
 
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
@@ -170,7 +170,7 @@ def _predict_impl(
     step_input = data_iter
 
     pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
-    is_auto_unit = isinstance(predict_unit, AutoUnit)
+    is_auto_unit = isinstance(predict_unit, (AutoUnit, AutoPredictUnit))
     prev_steps_in_epoch = predict_state.progress.num_steps_completed_in_epoch
 
     while not (
