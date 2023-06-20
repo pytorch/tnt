@@ -15,6 +15,7 @@ from .iterators import (
     RoundRobinIterator,
 )
 from .multi_dataloader import MultiDataLoader
+from .profile_dataloader import profile_dataloader
 
 __all__ = [
     "AllDatasetBatchesIterator",
@@ -26,4 +27,5 @@ __all__ = [
     "MultiIterator",
     "RandomizedBatchSamplerIterator",
     "RoundRobinIterator",
+    "profile_dataloader",
 ]
