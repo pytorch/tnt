@@ -437,10 +437,7 @@ class AutoUnit(
                 state, next_batch, non_blocking=non_blocking
             )
 
-    def train_step(
-        self, state: State, data: Iterator[TData]
-    ) -> Tuple[torch.Tensor, Any]:
-        train_state = none_throws(state.train_state)
+    def _get_next_batch(self, state: State, data: Iterator[TData]) -> TData:
         if not self._prefetched:
             self.prefetch_next_batch(state, data)
             self._prefetched = True
@@ -466,6 +463,15 @@ class AutoUnit(
 
         # prefetch the next batch
         self.prefetch_next_batch(state, data)
+
+        return batch
+
+    def train_step(
+        self, state: State, data: Iterator[TData]
+    ) -> Tuple[torch.Tensor, Any]:
+        train_state = none_throws(state.train_state)
+
+        batch = self._get_next_batch(state, data)
 
         should_update_weights = (
             train_state.progress.num_steps_completed_in_epoch + 1
