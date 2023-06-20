@@ -67,7 +67,7 @@ class TestAutoUnit(unittest.TestCase):
             )
         )
         for key in ("module", "optimizer", "lr_scheduler", "grad_scaler"):
-            self.assertTrue(key in auto_unit.app_state())
+            self.assertIn(key, auto_unit.app_state())
 
     def test_lr_scheduler_step(self) -> None:
         """
@@ -199,11 +199,11 @@ class TestAutoUnit(unittest.TestCase):
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
         train(state, auto_unit)
-        self.assertTrue(
+        self.assertEqual(
             auto_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
         )
-        self.assertTrue(
-            "_num_optimizer_steps_completed" in auto_unit.tracked_misc_statefuls()
+        self.assertIn(
+            "_num_optimizer_steps_completed", auto_unit.tracked_misc_statefuls()
         )
 
     def test_stochastic_weight_averaging_basic(self) -> None:
@@ -224,14 +224,14 @@ class TestAutoUnit(unittest.TestCase):
         self.assertIsNone(auto_unit.swa_model)
         self.assertIsNotNone(auto_unit2.swa_model)
 
-        self.assertTrue("swa_model" not in auto_unit.app_state())
-        self.assertTrue("swa_model" not in auto_unit.tracked_modules())
-        self.assertTrue("swa_scheduler" not in auto_unit.app_state())
-        self.assertTrue("swa_scheduler" not in auto_unit.tracked_lr_schedulers())
-        self.assertTrue("swa_model" in auto_unit2.app_state())
-        self.assertTrue("swa_model" in auto_unit2.tracked_modules())
-        self.assertTrue("swa_scheduler" in auto_unit2.app_state())
-        self.assertTrue("swa_scheduler" in auto_unit2.tracked_lr_schedulers())
+        self.assertNotIn("swa_model", auto_unit.app_state())
+        self.assertNotIn("swa_model", auto_unit.tracked_modules())
+        self.assertNotIn("swa_scheduler", auto_unit.app_state())
+        self.assertNotIn("swa_scheduler", auto_unit.tracked_lr_schedulers())
+        self.assertIn("swa_model", auto_unit2.app_state())
+        self.assertIn("swa_model", auto_unit2.tracked_modules())
+        self.assertIn("swa_scheduler", auto_unit2.app_state())
+        self.assertIn("swa_scheduler", auto_unit2.tracked_lr_schedulers())
 
     def test_stochastic_weight_averaging_e2e(self) -> None:
         """
