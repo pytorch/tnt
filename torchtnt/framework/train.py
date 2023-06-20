@@ -178,50 +178,6 @@ def _train_impl(
     _reset_module_training_mode(tracked_modules, prior_module_train_states)
 
 
-@torch.enable_grad()
-def train_epoch(
-    state: State,
-    train_unit: TTrainUnit,
-    callbacks: Optional[List[Callback]] = None,
-) -> None:
-    """
-    The `train_epoch` entry point takes in a State and a TrainUnit and runs one epoch (one pass through the dataloader).
-    This entry point can be used for interleaving training with another entry point (evaluate or predict).
-
-    Note: this does not call the ``on_train_start`` or ``on_train_end`` methods on the unit or callbacks.
-
-    Args:
-        state: a class:`~torchtnt.framework.State` object containing metadata about the training run.
-        train_unit: an instance of :class:`~torchtnt.framework.TrainUnit` which implements `train_step`.
-        callbacks: an optional list of callbacks.
-    """
-    callbacks = callbacks or []
-    try:
-        train_state = none_throws(state.train_state)
-        if not train_state.max_epochs == 1:
-            raise RuntimeError(
-                f"Expected state.train_state.max_epochs to be 1, but received {train_state.max_epochs}."
-            )
-        state._entry_point = EntryPoint.TRAIN
-        logger.info(
-            f"Started train_epoch with max_steps_per_epoch={train_state.max_steps_per_epoch}"
-        )
-        _train_epoch_impl(
-            state,
-            train_unit,
-            callbacks,
-        )
-        logger.info("Finished train")
-        if state.timer:
-            logger.info(get_timer_summary(state.timer))
-    except Exception as e:
-        # TODO: log for diagnostics
-        logger.info(f"Exception during train_epoch\n: {e}")
-        train_unit.on_exception(state, e)
-        _run_callback_fn(callbacks, "on_exception", state, train_unit, e)
-        raise e
-
-
 def _train_epoch_impl(
     state: State,
     train_unit: TTrainUnit,

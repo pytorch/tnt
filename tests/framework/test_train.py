@@ -14,7 +14,7 @@ from torch import nn
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.state import EntryPoint, State
-from torchtnt.framework.train import init_train_state, train, train_epoch
+from torchtnt.framework.train import init_train_state, train
 from torchtnt.framework.unit import TrainUnit
 
 
@@ -77,37 +77,6 @@ class TrainTest(unittest.TestCase):
         self.assertEqual(
             state.train_state.progress.num_steps_completed,
             max_epochs * max_steps_per_epoch,
-        )
-        self.assertEqual(state.entry_point, EntryPoint.TRAIN)
-
-        # step_output should be reset to None
-        self.assertEqual(state.train_state.step_output, None)
-
-        self.assertEqual(my_unit.module.training, initial_training_mode)
-
-    def test_train_epoch(self) -> None:
-        """
-        Test train_epoch entry point
-        """
-        input_dim = 2
-        dataset_len = 8
-        batch_size = 2
-        expected_steps_per_epoch = dataset_len / batch_size
-
-        my_unit = DummyTrainUnit(input_dim=input_dim)
-        initial_training_mode = my_unit.module.training
-
-        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
-        state = init_train_state(dataloader=dataloader, max_epochs=1)
-
-        train_epoch(state, my_unit)
-
-        self.assertEqual(state.train_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
-        self.assertEqual(
-            state.train_state.progress.num_steps_completed,
-            expected_steps_per_epoch,
         )
         self.assertEqual(state.entry_point, EntryPoint.TRAIN)
 
