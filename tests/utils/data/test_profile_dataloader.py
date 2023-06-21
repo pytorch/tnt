@@ -11,6 +11,7 @@ from typing import Iterator
 import torch
 from torch.profiler import ProfilerActivity
 from torchtnt.utils.data.profile_dataloader import profile_dataloader
+from torchtnt.utils.env import init_from_env
 
 
 class DummyIterable:
@@ -26,22 +27,38 @@ class ProfileDataLoaderTest(unittest.TestCase):
     def test_profile_dataloader(self) -> None:
         max_length = 10
         iterable = DummyIterable(max_length)
-        timer = profile_dataloader(iterable)
+        with _get_torch_profiler() as p:
+            timer = profile_dataloader(iterable, p)
         self.assertEqual(len(timer.recorded_durations["next(iter)"]), max_length)
 
     def test_profile_dataloader_max_steps(self) -> None:
         max_length = 10
         max_steps = 5
         iterable = DummyIterable(max_length)
-        timer = profile_dataloader(iterable, max_steps=max_steps)
+        with _get_torch_profiler() as p:
+            timer = profile_dataloader(iterable, p, max_steps=max_steps)
         self.assertEqual(len(timer.recorded_durations["next(iter)"]), max_steps)
 
     def test_profile_dataloader_profiler(self) -> None:
         max_length = 10
         iterable = DummyIterable(max_length)
-        profiler = _get_torch_profiler()
-        timer = profile_dataloader(iterable, profiler=profiler)
+        with _get_torch_profiler() as p:
+            timer = profile_dataloader(iterable, p)
         self.assertEqual(len(timer.recorded_durations["next(iter)"]), max_length)
+
+    @unittest.skipUnless(
+        torch.cuda.is_available(), reason="This test needs a GPU host to run."
+    )
+    def test_profile_dataloader_device(self) -> None:
+        device = init_from_env()
+        max_length = 10
+        iterable = DummyIterable(max_length)
+        with _get_torch_profiler() as p:
+            timer = profile_dataloader(iterable, p, device=device)
+        self.assertEqual(len(timer.recorded_durations["next(iter)"]), max_length)
+        self.assertEqual(
+            len(timer.recorded_durations["copy_data_to_device"]), max_length
+        )
 
 
 def _get_torch_profiler() -> torch.profiler.profile:
