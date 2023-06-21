@@ -10,6 +10,7 @@ from typing import Iterable, Optional
 
 import torch
 from torch.profiler import record_function
+from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.timer import get_timer_summary, Timer
 
@@ -18,19 +19,21 @@ _log: logging.Logger = logging.getLogger(__name__)
 
 def profile_dataloader(
     dataloader: Iterable[object],
+    profiler: torch.profiler.profile,
     *,
     max_steps: Optional[int] = None,
-    profiler: Optional[torch.profiler.profile] = None,
     timer: Optional[Timer] = None,
+    device: Optional[torch.device] = None,
 ) -> Timer:
     """
     A helper function that profiles the dataloader iterations.
 
     Args:
         dataloader: dataloader to be profiled.
+        profiler: PyTorch profiler to be used. The profiler is only stepped, so it is the responsibility of the caller to start/stop the profiler.
         max_steps (optional): maximum number of steps to run for. If not set, the dataloader will run until its iterator is exhausted.
-        profiler (optional): torch profiler to be used.
         timer (optional): timer to be used to track duration.
+        device (optional): device to copy the data to. If set, this function will profile copying data to device.
     """
     timer = timer if timer is not None else Timer()
     with timer.time("iter(dataloader)"), record_function("iter(dataloader)"):
@@ -39,21 +42,25 @@ def profile_dataloader(
     # If max_steps is not set, run until the dataloader is exhausted
     steps_completed = 0
 
-    if profiler:
-        profiler.start()
+    should_move_data_to_device = device is not None
 
     while max_steps is None or (steps_completed < max_steps):
         try:
             with timer.time("next(iter)"), record_function("next(iter)"):
-                next(data_iter)
+                data = next(data_iter)
+
+            if should_move_data_to_device:
+                with timer.time("copy_data_to_device"), record_function(
+                    "copy_data_to_device"
+                ):
+                    # pyre-ignore [6]: device is checked as not None before calling this
+                    data = copy_data_to_device(data, device)
+
             steps_completed += 1
             if profiler:
                 profiler.step()
         except StopIteration:
             break
-
-    if profiler:
-        profiler.stop()
 
     rank = get_global_rank()
     _log.info(f"Timer summary for rank {rank}:\n{get_timer_summary(timer)}")
