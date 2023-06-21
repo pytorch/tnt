@@ -47,6 +47,7 @@ from .rank_zero_log import (
     rank_zero_warn,
 )
 from .timer import FullSyncPeriodicTimer, get_timer_summary, Timer
+from .tqdm import close_progress_bar, create_progress_bar, update_progress_bar
 from .version import (
     get_python_version,
     get_torch_version,
@@ -104,6 +105,9 @@ __all__ = [
     "transfer_batch_norm_stats",
     "transfer_weights",
     "Timer",
+    "create_progress_bar",
+    "close_progress_bar",
+    "update_progress_bar",
     "TLRScheduler",
     "get_python_version",
     "get_torch_version",
