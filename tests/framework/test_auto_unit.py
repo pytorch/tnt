@@ -75,7 +75,7 @@ class TestAutoUnit(unittest.TestCase):
         """
         my_module = torch.nn.Linear(2, 2)
 
-        auto_unit = DummyAutoUnit(
+        auto_unit = DummyLRSchedulerAutoUnit(
             module=my_module,
             step_lr_interval="step",
         )
@@ -99,7 +99,7 @@ class TestAutoUnit(unittest.TestCase):
         """
         my_module = torch.nn.Linear(2, 2)
 
-        auto_unit = DummyAutoUnit(
+        auto_unit = DummyLRSchedulerAutoUnit(
             module=my_module,
             step_lr_interval="epoch",
         )
@@ -1106,6 +1106,27 @@ class DummyAutoUnit(AutoUnit[Batch]):
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         if DYNAMO_AVAIL:
             self._dynamo_used = torch._dynamo.is_compiling()
+        inputs, targets = data
+        outputs = self.module(inputs)
+        loss = torch.nn.functional.cross_entropy(outputs, targets)
+
+        return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        return my_optimizer, my_lr_scheduler
+
+
+class DummyLRSchedulerAutoUnit(AutoUnit[Batch]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         outputs = self.module(inputs)
         loss = torch.nn.functional.cross_entropy(outputs, targets)
