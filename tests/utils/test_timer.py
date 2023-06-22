@@ -15,7 +15,12 @@ import torch
 import torch.distributed as dist
 import torch.distributed.launcher as launcher
 from torchtnt.utils.test_utils import get_pet_launch_config
-from torchtnt.utils.timer import FullSyncPeriodicTimer, get_timer_summary, Timer
+from torchtnt.utils.timer import (
+    FullSyncPeriodicTimer,
+    get_timer_summary,
+    Timer,
+    VerboseTimer,
+)
 
 
 class TimerTest(unittest.TestCase):
@@ -58,6 +63,27 @@ class TimerTest(unittest.TestCase):
         timer.stop()
         self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
         self.assert_within_tolerance(timer.total_time_seconds, intervals[2])
+
+    def test_verbose_timer(self) -> None:
+        timer = VerboseTimer()
+
+        # TODO: maybe use a magic mock would be better?
+        class MockLogger:
+            def __init__(self):
+                self._info = []
+
+            def info(self, msg: str) -> None:
+                self._info.append(msg)
+
+        mock_logger = MockLogger()
+        with timer.time("hi", logger=mock_logger):
+            self.assertTrue("Starting hi" in mock_logger._info)
+            time.sleep(1)
+            self.assertTrue(
+                not any([x.startswith("Stopping hi") for x in mock_logger._info])
+            )
+        # Assert that end hi has been called
+        self.assertTrue(any([x.startswith("Stopping hi") for x in mock_logger._info]))
 
     def test_extra_starts_stops(self) -> None:
         """Test behavior with extra starts and stops"""
