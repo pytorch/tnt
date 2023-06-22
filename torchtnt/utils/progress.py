@@ -4,7 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Any, Dict
+from collections.abc import Sized
+from typing import Any, Dict, Iterable, Optional
 
 
 class Progress:
@@ -58,3 +59,28 @@ class Progress:
         self._num_epochs_completed = state_dict["num_epochs_completed"]
         self._num_steps_completed = state_dict["num_steps_completed"]
         self._num_steps_completed_in_epoch = state_dict["num_steps_completed_in_epoch"]
+
+
+def estimated_steps_in_epoch(
+    dataloader: Iterable[object],
+    *,
+    num_steps_completed: int,
+    max_steps: Optional[int],
+    max_steps_per_epoch: Optional[int],
+) -> float:
+    """Estimate the number of remaining steps for the current epoch."""
+
+    total = float("inf")
+    if isinstance(dataloader, Sized):
+        try:
+            total = len(dataloader)
+        except NotImplementedError:
+            pass
+
+    if max_steps_per_epoch and max_steps:
+        total = min(total, max_steps_per_epoch, max_steps - num_steps_completed)
+    elif max_steps:
+        total = min(total, max_steps - num_steps_completed)
+    elif max_steps_per_epoch:
+        total = min(total, max_steps_per_epoch)
+    return total
