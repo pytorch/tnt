@@ -6,6 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import datetime
+import logging
 import os
 import warnings
 from collections import defaultdict
@@ -17,6 +18,7 @@ import numpy as np
 
 import torch
 import torch.distributed as dist
+
 
 AsyncOperator = TypeVar("AsyncOperator")
 
@@ -199,6 +201,28 @@ def get_timer_summary(timer: Timer) -> str:
 
     output_string += sep
     return output_string
+
+
+class VerboseTimer(Timer):
+    """Timer that is more verbose - prints information upon start/stop.
+    Requires a customizable logger.
+    """
+
+    @contextmanager
+    def time(
+        self, action_name: str, logger: logging.Logger
+    ) -> Generator[None, None, None]:
+        try:
+            logger.info(f"Starting {action_name}")
+            self.start()
+            yield
+        finally:
+            self.stop()
+            logger.info(
+                f"Stopping {action_name}. Took {self.interval_time_seconds} seconds"
+            )
+
+        self.recorded_durations[action_name].append(self.interval_time_seconds)
 
 
 class FullSyncPeriodicTimer:
