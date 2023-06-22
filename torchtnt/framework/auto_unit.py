@@ -26,7 +26,8 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     checkpoint_wrapper,
     CheckpointImpl,
 )
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, StateDictType
+from torch.distributed.fsdp.api import OptimStateDictConfig, StateDictConfig
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     BackwardPrefetch,
     CPUOffload,
@@ -107,6 +108,12 @@ class FSDPStrategy(Strategy):
     forward_prefetch: bool = False
     limit_all_gathers: bool = False
     use_orig_params: bool = False
+
+    # FSDP set_state_dict_type params: https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type
+    # for setting type of state dict for checkpointing
+    state_dict_type: Optional[StateDictType] = None
+    state_dict_config: Optional[StateDictConfig] = None
+    optim_state_dict_config: Optional[OptimStateDictConfig] = None
 
 
 @dataclass
@@ -1055,11 +1062,23 @@ def _prepare_fsdp(
             buffer_dtype=precision,
         )
 
+    params_dict = asdict(strategy)
+
+    # extract params to set state dict type
+    state_dict_type = params_dict.pop("state_dict_type")
+    state_dict_config = params_dict.pop("state_dict_config")
+    optim_state_dict_config = params_dict.pop("optim_state_dict_config")
+
     # wrap module in FSDP
     module = FSDP(
         module,
         device_id=device,
         mixed_precision=mixed_precision,
-        **asdict(strategy),
+        **params_dict,
     )
+
+    if state_dict_type:
+        FSDP.set_state_dict_type(
+            module, state_dict_type, state_dict_config, optim_state_dict_config
+        )
     return module
