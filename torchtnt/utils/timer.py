@@ -12,12 +12,13 @@ import warnings
 from collections import defaultdict
 from contextlib import contextmanager
 from time import perf_counter
-from typing import Dict, Generator, List, Optional, Tuple, TypeVar
+from typing import Dict, Generator, List, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 
 import torch
 import torch.distributed as dist
+from torchtnt.utils.distributed import PGWrapper
 
 
 AsyncOperator = TypeVar("AsyncOperator")
@@ -201,6 +202,131 @@ def get_timer_summary(timer: Timer) -> str:
 
     output_string += sep
     return output_string
+
+
+def get_durations_histogram(
+    recorded_durations: Dict[str, List[float]],
+    percentiles: Sequence[float],
+) -> Dict[str, Dict[str, float]]:
+    """Computes a histogram of percentiles from the recorded durations passed in.
+
+    Args:
+        recorded_durations: The mapping of durations to sync and compute histograms from.
+        percentiles: The percentiles to compute. Values should be in the range [0, 100].
+
+    Returns:
+        A dictionary mapping the action names to a dictionary of the computed percentiles, along with the mean duration of each action.
+
+    Raises:
+        ValueError: If the input percentiles are not in the range [0, 100].
+    """
+    _validate_percentiles(percentiles)
+    percentiles = sorted(percentiles)
+    return _compute_percentiles(recorded_durations, percentiles=percentiles)
+
+
+def get_synced_durations_histogram(
+    recorded_durations: Dict[str, List[float]],
+    percentiles: Sequence[float],
+    pg: Optional[dist.ProcessGroup] = None,
+) -> Dict[str, Dict[str, float]]:
+    """Synchronizes the recorded durations across ranks.
+
+    Args:
+        recorded_durations: The mapping of durations to sync and compute histograms from.
+        percentiles: The percentiles to compute. Values should be in the range [0, 100].
+        pg (optional): The process group to use for synchronization. Defaults to the global process group.
+
+    Returns:
+        A dictionary mapping the action names to a dictionary of the computed percentiles, along with the mean duration of each action.
+
+    Raises:
+        ValueError: If the input percentiles are not in the range [0, 100].
+    """
+    _validate_percentiles(percentiles)
+    synced_durations = _sync_durations(recorded_durations, pg)
+    return get_durations_histogram(synced_durations, percentiles=percentiles)
+
+
+def get_synced_timer_histogram(
+    timer: Timer, percentiles: Sequence[float], pg: Optional[dist.ProcessGroup] = None
+) -> Dict[str, Dict[str, float]]:
+    """Synchronizes the input timer's recorded durations across ranks.
+
+    Args:
+        timer: The Timer object whose recorded durations will be synced.
+        percentiles: The percentiles to compute. Values should be in the range [0, 100].
+        pg (optional): The process group to use for synchronization. Defaults to the global process group.
+
+    Returns:
+        A dictionary mapping the action names to a dictionary of the computed percentiles, along with the mean duration of each action.
+
+    Raises:
+        ValueError: If the input percentiles are not in the range [0, 100].
+    """
+    return get_synced_durations_histogram(
+        timer.recorded_durations, percentiles=percentiles, pg=pg
+    )
+
+
+def _sync_durations(
+    recorded_durations: Dict[str, List[float]], pg: Optional[dist.ProcessGroup]
+) -> Dict[str, List[float]]:
+    if not (dist.is_available() and dist.is_initialized()):
+        return recorded_durations
+
+    pg_wrapper = PGWrapper(pg)
+    world_size = pg_wrapper.get_world_size()
+    outputs = [None] * world_size
+    pg_wrapper.all_gather_object(outputs, recorded_durations)
+    ret = defaultdict(list)
+    for output in outputs:
+        # pyre-ignore [16]: `Optional` has no attribute `__getitem__`.
+        for k, v in output.items():
+            if k not in ret:
+                ret[k] = []
+            ret[k].extend(v)
+    return ret
+
+
+def _compute_percentiles(
+    durations: Dict[str, List[float]], percentiles: Sequence[float]
+) -> Dict[str, Dict[str, float]]:
+    ret = {}
+    for name, values in durations.items():
+        ret[name] = _compute_percentile(name, values, percentiles=percentiles)
+    return ret
+
+
+def _compute_percentile(
+    name: str, timings: List[float], percentiles: Sequence[float]
+) -> Dict[str, float]:
+    ret = {}
+
+    # By default, numpy's percentile function will interpolate between values,
+    # but we want to snap to actual metrics that were recorded. For more
+    # discussion of percentile interpolation, see:
+    # https://numpy.org/doc/stable/reference/generated/numpy.percentile.html
+    computed_percentiles = np.percentile(timings, percentiles, interpolation="lower")
+
+    # computed_percentiles is a sequence of floats with the percentile
+    # results. We use enumerate to allow us to grab the index for each
+    # computed percentile, so that we can grab the corresponding percentile
+    # to use as the "name" when we turn these values into the metrics.
+    for i, percentile_value in enumerate(computed_percentiles):
+        percentile = percentiles[i]
+
+        ret[f"p{percentile}"] = percentile_value
+
+    # include the mean as well in addition to the percentiles passed in
+    ret["avg"] = np.mean(timings)
+    return ret
+
+
+def _validate_percentiles(percentiles: Sequence[float]) -> None:
+    for p in percentiles:
+        if p < 0 or p > 100:
+            raise ValueError(f"Percentile must be between 0 and 100. Got {p}")
 
 
 class VerboseTimer(Timer):

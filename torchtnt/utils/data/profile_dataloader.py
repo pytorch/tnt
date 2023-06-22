@@ -11,8 +11,7 @@ from typing import Iterable, Optional
 import torch
 from torch.profiler import record_function
 from torchtnt.utils.device import copy_data_to_device
-from torchtnt.utils.distributed import get_global_rank
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import Timer
 
 _log: logging.Logger = logging.getLogger(__name__)
 
@@ -62,6 +61,4 @@ def profile_dataloader(
         except StopIteration:
             break
 
-    rank = get_global_rank()
-    _log.info(f"Timer summary for rank {rank}:\n{get_timer_summary(timer)}")
     return timer

@@ -17,6 +17,8 @@ import torch.distributed.launcher as launcher
 from torchtnt.utils.test_utils import get_pet_launch_config
 from torchtnt.utils.timer import (
     FullSyncPeriodicTimer,
+    get_durations_histogram,
+    get_synced_durations_histogram,
     get_timer_summary,
     Timer,
     VerboseTimer,
@@ -251,6 +253,115 @@ class TimerTest(unittest.TestCase):
             time.sleep(0.5)
         summary = get_timer_summary(timer)
         self.assertTrue("action_1" in summary)
+
+    def test_invalid_get_synced_durations_histogram_percentiles(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Percentile must be between 0 and 100"):
+            get_synced_durations_histogram({}, percentiles=(-1,))
+        with self.assertRaisesRegex(ValueError, "Percentile must be between 0 and 100"):
+            get_synced_durations_histogram({}, percentiles=(101,))
+
+    def test_get_synced_durations_histogram(self) -> None:
+        recorded_durations = {
+            "bar": [4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
+            "foo": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+            "baz": [7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0],
+        }
+        percentiles = (10.0, 25.0, 50.0, 75.0, 95.0, 99.0)
+        durations = get_durations_histogram(recorded_durations, percentiles)
+        synced_durations = get_synced_durations_histogram(
+            recorded_durations, percentiles
+        )
+        expected_durations = {
+            "bar": {
+                "p10.0": 4.0,
+                "p25.0": 6.0,
+                "p50.0": 8.0,
+                "p75.0": 10.0,
+                "p95.0": 11.0,
+                "p99.0": 11.0,
+                "avg": 8.0,
+            },
+            "foo": {
+                "p10.0": 1.0,
+                "p25.0": 3.0,
+                "p50.0": 5.0,
+                "p75.0": 7.0,
+                "p95.0": 9.0,
+                "p99.0": 9.0,
+                "avg": 5.5,
+            },
+            "baz": {
+                "p10.0": 7.0,
+                "p25.0": 9.0,
+                "p50.0": 11.0,
+                "p75.0": 13.0,
+                "p95.0": 15.0,
+                "p99.0": 15.0,
+                "avg": 11.5,
+            },
+        }
+        self.assertEqual(durations, expected_durations)
+        self.assertEqual(durations, synced_durations)
+
+    @staticmethod
+    def _get_synced_durations_histogram_multi_process() -> None:
+        dist.init_process_group("gloo")
+        rank = dist.get_rank()
+        if rank == 0:
+            recorded_durations = {
+                "foo": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+                "bar": [4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
+            }
+        else:
+            recorded_durations = {
+                "foo": [4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
+                "bar": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+                "baz": [7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0],
+            }
+        durations = get_synced_durations_histogram(
+            recorded_durations, percentiles=(10.0, 25.0, 50.0, 75.0, 95.0, 99.0)
+        )
+        expected_durations = {
+            "foo": {
+                "p10.0": 2.0,
+                "p25.0": 4.0,
+                "p50.0": 7.0,
+                "p75.0": 9.0,
+                "p95.0": 11.0,
+                "p99.0": 11.0,
+                "avg": 6.684210526315789,
+            },
+            "bar": {
+                "p10.0": 2.0,
+                "p25.0": 4.0,
+                "p50.0": 7.0,
+                "p75.0": 9.0,
+                "p95.0": 11.0,
+                "p99.0": 11.0,
+                "avg": 6.684210526315789,
+            },
+            "baz": {
+                "p10.0": 7.0,
+                "p25.0": 9.0,
+                "p50.0": 11.0,
+                "p75.0": 13.0,
+                "p95.0": 15.0,
+                "p99.0": 15.0,
+                "avg": 11.5,
+            },
+        }
+        tc = unittest.TestCase()
+        tc.assertEqual(durations, expected_durations)
+
+    @unittest.skipUnless(
+        condition=dist.is_available(),
+        reason="This test should only run if torch.distributed is available.",
+    )
+    def test_get_synced_durations_histogram_multi_process(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(
+            config, entrypoint=self._get_synced_durations_histogram_multi_process
+        )()
 
 
 class FullSyncPeriodicTimerTest(unittest.TestCase):
