@@ -70,7 +70,7 @@ class Timer:
         """Yields a context manager to encapsulate the scope of a timed action.
 
         Args:
-        action_name: the name under which to store the timing of what is enclosed in the context manager
+            action_name: the name under which to store the timing of what is enclosed in the context manager
         """
         try:
             self.start()
