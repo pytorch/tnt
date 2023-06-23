@@ -376,33 +376,6 @@ class TestAutoUnit(unittest.TestCase):
     @unittest.skipUnless(
         condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
     )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    def test_dynamo_predict(self) -> None:
-        """
-        e2e torchdynamo on predict
-        """
-        my_module = torch.nn.Linear(2, 2)
-        auto_unit = DummyAutoUnit(
-            module=my_module,
-            torchdynamo_params=TorchDynamoParams("inductor"),
-        )
-
-        input_dim = 2
-        dataset_len = 8
-        batch_size = 2
-
-        predict_dl = generate_random_iterable_dataloader(
-            dataset_len, input_dim, batch_size
-        )
-        state = init_predict_state(dataloader=predict_dl)
-        self.assertFalse(auto_unit._dynamo_used)
-        predict(state, auto_unit)
-
-    @unittest.skipUnless(
-        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
-    )
     def test_dynamo_invalid_backend(self) -> None:
         """
         verify error is thrown on invalid backend
@@ -456,33 +429,6 @@ class TestAutoUnit(unittest.TestCase):
         evaluate(state, auto_unit)
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.bfloat16, enabled=True
-        )
-
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    @patch("torch.autocast")
-    def test_predict_mixed_precision_bf16(self, mock_autocast) -> None:
-        """
-        Test that the mixed precision autocast context is called during predict when precision = fp16
-        """
-        my_module = torch.nn.Linear(2, 2)
-        auto_unit = DummyAutoUnit(
-            module=my_module,
-            precision="fp16",
-        )
-
-        input_dim = 2
-        dataset_len = 8
-        batch_size = 2
-
-        predict_dl = generate_random_iterable_dataloader(
-            dataset_len, input_dim, batch_size
-        )
-        state = init_predict_state(dataloader=predict_dl)
-        predict(state, auto_unit)
-        mock_autocast.assert_called_with(
-            device_type="cuda", dtype=torch.float16, enabled=True
         )
 
     @unittest.skipUnless(
@@ -1013,14 +959,45 @@ class TestAutoUnit(unittest.TestCase):
         # eval_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's eval_step
         self.assertNotIn("DummyAutoUnit.eval_step", recorded_timer_keys)
 
-    def test_auto_unit_timing_predict(self) -> None:
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    @patch("torch.autocast")
+    def test_predict_mixed_precision_fp16(self, mock_autocast) -> None:
         """
-        Test auto timing in AutoUnit for predict
+        Test that the mixed precision autocast context is called during predict when precision = fp16
         """
         my_module = torch.nn.Linear(2, 2)
-        auto_unit = DummyAutoUnit(
+        auto_unit = AutoPredictUnit(module=my_module, precision="fp16")
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+
+        predict_dl = generate_random_iterable_dataloader(
+            dataset_len, input_dim, batch_size
+        )
+        state = init_predict_state(dataloader=predict_dl)
+        predict(state, auto_unit)
+        mock_autocast.assert_called_with(
+            device_type="cuda", dtype=torch.float16, enabled=True
+        )
+
+    @unittest.skipUnless(
+        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    @patch("torch.compile")
+    def test_dynamo_predict(self, mock_compile) -> None:
+        """
+        e2e torchdynamo on predict
+        """
+        my_module = torch.nn.Linear(2, 2)
+        auto_unit = AutoPredictUnit(
             module=my_module,
-            training=False,
+            torchdynamo_params=TorchDynamoParams("eager"),
         )
 
         input_dim = 2
@@ -1030,30 +1007,9 @@ class TestAutoUnit(unittest.TestCase):
         predict_dl = generate_random_iterable_dataloader(
             dataset_len, input_dim, batch_size
         )
-        state = init_predict_state(dataloader=predict_dl, max_steps_per_epoch=1)
+        state = init_predict_state(dataloader=predict_dl)
         predict(state, auto_unit)
-        self.assertIsNone(state.timer)
-
-        state = init_predict_state(
-            dataloader=predict_dl, max_steps_per_epoch=1, auto_timing=True
-        )
-        predict(state, auto_unit)
-        recorded_timer_keys = state.timer.recorded_durations.keys()
-        for k in (
-            "DummyAutoUnit.on_predict_start",
-            "DummyAutoUnit.on_predict_epoch_start",
-            "predict.iter(dataloader)",
-            "predict.next(data_iter)",
-            "DummyAutoUnit.move_data_to_device",
-            "DummyAutoUnit.forward",
-            "DummyAutoUnit.on_predict_step_end",
-            "DummyAutoUnit.on_predict_epoch_end",
-            "DummyAutoUnit.on_predict_end",
-        ):
-            self.assertIn(k, recorded_timer_keys)
-
-        # predict_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's predict_step
-        self.assertNotIn("DummyAutoUnit.predict_step", recorded_timer_keys)
+        mock_compile.assert_called()
 
     def test_auto_predict_unit_timing_predict(self) -> None:
         """
