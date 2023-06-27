@@ -7,16 +7,19 @@
 
 import gc
 import unittest
+from unittest import mock
 from unittest.mock import MagicMock
 
 from torchtnt.framework._test_utils import (
     DummyEvalUnit,
+    DummyFitUnit,
     DummyPredictUnit,
     DummyTrainUnit,
     generate_random_dataloader,
 )
 from torchtnt.framework.callbacks.garbage_collector import GarbageCollector
 from torchtnt.framework.evaluate import evaluate, init_eval_state
+from torchtnt.framework.fit import fit, init_fit_state
 from torchtnt.framework.predict import init_predict_state, predict
 from torchtnt.framework.train import init_train_state, train
 
@@ -142,4 +145,78 @@ class GarbageCollectorTest(unittest.TestCase):
 
         self.assertTrue(gc.isenabled())
         predict(state, my_unit, callbacks=[gc_callback])
+        self.assertTrue(gc.isenabled())
+
+    def test_garbage_collector_call_count_fit(self) -> None:
+        """
+        Test GarbageCollector callback was called correct number of times (with fit entry point)
+        """
+        input_dim = 2
+        train_dataset_len = 10
+        eval_dataset_len = 6
+        batch_size = 2
+        max_epochs = 2
+        evaluate_every_n_epochs = 1
+        expected_num_total_steps = (
+            train_dataset_len / batch_size * max_epochs
+            + eval_dataset_len / batch_size * max_epochs
+        )
+        gc_step_interval = 4
+
+        my_unit = MagicMock(spec=DummyFitUnit)
+        gc_callback = GarbageCollector(gc_step_interval)
+
+        train_dataloader = generate_random_dataloader(
+            train_dataset_len, input_dim, batch_size
+        )
+        eval_dataloader = generate_random_dataloader(
+            eval_dataset_len, input_dim, batch_size
+        )
+        state = init_fit_state(
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
+            max_epochs=max_epochs,
+            evaluate_every_n_epochs=evaluate_every_n_epochs,
+        )
+        # we call gc.collect() once for every step with generation=1, and then we call gc.collect()
+        expected_num_calls_to_gc_collect = (
+            expected_num_total_steps + expected_num_total_steps / gc_step_interval
+        )
+        with mock.patch(
+            "torchtnt.framework.callbacks.garbage_collector.gc.collect"
+        ) as gc_collect_mock:
+            fit(state, my_unit, callbacks=[gc_callback])
+            self.assertEqual(
+                gc_collect_mock.call_count, expected_num_calls_to_gc_collect
+            )
+
+    def test_garbage_collector_enabled_fit(self) -> None:
+        """
+        Test garbage collection is enabled after runs are finished (with fit entry point)
+        """
+        input_dim = 2
+        train_dataset_len = 10
+        eval_dataset_len = 6
+        batch_size = 2
+        max_epochs = 2
+        evaluate_every_n_epochs = 1
+
+        my_unit = MagicMock(spec=DummyFitUnit)
+        gc_callback = GarbageCollector(2)
+
+        train_dataloader = generate_random_dataloader(
+            train_dataset_len, input_dim, batch_size
+        )
+        eval_dataloader = generate_random_dataloader(
+            eval_dataset_len, input_dim, batch_size
+        )
+        state = init_fit_state(
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
+            max_epochs=max_epochs,
+            evaluate_every_n_epochs=evaluate_every_n_epochs,
+        )
+
+        self.assertTrue(gc.isenabled())
+        fit(state, my_unit, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())

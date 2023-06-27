@@ -9,7 +9,7 @@ import gc
 from pyre_extensions import none_throws
 
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.state import State
+from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 
 
@@ -48,22 +48,40 @@ class GarbageCollector(Callback):
         gc.collect(generation=1)
 
         train_state = none_throws(state.train_state)
-        if train_state.progress.num_steps_completed % self._step_interval == 0:
+        total_num_steps_completed = train_state.progress.num_steps_completed
+        if state.entry_point == EntryPoint.FIT:
+            # if fitting, include the num eval steps completed in the total steps completed
+            eval_state = none_throws(state.eval_state)
+            total_num_steps_completed += eval_state.progress.num_steps_completed
+
+        if total_num_steps_completed % self._step_interval == 0:
             gc.collect()
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         gc.enable()
 
     def on_eval_start(self, state: State, unit: TEvalUnit) -> None:
+        if state.entry_point == EntryPoint.FIT:
+            # if fitting, this is already handled in on_train_start
+            return
         gc.disable()
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         gc.collect(generation=1)
         eval_state = none_throws(state.eval_state)
-        if eval_state.progress.num_steps_completed % self._step_interval == 0:
+        total_num_steps_completed = eval_state.progress.num_steps_completed
+        if state.entry_point == EntryPoint.FIT:
+            # if fitting, include the num train steps completed in the total steps completed
+            train_state = none_throws(state.train_state)
+            total_num_steps_completed += train_state.progress.num_steps_completed
+
+        if total_num_steps_completed % self._step_interval == 0:
             gc.collect()
 
     def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
+        if state.entry_point == EntryPoint.FIT:
+            # if fitting, this will be handled in on_train_end
+            return
         gc.enable()
 
     def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
