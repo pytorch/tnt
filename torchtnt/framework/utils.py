@@ -32,7 +32,6 @@ from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.progress import Progress
-from typing_extensions import Self
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -262,30 +261,3 @@ def get_current_progress(state: State) -> Progress:
         return none_throws(state.eval_state).progress
     else:
         return none_throws(state.predict_state).progress
-
-
-class StatefulInt:
-    """
-    This wrapper is useful if there are additional values related to training
-    progress that need to be saved during checkpointing.
-    """
-
-    def __init__(self, val: int) -> None:
-        self.val = val
-
-    def state_dict(self) -> Dict[str, Any]:
-        return {"value": self.val}
-
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
-        self.val = state_dict["value"]
-
-    def __add__(self, other: int) -> Self:
-        self.val += other
-        return self
-
-    def __sub__(self, other: int) -> Self:
-        self.val -= other
-        return self
-
-    def __repr__(self) -> str:
-        return f"StatefulInt({self.val})"

@@ -42,7 +42,6 @@ from torchtnt.framework.utils import (
     _get_timing_context,
     _is_fsdp_module,
     get_current_progress,
-    StatefulInt,
 )
 from torchtnt.utils import (
     init_from_env,
@@ -507,7 +506,6 @@ class AutoUnit(
             )
 
         self.gradient_accumulation_steps = gradient_accumulation_steps
-        self._num_optimizer_steps_completed: StatefulInt = StatefulInt(0)
 
         self.detect_anomaly = detect_anomaly
         self.clip_grad_norm = clip_grad_norm
@@ -758,8 +756,6 @@ class AutoUnit(
                 else:
                     self.optimizer.step()
 
-            self._num_optimizer_steps_completed += 1
-
             # sets gradients to zero
             with _get_timing_context(
                 state, f"{self.__class__.__name__}.optimizer_zero_grad"
@@ -877,10 +873,6 @@ class AutoUnit(
             outputs: the outputs of the model forward pass
         """
         pass
-
-    @property
-    def num_optimizer_steps_completed(self) -> int:
-        return self._num_optimizer_steps_completed.val
 
 
 def _validate_torchdynamo_available() -> None:
