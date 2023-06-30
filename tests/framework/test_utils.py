@@ -48,7 +48,6 @@ from torchtnt.framework.utils import (
     _set_module_training_mode,
     _step_requires_iterator,
     get_current_progress,
-    StatefulInt,
 )
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -421,15 +420,6 @@ class UtilsTest(unittest.TestCase):
         tc.assertTrue(isinstance(result["optim"], _FSDPOptimizerWrapper))
         tc.assertTrue(isinstance(result["optim2"], torch.optim.Optimizer))
         tc.assertTrue(isinstance(result["lr_scheduler"], TLRScheduler))
-
-    def test_stateful_int(self) -> None:
-        v = StatefulInt(0)
-        v += 10
-        v -= 2
-        self.assertEqual(v.val, 8)
-        self.assertEqual(v.state_dict(), {"value": 8})
-        v.load_state_dict({"value": -4})
-        self.assertEqual(v.val, -4)
 
 
 Batch = Tuple[torch.tensor, torch.tensor]

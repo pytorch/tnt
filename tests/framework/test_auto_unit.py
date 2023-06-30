@@ -5,7 +5,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import math
 import unittest
 from typing import Any, Tuple
 from unittest.mock import MagicMock, patch
@@ -19,7 +18,6 @@ if is_torch_version_geq_1_13():
     DYNAMO_AVAIL = True
     import torch._dynamo
 
-from parameterized import parameterized
 from torch.distributed import GradBucket, launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -167,44 +165,6 @@ class TestAutoUnit(unittest.TestCase):
                 module=my_module,
                 precision="foo",
             )
-
-    @parameterized.expand(
-        [
-            [1],
-            [2],
-            [4],
-            [5],
-        ]
-    )
-    def test_num_optimizer_steps_completed(self, gradient_accumulation_steps) -> None:
-        """
-        Test the num_optimizer_steps_completed property of AutoUnit
-        """
-        my_module = torch.nn.Linear(2, 2)
-
-        input_dim = 2
-        dataset_len = 16
-        batch_size = 2
-        max_epochs = 1
-
-        auto_unit = DummyAutoUnit(
-            module=my_module,
-            gradient_accumulation_steps=gradient_accumulation_steps,
-        )
-
-        expected_opt_steps_per_epoch = math.ceil(
-            dataset_len / batch_size / gradient_accumulation_steps
-        )
-
-        train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
-        train(state, auto_unit)
-        self.assertEqual(
-            auto_unit.num_optimizer_steps_completed, expected_opt_steps_per_epoch
-        )
-        self.assertIn(
-            "_num_optimizer_steps_completed", auto_unit.tracked_misc_statefuls()
-        )
 
     def test_stochastic_weight_averaging_basic(self) -> None:
         """
