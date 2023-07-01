@@ -10,7 +10,7 @@ import uuid
 
 import torch
 from torch.distributed import launcher
-from torchrec.test_utils import skip_if_asan
+from torchtnt.utils.test_utils import skip_if_asan
 
 from ..main import main
 

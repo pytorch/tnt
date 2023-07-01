@@ -5,9 +5,16 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import ctypes
 import uuid
+from functools import wraps
+from typing import Callable, Optional, TypeVar
 
 import torch.distributed.launcher as pet
+from pyre_extensions import ParameterSpecification
+
+TParams = ParameterSpecification("TParams")
+TReturn = TypeVar("TReturn")
 
 
 def get_pet_launch_config(nproc: int) -> pet.LaunchConfig:
@@ -30,3 +37,32 @@ def get_pet_launch_config(nproc: int) -> pet.LaunchConfig:
         max_restarts=0,
         monitor_interval=1,
     )
+
+
+def is_asan() -> bool:
+    """Determines if the Python interpreter is running with ASAN"""
+    return hasattr(ctypes.CDLL(""), "__asan_init")
+
+
+def is_tsan() -> bool:
+    """Determines if the Python interpreter is running with TSAN"""
+    return hasattr(ctypes.CDLL(""), "__tsan_init")
+
+
+def is_asan_or_tsan() -> bool:
+    return is_asan() or is_tsan()
+
+
+def skip_if_asan(
+    func: Callable[TParams, TReturn]
+) -> Callable[TParams, Optional[TReturn]]:
+    """Skip test run if we are in ASAN mode."""
+
+    @wraps(func)
+    def wrapper(*args: TParams.args, **kwargs: TParams.kwargs) -> Optional[TReturn]:
+        if is_asan_or_tsan():
+            print("Skipping test run since we are in ASAN mode.")
+            return
+        return func(*args, **kwargs)
+
+    return wrapper
