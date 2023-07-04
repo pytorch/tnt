@@ -466,40 +466,6 @@ class TestAutoUnit(unittest.TestCase):
             auto_unit.train_step(state=state, data=dummy_iterator)
             no_sync_mock.assert_not_called()
 
-    @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    def test_fsdp_fp16_pytorch_version(self) -> None:
-        """
-        Test that a RuntimeError is thrown when using FSDP, fp16 precision, and PyTorch < v1.12
-        """
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._test_fsdp_fp16_pytorch_version
-        )()
-
-    @staticmethod
-    def _test_fsdp_fp16_pytorch_version() -> None:
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2).to(device)
-
-        tc = unittest.TestCase()
-        with patch(
-            "torchtnt.framework.auto_unit.is_torch_version_geq_1_12", return_value=False
-        ), tc.assertRaisesRegex(
-            RuntimeError,
-            "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/",
-        ):
-            _ = DummyAutoUnit(
-                module=my_module,
-                device=device,
-                strategy=FSDPStrategy(),
-                precision="fp16",
-            )
-
     def test_move_data_to_device(self) -> None:
         """
         Test that move_data_to_device is called

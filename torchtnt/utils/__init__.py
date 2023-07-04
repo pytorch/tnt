@@ -37,6 +37,7 @@ from .oom import (
     is_out_of_memory_error,
     log_memory_snapshot,
 )
+from .prepare_model import DDPStrategy, FSDPStrategy, prepare_ddp, prepare_fsdp
 from .progress import Progress
 from .rank_zero_log import (
     rank_zero_critical,
@@ -93,6 +94,10 @@ __all__ = [
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
     "log_memory_snapshot",
+    "DDPStrategy",
+    "FSDPStrategy",
+    "prepare_ddp",
+    "prepare_fsdp",
     "Progress",
     "rank_zero_critical",
     "rank_zero_debug",
