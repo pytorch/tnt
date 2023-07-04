@@ -10,30 +10,19 @@
 
 import contextlib
 from abc import ABCMeta, abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable, Iterable, Iterator, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
-import torch.distributed as dist
-
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
-from torch.distributed import ProcessGroup
-
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     apply_activation_checkpointing,
     checkpoint_wrapper,
     CheckpointImpl,
 )
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, StateDictType
-from torch.distributed.fsdp.api import OptimStateDictConfig, StateDictConfig
-from torch.distributed.fsdp.fully_sharded_data_parallel import (
-    BackwardPrefetch,
-    CPUOffload,
-    MixedPrecision,
-    ShardingStrategy,
-)
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.framework.state import ActivePhase, State
@@ -45,74 +34,23 @@ from torchtnt.framework.utils import (
 )
 from torchtnt.utils import (
     init_from_env,
-    is_torch_version_geq_1_12,
     TLRScheduler,
     transfer_batch_norm_stats,
     transfer_weights,
 )
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
+from torchtnt.utils.prepare_model import (
+    DDPStrategy,
+    FSDPStrategy,
+    prepare_ddp,
+    prepare_fsdp,
+    Strategy,
+)
 from torchtnt.utils.rank_zero_log import rank_zero_warn
 from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
 
 TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
-
-
-@dataclass
-class Strategy:
-    """Dataclass representing the parallelization strategy for the AutoUnit"""
-
-    pass
-
-
-@dataclass
-class DDPStrategy(Strategy):
-    """
-    Dataclass representing the `DistributedDataParallel <https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html>`_ strategy.
-    Includes params for registering `DDP communication hooks <https://pytorch.org/docs/stable/ddp_comm_hooks.html>`_ and `syncing batch norm <https://pytorch.org/docs/stable/generated/torch.nn.SyncBatchNorm.html>`_.
-    """
-
-    # DDP Constructor params
-    output_device: Optional[Union[int, torch.device]] = None
-    dim: int = 0
-    broadcast_buffers: bool = True
-    process_group: Optional[ProcessGroup] = None
-    bucket_cap_mb: int = 25
-    find_unused_parameters: bool = False
-    check_reduction: bool = False
-    gradient_as_bucket_view: bool = False
-    static_graph: bool = False
-
-    # DDP Comm Hook params
-    comm_state: Optional[object] = None
-    comm_hook: Optional[
-        Callable[[object, dist.GradBucket], torch.futures.Future[torch.Tensor]]
-    ] = None
-
-    # SyncBatchNorm params
-    sync_batchnorm: bool = True
-
-
-@dataclass
-class FSDPStrategy(Strategy):
-    """Dataclass representing the `FullyShardedDataParallel <https://pytorch.org/docs/stable/fsdp.html>`_ strategy"""
-
-    process_group: Optional[ProcessGroup] = None
-    sharding_strategy: Optional[ShardingStrategy] = None
-    cpu_offload: Optional[CPUOffload] = None
-    auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
-    backward_prefetch: Optional[BackwardPrefetch] = None
-    ignored_modules: Optional[Iterable[torch.nn.Module]] = None
-    sync_module_states: bool = False
-    forward_prefetch: bool = False
-    limit_all_gathers: bool = False
-    use_orig_params: bool = False
-
-    # FSDP set_state_dict_type params: https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type
-    # for setting type of state dict for checkpointing
-    state_dict_type: Optional[StateDictType] = None
-    state_dict_config: Optional[StateDictConfig] = None
-    optim_state_dict_config: Optional[OptimStateDictConfig] = None
 
 
 @dataclass
@@ -255,13 +193,17 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             if isinstance(strategy, str):
                 strategy = _convert_str_to_strategy(strategy)
             if isinstance(strategy, DDPStrategy):
-                module = _prepare_ddp(module, strategy, self.device, torchdynamo_params)
+                if torchdynamo_params:
+                    # TODO: Add support for dynamo and DDP
+                    rank_zero_warn(
+                        "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
+                    )
+                module = prepare_ddp(module, self.device, strategy)
             elif isinstance(strategy, FSDPStrategy):
-                module = _prepare_fsdp(
+                module = prepare_fsdp(
                     module,
-                    strategy,
                     self.device,
-                    None,  # SWA params
+                    strategy,
                     self.precision,
                 )
         else:
@@ -473,11 +415,18 @@ class AutoUnit(
             if isinstance(strategy, str):
                 strategy = _convert_str_to_strategy(strategy)
             if isinstance(strategy, DDPStrategy):
-                module = _prepare_ddp(module, strategy, self.device, torchdynamo_params)
+                if torchdynamo_params:
+                    # TODO: Add support for dynamo and DDP
+                    rank_zero_warn(
+                        "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
+                    )
+                module = prepare_ddp(module, self.device, strategy)
             elif isinstance(strategy, FSDPStrategy):
-                module = _prepare_fsdp(
-                    module, strategy, self.device, swa_params, self.precision
-                )
+                if swa_params:
+                    raise RuntimeError(
+                        "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
+                    )
+                module = prepare_fsdp(module, self.device, strategy, self.precision)
         else:
             module = module.to(self.device)
 
@@ -668,7 +617,6 @@ class AutoUnit(
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
         # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
         maybe_no_sync = (
-            # pyre-ignore[29]
             module.no_sync()
             if not should_update_weights
             and (isinstance(module, DDP) or _is_fsdp_module(module))
@@ -955,85 +903,3 @@ def _dynamo_wrapper(fn: Callable, torchdynamo_params: TorchDynamoParams):
         raise RuntimeError(
             f"The following error encountered when calling torch.compile for dynamo: {e}"
         ) from e
-
-
-def _prepare_ddp(
-    module: torch.nn.Module,
-    strategy: DDPStrategy,
-    device: torch.device,
-    torchdynamo_params: Optional[TorchDynamoParams],
-) -> DDP:
-    # wrap module in DDP
-    device_ids = None
-    if device.type == "cuda":
-        device_ids = [device.index]
-    params_dict = asdict(strategy)
-    # remove ddp comm hook variables from params dict
-    del params_dict["comm_state"]
-    del params_dict["comm_hook"]
-    module = module.to(device)
-
-    # remove sync batch norm from params dict before converting module
-    del params_dict["sync_batchnorm"]
-    if strategy.sync_batchnorm:
-        if device.type == "cuda":
-            module = torch.nn.SyncBatchNorm.convert_sync_batchnorm(module)
-        else:
-            rank_zero_warn(
-                f"SyncBatchNorm layers only work with GPU modules. Skipping the conversion because the device type is {device.type}."
-            )
-
-    module = DDP(module, device_ids=device_ids, **params_dict)
-    if torchdynamo_params:
-        # TODO: Add support for dynamo and DDP
-        rank_zero_warn(
-            "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
-        )
-    if strategy.comm_hook:
-        module.register_comm_hook(state=strategy.comm_state, hook=strategy.comm_hook)
-    return module
-
-
-def _prepare_fsdp(
-    module: torch.nn.Module,
-    strategy: FSDPStrategy,
-    device: torch.device,
-    swa_params: Optional[SWAParams],
-    precision: Optional[torch.dtype],
-) -> FSDP:
-    if not is_torch_version_geq_1_12():
-        raise RuntimeError(
-            "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/"
-        )
-    elif swa_params:
-        raise RuntimeError(
-            "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
-        )
-    mixed_precision = None
-    if precision:
-        mixed_precision = MixedPrecision(
-            param_dtype=precision,
-            reduce_dtype=precision,
-            buffer_dtype=precision,
-        )
-
-    params_dict = asdict(strategy)
-
-    # extract params to set state dict type
-    state_dict_type = params_dict.pop("state_dict_type")
-    state_dict_config = params_dict.pop("state_dict_config")
-    optim_state_dict_config = params_dict.pop("optim_state_dict_config")
-
-    # wrap module in FSDP
-    module = FSDP(
-        module,
-        device_id=device,
-        mixed_precision=mixed_precision,
-        **params_dict,
-    )
-
-    if state_dict_type:
-        FSDP.set_state_dict_type(
-            module, state_dict_type, state_dict_config, optim_state_dict_config
-        )
-    return module
