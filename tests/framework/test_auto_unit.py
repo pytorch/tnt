@@ -38,8 +38,9 @@ from torchtnt.framework.evaluate import evaluate, init_eval_state
 from torchtnt.framework.predict import init_predict_state, predict
 from torchtnt.framework.state import State
 from torchtnt.framework.train import init_train_state, train
-from torchtnt.utils import init_from_env, TLRScheduler
 from torchtnt.utils.device import copy_data_to_device
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.test_utils import get_pet_launch_config
 
 
@@ -244,6 +245,36 @@ class TestAutoUnit(unittest.TestCase):
         self.assertTrue(
             torch.allclose(orig_module.l2.weight, swa_module.module.l2.weight)
         )
+
+    @unittest.skipUnless(
+        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_dynamo_state_dict(self) -> None:
+        """
+        e2e torchdynamo on train
+        """
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2, device=device)
+        my_module_state_dict = my_module.state_dict()
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            torchdynamo_params=TorchDynamoParams("inductor"),
+            device=device,
+        )
+        compiled_state_dict = auto_unit.module.state_dict()
+        for k in my_module_state_dict.keys():
+            self.assertIn(k, compiled_state_dict)
+            self.assertTrue(
+                torch.allclose(my_module_state_dict[k], compiled_state_dict[k])
+            )
+        for k in compiled_state_dict.keys():
+            self.assertIn(k, my_module_state_dict)
+            self.assertTrue(
+                torch.allclose(my_module_state_dict[k], compiled_state_dict[k])
+            )
 
     @unittest.skipUnless(
         condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."

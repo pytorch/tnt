@@ -209,7 +209,8 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         else:
             module = module.to(self.device)
         if torchdynamo_params:
-            module = _dynamo_wrapper(module, torchdynamo_params)
+            # use in-place compile to avoid altering the state_dict keys
+            module.compile(backend=torchdynamo_params.backend)
         self.module: torch.nn.Module = module
 
         # cuda stream to use for moving data to device
@@ -443,16 +444,22 @@ class AutoUnit(
                 check_fn=check_fn,
             )
 
-        self.module: torch.nn.Module = module
-
-        self.step_lr_interval = step_lr_interval
-
         self.grad_scaler: Optional[GradScaler] = None
         if self.precision:
             self.grad_scaler = _get_grad_scaler_from_precision(
                 self.precision,
-                self.module,
+                module,
             )
+
+        if torchdynamo_params:
+            # pyre-ignore
+            self.compute_loss = _dynamo_wrapper(self.compute_loss, torchdynamo_params)
+            # use in-place compile to avoid altering the state_dict keys
+            module.compile(backend=torchdynamo_params.backend)
+
+        self.module: torch.nn.Module = module
+
+        self.step_lr_interval = step_lr_interval
 
         self.gradient_accumulation_steps = gradient_accumulation_steps
 
@@ -468,11 +475,6 @@ class AutoUnit(
         )
 
         self.swa_params: Optional[SWAParams] = swa_params
-
-        if torchdynamo_params:
-            # pyre-ignore
-            self.compute_loss = _dynamo_wrapper(self.compute_loss, torchdynamo_params)
-            self.module = _dynamo_wrapper(self.module, torchdynamo_params)
 
         self.training = training
 
