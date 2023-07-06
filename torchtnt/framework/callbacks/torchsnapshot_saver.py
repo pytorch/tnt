@@ -115,9 +115,9 @@ class TorchSnapshotSaver(Callback):
         _check_app_state_collision(app_state)
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        train_state = none_throws(state.train_state)
+        train_progress = none_throws(state.train_state).progress
 
-        num_steps_completed = train_state.progress.num_steps_completed
+        num_steps_completed = train_progress.num_steps_completed
         save_every_n_train_steps = self._save_every_n_train_steps
         if (
             save_every_n_train_steps is None
@@ -126,30 +126,21 @@ class TorchSnapshotSaver(Callback):
             return
 
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=True)
-
-        # save snapshot to predetermined path
-        # TODO: discuss whether this path should be customized
-        epoch = train_state.progress.num_epochs_completed
+        epoch = train_progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
         self._async_snapshot(snapshot_path, app_state, wait=False)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
-        train_state = none_throws(state.train_state)
+        train_progress = none_throws(state.train_state).progress
 
-        train_progress = train_state.progress
         epoch = train_progress.num_epochs_completed
         save_every_n_epochs = self._save_every_n_epochs
         if save_every_n_epochs is None or epoch % save_every_n_epochs != 0:
             return
 
-        app_state = _get_app_state(
-            state, unit, replicated=self._replicated, intra_epoch=False
-        )
-
-        # save snapshot to predetermined path
-        # TODO: discuss whether this path should be customized
+        app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
         num_steps_completed = train_progress.num_steps_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
@@ -157,19 +148,14 @@ class TorchSnapshotSaver(Callback):
         self._async_snapshot(snapshot_path, app_state, wait=True)
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
-        train_state = none_throws(state.train_state)
-        num_steps_completed = train_state.progress.num_steps_completed
-
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
-
-        # save snapshot to predetermined path
-        # TODO: discuss whether this path should be customized
-        epoch = train_state.progress.num_epochs_completed
+        train_progress = none_throws(state.train_state).progress
+        num_steps_completed = train_progress.num_steps_completed
+        epoch = train_progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
         self._async_snapshot(snapshot_path, app_state, wait=False)
-
         self._wait()
 
     def on_exception(
@@ -269,6 +255,7 @@ def _validate_snapshot_available() -> None:
 
 
 def _get_snapshot_save_path(dirpath: str, epoch: int, step: int) -> str:
+    # TODO: discuss whether this path should be customized
     return os.path.join(dirpath, f"epoch_{epoch}_step_{step}")
 
 
