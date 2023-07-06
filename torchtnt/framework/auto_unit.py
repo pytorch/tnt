@@ -10,9 +10,9 @@
 
 import contextlib
 from abc import ABCMeta, abstractmethod
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import partial
-from typing import Any, Callable, Iterator, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
@@ -74,15 +74,18 @@ class SWAParams:
 
 
 @dataclass
-class TorchDynamoParams:
+class TorchCompileParams:
     """
-    Dataclass to store parameters for torchdynamo.
-
-    Args:
-        backend: a string backend name in `torch._dynamo.list_backends()`
+    Dataclass to store parameters for torch compile. See https://pytorch.org/docs/stable/generated/torch.compile.html for details.
     """
 
-    backend: str
+    fullgraph: bool = False
+    dynamic: bool = False
+    # pyre-ignore: Invalid type parameters [24]
+    backend: Union[str, Callable] = "inductor"
+    mode: Union[str, None] = None
+    options: Optional[Dict[str, Union[str, int, bool]]] = None
+    disable: bool = False
 
 
 @dataclass
@@ -145,7 +148,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         device: Optional[torch.device] = None,
         strategy: Optional[Union[Strategy, str]] = None,
         precision: Optional[Union[str, torch.dtype]] = None,
-        torchdynamo_params: Optional[TorchDynamoParams] = None,
+        torch_compile_params: Optional[TorchCompileParams] = None,
     ) -> None:
         """
         AutoPredictUnit is a convenience for users who are running inference and would like to have certain features handled for them, such as:
@@ -166,13 +169,13 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             device: the device to be used.
             precision: the precision to use in training, as either a string or a torch.dtype.
             strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.
-            torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/stable/dynamo/index.html
+            torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html
 
         Note:
-            TorchDynamo support is only available in PyTorch 2.0 or higher.
+            Torch compile support is only available in PyTorch 2.0 or higher.
         """
-        if torchdynamo_params:
-            _validate_torchdynamo_available()
+        if torch_compile_params:
+            _validate_torch_compile_available()
 
         super().__init__()
 
@@ -193,13 +196,18 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             if isinstance(strategy, str):
                 strategy = _convert_str_to_strategy(strategy)
             if isinstance(strategy, DDPStrategy):
-                if torchdynamo_params:
-                    # TODO: Add support for dynamo and DDP
-                    rank_zero_warn(
-                        "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
+                if torch_compile_params and strategy.static_graph is True:
+                    # https://dev-discuss.pytorch.org/t/torchdynamo-update-9-making-ddp-work-with-torchdynamo/860
+                    raise RuntimeError(
+                        "Torch compile requires DDPStrategy's static_graph to be False"
                     )
                 module = prepare_ddp(module, self.device, strategy)
             elif isinstance(strategy, FSDPStrategy):
+                if torch_compile_params and strategy.use_orig_params is False:
+                    # as stated here https://pytorch.org/get-started/pytorch-2.0/
+                    rank_zero_warn(
+                        "We recommend setting FSDPStrategy's use_orig_params to True when using torch compile."
+                    )
                 module = prepare_fsdp(
                     module,
                     self.device,
@@ -208,9 +216,9 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
                 )
         else:
             module = module.to(self.device)
-        if torchdynamo_params:
+        if torch_compile_params:
             # use in-place compile to avoid altering the state_dict keys
-            module.compile(backend=torchdynamo_params.backend)
+            module.compile(backend=torch_compile_params.backend)
         self.module: torch.nn.Module = module
 
         # cuda stream to use for moving data to device
@@ -367,7 +375,7 @@ class AutoUnit(
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
-        torchdynamo_params: params for TorchDynamo https://pytorch.org/docs/stable/dynamo/index.html
+        torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html
         activation_checkpoint_params: params for enabling activation checkpointing
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
@@ -375,7 +383,7 @@ class AutoUnit(
         Stochastic Weight Averaging is currently not supported with the FSDP strategy.
 
     Note:
-        TorchDynamo support is only available in PyTorch 2.0 or higher.
+        Torch compile support is only available in PyTorch 2.0 or higher.
 
     """
 
@@ -392,7 +400,7 @@ class AutoUnit(
         clip_grad_norm: Optional[float] = None,
         clip_grad_value: Optional[float] = None,
         swa_params: Optional[SWAParams] = None,
-        torchdynamo_params: Optional[TorchDynamoParams] = None,
+        torch_compile_params: Optional[TorchCompileParams] = None,
         activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
         training: bool = True,
     ) -> None:
@@ -402,8 +410,8 @@ class AutoUnit(
             raise ValueError(
                 f"gradient_accumulation_steps must be > 0. Got {gradient_accumulation_steps}"
             )
-        if torchdynamo_params:
-            _validate_torchdynamo_available()
+        if torch_compile_params:
+            _validate_torch_compile_available()
 
         self.device: torch.device = device or init_from_env()
         self.precision: Optional[torch.dtype]
@@ -416,10 +424,10 @@ class AutoUnit(
             if isinstance(strategy, str):
                 strategy = _convert_str_to_strategy(strategy)
             if isinstance(strategy, DDPStrategy):
-                if torchdynamo_params:
-                    # TODO: Add support for dynamo and DDP
-                    rank_zero_warn(
-                        "Torchdynamo params has been set with DDP - Note that performance will likely be slower and we recommend using only one."
+                if torch_compile_params and strategy.static_graph is True:
+                    # https://dev-discuss.pytorch.org/t/torchdynamo-update-9-making-ddp-work-with-torchdynamo/860
+                    raise RuntimeError(
+                        "Torch compile requires DDPStrategy's static_graph to be False"
                     )
                 module = prepare_ddp(module, self.device, strategy)
             elif isinstance(strategy, FSDPStrategy):
@@ -427,6 +435,10 @@ class AutoUnit(
                     raise RuntimeError(
                         "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
                     )
+                # as stated here https://pytorch.org/get-started/pytorch-2.0/
+                rank_zero_warn(
+                    "We recommend setting FSDPStrategy's use_original_params to True when using torch compile."
+                )
                 module = prepare_fsdp(module, self.device, strategy, self.precision)
         else:
             module = module.to(self.device)
@@ -451,13 +463,14 @@ class AutoUnit(
                 module,
             )
 
-        if torchdynamo_params:
+        if torch_compile_params:
             # pyre-ignore
             self.compute_loss = torch.compile(
-                self.compute_loss, backend=torchdynamo_params.backend
+                self.compute_loss,
+                **asdict(torch_compile_params),
             )
             # use in-place compile to avoid altering the state_dict keys
-            module.compile(backend=torchdynamo_params.backend)
+            module.compile(**asdict(torch_compile_params))
 
         self.module: torch.nn.Module = module
 
@@ -657,7 +670,6 @@ class AutoUnit(
 
         if should_update_weights:
             # Run gradient clipping, optimizer step, and zero_grad
-            # TODO try to use dynamo here
             clip_grad_norm = self.clip_grad_norm
             clip_grad_value = self.clip_grad_value
             if grad_scaler and (clip_grad_norm or clip_grad_value):
@@ -827,10 +839,10 @@ class AutoUnit(
         pass
 
 
-def _validate_torchdynamo_available() -> None:
+def _validate_torch_compile_available() -> None:
     if not is_torch_version_ge_1_13_1():
         raise RuntimeError(
-            "TorchDynamo support is available only in PyTorch 2.0 or higher. "
+            "Torch compile support is available only in PyTorch 2.0 or higher. "
             "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
         )
 

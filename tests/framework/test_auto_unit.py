@@ -13,9 +13,9 @@ import torch
 
 from torchtnt.utils.version import is_torch_version_geq_1_13
 
-DYNAMO_AVAIL = False
+COMPILE_AVAIL = False
 if is_torch_version_geq_1_13():
-    DYNAMO_AVAIL = True
+    COMPILE_AVAIL = True
     import torch._dynamo
 
 from torch.distributed import GradBucket, launcher
@@ -32,7 +32,7 @@ from torchtnt.framework.auto_unit import (
     DDPStrategy,
     FSDPStrategy,
     SWAParams,
-    TorchDynamoParams,
+    TorchCompileParams,
 )
 from torchtnt.framework.evaluate import evaluate, init_eval_state
 from torchtnt.framework.predict import init_predict_state, predict
@@ -247,21 +247,22 @@ class TestAutoUnit(unittest.TestCase):
         )
 
     @unittest.skipUnless(
-        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+        condition=COMPILE_AVAIL,
+        reason="This test needs PyTorch 1.13 or greater to run.",
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
-    def test_dynamo_state_dict(self) -> None:
+    def test_compile_state_dict(self) -> None:
         """
-        e2e torchdynamo on train
+        e2e torchcompile on train
         """
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2, device=device)
         my_module_state_dict = my_module.state_dict()
         auto_unit = DummyAutoUnit(
             module=my_module,
-            torchdynamo_params=TorchDynamoParams("inductor"),
+            torch_compile_params=TorchCompileParams(backend="inductor"),
             device=device,
         )
         compiled_state_dict = auto_unit.module.state_dict()
@@ -277,11 +278,12 @@ class TestAutoUnit(unittest.TestCase):
             )
 
     @unittest.skipUnless(
-        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+        condition=COMPILE_AVAIL,
+        reason="This test needs PyTorch 1.13 or greater to run.",
     )
-    def test_dynamo_eager(self) -> None:
+    def test_compile_eager(self) -> None:
         """
-        e2e torchdynamo test
+        e2e torchcompile test
         """
 
         my_module = torch.nn.Linear(2, 2)
@@ -293,24 +295,25 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            torchdynamo_params=TorchDynamoParams("eager"),
+            torch_compile_params=TorchCompileParams(backend="eager"),
         )
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
-        self.assertFalse(auto_unit._dynamo_used)
+        self.assertFalse(auto_unit._compile_used)
         train(state, auto_unit)
-        self.assertTrue(auto_unit._dynamo_used)
+        self.assertTrue(auto_unit._compile_used)
 
     @unittest.skipUnless(
-        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+        condition=COMPILE_AVAIL,
+        reason="This test needs PyTorch 1.13 or greater to run.",
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
-    def test_dynamo_train(self) -> None:
+    def test_compile_train(self) -> None:
         """
-        e2e torchdynamo on train
+        e2e torchcompile on train
         """
 
         my_module = torch.nn.Linear(2, 2)
@@ -322,25 +325,26 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            torchdynamo_params=TorchDynamoParams("inductor"),
+            torch_compile_params=TorchCompileParams(backend="inductor"),
         )
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
 
-        self.assertFalse(auto_unit._dynamo_used)
+        self.assertFalse(auto_unit._compile_used)
         train(state, auto_unit)
-        self.assertTrue(auto_unit._dynamo_used)
+        self.assertTrue(auto_unit._compile_used)
 
     @unittest.skipUnless(
-        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+        condition=COMPILE_AVAIL,
+        reason="This test needs PyTorch 1.13 or greater to run.",
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
-    def test_dynamo_eval(self) -> None:
+    def test_compile_eval(self) -> None:
         """
-        e2e torchdynamo on eval
+        e2e torchcompile on eval
         """
 
         my_module = torch.nn.Linear(2, 2)
@@ -351,7 +355,7 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit = DummyAutoUnit(
             module=my_module,
-            torchdynamo_params=TorchDynamoParams("inductor"),
+            torch_compile_params=TorchCompileParams(backend="inductor"),
         )
 
         input_dim = 2
@@ -360,14 +364,15 @@ class TestAutoUnit(unittest.TestCase):
 
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_eval_state(dataloader=eval_dl)
-        self.assertFalse(auto_unit._dynamo_used)
+        self.assertFalse(auto_unit._compile_used)
         evaluate(state, auto_unit)
-        self.assertTrue(auto_unit._dynamo_used)
+        self.assertTrue(auto_unit._compile_used)
 
     @unittest.skipUnless(
-        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+        condition=COMPILE_AVAIL,
+        reason="This test needs PyTorch 1.13 or greater to run.",
     )
-    def test_dynamo_invalid_backend(self) -> None:
+    def test_compile_invalid_backend(self) -> None:
         """
         verify error is thrown on invalid backend
         """
@@ -386,14 +391,14 @@ class TestAutoUnit(unittest.TestCase):
                 return x
 
         my_module = Net()
-        my_dynamo_params = TorchDynamoParams(backend="foo")
+        my_compile_params = TorchCompileParams(backend="foo")
 
         self.failUnlessRaises(
             RuntimeError,
             DummyAutoUnit,
             **{
                 "module": my_module,
-                "torchdynamo_params": my_dynamo_params,
+                "torch_compile_params": my_compile_params,
             },
         )
 
@@ -941,20 +946,21 @@ class TestAutoUnit(unittest.TestCase):
         )
 
     @unittest.skipUnless(
-        condition=DYNAMO_AVAIL, reason="This test needs PyTorch 1.13 or greater to run."
+        condition=COMPILE_AVAIL,
+        reason="This test needs PyTorch 1.13 or greater to run.",
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.compile")
-    def test_dynamo_predict(self, mock_compile) -> None:
+    def test_compile_predict(self, mock_dynamo) -> None:
         """
-        e2e torchdynamo on predict
+        e2e torchcompile on predict
         """
         my_module = torch.nn.Linear(2, 2)
         auto_unit = AutoPredictUnit(
             module=my_module,
-            torchdynamo_params=TorchDynamoParams("eager"),
+            torch_compile_params=TorchCompileParams(backend="eager"),
         )
 
         input_dim = 2
@@ -966,7 +972,7 @@ class TestAutoUnit(unittest.TestCase):
         )
         state = init_predict_state(dataloader=predict_dl)
         predict(state, auto_unit)
-        mock_compile.assert_called()
+        mock_dynamo.assert_called()
 
     def test_auto_predict_unit_timing_predict(self) -> None:
         """
@@ -1014,11 +1020,11 @@ Batch = Tuple[torch.tensor, torch.tensor]
 class DummyAutoUnit(AutoUnit[Batch]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._dynamo_used = False
+        self._compile_used = False
 
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
-        if DYNAMO_AVAIL:
-            self._dynamo_used = torch._dynamo.is_compiling()
+        if COMPILE_AVAIL:
+            self._compile_used = torch._dynamo.is_compiling()
         inputs, targets = data
         outputs = self.module(inputs)
         loss = torch.nn.functional.cross_entropy(outputs, targets)
