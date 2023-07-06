@@ -155,7 +155,7 @@ class TorchSnapshotSaver(Callback):
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
-        self._async_snapshot(snapshot_path, app_state, wait=False)
+        self._async_snapshot(snapshot_path, app_state, wait=True)
         self._wait()
 
     def on_exception(
