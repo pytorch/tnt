@@ -75,13 +75,13 @@ class TorchSnapshotSaver(Callback):
         replicated: Optional[List[str]] = None,
     ) -> None:
         _validate_snapshot_available()
-        if save_every_n_train_steps is not None and save_every_n_train_steps < 0:
+        if save_every_n_train_steps is not None and save_every_n_train_steps <= 0:
             raise ValueError(
-                f"Invalid value passed for save_every_n_train_steps. Expected to receive either None or non-negative number, but received {save_every_n_train_steps}"
+                f"Invalid value passed for save_every_n_train_steps. Expected to receive either None or positive number, but received {save_every_n_train_steps}"
             )
-        if save_every_n_epochs is not None and save_every_n_epochs < 0:
+        if save_every_n_epochs is not None and save_every_n_epochs <= 0:
             raise ValueError(
-                f"Invalid value passed for save_every_n_epochs. Expected to receive either None or non-negative number, but received {save_every_n_epochs}"
+                f"Invalid value passed for save_every_n_epochs. Expected to receive either None or positive number, but received {save_every_n_epochs}"
             )
         self._save_every_n_epochs = save_every_n_epochs
         self._save_every_n_train_steps = save_every_n_train_steps
