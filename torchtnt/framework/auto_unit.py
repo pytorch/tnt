@@ -453,7 +453,9 @@ class AutoUnit(
 
         if torchdynamo_params:
             # pyre-ignore
-            self.compute_loss = _dynamo_wrapper(self.compute_loss, torchdynamo_params)
+            self.compute_loss = torch.compile(
+                self.compute_loss, backend=torchdynamo_params.backend
+            )
             # use in-place compile to avoid altering the state_dict keys
             module.compile(backend=torchdynamo_params.backend)
 
@@ -890,18 +892,3 @@ def _get_grad_scaler_from_precision(
         else:
             return GradScaler()
     return None
-
-
-# pyre-ignore
-def _dynamo_wrapper(fn: Callable, torchdynamo_params: TorchDynamoParams):
-    backend = torchdynamo_params.backend
-    try:
-        return torch.compile(fn, backend=backend)
-    except KeyError as e:
-        raise RuntimeError(
-            f"Torchdynamo backend {torchdynamo_params.backend} is not supported."
-        ) from e
-    except Exception as e:
-        raise RuntimeError(
-            f"The following error encountered when calling torch.compile for dynamo: {e}"
-        ) from e
