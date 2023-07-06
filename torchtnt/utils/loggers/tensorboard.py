@@ -160,6 +160,17 @@ class TensorBoardLogger(MetricLogger):
         if writer:
             writer.add_images(*args, **kwargs)
 
+    def log_audio(self, *args: Any, **kwargs: Any) -> None:
+        """Add audio data to TensorBoard.
+
+        Args:
+            *args (Any): Positional arguments passed to SummaryWriter.add_audio
+            **kwargs (Any): Keyword arguments passed to SummaryWriter.add_audio
+        """
+        writer = self._writer
+        if writer:
+            writer.add_audio(*args, **kwargs)
+
     def flush(self) -> None:
         """Writes pending logs to disk."""
 
