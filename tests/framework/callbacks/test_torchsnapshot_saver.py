@@ -240,11 +240,18 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 ValueError, "Invalid value passed for save_every_n_train_steps.*"
             ):
                 TorchSnapshotSaver(temp_dir, save_every_n_train_steps=-2)
-
+            with self.assertRaisesRegex(
+                ValueError, "Invalid value passed for save_every_n_train_steps.*"
+            ):
+                TorchSnapshotSaver(temp_dir, save_every_n_train_steps=0)
             with self.assertRaisesRegex(
                 ValueError, "Invalid value passed for save_every_n_epochs.*"
             ):
                 TorchSnapshotSaver(temp_dir, save_every_n_epochs=-2)
+            with self.assertRaisesRegex(
+                ValueError, "Invalid value passed for save_every_n_epochs.*"
+            ):
+                TorchSnapshotSaver(temp_dir, save_every_n_epochs=0)
 
 
 Batch = Tuple[torch.tensor, torch.tensor]
