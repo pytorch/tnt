@@ -218,7 +218,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             module = module.to(self.device)
         if torch_compile_params:
             # use in-place compile to avoid altering the state_dict keys
-            module.compile(backend=torch_compile_params.backend)
+            module.compile(**asdict(torch_compile_params))
         self.module: torch.nn.Module = module
 
         # cuda stream to use for moving data to device

@@ -255,7 +255,7 @@ class TestAutoUnit(unittest.TestCase):
     )
     def test_compile_state_dict(self) -> None:
         """
-        e2e torchcompile on train
+        e2e torch compile on train
         """
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2, device=device)
@@ -283,7 +283,7 @@ class TestAutoUnit(unittest.TestCase):
     )
     def test_compile_eager(self) -> None:
         """
-        e2e torchcompile test
+        e2e torch compile test
         """
 
         my_module = torch.nn.Linear(2, 2)
@@ -313,7 +313,7 @@ class TestAutoUnit(unittest.TestCase):
     )
     def test_compile_train(self) -> None:
         """
-        e2e torchcompile on train
+        e2e torch compile on train
         """
 
         my_module = torch.nn.Linear(2, 2)
@@ -344,7 +344,7 @@ class TestAutoUnit(unittest.TestCase):
     )
     def test_compile_eval(self) -> None:
         """
-        e2e torchcompile on eval
+        e2e torch compile on eval
         """
 
         my_module = torch.nn.Linear(2, 2)
@@ -955,7 +955,7 @@ class TestAutoUnit(unittest.TestCase):
     @patch("torch.compile")
     def test_compile_predict(self, mock_dynamo) -> None:
         """
-        e2e torchcompile on predict
+        e2e torch compile on predict
         """
         my_module = torch.nn.Linear(2, 2)
         auto_unit = AutoPredictUnit(
