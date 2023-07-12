@@ -1013,6 +1013,22 @@ class TestAutoUnit(unittest.TestCase):
         # predict_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's predict_step
         self.assertNotIn("AutoPredictUnit.predict_step", recorded_timer_keys)
 
+    @patch("torch.autograd.set_detect_anomaly")
+    def test_predict_detect_anomaly(self, mock_detect_anomaly) -> None:
+        my_module = torch.nn.Linear(2, 2)
+        auto_unit = AutoPredictUnit(module=my_module, detect_anomaly=True)
+
+        input_dim = 2
+        dataset_len = 8
+        batch_size = 2
+
+        predict_dl = generate_random_iterable_dataloader(
+            dataset_len, input_dim, batch_size
+        )
+        state = init_predict_state(dataloader=predict_dl, max_steps_per_epoch=1)
+        predict(state, auto_unit)
+        mock_detect_anomaly.assert_called()
+
 
 Batch = Tuple[torch.tensor, torch.tensor]
 
