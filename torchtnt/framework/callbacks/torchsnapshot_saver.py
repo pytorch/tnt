@@ -15,15 +15,11 @@ from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
-from torchtnt.framework.unit import (
-    _Stateful as StatefulProtocol,
-    AppStateMixin,
-    TEvalUnit,
-    TPredictUnit,
-    TTrainUnit,
-)
+from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.framework.utils import _construct_tracked_optimizers
-from torchtnt.utils import get_global_rank, rank_zero_info, rank_zero_warn
+from torchtnt.utils.distributed import get_global_rank
+from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
+from torchtnt.utils.stateful import Stateful
 
 try:
     import torchsnapshot
@@ -31,7 +27,7 @@ try:
     _TStateful = torchsnapshot.Stateful
     _TORCHSNAPSHOT_AVAILABLE = True
 except Exception:
-    _TStateful = StatefulProtocol
+    _TStateful = Stateful
     _TORCHSNAPSHOT_AVAILABLE = False
 
 _EVAL_PROGRESS_STATE_KEY = "eval_progress"
