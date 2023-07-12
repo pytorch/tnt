@@ -14,21 +14,12 @@ from typing import Any, Dict, Generic, TypeVar
 import torch
 
 from torchtnt.framework.state import State
-from torchtnt.utils import TLRScheduler
-from typing_extensions import Protocol, runtime_checkable
+from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.stateful import Stateful
 
 """
 This file defines mixins and interfaces for users to customize hooks in training, evaluation, and prediction loops.
 """
-
-
-@runtime_checkable
-class _Stateful(Protocol):
-    def state_dict(self) -> Dict[str, Any]:
-        ...
-
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
-        ...
 
 
 def _remove_from_dicts(name_to_remove: str, *dicts: Dict[str, Any]) -> None:
@@ -131,7 +122,7 @@ class AppStateMixin:
                 value,
                 self.__dict__.get("_lr_schedulers"),
             )
-        elif isinstance(value, _Stateful):
+        elif isinstance(value, Stateful):
             self._update_attr(
                 name,
                 value,
