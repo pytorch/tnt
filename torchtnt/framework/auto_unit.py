@@ -149,6 +149,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         strategy: Optional[Union[Strategy, str]] = None,
         precision: Optional[Union[str, torch.dtype]] = None,
         torch_compile_params: Optional[TorchCompileParams] = None,
+        detect_anomaly: Optional[bool] = None,
     ) -> None:
         """
         AutoPredictUnit is a convenience for users who are running inference and would like to have certain features handled for them, such as:
@@ -170,6 +171,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             precision: the precision to use in training, as either a string or a torch.dtype.
             strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.
             torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html
+            detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
 
         Note:
             Torch compile support is only available in PyTorch 2.0 or higher.
@@ -231,10 +233,20 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         # whether the next batch has been prefetched and is ready to be used
         self._prefetched: bool = False
 
+        self.detect_anomaly = detect_anomaly
+
     def predict_step(self, state: State, data: Iterator[TPredictData]) -> Any:
         batch = self._get_next_batch(state, data)
 
-        with self.maybe_autocast_precision:
+        # if detect_anomaly is true, run forward pass under detect_anomaly context
+        detect_anomaly = self.detect_anomaly
+        maybe_detect_anomaly = (
+            torch.autograd.set_detect_anomaly(detect_anomaly)
+            if detect_anomaly is not None
+            else contextlib.nullcontext()
+        )
+
+        with self.maybe_autocast_precision, maybe_detect_anomaly:
             with _get_timing_context(state, f"{self.__class__.__name__}.forward"):
                 outputs = self.module(batch)
 
