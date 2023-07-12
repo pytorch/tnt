@@ -15,6 +15,7 @@ from torchtnt.utils.data.iterators import (
     DataIterationStrategyRegistry,
     MultiIterator,
 )
+from torchtnt.utils.stateful import Stateful
 
 if TYPE_CHECKING:
     from torch.utils.data import DataLoader
@@ -64,7 +65,7 @@ class MultiDataLoader:
                     )
 
     def __iter__(self) -> Iterator[Dict[str, Any]]:
-        """Iterator functions for the collection of dataloaders
+        """Iterator functions for the collection of dataloaders.
 
         Returns:
             a newly created iterator based on DataIterationStrategy
@@ -80,3 +81,36 @@ class MultiDataLoader:
             iteration_strategy=self.iteration_strategy,
         )
         return self.iterator
+
+    def state_dict(self) -> Dict[str, Any]:
+        """Return an aggregated state dict based on individual dataloaders.
+
+        The state dict is keyed off the names provided by ``individual_dataloaders``.
+
+        Note:
+            Only states from dataloaders that implement the :class:`~torchtnt.utils.stateful.Stateful` protocol are included in the returned state dict.
+        """
+        state_dict = {}
+        for name, dl in self.individual_dataloaders.items():
+            if isinstance(dl, Stateful):
+                state_dict[name] = dl.state_dict()
+
+        return state_dict
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        """Loads aggregated state dict based on individual dataloaders.
+
+        The provided state dict should be keyed off the names provided by ``individual_dataloaders``.
+
+        Note:
+            Only states from dataloaders that implement the :class:`~torchtnt.utils.stateful.Stateful` protocol are loaded.
+        """
+        for name, dl in self.individual_dataloaders.items():
+            if isinstance(dl, Stateful):
+                contents = state_dict.get(name, None)
+                if contents is None:
+                    logger.warning(
+                        f"Skipping loading state dict for dataloader {name} as there is no corresponding entry in the state dict"
+                    )
+                    continue
+                dl.load_state_dict(contents)
