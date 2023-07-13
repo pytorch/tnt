@@ -9,8 +9,12 @@ import unittest
 from typing import Set, Union
 from unittest.mock import MagicMock
 
-from torchtnt.framework._callback_handler import CallbackHandler
+from torchtnt.framework._callback_handler import (
+    _get_implemented_callback_mapping,
+    CallbackHandler,
+)
 from torchtnt.framework.callback import Callback
+from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils.timer import Timer
@@ -214,3 +218,39 @@ class CallbackHandlerTest(unittest.TestCase):
         cb_handler.on_predict_end(state, unit)
         self.assertIn("on_predict_end", called_hooks)
         self.assertIn("DummyCallback.on_predict_end", timer.recorded_durations.keys())
+
+    def test_get_implemented_callback_mapping(self) -> None:
+        callbacks = []
+        remaining_callback_hooks = (
+            "on_train_start",
+            "on_train_epoch_start",
+            "on_train_step_start",
+            "on_train_step_end",
+            "on_train_epoch_end",
+            "on_train_end",
+            "on_eval_start",
+            "on_eval_epoch_start",
+            "on_eval_step_start",
+            "on_eval_step_end",
+            "on_eval_epoch_end",
+            "on_eval_end",
+            "on_predict_start",
+            "on_predict_epoch_start",
+            "on_predict_step_start",
+            "on_predict_step_end",
+            "on_predict_epoch_end",
+            "on_predict_end",
+        )
+
+        def dummy_fn(x, y):
+            print("foo")
+
+        for hook in remaining_callback_hooks:
+            kwargs = {hook: dummy_fn}
+            callbacks.append(Lambda(**kwargs))
+
+        implemented_cbs = _get_implemented_callback_mapping(callbacks)
+        for hook in remaining_callback_hooks:
+            self.assertIn(hook, implemented_cbs)
+            self.assertEqual(len(implemented_cbs[hook]), 1)
+        self.assertNotIn("on_exception", implemented_cbs)

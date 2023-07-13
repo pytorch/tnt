@@ -19,7 +19,6 @@ from torchtnt.utils.version import is_torch_version_geq_2_0
 if is_torch_version_geq_2_0():
     from torch.distributed._composable import fully_shard
 
-
 from torch.distributed import launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.optim.lr_scheduler import ExponentialLR

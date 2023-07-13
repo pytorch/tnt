@@ -13,6 +13,7 @@ import torch
 from torch import nn
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
+from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.train import init_train_state, train
 from torchtnt.framework.unit import TrainUnit
@@ -135,7 +136,7 @@ class TrainTest(unittest.TestCase):
             max_steps_per_epoch=max_steps_per_epoch,
         )
 
-        callback_mock = MagicMock()
+        callback_mock = MagicMock(spec=Callback)
         train(state, my_unit, callbacks=[callback_mock])
         self.assertEqual(callback_mock.on_train_start.call_count, 1)
         self.assertEqual(callback_mock.on_train_epoch_start.call_count, max_epochs)

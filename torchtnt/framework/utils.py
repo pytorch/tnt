@@ -25,12 +25,12 @@ if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
     from torch.distributed.fsdp._common_utils import _FSDPState
 
-
 from pyre_extensions import none_throws
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.progress import Progress
+
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
