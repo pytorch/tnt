@@ -9,6 +9,7 @@ from typing import Iterable, List, Optional
 
 import torch
 from pyre_extensions import none_throws
+from torchtnt.framework._callback_handler import CallbackHandler
 from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callback import Callback
 
@@ -18,7 +19,6 @@ from torchtnt.framework.utils import (
     _get_timing_context,
     _is_epoch_done,
     _reset_module_training_mode,
-    _run_callback_fn,
     _set_module_training_mode,
     _step_requires_iterator,
     log_api_usage,
@@ -115,10 +115,10 @@ def evaluate(
         call on_eval_end on unit first and then callbacks
     """
     log_api_usage("evaluate")
-    callbacks = callbacks or []
+    state._entry_point = EntryPoint.EVALUATE
+    callback_handler = CallbackHandler(callbacks or [])
     try:
-        state._entry_point = EntryPoint.EVALUATE
-        _evaluate_impl(state, eval_unit, callbacks)
+        _evaluate_impl(state, eval_unit, callback_handler)
         logger.info("Finished evaluation")
         if state.timer:
             logger.info(get_timer_summary(state.timer))
@@ -126,7 +126,7 @@ def evaluate(
         # TODO: log for diagnostics
         logger.info(e)
         eval_unit.on_exception(state, e)
-        _run_callback_fn(callbacks, "on_exception", state, eval_unit, e)
+        callback_handler.on_exception(state, eval_unit, e)
         raise e
 
 
@@ -134,7 +134,7 @@ def evaluate(
 def _evaluate_impl(
     state: State,
     eval_unit: TEvalUnit,
-    callbacks: List[Callback],
+    callback_handler: CallbackHandler,
 ) -> None:
     # input validation
     eval_state = none_throws(state.eval_state)
@@ -145,13 +145,13 @@ def _evaluate_impl(
     )
 
     # Set all modules to eval mode
-    # access modules made available through _AppStateMixin
+    # access modules made available through AppStateMixin
     tracked_modules = eval_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
     with _get_timing_context(state, f"{eval_unit.__class__.__name__}.on_eval_start"):
         eval_unit.on_eval_start(state)
-    _run_callback_fn(callbacks, "on_eval_start", state, eval_unit)
+    callback_handler.on_eval_start(state, eval_unit)
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
@@ -160,7 +160,7 @@ def _evaluate_impl(
             state, f"{eval_unit.__class__.__name__}.on_eval_epoch_start"
         ):
             eval_unit.on_eval_epoch_start(state)
-        _run_callback_fn(callbacks, "on_eval_epoch_start", state, eval_unit)
+        callback_handler.on_eval_epoch_start(state, eval_unit)
 
     with _get_timing_context(state, "evaluate.iter(dataloader)"):
         data_iter = iter(eval_state.dataloader)
@@ -181,7 +181,7 @@ def _evaluate_impl(
                 # get the next batch from the data iterator
                 with _get_timing_context(state, "evaluate.next(data_iter)"):
                     step_input = next(data_iter)
-            _run_callback_fn(callbacks, "on_eval_step_start", state, eval_unit)
+            callback_handler.on_eval_step_start(state, eval_unit)
             with _get_timing_context(
                 state,
                 f"{eval_unit.__class__.__name__}.eval_step",
@@ -191,12 +191,7 @@ def _evaluate_impl(
                 eval_state._step_output = eval_unit.eval_step(state, step_input)
 
             eval_state.progress.increment_step()
-            _run_callback_fn(
-                callbacks,
-                "on_eval_step_end",
-                state,
-                eval_unit,
-            )
+            callback_handler.on_eval_step_end(state, eval_unit)
             # clear step_output to avoid retaining extra memory
             eval_state._step_output = None
         except StopIteration:
@@ -216,11 +211,11 @@ def _evaluate_impl(
         state, f"{eval_unit.__class__.__name__}.on_eval_epoch_end"
     ):
         eval_unit.on_eval_epoch_end(state)
-    _run_callback_fn(callbacks, "on_eval_epoch_end", state, eval_unit)
+    callback_handler.on_eval_epoch_end(state, eval_unit)
 
     with _get_timing_context(state, f"{eval_unit.__class__.__name__}.on_eval_end"):
         eval_unit.on_eval_end(state)
-    _run_callback_fn(callbacks, "on_eval_end", state, eval_unit)
+    callback_handler.on_eval_end(state, eval_unit)
 
     # Reset training mode for modules at the end of the epoch
     # This ensures that side-effects made by the loop are reset before

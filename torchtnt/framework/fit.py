@@ -8,6 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 from pyre_extensions import none_throws
+from torchtnt.framework._callback_handler import CallbackHandler
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.framework.train import _train_epoch_impl
@@ -18,12 +19,7 @@ from torchtnt.framework.unit import (
     TTrainData,
     TTrainUnit,
 )
-from torchtnt.framework.utils import (
-    _get_timing_context,
-    _is_done,
-    _run_callback_fn,
-    log_api_usage,
-)
+from torchtnt.framework.utils import _get_timing_context, _is_done, log_api_usage
 from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -144,25 +140,25 @@ def fit(
         call on_train_end on unit first and then callbacks
     """
     log_api_usage("fit")
-    callbacks = callbacks or []
+    state._entry_point = EntryPoint.FIT
+    callback_handler = CallbackHandler(callbacks or [])
 
     try:
-        state._entry_point = EntryPoint.FIT
-        _fit_impl(state, unit, callbacks)
+        _fit_impl(state, unit, callback_handler)
         if state.timer:
             logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
         logger.info(e)
         unit.on_exception(state, e)
-        _run_callback_fn(callbacks, "on_exception", state, unit, e)
+        callback_handler.on_exception(state, unit, e)
         raise e
 
 
 def _fit_impl(
     state: State,
     unit: TTrainUnit,
-    callbacks: List[Callback],
+    callback_handler: CallbackHandler,
 ) -> None:
     # input validation
     if not isinstance(unit, TrainUnit):
@@ -184,14 +180,14 @@ def _fit_impl(
 
     with _get_timing_context(state, f"{unit.__class__.__name__}.on_train_start"):
         unit.on_train_start(state)
-    _run_callback_fn(callbacks, "on_train_start", state, unit)
+    callback_handler.on_train_start(state, unit)
 
     while not (
         state.should_stop
         or _is_done(train_state.progress, train_state.max_epochs, train_state.max_steps)
     ):
-        _train_epoch_impl(state, unit, callbacks)
+        _train_epoch_impl(state, unit, callback_handler)
 
     with _get_timing_context(state, f"{unit.__class__.__name__}.on_train_end"):
         unit.on_train_end(state)
-    _run_callback_fn(callbacks, "on_train_end", state, unit)
+    callback_handler.on_train_end(state, unit)
