@@ -9,6 +9,7 @@ from typing import Iterable, List, Optional
 
 import torch
 from pyre_extensions import none_throws
+from torchtnt.framework._callback_handler import CallbackHandler
 from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.evaluate import _evaluate_impl
@@ -20,7 +21,6 @@ from torchtnt.framework.utils import (
     _is_epoch_done,
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
-    _run_callback_fn,
     _set_module_training_mode,
     _step_requires_iterator,
     log_api_usage,
@@ -126,10 +126,10 @@ def train(
         call on_train_end on unit first and then callbacks
     """
     log_api_usage("train")
-    callbacks = callbacks or []
+    state._entry_point = EntryPoint.TRAIN
+    callback_handler = CallbackHandler(callbacks or [])
     try:
-        state._entry_point = EntryPoint.TRAIN
-        _train_impl(state, train_unit, callbacks)
+        _train_impl(state, train_unit, callback_handler)
         logger.info("Finished train")
         if state.timer:
             logger.info(get_timer_summary(state.timer))
@@ -137,14 +137,14 @@ def train(
         # TODO: log for diagnostics
         logger.info(f"Exception during train\n: {e}")
         train_unit.on_exception(state, e)
-        _run_callback_fn(callbacks, "on_exception", state, train_unit, e)
+        callback_handler.on_exception(state, train_unit, e)
         raise e
 
 
 def _train_impl(
     state: State,
     train_unit: TTrainUnit,
-    callbacks: List[Callback],
+    callback_handler: CallbackHandler,
 ) -> None:
     train_state = none_throws(state.train_state)
 
@@ -154,23 +154,23 @@ def _train_impl(
     state._active_phase = ActivePhase.TRAIN
 
     # Set all modules to train() mode
-    # access modules made available through _AppStateMixin
+    # access modules made available through AppStateMixin
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
     with _get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_start"):
         train_unit.on_train_start(state)
-    _run_callback_fn(callbacks, "on_train_start", state, train_unit)
+    callback_handler.on_train_start(state, train_unit)
 
     while not (
         state.should_stop
         or _is_done(train_state.progress, train_state.max_epochs, train_state.max_steps)
     ):
-        _train_epoch_impl(state, train_unit, callbacks)
+        _train_epoch_impl(state, train_unit, callback_handler)
 
     with _get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_end"):
         train_unit.on_train_end(state)
-    _run_callback_fn(callbacks, "on_train_end", state, train_unit)
+    callback_handler.on_train_end(state, train_unit)
 
     # Reset training mode for modules at the end of the epoch
     # This ensures that side-effects made by the loop are reset before
@@ -181,13 +181,13 @@ def _train_impl(
 def _train_epoch_impl(
     state: State,
     train_unit: TTrainUnit,
-    callbacks: List[Callback],
+    callback_handler: CallbackHandler,
 ) -> None:
     logger.info("Started train epoch")
     state._active_phase = ActivePhase.TRAIN
 
     # Set all modules to train() mode
-    # access modules made available through _AppStateMixin
+    # access modules made available through AppStateMixin
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
@@ -209,7 +209,7 @@ def _train_epoch_impl(
             state, f"{train_unit.__class__.__name__}.on_train_epoch_start"
         ):
             train_unit.on_train_epoch_start(state)
-        _run_callback_fn(callbacks, "on_train_epoch_start", state, train_unit)
+        callback_handler.on_train_epoch_start(state, train_unit)
 
     _maybe_set_distributed_sampler_epoch(
         train_state.dataloader, train_state.progress.num_epochs_completed
@@ -236,7 +236,7 @@ def _train_epoch_impl(
                 with _get_timing_context(state, "train.next(data_iter)"):
                     step_input = next(data_iter)
 
-            _run_callback_fn(callbacks, "on_train_step_start", state, train_unit)
+            callback_handler.on_train_step_start(state, train_unit)
 
             with _get_timing_context(
                 state,
@@ -247,7 +247,7 @@ def _train_epoch_impl(
                 train_state._step_output = train_unit.train_step(state, step_input)
 
             train_state.progress.increment_step()
-            _run_callback_fn(callbacks, "on_train_step_end", state, train_unit)
+            callback_handler.on_train_step_end(state, train_unit)
 
             # clear step_output to avoid retaining extra memory
             train_state._step_output = None
@@ -261,7 +261,7 @@ def _train_epoch_impl(
                     state,
                     # pyre-ignore: Incompatible parameter type [6]
                     train_unit,
-                    callbacks,
+                    callback_handler,
                 )
                 logger.info("Finished evaluation. Resuming training epoch")
                 state._active_phase = ActivePhase.TRAIN
@@ -283,7 +283,7 @@ def _train_epoch_impl(
         state, f"{train_unit.__class__.__name__}.on_train_epoch_end"
     ):
         train_unit.on_train_epoch_end(state)
-    _run_callback_fn(callbacks, "on_train_epoch_end", state, train_unit)
+    callback_handler.on_train_epoch_end(state, train_unit)
 
     if (
         evaluate_every_n_epochs
@@ -293,7 +293,7 @@ def _train_epoch_impl(
             state,
             # pyre-ignore: Incompatible parameter type [6]
             train_unit,
-            callbacks,
+            callback_handler,
         )
         state._active_phase = ActivePhase.TRAIN
 

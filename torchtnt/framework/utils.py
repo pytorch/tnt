@@ -27,7 +27,6 @@ if is_torch_version_geq_2_0():
 
 
 from pyre_extensions import none_throws
-from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -104,21 +103,6 @@ def _get_timing_context(state: State, event_name: str, skip_timer: bool = False)
     profiler_context = record_function(event_name)
     with timer_context, profiler_context:
         yield (timer_context, profiler_context)
-
-
-def _run_callback_fn(
-    callbacks: List[Callback],
-    fn_name: str,
-    state: State,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    for cb in callbacks:
-        fn = getattr(cb, fn_name)
-        if not callable(fn):
-            raise ValueError(f"Invalid callback method name provided: {fn_name}")
-        with _get_timing_context(state, f"{cb.name}.{fn_name}"):
-            fn(state, *args, **kwargs)
 
 
 def log_api_usage(entry_point: str) -> None:
