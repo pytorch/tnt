@@ -12,8 +12,8 @@ import torch
 import torch.distributed.launcher as launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torchtnt.utils import init_from_env
-from torchtnt.utils.prepare_model import (
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.prepare_module import (
     DDPStrategy,
     FSDPStrategy,
     prepare_ddp,

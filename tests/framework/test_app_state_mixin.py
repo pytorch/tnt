@@ -11,7 +11,7 @@ from typing import Any, Dict
 import torch
 from torch import nn
 from torchtnt.framework.unit import AppStateMixin
-from torchtnt.utils import TLRScheduler
+from torchtnt.utils.lr_scheduler import TLRScheduler
 
 
 class Dummy(AppStateMixin):
