@@ -32,14 +32,11 @@ from torchtnt.framework.utils import (
     _is_fsdp_module,
     get_current_progress,
 )
-from torchtnt.utils import (
-    init_from_env,
-    TLRScheduler,
-    transfer_batch_norm_stats,
-    transfer_weights,
-)
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
-from torchtnt.utils.prepare_model import (
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.misc import transfer_batch_norm_stats, transfer_weights
+from torchtnt.utils.prepare_module import (
     DDPStrategy,
     FSDPStrategy,
     prepare_ddp,
