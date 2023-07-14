@@ -67,11 +67,11 @@ class FSDPStrategy(Strategy):
     sharding_strategy: Optional[ShardingStrategy] = None
     cpu_offload: Optional[CPUOffload] = None
     auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
-    backward_prefetch: Optional[BackwardPrefetch] = None
+    backward_prefetch: Optional[BackwardPrefetch] = BackwardPrefetch.BACKWARD_PRE
     ignored_modules: Optional[Iterable[torch.nn.Module]] = None
     sync_module_states: bool = False
     forward_prefetch: bool = False
-    limit_all_gathers: bool = False
+    limit_all_gathers: bool = True
     use_orig_params: bool = False
 
     # FSDP set_state_dict_type params: https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type
