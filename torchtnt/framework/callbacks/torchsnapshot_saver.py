@@ -55,6 +55,7 @@ class TorchSnapshotSaver(Callback):
         save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
         replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
             For more information, see https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take .
+        storage_options: Additional keyword options for the storage plugin to use. See each storage plugin's documentation for customizations.
 
     Note: If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks
 
@@ -69,6 +70,7 @@ class TorchSnapshotSaver(Callback):
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
         replicated: Optional[List[str]] = None,
+        storage_options: Optional[Dict[str, Any]] = None,
     ) -> None:
         _validate_snapshot_available()
         if save_every_n_train_steps is not None and save_every_n_train_steps <= 0:
@@ -85,6 +87,7 @@ class TorchSnapshotSaver(Callback):
         self._replicated: Set[str] = set(replicated or [])
 
         self._prev_snapshot: Optional[PendingSnapshot] = None
+        self._storage_options = storage_options
 
     def _sync_dirpath_to_all_ranks(self, dirpath: str) -> None:
         if not (dist.is_available() and dist.is_initialized()):
@@ -186,7 +189,10 @@ class TorchSnapshotSaver(Callback):
                 return False
 
         self._prev_snapshot = Snapshot.async_take(
-            str(snapshot_path), app_state=app_state, replicated=list(self._replicated)
+            str(snapshot_path),
+            app_state=app_state,
+            replicated=list(self._replicated),
+            storage_options=self._storage_options,
         )
         rank_zero_info(f"Saving snapshot to path: {snapshot_path}", logger=logger)
         return True
@@ -200,6 +206,7 @@ class TorchSnapshotSaver(Callback):
         restore_train_progress: bool = True,
         restore_train_dataloader: bool = True,
         restore_eval_progress: bool = True,
+        storage_options: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Utility method to restore snapshot state from a path.
 
@@ -213,7 +220,7 @@ class TorchSnapshotSaver(Callback):
         app_state = _app_state(unit)
         _check_app_state_collision(app_state)
 
-        snapshot = torchsnapshot.Snapshot(path)
+        snapshot = torchsnapshot.Snapshot(path, storage_options=storage_options)
 
         train_state = none_throws(state.train_state)
 
