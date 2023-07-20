@@ -21,7 +21,7 @@ from torchtnt.framework import AutoUnit
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.callbacks import Lambda, TorchSnapshotSaver
 from torchtnt.framework.state import State
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.train import train
 from torchtnt.utils import get_global_rank, init_from_env, TLRScheduler
 from torchtnt.utils.test_utils import get_pet_launch_config
 
@@ -39,7 +39,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
         expected_paths: List[str] = []
         with tempfile.TemporaryDirectory() as temp_dir:
             cumulative_steps = 0
@@ -61,7 +60,12 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             # Artificially increase the step duration, otherwise torchsnapshot
             # doesn't have the time to save all snapshots and will skip some.
             slowdown = Lambda(on_train_step_end=lambda *_: time.sleep(0.1))
-            train(state, my_unit, callbacks=[snapshot, slowdown])
+            train(
+                my_unit,
+                dataloader,
+                max_epochs=max_epochs,
+                callbacks=[snapshot, slowdown],
+            )
             for path in expected_paths:
                 self.assertTrue(os.path.exists(path) and os.path.isdir(path))
 
@@ -75,7 +79,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
         with tempfile.TemporaryDirectory() as temp_dir:
             expected_path = os.path.join(
                 temp_dir,
@@ -86,7 +89,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 save_every_n_epochs=save_every_n_train_epochs,
                 replicated=["**"],
             )
-            train(state, my_unit, callbacks=[snapshot])
+            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot])
             self.assertTrue(
                 os.path.exists(expected_path) and os.path.isdir(expected_path)
             )
@@ -101,7 +104,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
         expected_paths: List[str] = []
         with tempfile.TemporaryDirectory() as temp_dir:
             cumulative_steps = 0
@@ -120,7 +122,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 save_every_n_train_steps=save_every_n_train_steps,
                 replicated=["**"],
             )
-            train(state, my_unit, callbacks=[snapshot_cb])
+            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
             end_num_steps_completed = my_unit.train_progress.num_steps_completed
             self.assertGreater(len(expected_paths), 0)
@@ -141,7 +143,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
         expected_paths: List[str] = []
         with tempfile.TemporaryDirectory() as temp_dir:
             cumulative_steps = 0
@@ -160,7 +161,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 save_every_n_train_steps=save_every_n_train_steps,
                 replicated=["**"],
             )
-            train(state, my_unit, callbacks=[snapshot_cb])
+            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
             end_num_steps_completed = my_unit.train_progress.num_steps_completed
             self.assertGreater(len(expected_paths), 0)
@@ -183,14 +184,13 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
         with tempfile.TemporaryDirectory() as temp_dir:
             self.assertFalse(os.path.exists(os.path.join(temp_dir, expected_path)))
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
                 replicated=["**"],
             )
-            train(state, my_unit, callbacks=[snapshot_cb])
+            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
             expected_path = (
                 f"epoch_{max_epochs}_step_{max_epochs * (dataset_len // batch_size)}"
@@ -242,8 +242,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         my_unit = DummyAutoUnit(input_dim=input_dim, strategy="fsdp")
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
-
         if get_global_rank() == 0:
             temp_dir = tempfile.mkdtemp()
         else:
@@ -254,7 +252,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             save_every_n_epochs=save_every_n_epochs,
         )
         temp_dir = snapshot_cb.dirpath
-        train(state, my_unit, callbacks=[snapshot_cb])
+        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
         tc = unittest.TestCase()
         try:

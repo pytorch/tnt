@@ -9,7 +9,7 @@ import unittest
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.callbacks.train_progress_monitor import TrainProgressMonitor
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.train import train
 
 from torchtnt.utils.loggers import InMemoryLogger
 
@@ -30,8 +30,7 @@ class TrainProgressMonitorTest(unittest.TestCase):
         monitor = TrainProgressMonitor(loggers=logger)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
-        train(state, my_unit, callbacks=[monitor])
+        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[monitor])
 
         buf = logger.log_buffer
         self.assertEqual(

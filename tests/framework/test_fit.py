@@ -14,8 +14,8 @@ import torch
 from torch import nn
 from torchtnt.framework._test_utils import DummyFitUnit, generate_random_dataloader
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.fit import fit, init_fit_state
-from torchtnt.framework.state import ActivePhase, EntryPoint, State
+from torchtnt.framework.fit import fit
+from torchtnt.framework.state import ActivePhase, State
 from torchtnt.framework.unit import EvalUnit, TrainUnit, TTrainUnit
 
 
@@ -42,13 +42,14 @@ class FitTest(unittest.TestCase):
         eval_dataloader = generate_random_dataloader(
             eval_dataset_len, input_dim, batch_size
         )
-        state = init_fit_state(
+
+        fit(
+            my_unit,
             train_dataloader=train_dataloader,
             eval_dataloader=eval_dataloader,
             max_epochs=max_epochs,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
         )
-        fit(state, my_unit)
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
@@ -66,11 +67,6 @@ class FitTest(unittest.TestCase):
             my_unit.eval_progress.num_steps_completed,
             max_epochs * expected_eval_steps_per_epoch,
         )
-        self.assertEqual(state.entry_point, EntryPoint.FIT)
-
-        # step_output should be reset to None
-        self.assertEqual(state.eval_state.step_output, None)
-        self.assertEqual(state.train_state.step_output, None)
 
     def test_fit_evaluate_every_n_steps(self) -> None:
         """
@@ -98,14 +94,14 @@ class FitTest(unittest.TestCase):
             eval_dataset_len, input_dim, batch_size
         )
 
-        state = init_fit_state(
+        fit(
+            my_unit,
             train_dataloader=train_dataloader,
             eval_dataloader=eval_dataloader,
             max_epochs=max_epochs,
             evaluate_every_n_epochs=None,
             evaluate_every_n_steps=evaluate_every_n_steps,
         )
-        fit(state, my_unit)
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
@@ -123,11 +119,6 @@ class FitTest(unittest.TestCase):
             my_unit.eval_progress.num_steps_completed,
             expected_num_evaluate_calls * expected_eval_steps_per_epoch,
         )
-        self.assertEqual(state.entry_point, EntryPoint.FIT)
-
-        # step_output should be reset to None
-        self.assertEqual(state.eval_state.step_output, None)
-        self.assertEqual(state.train_state.step_output, None)
 
     def test_fit_stop(self) -> None:
         Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -186,13 +177,13 @@ class FitTest(unittest.TestCase):
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_fit_state(
+        fit(
+            my_unit,
             train_dataloader=train_dl,
             eval_dataloader=eval_dl,
             max_epochs=max_epochs,
             max_train_steps_per_epoch=max_steps_per_epoch,
         )
-        fit(state, my_unit)
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
@@ -214,10 +205,12 @@ class FitTest(unittest.TestCase):
         my_unit = DummyFitUnit(2)
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_fit_state(
-            train_dataloader=train_dl, eval_dataloader=eval_dl, max_steps=max_steps
+        fit(
+            my_unit,
+            train_dataloader=train_dl,
+            eval_dataloader=eval_dl,
+            max_steps=max_steps,
         )
-        fit(state, my_unit)
 
         self.assertEqual(my_unit.train_progress.num_steps_completed, max_steps)
         self.assertEqual(
@@ -245,12 +238,14 @@ class FitTest(unittest.TestCase):
         )
 
         callback_mock = MagicMock(spec=Callback)
-        state = init_fit_state(
+
+        fit(
+            my_unit,
             train_dataloader=train_dataloader,
             eval_dataloader=eval_dataloader,
             max_epochs=max_epochs,
+            callbacks=[callback_mock],
         )
-        fit(state, my_unit, callbacks=[callback_mock])
 
         self.assertEqual(callback_mock.on_train_start.call_count, 1)
         self.assertEqual(callback_mock.on_train_epoch_start.call_count, max_epochs)
@@ -295,14 +290,15 @@ class FitTest(unittest.TestCase):
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_fit_state(
+        fit(
+            my_unit,
             train_dataloader=train_dl,
             eval_dataloader=eval_dl,
             evaluate_every_n_steps=evaluate_every_n_steps,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
             max_epochs=max_epochs,
+            callbacks=[PhaseTestCallback()],
         )
-        fit(state, my_unit, callbacks=[PhaseTestCallback()])
 
     def test_fit_auto_timing(self) -> None:
         """
@@ -318,20 +314,8 @@ class FitTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_fit_state(
-            train_dataloader=dataloader,
-            eval_dataloader=dataloader,
-            max_train_steps_per_epoch=max_steps_per_epoch,
-            max_epochs=max_epochs,
-            evaluate_every_n_epochs=evaluate_every_n_epochs,
-        )
         fit(
-            state,
-            DummyFitUnit(input_dim=input_dim),
-        )
-        self.assertIsNone(state.timer)
-
-        state = init_fit_state(
+            TimingFitUnit(input_dim=input_dim),
             train_dataloader=dataloader,
             eval_dataloader=dataloader,
             max_train_steps_per_epoch=max_steps_per_epoch,
@@ -339,9 +323,29 @@ class FitTest(unittest.TestCase):
             evaluate_every_n_epochs=evaluate_every_n_epochs,
             auto_timing=True,
         )
-        fit(state, DummyFitUnit(input_dim=input_dim))
+
+
+Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+class TimingFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
+    def __init__(self, input_dim: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+
+    def train_step(self, state: State, data: Batch) -> torch.Tensor:
+        inputs, _ = data
+        outputs = self.module(inputs)
+
+        tc = unittest.TestCase()
         for k in (
-            "DummyFitUnit.on_train_start",
-            "DummyFitUnit.on_train_end",
+            "TimingFitUnit.on_train_start",
+            "TimingFitUnit.on_train_epoch_start",
         ):
-            self.assertTrue(k in state.timer.recorded_durations.keys())
+            tc.assertTrue(k in state.timer.recorded_durations.keys())
+
+        return outputs
+
+    def eval_step(self, state: State, data: Batch) -> None:
+        pass

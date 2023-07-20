@@ -5,15 +5,30 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Iterator, Tuple
+from typing import Any, Iterable, Iterator, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset, IterableDataset, TensorDataset
-from torchtnt.framework.state import State
+from torchtnt.framework import PhaseState
+from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+# pyre-ignore
+def get_dummy_train_state(dataloader: Optional[Iterable[Any]] = None) -> State:
+    return State(
+        entry_point=EntryPoint.TRAIN,
+        train_state=PhaseState(
+            dataloader=dataloader or [1, 2, 3, 4],
+            max_epochs=1,
+            max_steps=1,
+            max_steps_per_epoch=1,
+        ),
+        timer=None,
+    )
 
 
 class DummyEvalUnit(EvalUnit[Batch]):

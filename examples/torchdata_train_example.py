@@ -19,7 +19,7 @@ from torch.utils.data.datapipes.map.combinatorics import ShufflerIterDataPipe
 from torchdata.dataloader2 import DataLoader2, MultiProcessingReadingService
 from torchdata.datapipes.iter import IterableWrapper
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.framework import init_train_state, State, train, TrainUnit
+from torchtnt.framework import State, train, TrainUnit
 from torchtnt.utils import copy_data_to_device, init_from_env, seed, TLRScheduler
 
 from torchtnt.utils.loggers import TensorBoardLogger
@@ -165,12 +165,12 @@ def main(argv: List[str]) -> None:
         tb_logger=tb_logger,
         log_every_n_steps=args.log_every_n_steps,
     )
-    train_state = init_train_state(
-        dataloader=dataloader,
+
+    train(
+        train_unit,
+        train_dataloader=dataloader,
         max_epochs=args.max_epochs,
     )
-
-    train(train_state, train_unit)
 
 
 def get_args(argv: List[str]) -> Namespace:

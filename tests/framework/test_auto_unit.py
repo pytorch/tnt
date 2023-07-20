@@ -24,6 +24,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.framework._test_utils import (
     generate_random_dataloader,
     generate_random_iterable_dataloader,
+    get_dummy_train_state,
 )
 
 from torchtnt.framework.auto_unit import (
@@ -34,10 +35,11 @@ from torchtnt.framework.auto_unit import (
     SWAParams,
     TorchCompileParams,
 )
-from torchtnt.framework.evaluate import evaluate, init_eval_state
-from torchtnt.framework.predict import init_predict_state, predict
+from torchtnt.framework.evaluate import evaluate
+from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.train import train
+from torchtnt.framework.unit import TPredictData
 from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -86,8 +88,7 @@ class TestAutoUnit(unittest.TestCase):
         expected_steps_per_epoch = dataset_len / batch_size * max_epochs
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
-        train(state, auto_unit)
+        train(auto_unit, train_dataloader=train_dl, max_epochs=max_epochs)
         self.assertEqual(
             auto_unit.lr_scheduler.step.call_count, expected_steps_per_epoch
         )
@@ -110,8 +111,7 @@ class TestAutoUnit(unittest.TestCase):
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
-        train(state, auto_unit)
+        train(auto_unit, train_dataloader=train_dl, max_epochs=max_epochs)
         self.assertEqual(auto_unit.lr_scheduler.step.call_count, max_epochs)
 
     @unittest.skipUnless(
@@ -128,7 +128,7 @@ class TestAutoUnit(unittest.TestCase):
             precision="fp16",
         )
         dummy_iterable = [(torch.ones(2, 2), torch.ones(2, 2))]
-        state = init_train_state(dataloader=dummy_iterable)
+        state = get_dummy_train_state(dummy_iterable)
         auto_unit.train_step(state=state, data=iter(dummy_iterable))
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.float16, enabled=True
@@ -149,7 +149,7 @@ class TestAutoUnit(unittest.TestCase):
             precision="bf16",
         )
         dummy_iterable = [(torch.ones(2, 2), torch.ones(2, 2))]
-        state = init_train_state(dataloader=dummy_iterable)
+        state = get_dummy_train_state(dummy_iterable)
         auto_unit.train_step(state=state, data=iter(dummy_iterable))
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.bfloat16, enabled=True
@@ -223,10 +223,8 @@ class TestAutoUnit(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
-        max_epochs = 10
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
-        train(state, auto_unit)
+        train(auto_unit, dataloader)
 
         orig_module = auto_unit.module
         swa_module = auto_unit.swa_model
@@ -299,9 +297,8 @@ class TestAutoUnit(unittest.TestCase):
         )
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
         self.assertFalse(auto_unit._compile_used)
-        train(state, auto_unit)
+        train(auto_unit, train_dl, max_epochs=max_epochs)
         self.assertTrue(auto_unit._compile_used)
 
     @unittest.skipUnless(
@@ -329,10 +326,9 @@ class TestAutoUnit(unittest.TestCase):
         )
 
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=train_dl, max_epochs=max_epochs)
 
         self.assertFalse(auto_unit._compile_used)
-        train(state, auto_unit)
+        train(auto_unit, train_dl, max_epochs=max_epochs)
         self.assertTrue(auto_unit._compile_used)
 
     @unittest.skipUnless(
@@ -363,9 +359,8 @@ class TestAutoUnit(unittest.TestCase):
         batch_size = 2
 
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(dataloader=eval_dl)
         self.assertFalse(auto_unit._compile_used)
-        evaluate(state, auto_unit)
+        evaluate(auto_unit, eval_dl)
         self.assertTrue(auto_unit._compile_used)
 
     @unittest.skipUnless(
@@ -421,8 +416,7 @@ class TestAutoUnit(unittest.TestCase):
         batch_size = 2
 
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(dataloader=eval_dl)
-        evaluate(state, auto_unit)
+        evaluate(auto_unit, eval_dl)
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.bfloat16, enabled=True
         )
@@ -458,7 +452,7 @@ class TestAutoUnit(unittest.TestCase):
         dummy_iterator = iter(
             [(torch.ones(2, 2), torch.ones(2, 2)), (torch.ones(2, 2), torch.ones(2, 2))]
         )
-        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        state = get_dummy_train_state()
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
@@ -489,7 +483,7 @@ class TestAutoUnit(unittest.TestCase):
         dummy_iterator = iter(
             [(torch.ones(2, 2), torch.ones(2, 2)), (torch.ones(2, 2), torch.ones(2, 2))]
         )
-        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        state = get_dummy_train_state()
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
@@ -514,7 +508,7 @@ class TestAutoUnit(unittest.TestCase):
             device=device,
         )
 
-        state = init_train_state(dataloader=MagicMock(), max_epochs=1)
+        state = get_dummy_train_state()
 
         dummy_data = (torch.ones(2, 2), torch.ones(2, 2))
         data_iter = iter([dummy_data])
@@ -640,10 +634,8 @@ class TestAutoUnit(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
-        max_epochs = 10
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
-        train(state, auto_unit)
+        train(auto_unit, dataloader)
 
         orig_module = auto_unit.module.module
         swa_module = auto_unit.swa_model.module.module
@@ -703,9 +695,8 @@ class TestAutoUnit(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
-        max_epochs = 2
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
+        state = get_dummy_train_state(dataloader)
         train(state, auto_unit)
 
         tc = unittest.TestCase()
@@ -814,8 +805,8 @@ class TestAutoUnit(unittest.TestCase):
         input_dim = 2
         dataset_len = 8
         batch_size = 2
-        max_epochs = 3
         expected_steps_per_epoch = dataset_len / batch_size
+        max_epochs = 1
         my_module = torch.nn.Linear(input_dim, 2)
 
         my_unit = LastBatchAutoUnit(
@@ -824,8 +815,7 @@ class TestAutoUnit(unittest.TestCase):
         )
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
-        train(state, my_unit)
+        train(my_unit, dataloader, max_epochs=max_epochs)
 
     def test_auto_unit_timing_train(self) -> None:
         """
@@ -842,41 +832,13 @@ class TestAutoUnit(unittest.TestCase):
 
         my_module = torch.nn.Linear(2, 2)
 
-        state = init_train_state(
-            dataloader=dataloader,
-            max_steps_per_epoch=max_steps_per_epoch,
-            max_epochs=max_epochs,
-        )
-        train(state, DummyAutoUnit(module=my_module))
-        self.assertIsNone(state.timer)
-
-        state = init_train_state(
-            dataloader=dataloader,
+        train(
+            TimingAutoUnit(module=my_module),
+            dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
             max_epochs=max_epochs,
             auto_timing=True,
         )
-        train(state, DummyAutoUnit(module=my_module))
-        recorded_timer_keys = state.timer.recorded_durations.keys()
-        for k in (
-            "DummyAutoUnit.on_train_start",
-            "DummyAutoUnit.on_train_epoch_start",
-            "train.iter(dataloader)",
-            "DummyAutoUnit.train.next(data_iter)",
-            "DummyAutoUnit.train.move_data_to_device",
-            "DummyAutoUnit.compute_loss",
-            "DummyAutoUnit.backward",
-            "DummyAutoUnit.optimizer_step",
-            "DummyAutoUnit.optimizer_zero_grad",
-            "DummyAutoUnit.on_train_step_end",
-            "DummyAutoUnit.lr_scheduler_step",
-            "DummyAutoUnit.on_train_epoch_end",
-            "DummyAutoUnit.on_train_end",
-        ):
-            self.assertIn(k, recorded_timer_keys)
-
-        # train_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's train_step
-        self.assertNotIn("DummyAutoUnit.train_step", recorded_timer_keys)
 
     def test_auto_unit_timing_eval(self) -> None:
         """
@@ -891,35 +853,12 @@ class TestAutoUnit(unittest.TestCase):
 
         my_module = torch.nn.Linear(2, 2)
 
-        state = init_eval_state(
-            dataloader=dataloader,
-            max_steps_per_epoch=max_steps_per_epoch,
-        )
-        evaluate(state, DummyAutoUnit(module=my_module))
-        self.assertIsNone(state.timer)
-
-        state = init_eval_state(
-            dataloader=dataloader,
+        evaluate(
+            TimingAutoUnit(module=my_module),
+            dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
             auto_timing=True,
         )
-        evaluate(state, DummyAutoUnit(module=my_module))
-        recorded_timer_keys = state.timer.recorded_durations.keys()
-        for k in (
-            "DummyAutoUnit.on_eval_start",
-            "DummyAutoUnit.on_eval_epoch_start",
-            "evaluate.iter(dataloader)",
-            "evaluate.next(data_iter)",
-            "DummyAutoUnit.move_data_to_device",
-            "DummyAutoUnit.compute_loss",
-            "DummyAutoUnit.on_eval_step_end",
-            "DummyAutoUnit.on_eval_epoch_end",
-            "DummyAutoUnit.on_eval_end",
-        ):
-            self.assertIn(k, recorded_timer_keys)
-
-        # eval_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's eval_step
-        self.assertNotIn("DummyAutoUnit.eval_step", recorded_timer_keys)
 
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
@@ -939,8 +878,7 @@ class TestAutoUnit(unittest.TestCase):
         predict_dl = generate_random_iterable_dataloader(
             dataset_len, input_dim, batch_size
         )
-        state = init_predict_state(dataloader=predict_dl)
-        predict(state, auto_unit)
+        predict(auto_unit, predict_dl)
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.float16, enabled=True
         )
@@ -970,8 +908,7 @@ class TestAutoUnit(unittest.TestCase):
         predict_dl = generate_random_iterable_dataloader(
             dataset_len, input_dim, batch_size
         )
-        state = init_predict_state(dataloader=predict_dl)
-        predict(state, auto_unit)
+        predict(auto_unit, predict_dl)
         mock_dynamo.assert_called()
 
     def test_auto_predict_unit_timing_predict(self) -> None:
@@ -979,7 +916,6 @@ class TestAutoUnit(unittest.TestCase):
         Test auto timing in AutoUnit for predict
         """
         my_module = torch.nn.Linear(2, 2)
-        auto_unit = AutoPredictUnit(module=my_module)
 
         input_dim = 2
         dataset_len = 8
@@ -988,30 +924,12 @@ class TestAutoUnit(unittest.TestCase):
         predict_dl = generate_random_iterable_dataloader(
             dataset_len, input_dim, batch_size
         )
-        state = init_predict_state(dataloader=predict_dl, max_steps_per_epoch=1)
-        predict(state, auto_unit)
-        self.assertIsNone(state.timer)
-
-        state = init_predict_state(
-            dataloader=predict_dl, max_steps_per_epoch=1, auto_timing=True
+        predict(
+            TimingAutoPredictUnit(module=my_module),
+            predict_dl,
+            max_steps_per_epoch=1,
+            auto_timing=True,
         )
-        predict(state, auto_unit)
-        recorded_timer_keys = state.timer.recorded_durations.keys()
-        for k in (
-            "AutoPredictUnit.on_predict_start",
-            "AutoPredictUnit.on_predict_epoch_start",
-            "predict.iter(dataloader)",
-            "AutoPredictUnit.next(data_iter)",
-            "AutoPredictUnit.move_data_to_device",
-            "AutoPredictUnit.forward",
-            "AutoPredictUnit.on_predict_step_end",
-            "AutoPredictUnit.on_predict_epoch_end",
-            "AutoPredictUnit.on_predict_end",
-        ):
-            self.assertIn(k, recorded_timer_keys)
-
-        # predict_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's predict_step
-        self.assertNotIn("AutoPredictUnit.predict_step", recorded_timer_keys)
 
     @patch("torch.autograd.set_detect_anomaly")
     def test_predict_detect_anomaly(self, mock_detect_anomaly) -> None:
@@ -1025,8 +943,7 @@ class TestAutoUnit(unittest.TestCase):
         predict_dl = generate_random_iterable_dataloader(
             dataset_len, input_dim, batch_size
         )
-        state = init_predict_state(dataloader=predict_dl, max_steps_per_epoch=1)
-        predict(state, auto_unit)
+        predict(auto_unit, predict_dl, max_steps_per_epoch=1)
         mock_detect_anomaly.assert_called()
 
 
@@ -1123,3 +1040,112 @@ class LastBatchAutoUnit(AutoUnit[Batch]):
         my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
         my_lr_scheduler = MagicMock()
         return my_optimizer, my_lr_scheduler
+
+
+class TimingAutoUnit(AutoUnit[Batch]):
+    def __init__(self, module: torch.nn.Module) -> None:
+        super().__init__(module=module)
+        self.loss_fn = torch.nn.CrossEntropyLoss()
+
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
+        my_lr_scheduler = MagicMock()
+        return my_optimizer, my_lr_scheduler
+
+    def on_train_step_end(
+        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+    ) -> None:
+        assert state.train_state
+        if self.train_progress.num_steps_completed_in_epoch == 1:
+            tc = unittest.TestCase()
+            recorded_timer_keys = state.timer.recorded_durations.keys()
+            for k in (
+                "TimingAutoUnit.on_train_start",
+                "TimingAutoUnit.on_train_epoch_start",
+                "train.iter(dataloader)",
+                "TimingAutoUnit.train.next(data_iter)",
+                "TimingAutoUnit.train.move_data_to_device",
+                "TimingAutoUnit.compute_loss",
+                "TimingAutoUnit.backward",
+                "TimingAutoUnit.optimizer_step",
+                "TimingAutoUnit.optimizer_zero_grad",
+                "TimingAutoUnit.on_train_step_end",
+                "TimingAutoUnit.lr_scheduler_step",
+            ):
+                tc.assertIn(k, recorded_timer_keys)
+
+            # train_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's train_step
+            tc.assertNotIn("TimingAutoUnit.train_step", recorded_timer_keys)
+
+        def on_eval_step_end(
+            self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+        ) -> None:
+            if self.eval_progress.num_steps_completed_in_epoch == 1:
+                tc = unittest.TestCase()
+                recorded_timer_keys = state.timer.recorded_durations.keys()
+                for k in (
+                    "TimingAutoUnit.on_eval_start",
+                    "TimingAutoUnit.on_eval_epoch_start",
+                    "evaluate.iter(dataloader)",
+                    "evaluate.next(data_iter)",
+                    "TimingAutoUnit.move_data_to_device",
+                    "TimingAutoUnit.compute_loss",
+                    "TimingAutoUnit.on_eval_step_end",
+                ):
+                    tc.assertIn(k, recorded_timer_keys)
+
+                # eval_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's eval_step
+                tc.assertNotIn("TimingAutoUnit.eval_step", recorded_timer_keys)
+
+
+class TimingAutoPredictUnit(AutoPredictUnit[Batch]):
+    def __init__(self, module: torch.nn.Module) -> None:
+        super().__init__(module=module)
+        self.loss_fn = torch.nn.CrossEntropyLoss()
+
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        inputs, targets = data
+
+        outputs = self.module(inputs)
+        loss = self.loss_fn(outputs, targets)
+        return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
+        my_lr_scheduler = MagicMock()
+        return my_optimizer, my_lr_scheduler
+
+    def on_predict_step_end(
+        self, state: State, data: TPredictData, step: int, outputs: Any
+    ) -> None:
+        if self.predict_progress.num_steps_completed_in_epoch == 1:
+            tc = unittest.TestCase()
+            recorded_timer_keys = state.timer.recorded_durations.keys()
+            for k in (
+                "AutoPredictUnit.on_predict_start",
+                "AutoPredictUnit.on_predict_epoch_start",
+                "predict.iter(dataloader)",
+                "AutoPredictUnit.next(data_iter)",
+                "AutoPredictUnit.move_data_to_device",
+                "AutoPredictUnit.forward",
+                "AutoPredictUnit.on_predict_step_end",
+            ):
+                tc.assertIn(k, recorded_timer_keys)
+
+            # predict_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's predict_step
+            tc.assertNotIn("AutoPredictUnit.predict_step", recorded_timer_keys)

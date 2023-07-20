@@ -19,10 +19,10 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks.lambda_callback import Lambda
-from torchtnt.framework.evaluate import evaluate, init_eval_state
-from torchtnt.framework.predict import init_predict_state, predict
+from torchtnt.framework.evaluate import evaluate
+from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.train import train
 from torchtnt.framework.unit import TrainUnit
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -63,12 +63,14 @@ class LambdaTest(unittest.TestCase):
         hooks = _get_members_in_different_name(Callback, "train")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_train_unit = DummyTrainUnit(input_dim=input_dim)
-        state = init_train_state(
-            dataloader=train_dataloader,
+
+        train(
+            my_train_unit,
+            train_dataloader,
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[Lambda(**hooks_args)],
         )
-        train(state, my_train_unit, callbacks=[Lambda(**hooks_args)])
         self.assertEqual(checker, hooks)
 
     def test_lambda_callback_eval(self) -> None:
@@ -87,10 +89,12 @@ class LambdaTest(unittest.TestCase):
         hooks = _get_members_in_different_name(Callback, "eval")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_eval_unit = DummyEvalUnit(input_dim=input_dim)
-        state = init_eval_state(
-            dataloader=eval_dataloader, max_steps_per_epoch=max_steps_per_epoch
+        evaluate(
+            my_eval_unit,
+            eval_dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[Lambda(**hooks_args)],
         )
-        evaluate(state, my_eval_unit, callbacks=[Lambda(**hooks_args)])
         self.assertEqual(checker, hooks)
 
     def test_lambda_callback_predict(self) -> None:
@@ -109,10 +113,12 @@ class LambdaTest(unittest.TestCase):
             predict_dataset_len, input_dim, batch_size
         )
         my_predict_unit = DummyPredictUnit(input_dim=input_dim)
-        state = init_predict_state(
-            dataloader=predict_dataloader, max_steps_per_epoch=max_steps_per_epoch
+        predict(
+            my_predict_unit,
+            predict_dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[Lambda(**hooks_args)],
         )
-        predict(state, my_predict_unit, callbacks=[Lambda(**hooks_args)])
         self.assertEqual(checker, hooks)
 
     def test_lambda_callback_train_with_except(self) -> None:
@@ -139,12 +145,13 @@ class LambdaTest(unittest.TestCase):
         hooks_args = {h: partial(call, h) for h in hooks}
         my_train_unit = DummyTrainExceptUnit(input_dim=input_dim)
         try:
-            state = init_train_state(
-                dataloader=train_dataloader,
+            train(
+                my_train_unit,
+                train_dataloader,
                 max_epochs=max_epochs,
                 max_steps_per_epoch=max_steps_per_epoch,
+                callbacks=[Lambda(**hooks_args)],
             )
-            train(state, my_train_unit, callbacks=[Lambda(**hooks_args)])
         except Exception:
             self.assertRaisesRegex(RuntimeError, "testing")
         self.assertEqual(checker, hooks)

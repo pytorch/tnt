@@ -15,7 +15,7 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callbacks.tqdm_progress_bar import TQDMProgressBar
 from torchtnt.framework.state import EntryPoint, PhaseState, State
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.train import train
 
 
 class TQDMProgressBarTest(unittest.TestCase):
@@ -53,11 +53,10 @@ class TQDMProgressBarTest(unittest.TestCase):
         max_epochs = 1
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
 
         my_unit = DummyTrainUnit(2)
         progress_bar = TQDMProgressBar()
-        train(state, my_unit, callbacks=[progress_bar])
+        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[progress_bar])
 
     def test_progress_bar_evaluate(self) -> None:
         """

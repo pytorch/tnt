@@ -17,7 +17,7 @@ import torch.nn as nn
 from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.framework import AutoUnit, fit, init_fit_state, State
+from torchtnt.framework import AutoUnit, fit, State
 from torchtnt.framework.state import EntryPoint
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
@@ -168,13 +168,13 @@ def main(args: Namespace) -> None:
     eval_dataloader = prepare_dataloader(
         args.num_batches_per_epoch, args.input_dim, args.batch_size, device
     )
-    state = init_fit_state(
+
+    fit(
+        my_unit,
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         max_epochs=args.max_epochs,
     )
-
-    fit(state, my_unit)
 
 
 def get_args() -> Namespace:

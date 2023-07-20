@@ -22,7 +22,7 @@ from torchtnt.examples.mingpt.model import (
     GPTConfig,
     OptimizerConfig,
 )
-from torchtnt.framework import AutoUnit, fit, init_fit_state, State
+from torchtnt.framework import AutoUnit, fit, State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 
@@ -124,15 +124,14 @@ def main(args: Namespace) -> None:
         clip_grad_norm=args.clip_grad_norm,
     )
 
-    state = init_fit_state(
+    fit(
+        my_unit,
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         max_epochs=args.max_epochs,
         max_steps=args.max_steps,
         max_train_steps_per_epoch=args.max_steps_epoch,
     )
-
-    fit(state, my_unit)
 
 
 def get_args() -> Namespace:

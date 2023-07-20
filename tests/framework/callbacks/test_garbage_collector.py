@@ -18,10 +18,10 @@ from torchtnt.framework._test_utils import (
     generate_random_dataloader,
 )
 from torchtnt.framework.callbacks.garbage_collector import GarbageCollector
-from torchtnt.framework.evaluate import evaluate, init_eval_state
-from torchtnt.framework.fit import fit, init_fit_state
-from torchtnt.framework.predict import init_predict_state, predict
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.evaluate import evaluate
+from torchtnt.framework.fit import fit
+from torchtnt.framework.predict import predict
+from torchtnt.framework.train import train
 
 
 class GarbageCollectorTest(unittest.TestCase):
@@ -39,9 +39,8 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback_mock = MagicMock(spec=GarbageCollector)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
 
-        train(state, my_unit, callbacks=[gc_callback_mock])
+        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[gc_callback_mock])
         self.assertEqual(gc_callback_mock.on_train_start.call_count, 1)
         self.assertEqual(
             gc_callback_mock.on_train_step_end.call_count, expected_num_total_steps
@@ -61,10 +60,9 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback = GarbageCollector(2)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
 
         self.assertTrue(gc.isenabled())
-        train(state, my_unit, callbacks=[gc_callback])
+        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())
 
     def test_garbage_collector_call_count_evaluate(self) -> None:
@@ -80,9 +78,8 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback_mock = MagicMock(spec=GarbageCollector)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(dataloader=dataloader)
 
-        evaluate(state, my_unit, callbacks=[gc_callback_mock])
+        evaluate(my_unit, dataloader, callbacks=[gc_callback_mock])
         self.assertEqual(gc_callback_mock.on_eval_start.call_count, 1)
         self.assertEqual(
             gc_callback_mock.on_eval_step_end.call_count, expected_num_total_steps
@@ -101,10 +98,9 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback = GarbageCollector(2)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(dataloader=dataloader)
 
         self.assertTrue(gc.isenabled())
-        evaluate(state, my_unit, callbacks=[gc_callback])
+        evaluate(my_unit, dataloader, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())
 
     def test_garbage_collector_call_count_predict(self) -> None:
@@ -120,9 +116,8 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback_mock = MagicMock(spec=GarbageCollector)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
 
-        predict(state, my_unit, callbacks=[gc_callback_mock])
+        predict(my_unit, dataloader, callbacks=[gc_callback_mock])
         self.assertEqual(gc_callback_mock.on_predict_start.call_count, 1)
         self.assertEqual(
             gc_callback_mock.on_predict_step_end.call_count, expected_num_total_steps
@@ -141,10 +136,9 @@ class GarbageCollectorTest(unittest.TestCase):
         gc_callback = GarbageCollector(2)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
 
         self.assertTrue(gc.isenabled())
-        predict(state, my_unit, callbacks=[gc_callback])
+        predict(my_unit, dataloader, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())
 
     def test_garbage_collector_call_count_fit(self) -> None:
@@ -172,12 +166,7 @@ class GarbageCollectorTest(unittest.TestCase):
         eval_dataloader = generate_random_dataloader(
             eval_dataset_len, input_dim, batch_size
         )
-        state = init_fit_state(
-            train_dataloader=train_dataloader,
-            eval_dataloader=eval_dataloader,
-            max_epochs=max_epochs,
-            evaluate_every_n_epochs=evaluate_every_n_epochs,
-        )
+
         # we call gc.collect() once for every step with generation=1, and then we call gc.collect()
         expected_num_calls_to_gc_collect = (
             expected_num_total_steps + expected_num_total_steps / gc_step_interval
@@ -185,7 +174,14 @@ class GarbageCollectorTest(unittest.TestCase):
         with mock.patch(
             "torchtnt.framework.callbacks.garbage_collector.gc.collect"
         ) as gc_collect_mock:
-            fit(state, my_unit, callbacks=[gc_callback])
+            fit(
+                my_unit,
+                train_dataloader=train_dataloader,
+                eval_dataloader=eval_dataloader,
+                max_epochs=max_epochs,
+                evaluate_every_n_epochs=evaluate_every_n_epochs,
+                callbacks=[gc_callback],
+            )
             self.assertEqual(
                 gc_collect_mock.call_count, expected_num_calls_to_gc_collect
             )
@@ -210,13 +206,14 @@ class GarbageCollectorTest(unittest.TestCase):
         eval_dataloader = generate_random_dataloader(
             eval_dataset_len, input_dim, batch_size
         )
-        state = init_fit_state(
+
+        self.assertTrue(gc.isenabled())
+        fit(
+            my_unit,
             train_dataloader=train_dataloader,
             eval_dataloader=eval_dataloader,
             max_epochs=max_epochs,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
+            callbacks=[gc_callback],
         )
-
-        self.assertTrue(gc.isenabled())
-        fit(state, my_unit, callbacks=[gc_callback])
         self.assertTrue(gc.isenabled())

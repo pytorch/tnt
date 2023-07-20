@@ -12,8 +12,8 @@ from unittest.mock import MagicMock
 import torch
 from torch import nn
 from torchtnt.framework._test_utils import DummyEvalUnit, generate_random_dataloader
-from torchtnt.framework.evaluate import evaluate, init_eval_state
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.evaluate import evaluate
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import EvalUnit
 
 
@@ -31,17 +31,11 @@ class EvaluateTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(dataloader=dataloader)
-        evaluate(state, my_unit)
+        evaluate(my_unit, dataloader)
 
         self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(my_unit.eval_progress.num_steps_completed, expected_steps)
-        self.assertEqual(state.entry_point, EntryPoint.EVALUATE)
-
-        # step_output should be reset to None
-        self.assertEqual(state.eval_state.step_output, None)
-
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
     def test_evaluate_max_steps_per_epoch(self) -> None:
@@ -57,19 +51,12 @@ class EvaluateTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(
-            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
-        )
-        evaluate(state, my_unit)
+
+        evaluate(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
 
         self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(my_unit.eval_progress.num_steps_completed, max_steps_per_epoch)
-        self.assertEqual(state.entry_point, EntryPoint.EVALUATE)
-
-        # step_output should be reset to None
-        self.assertEqual(state.eval_state.step_output, None)
-
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
     def test_evaluate_stop(self) -> None:
@@ -86,10 +73,7 @@ class EvaluateTest(unittest.TestCase):
             input_dim=input_dim, steps_before_stopping=steps_before_stopping
         )
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(
-            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
-        )
-        evaluate(state, my_unit)
+        evaluate(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
 
         self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
@@ -124,16 +108,11 @@ class EvaluateTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(dataloader=dataloader)
-        evaluate(state, my_unit)
+        evaluate(my_unit, dataloader)
 
         self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(my_unit.eval_progress.num_steps_completed, expected_steps)
-
-        # step_output should be reset to None
-        self.assertEqual(state.eval_state.step_output, None)
-
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
     def test_evaluate_with_callback(self) -> None:
@@ -148,12 +127,15 @@ class EvaluateTest(unittest.TestCase):
 
         my_unit = DummyEvalUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(
-            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
-        )
+
         callback_mock = MagicMock()
 
-        evaluate(state, my_unit, callbacks=[callback_mock])
+        evaluate(
+            my_unit,
+            dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[callback_mock],
+        )
 
         self.assertEqual(callback_mock.on_eval_start.call_count, 1)
         self.assertEqual(callback_mock.on_eval_epoch_start.call_count, 1)
@@ -172,35 +154,16 @@ class EvaluateTest(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
-        max_steps_per_epoch = 1
+        max_steps_per_epoch = 2
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_eval_state(
-            dataloader=dataloader,
-            max_steps_per_epoch=max_steps_per_epoch,
-        )
         evaluate(
-            state,
-            DummyEvalUnit(input_dim=input_dim),
-        )
-        self.assertIsNone(state.timer)
-
-        state = init_eval_state(
-            dataloader=dataloader,
+            TimingEvalUnit(input_dim=input_dim),
+            dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
             auto_timing=True,
         )
-        evaluate(state, DummyEvalUnit(input_dim=input_dim))
-        for k in (
-            "DummyEvalUnit.on_eval_start",
-            "DummyEvalUnit.on_eval_epoch_start",
-            "evaluate.next(data_iter)",
-            "DummyEvalUnit.eval_step",
-            "DummyEvalUnit.on_eval_epoch_end",
-            "DummyEvalUnit.on_eval_end",
-        ):
-            self.assertTrue(k in state.timer.recorded_durations.keys())
 
 
 class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
@@ -230,3 +193,29 @@ class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
 
         self.steps_processed += 1
         return loss, outputs
+
+
+Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+class TimingEvalUnit(EvalUnit[Batch]):
+    def __init__(self, input_dim: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+
+    def eval_step(self, state: State, data: Batch) -> torch.Tensor:
+        inputs, _ = data
+        outputs = self.module(inputs)
+
+        if self.eval_progress.num_steps_completed == 1:
+            tc = unittest.TestCase()
+            for k in (
+                "TimingEvalUnit.on_eval_start",
+                "TimingEvalUnit.on_eval_epoch_start",
+                "evaluate.next(data_iter)",
+                "TimingEvalUnit.eval_step",
+            ):
+                tc.assertTrue(k in state.timer.recorded_durations.keys())
+
+        return outputs

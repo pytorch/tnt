@@ -16,9 +16,9 @@ from torchtnt.framework._test_utils import (
     generate_random_dataloader,
 )
 from torchtnt.framework.callbacks.pytorch_profiler import PyTorchProfiler
-from torchtnt.framework.evaluate import evaluate, init_eval_state
-from torchtnt.framework.predict import init_predict_state, predict
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.evaluate import evaluate
+from torchtnt.framework.predict import predict
+from torchtnt.framework.train import train
 
 
 class PyTorchProfilerTest(unittest.TestCase):
@@ -38,8 +38,7 @@ class PyTorchProfilerTest(unittest.TestCase):
         profiler = PyTorchProfiler(profiler=profiler_mock)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
-        train(state, my_unit, callbacks=[profiler])
+        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[profiler])
         self.assertEqual(profiler_mock.start.call_count, 1)
         self.assertEqual(profiler_mock.step.call_count, expected_num_total_steps)
         self.assertEqual(profiler_mock.stop.call_count, 1)
@@ -59,9 +58,8 @@ class PyTorchProfilerTest(unittest.TestCase):
         profiler = PyTorchProfiler(profiler=profiler_mock)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_eval_state(dataloader=dataloader)
 
-        evaluate(state, my_unit, callbacks=[profiler])
+        evaluate(my_unit, dataloader, callbacks=[profiler])
         self.assertEqual(profiler_mock.start.call_count, 1)
         self.assertEqual(profiler_mock.step.call_count, expected_num_total_steps)
         self.assertEqual(profiler_mock.stop.call_count, 1)
@@ -81,9 +79,8 @@ class PyTorchProfilerTest(unittest.TestCase):
         profiler = PyTorchProfiler(profiler=profiler_mock)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
 
-        predict(state, my_unit, callbacks=[profiler])
+        predict(my_unit, dataloader, callbacks=[profiler])
         self.assertEqual(profiler_mock.start.call_count, 1)
         self.assertEqual(profiler_mock.step.call_count, expected_num_total_steps)
         self.assertEqual(profiler_mock.stop.call_count, 1)

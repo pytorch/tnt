@@ -28,71 +28,35 @@ from torchtnt.utils.timer import get_timer_summary, Timer
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def init_eval_state(
-    *,
-    dataloader: Iterable[TEvalData],
-    max_steps_per_epoch: Optional[int] = None,
-    auto_timing: bool = False,
-) -> State:
-    """
-    ``init_eval_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for evaluation. This :class:`~torchtnt.framework.State` object
-    can then be passed to the :func:`~torchtnt.framework.evaluate` entry point.
-
-    Args:
-        dataloader: dataloader to be used during evaluation, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
-        max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
-        auto_timing: whether to automatically time the evaluation loop, using the state's timer (enabling auto_timing may degrade performance).
-
-    Returns:
-        An initialized state object containing metadata.
-
-    Below is an example of calling :py:func:`~torchtnt.framework.init_eval_state` and :py:func:`~torchtnt.framework.evaluate` together.
-
-    .. code-block:: python
-
-        from torchtnt.framework import init_eval_state, evaluate
-
-        eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
-        dataloader = torch.utils.data.DataLoader(...)
-        state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
-        evaluate(state, eval_unit)
-    """
-
-    return State(
-        entry_point=EntryPoint.EVALUATE,
-        eval_state=PhaseState(
-            dataloader=dataloader,
-            max_steps_per_epoch=max_steps_per_epoch,
-        ),
-        timer=None if not auto_timing else Timer(),
-    )
-
-
 def evaluate(
-    state: State,
     eval_unit: TEvalUnit,
+    eval_dataloader: Iterable[TEvalData],
     *,
+    max_steps_per_epoch: Optional[int] = None,
     callbacks: Optional[List[Callback]] = None,
+    auto_timing: bool = False,
 ) -> None:
     """
-    The ``evaluate`` entry point takes in a :class:`~torchtnt.framework.State` object, a :class:`~torchtnt.framework.EvalUnit` object, and an optional list of :class:`~torchtnt.framework.Callback` s,
-    and runs the evaluation loop. The :class:`~torchtnt.framework.State` object can be initialized with :func:`~torchtnt.framework.init_eval_state`.
+    The ``evaluate`` entry point takes in a :class:`~torchtnt.framework.EvalUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
+    and runs the evaluation loop.
 
     Args:
-        state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
         eval_unit: an instance of :class:`~torchtnt.framework.EvalUnit` which implements `eval_step`.
-        callbacks: an optional list of callbacks.
+        eval_dataloader: dataloader to be used during evaluation, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
+        max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
+        callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
+        auto_timing: whether to automatically time the evaluation loop, using the state's timer (enabling auto_timing may degrade performance).
 
-    Below is an example of calling :py:func:`~torchtnt.framework.init_eval_state` and :py:func:`~torchtnt.framework.evaluate` together.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.evaluate`.
 
     .. code-block:: python
 
-        from torchtnt.framework import init_eval_state, evaluate
+        from torchtnt.framework import evaluate
 
         eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
-        dataloader = torch.utils.data.DataLoader(...)
-        state = init_eval_state(dataloader=dataloader, max_steps_per_epoch=20)
-        evaluate(state, eval_unit)
+        eval_dataloader = torch.utils.data.DataLoader(...)
+        evaluate(eval_unit, eval_dataloader, max_steps_per_epoch=20)
 
     Below is pseudocode of what the :py:func:`~torchtnt.framework.evaluate` entry point does.
 
@@ -115,8 +79,15 @@ def evaluate(
         call on_eval_end on unit first and then callbacks
     """
     log_api_usage("evaluate")
-    state._entry_point = EntryPoint.EVALUATE
     callback_handler = CallbackHandler(callbacks or [])
+    state = State(
+        entry_point=EntryPoint.EVALUATE,
+        eval_state=PhaseState(
+            dataloader=eval_dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+        ),
+        timer=None if not auto_timing else Timer(),
+    )
     try:
         _evaluate_impl(state, eval_unit, callback_handler)
         logger.info("Finished evaluation")

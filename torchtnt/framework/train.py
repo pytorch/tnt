@@ -30,79 +30,40 @@ from torchtnt.utils.timer import get_timer_summary, Timer
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def init_train_state(
+@torch.enable_grad()
+def train(
+    train_unit: TTrainUnit,
+    train_dataloader: Iterable[TTrainData],
     *,
-    dataloader: Iterable[TTrainData],
     max_epochs: Optional[int] = None,
     max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
+    callbacks: Optional[List[Callback]] = None,
     auto_timing: bool = False,
-) -> State:
+) -> None:
     """
-    ``init_train_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for training. This :class:`~torchtnt.framework.State` object
-    can then be passed to the :func:`~torchtnt.framework.train` entry point.
+    The ``train`` entry point takes in a :class:`~torchtnt.framework.TrainUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
+    and runs the training loop.
 
     Args:
-        dataloader: dataloader to be used during training, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
+        train_unit: an instance of :class:`~torchtnt.framework.TrainUnit` which implements `train_step`.
+        train_dataloader: dataloader to be used during training, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_epochs: the max number of epochs to run. ``None`` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
+        callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
         auto_timing: whether to automatically time the training loop, using the state's timer (enabling auto_timing may degrade performance).
 
-    Returns:
-        An initialized state object containing metadata.
 
-    Below is an example of calling :py:func:`~torchtnt.framework.init_train_state` and :py:func:`~torchtnt.framework.train` together.
+    Below is an example of calling :py:func:`~torchtnt.framework.train`.
 
     .. code-block:: python
 
-        from torchtnt.framework import init_train_state, train
+        from torchtnt.framework import train
 
         train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
-        dataloader = torch.utils.data.DataLoader(...)
-        state = init_train_state(dataloader=dataloader, max_epochs=4)
-        train(state, train_unit)
-
-    """
-
-    return State(
-        entry_point=EntryPoint.TRAIN,
-        train_state=PhaseState(
-            dataloader=dataloader,
-            max_epochs=max_epochs,
-            max_steps=max_steps,
-            max_steps_per_epoch=max_steps_per_epoch,
-        ),
-        timer=None if not auto_timing else Timer(),
-    )
-
-
-@torch.enable_grad()
-def train(
-    state: State,
-    train_unit: TTrainUnit,
-    *,
-    callbacks: Optional[List[Callback]] = None,
-) -> None:
-    """
-    The ``train`` entry point takes in a :class:`~torchtnt.framework.State` object, a :class:`~torchtnt.framework.TrainUnit` object, and an optional list of :class:`~torchtnt.framework.Callback` s,
-    and runs the training loop. The :class:`~torchtnt.framework.State` object can be initialized with :func:`~torchtnt.framework.init_train_state`.
-
-    Args:
-        state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
-        train_unit: an instance of :class:`~torchtnt.framework.TrainUnit` which implements `train_step`.
-        callbacks: an optional list of callbacks.
-
-    Below is an example of calling :py:func:`~torchtnt.framework.init_train_state` and :py:func:`~torchtnt.framework.train` together.
-
-    .. code-block:: python
-
-        from torchtnt.framework import init_train_state, train
-
-        train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
-        dataloader = torch.utils.data.DataLoader(...)
-        state = init_train_state(dataloader=dataloader, max_epochs=4)
-        train(state, train_unit)
+        train_dataloader = torch.utils.data.DataLoader(...)
+        train(train_unit, train_dataloader, max_epochs=4)
 
     Below is pseudocode of what the :py:func:`~torchtnt.framework.train` entry point does.
 
@@ -126,8 +87,17 @@ def train(
         call on_train_end on unit first and then callbacks
     """
     log_api_usage("train")
-    state._entry_point = EntryPoint.TRAIN
     callback_handler = CallbackHandler(callbacks or [])
+    state = State(
+        entry_point=EntryPoint.TRAIN,
+        train_state=PhaseState(
+            dataloader=train_dataloader,
+            max_epochs=max_epochs,
+            max_steps=max_steps,
+            max_steps_per_epoch=max_steps_per_epoch,
+        ),
+        timer=None if not auto_timing else Timer(),
+    )
     try:
         _train_impl(state, train_unit, callback_handler)
         logger.info("Finished train")
