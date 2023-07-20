@@ -7,11 +7,10 @@
 import logging
 from typing import Iterable, List, Optional
 
-from pyre_extensions import none_throws
 from torchtnt.framework._callback_handler import CallbackHandler
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, PhaseState, State
-from torchtnt.framework.train import _train_epoch_impl
+from torchtnt.framework.train import _train_impl
 from torchtnt.framework.unit import (
     EvalUnit,
     TEvalData,
@@ -19,7 +18,7 @@ from torchtnt.framework.unit import (
     TTrainData,
     TTrainUnit,
 )
-from torchtnt.framework.utils import _get_timing_context, _is_done, log_api_usage
+from torchtnt.framework.utils import log_api_usage
 from torchtnt.utils.timer import get_timer_summary, Timer
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -94,6 +93,13 @@ def fit(
         call on_train_end on unit first and then callbacks
     """
     log_api_usage("fit")
+
+    # input validation
+    if not isinstance(unit, TrainUnit):
+        raise TypeError("Expected unit to implement TrainUnit interface.")
+    if not isinstance(unit, EvalUnit):
+        raise TypeError("Expected unit to implement EvalUnit interface.")
+
     callback_handler = CallbackHandler(callbacks or [])
     state = State(
         entry_point=EntryPoint.FIT,
@@ -111,8 +117,18 @@ def fit(
         ),
         timer=None if not auto_timing else Timer(),
     )
+
+    logger.info(
+        f"Started fit with max_epochs={max_epochs} "
+        f"max_steps={max_steps} "
+        f"max_train_steps_per_epoch={max_train_steps_per_epoch} "
+        f"max_eval_steps_per_epoch={max_eval_steps_per_epoch} "
+        f"evaluate_every_n_steps={evaluate_every_n_steps} "
+        f"evaluate_every_n_epochs={evaluate_every_n_epochs} "
+    )
+
     try:
-        _fit_impl(state, unit, callback_handler)
+        _train_impl(state, unit, callback_handler)
         if state.timer:
             logger.info(get_timer_summary(state.timer))
     except Exception as e:
@@ -121,41 +137,3 @@ def fit(
         unit.on_exception(state, e)
         callback_handler.on_exception(state, unit, e)
         raise e
-
-
-def _fit_impl(
-    state: State,
-    unit: TTrainUnit,
-    callback_handler: CallbackHandler,
-) -> None:
-    # input validation
-    if not isinstance(unit, TrainUnit):
-        raise TypeError("Expected unit to implement TrainUnit interface.")
-    if not isinstance(unit, EvalUnit):
-        raise TypeError("Expected unit to implement EvalUnit interface.")
-
-    train_state = none_throws(state.train_state)
-    eval_state = none_throws(state.eval_state)
-
-    logger.info(
-        f"Started fit with max_epochs={train_state.max_epochs} "
-        f"max_steps={train_state.max_steps} "
-        f"max_train_steps_per_epoch={train_state.max_steps_per_epoch} "
-        f"max_eval_steps_per_epoch={eval_state.max_steps_per_epoch} "
-        f"evaluate_every_n_steps={eval_state.evaluate_every_n_steps} "
-        f"evaluate_every_n_epochs={eval_state.evaluate_every_n_epochs} "
-    )
-
-    with _get_timing_context(state, f"{unit.__class__.__name__}.on_train_start"):
-        unit.on_train_start(state)
-    callback_handler.on_train_start(state, unit)
-
-    while not (
-        state.should_stop
-        or _is_done(unit.train_progress, train_state.max_epochs, train_state.max_steps)
-    ):
-        _train_epoch_impl(state, unit, callback_handler)
-
-    with _get_timing_context(state, f"{unit.__class__.__name__}.on_train_end"):
-        unit.on_train_end(state)
-    callback_handler.on_train_end(state, unit)
