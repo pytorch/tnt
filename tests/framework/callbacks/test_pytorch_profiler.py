@@ -32,7 +32,7 @@ class PyTorchProfilerTest(unittest.TestCase):
         max_epochs = 2
         expected_num_total_steps = dataset_len / batch_size * max_epochs
 
-        my_unit = MagicMock(spec=DummyTrainUnit)
+        my_unit = DummyTrainUnit(input_dim)
         profiler_mock = MagicMock(spec=torch.profiler.profile)
 
         profiler = PyTorchProfiler(profiler=profiler_mock)
@@ -53,7 +53,7 @@ class PyTorchProfilerTest(unittest.TestCase):
         batch_size = 2
         expected_num_total_steps = dataset_len / batch_size
 
-        my_unit = MagicMock(spec=DummyEvalUnit)
+        my_unit = DummyEvalUnit(2)
         profiler_mock = MagicMock(spec=torch.profiler.profile)
 
         profiler = PyTorchProfiler(profiler=profiler_mock)
@@ -75,7 +75,7 @@ class PyTorchProfilerTest(unittest.TestCase):
         batch_size = 2
         expected_num_total_steps = dataset_len / batch_size
 
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
         profiler_mock = MagicMock(spec=torch.profiler.profile)
 
         profiler = PyTorchProfiler(profiler=profiler_mock)

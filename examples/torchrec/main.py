@@ -42,7 +42,6 @@ from torchrec.optim.optimizers import in_backward_optimizer_filter
 
 from torchtnt.framework import EvalUnit, fit, init_fit_state, State, TrainUnit
 from torchtnt.framework.callbacks import TQDMProgressBar
-from torchtnt.framework.utils import get_current_progress
 from torchtnt.utils import (
     get_process_group_backend_from_device,
     init_from_env,
@@ -202,7 +201,7 @@ class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
         self.log_every_n_steps = log_every_n_steps
 
     def train_step(self, state: State, data: Iterator[Batch]) -> None:
-        step = get_current_progress(state).num_steps_completed
+        step = self.train_progress.num_steps_completed
         loss, logits, labels = self.pipeline.progress(data)
         preds = torch.sigmoid(logits)
         self.train_auroc.update(preds, labels)
@@ -217,7 +216,7 @@ class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
         self.train_auroc.reset()
 
     def eval_step(self, state: State, data: Iterator[Batch]) -> None:
-        step = get_current_progress(state).num_steps_completed
+        step = self.eval_progress.num_steps_completed
         loss, _, _ = self.pipeline.progress(data)
         if step % self.log_every_n_steps == 0:
             self.tb_logger.log("evaluation_loss", loss, step)

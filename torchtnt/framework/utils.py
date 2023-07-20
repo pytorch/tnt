@@ -25,8 +25,7 @@ if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
     from torch.distributed.fsdp._common_utils import _FSDPState
 
-from pyre_extensions import none_throws
-from torchtnt.framework.state import ActivePhase, EntryPoint, State
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.progress import Progress
@@ -231,17 +230,3 @@ def _find_optimizers_for_module(
         if all(module_param in optimizer_params for module_param in module_params):
             optimizer_list.append((optim_name, optimizer))
     return optimizer_list
-
-
-def get_current_progress(state: State) -> Progress:
-    """
-    If state's entry point is fit, returns train progress. During fit, we want to return training progress even during eval, so that metrics can be compared easily across train and eval.
-    Otherwise, checks the active phase, and returns the corresponding progress class.
-    """
-    if state.entry_point == EntryPoint.FIT or state.active_phase == ActivePhase.TRAIN:
-        return none_throws(state.train_state).progress
-
-    if state.active_phase == ActivePhase.EVALUATE:
-        return none_throws(state.eval_state).progress
-    else:
-        return none_throws(state.predict_state).progress
