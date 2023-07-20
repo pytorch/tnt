@@ -158,11 +158,6 @@ def _train_epoch_impl(
     logger.info("Started train epoch")
     state._active_phase = ActivePhase.TRAIN
 
-    # Set all modules to train() mode
-    # access modules made available through AppStateMixin
-    tracked_modules = train_unit.tracked_modules()
-    prior_module_train_states = _set_module_training_mode(tracked_modules, True)
-
     train_state = none_throws(state.train_state)
 
     evaluate_every_n_steps = None
@@ -275,10 +270,5 @@ def _train_epoch_impl(
             callback_handler,
         )
         state._active_phase = ActivePhase.TRAIN
-
-    # Reset training mode for modules at the end of the epoch
-    # This ensures that side-effects made by the loop are reset before
-    # returning back to the user
-    _reset_module_training_mode(tracked_modules, prior_module_train_states)
 
     logger.info("Ended train epoch")
