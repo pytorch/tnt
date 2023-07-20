@@ -13,9 +13,8 @@ except ImportError:
 
 import psutil
 import torch
-from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.state import PhaseState, State
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils.device import collect_system_stats, get_device_from_env
 from torchtnt.utils.loggers.logger import MetricLogger
@@ -69,7 +68,7 @@ class SystemResourcesMonitor(Callback):
         self.device: torch.device = get_device_from_env()
 
     def write_system_stats(
-        self, logging_interval: Literal["epoch", "step"], state: PhaseState
+        self, logging_interval: Literal["epoch", "step"], step: int
     ) -> None:
         if not self._loggers:
             return
@@ -78,23 +77,22 @@ class SystemResourcesMonitor(Callback):
             return
 
         system_stats = collect_system_stats(self.device)
-        step = state.progress.num_steps_completed
         _write_stats(self._loggers, system_stats, step)
 
     def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
-        self.write_system_stats("epoch", none_throws(state.train_state))
+        self.write_system_stats("epoch", unit.train_progress.num_steps_completed)
 
     def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
-        self.write_system_stats("step", none_throws(state.train_state))
+        self.write_system_stats("step", unit.train_progress.num_steps_completed)
 
     def on_eval_epoch_start(self, state: State, unit: TEvalUnit) -> None:
-        self.write_system_stats("epoch", none_throws(state.eval_state))
+        self.write_system_stats("epoch", unit.eval_progress.num_steps_completed)
 
     def on_eval_step_start(self, state: State, unit: TEvalUnit) -> None:
-        self.write_system_stats("step", none_throws(state.eval_state))
+        self.write_system_stats("step", unit.eval_progress.num_steps_completed)
 
     def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
-        self.write_system_stats("epoch", none_throws(state.predict_state))
+        self.write_system_stats("epoch", unit.predict_progress.num_steps_completed)
 
     def on_predict_step_start(self, state: State, unit: TPredictUnit) -> None:
-        self.write_system_stats("step", none_throws(state.predict_state))
+        self.write_system_stats("step", unit.predict_progress.num_steps_completed)

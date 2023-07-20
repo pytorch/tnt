@@ -26,7 +26,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchtnt.framework._test_utils import generate_random_dataset
 from torchtnt.framework.auto_unit import AutoUnit
-from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
+from torchtnt.framework.state import State
 from torchtnt.framework.utils import (
     _construct_tracked_optimizers_and_schedulers,
     _find_optimizers_for_module,
@@ -39,7 +39,6 @@ from torchtnt.framework.utils import (
     _reset_module_training_mode,
     _set_module_training_mode,
     _step_requires_iterator,
-    get_current_progress,
 )
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -197,45 +196,6 @@ class UtilsTest(unittest.TestCase):
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=200))
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=None))
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=None))
-
-    def test_get_current_progress(self) -> None:
-        train_state = PhaseState(
-            dataloader=[], progress=Progress(num_steps_completed=0)
-        )
-        eval_state = PhaseState(dataloader=[], progress=Progress(num_steps_completed=1))
-        predict_state = PhaseState(
-            dataloader=[], progress=Progress(num_steps_completed=2)
-        )
-        state = State(
-            entry_point=EntryPoint.TRAIN,
-            train_state=train_state,
-            eval_state=eval_state,
-            predict_state=predict_state,
-        )
-
-        progress = get_current_progress(state)
-        self.assertEqual(
-            progress.num_steps_completed, train_state.progress.num_steps_completed
-        )
-
-        state._active_phase = ActivePhase.EVALUATE
-        progress = get_current_progress(state)
-        self.assertEqual(
-            progress.num_steps_completed, eval_state.progress.num_steps_completed
-        )
-
-        state._active_phase = ActivePhase.PREDICT
-        progress = get_current_progress(state)
-        self.assertEqual(
-            progress.num_steps_completed, predict_state.progress.num_steps_completed
-        )
-
-        state._entry_point = EntryPoint.FIT
-        state._active_phase = ActivePhase.EVALUATE
-        progress = get_current_progress(state)
-        self.assertEqual(
-            progress.num_steps_completed, train_state.progress.num_steps_completed
-        )
 
     @patch("torchtnt.framework.utils.record_function")
     def test_get_timing_context(self, mock_record_function) -> None:

@@ -25,13 +25,9 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
-from torchtnt.framework.state import ActivePhase, State
+from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
-from torchtnt.framework.utils import (
-    _get_timing_context,
-    _is_fsdp_module,
-    get_current_progress,
-)
+from torchtnt.framework.utils import _get_timing_context, _is_fsdp_module
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -247,7 +243,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             with _get_timing_context(state, f"{self.__class__.__name__}.forward"):
                 outputs = self.module(batch)
 
-        step = get_current_progress(state).num_steps_completed
+        step = self.predict_progress.num_steps_completed
         with _get_timing_context(
             state, f"{self.__class__.__name__}.on_predict_step_end"
         ):
@@ -627,12 +623,10 @@ class AutoUnit(
     def train_step(
         self, state: State, data: Iterator[TData]
     ) -> Tuple[torch.Tensor, Any]:
-        train_state = none_throws(state.train_state)
-
         batch = self._get_next_batch(state, data)
 
         should_update_weights = (
-            train_state.progress.num_steps_completed_in_epoch + 1
+            self.train_progress.num_steps_completed_in_epoch + 1
         ) % self.gradient_accumulation_steps == 0 or self._is_last_train_batch
 
         # for pyre, assign to local variable
@@ -736,10 +730,9 @@ class AutoUnit(
                 self.optimizer.zero_grad(set_to_none=True)
 
             # optionally step lr scheduler if SWA not in use
-            train_state = none_throws(state.train_state)
             if (
                 self.swa_params is None
-                or train_state.progress.num_epochs_completed
+                or self.train_progress.num_epochs_completed
                 < self.swa_params.epoch_start
             ):
                 lr_scheduler = self.lr_scheduler
@@ -749,7 +742,7 @@ class AutoUnit(
                     ):
                         lr_scheduler.step()
 
-        step = get_current_progress(state).num_steps_completed
+        step = self.train_progress.num_steps_completed
         # users can override this, by default this is a no-op
         with _get_timing_context(state, f"{self.__class__.__name__}.on_train_step_end"):
             self.on_train_step_end(state, batch, step, loss, outputs)
@@ -775,12 +768,10 @@ class AutoUnit(
         """
         Note: if overriding ``on_train_epoch_end``, remember to call ``super().on_train_epoch_end()``
         """
-        train_state = none_throws(state.train_state)
-
         if (
             self.swa_model
             and self.swa_params
-            and train_state.progress.num_epochs_completed >= self.swa_params.epoch_start
+            and self.train_progress.num_epochs_completed >= self.swa_params.epoch_start
         ):
             with _get_timing_context(
                 state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
@@ -825,7 +816,11 @@ class AutoUnit(
             with _get_timing_context(state, f"{self.__class__.__name__}.compute_loss"):
                 loss, outputs = self.compute_loss(state, data)
 
-        step = get_current_progress(state).num_steps_completed
+        if state.entry_point == EntryPoint.FIT:
+            step = self.train_progress.num_steps_completed
+        else:
+            step = self.eval_progress.num_steps_completed
+
         # users can override this, by default this is a no-op
         with _get_timing_context(state, f"{self.__class__.__name__}.on_eval_step_end"):
             self.on_eval_step_end(state, data, step, loss, outputs)

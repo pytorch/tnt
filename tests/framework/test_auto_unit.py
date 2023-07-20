@@ -465,7 +465,7 @@ class TestAutoUnit(unittest.TestCase):
             auto_unit.train_step(state=state, data=dummy_iterator)
             no_sync_mock.assert_called_once()
 
-        state.train_state.progress.increment_step()
+        auto_unit.train_progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
             auto_unit.train_step(state=state, data=dummy_iterator)
@@ -496,7 +496,7 @@ class TestAutoUnit(unittest.TestCase):
             auto_unit.train_step(state=state, data=dummy_iterator)
             no_sync_mock.assert_called_once()
 
-        state.train_state.progress.increment_step()
+        auto_unit.train_progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
             auto_unit.train_step(state=state, data=dummy_iterator)
@@ -1108,7 +1108,7 @@ class LastBatchAutoUnit(AutoUnit[Batch]):
         tc = unittest.TestCase()
         tc.assertEqual(
             self._is_last_train_batch,
-            state.train_state.progress.num_steps_completed_in_epoch + 1
+            self.train_progress.num_steps_completed_in_epoch + 1
             == self.expected_steps_per_epoch,
         )
         inputs, targets = data

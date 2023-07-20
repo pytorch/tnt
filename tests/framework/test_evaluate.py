@@ -34,9 +34,9 @@ class EvaluateTest(unittest.TestCase):
         state = init_eval_state(dataloader=dataloader)
         evaluate(state, my_unit)
 
-        self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
-        self.assertEqual(state.eval_state.progress.num_steps_completed, expected_steps)
+        self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed, expected_steps)
         self.assertEqual(state.entry_point, EntryPoint.EVALUATE)
 
         # step_output should be reset to None
@@ -62,11 +62,9 @@ class EvaluateTest(unittest.TestCase):
         )
         evaluate(state, my_unit)
 
-        self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
-        self.assertEqual(
-            state.eval_state.progress.num_steps_completed, max_steps_per_epoch
-        )
+        self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed, max_steps_per_epoch)
         self.assertEqual(state.entry_point, EntryPoint.EVALUATE)
 
         # step_output should be reset to None
@@ -93,10 +91,10 @@ class EvaluateTest(unittest.TestCase):
         )
         evaluate(state, my_unit)
 
-        self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            my_unit.steps_processed, state.eval_state.progress.num_steps_completed
+            my_unit.steps_processed, my_unit.eval_progress.num_steps_completed
         )
         self.assertEqual(my_unit.steps_processed, steps_before_stopping)
 
@@ -129,9 +127,9 @@ class EvaluateTest(unittest.TestCase):
         state = init_eval_state(dataloader=dataloader)
         evaluate(state, my_unit)
 
-        self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
-        self.assertEqual(state.eval_state.progress.num_steps_completed, expected_steps)
+        self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed, expected_steps)
 
         # step_output should be reset to None
         self.assertEqual(state.eval_state.step_output, None)
@@ -148,7 +146,7 @@ class EvaluateTest(unittest.TestCase):
         max_steps_per_epoch = 6
         expected_num_steps = dataset_len / batch_size
 
-        my_unit = MagicMock()
+        my_unit = DummyEvalUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_eval_state(
             dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
@@ -225,7 +223,7 @@ class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
 
         assert state.eval_state
         if (
-            state.eval_state.progress.num_steps_completed_in_epoch + 1
+            self.eval_progress.num_steps_completed_in_epoch + 1
             == self.steps_before_stopping
         ):
             state.stop()

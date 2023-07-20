@@ -155,7 +155,7 @@ def _evaluate_impl(
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
-    if eval_state.progress.num_steps_completed_in_epoch == 0:
+    if eval_unit.eval_progress.num_steps_completed_in_epoch == 0:
         with _get_timing_context(
             state, f"{eval_unit.__class__.__name__}.on_eval_epoch_start"
         ):
@@ -168,12 +168,14 @@ def _evaluate_impl(
 
     pass_data_iter_to_step = _step_requires_iterator(eval_unit.eval_step)
     is_auto_unit = isinstance(eval_unit, AutoUnit)
-    prev_steps_in_epoch = eval_state.progress.num_steps_completed_in_epoch
+    prev_steps_in_epoch = eval_unit.eval_progress.num_steps_completed_in_epoch
 
     while not (
         state.should_stop
         or _is_epoch_done(
-            eval_state.progress, eval_state.max_steps_per_epoch, eval_state.max_steps
+            eval_unit.eval_progress,
+            eval_state.max_steps_per_epoch,
+            eval_state.max_steps,
         )
     ):
         try:
@@ -190,8 +192,9 @@ def _evaluate_impl(
             ):
                 eval_state._step_output = eval_unit.eval_step(state, step_input)
 
-            eval_state.progress.increment_step()
+            eval_unit.eval_progress.increment_step()
             callback_handler.on_eval_step_end(state, eval_unit)
+
             # clear step_output to avoid retaining extra memory
             eval_state._step_output = None
         except StopIteration:
@@ -199,13 +202,14 @@ def _evaluate_impl(
 
     # Possibly warn about an empty dataloader
     any_steps_completed = (
-        abs(eval_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch) > 0
+        abs(eval_unit.eval_progress.num_steps_completed_in_epoch - prev_steps_in_epoch)
+        > 0
     )
     if not any_steps_completed:
         logger.warning("No steps completed during evaluate epoch!")
 
     # set progress counters for the next epoch
-    eval_state.progress.increment_epoch()
+    eval_unit.eval_progress.increment_epoch()
 
     with _get_timing_context(
         state, f"{eval_unit.__class__.__name__}.on_eval_epoch_end"

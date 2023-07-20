@@ -8,7 +8,6 @@
 import tempfile
 import unittest
 from typing import Any, List, Union
-from unittest.mock import MagicMock
 
 from torchtnt.framework._test_utils import DummyPredictUnit, generate_random_dataloader
 from torchtnt.framework.callbacks.base_csv_writer import BaseCSVWriter
@@ -49,7 +48,7 @@ class BaseCSVWriterTest(unittest.TestCase):
         dataset_len = 10
         batch_size = 2
 
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_predict_state(dataloader=dataloader)
 
@@ -73,7 +72,7 @@ class BaseCSVWriterTest(unittest.TestCase):
         dataset_len = 10
         batch_size = 2
 
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_predict_state(dataloader=dataloader)
 
@@ -96,7 +95,7 @@ class BaseCSVWriterTest(unittest.TestCase):
         dataset_len = 10
         batch_size = 2
 
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_predict_state(dataloader=dataloader)
 

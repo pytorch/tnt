@@ -6,22 +6,21 @@
 
 from typing import List, Union
 
-from pyre_extensions import none_throws
-
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import TTrainUnit
 from torchtnt.utils.loggers.logger import MetricLogger
+from torchtnt.utils.progress import Progress
 
 
-def _write_training_progress(state: State, loggers: List[MetricLogger]) -> None:
+def _write_training_progress(
+    train_progress: Progress, loggers: List[MetricLogger]
+) -> None:
     if not loggers:
         return
 
-    train_state = none_throws(state.train_state)
-
-    step = train_state.progress.num_steps_completed
-    epoch = train_state.progress.num_epochs_completed
+    step = train_progress.num_steps_completed
+    epoch = train_progress.num_epochs_completed
     for logger in loggers:
         logger.log("Training steps completed vs epochs", step, epoch)
 
@@ -45,7 +44,7 @@ class TrainProgressMonitor(Callback):
         self._loggers: List[MetricLogger] = loggers
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
-        _write_training_progress(state, self._loggers)
+        _write_training_progress(unit.train_progress, self._loggers)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
-        _write_training_progress(state, self._loggers)
+        _write_training_progress(unit.train_progress, self._loggers)
