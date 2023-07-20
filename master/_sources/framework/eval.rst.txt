@@ -5,6 +5,4 @@ Evaluate
 Evaluate Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: init_eval_state
-
 .. autofunction:: evaluate
