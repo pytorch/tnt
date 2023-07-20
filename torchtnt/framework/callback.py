@@ -21,7 +21,9 @@ class Callback:
 
     .. code-block:: python
 
-      from torchtnt.framework import Callback, State, TEvalUnit, TPredictUnit, TTrainUnit
+      from torchtnt.framework.callback import Callback
+      from torchtnt.framework.state import State
+      from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 
       class PrintingCallback(Callback):
           def on_train_start(self, state: State, unit: TTrainUnit) -> None:

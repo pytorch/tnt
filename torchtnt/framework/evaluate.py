@@ -52,7 +52,7 @@ def evaluate(
 
     .. code-block:: python
 
-        from torchtnt.framework import evaluate
+        from torchtnt.framework.evaluate import evaluate
 
         eval_unit = MyEvalUnit(module=..., optimizer=..., lr_scheduler=...)
         eval_dataloader = torch.utils.data.DataLoader(...)

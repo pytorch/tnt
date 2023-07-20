@@ -17,8 +17,9 @@ import torch.nn as nn
 from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.framework import AutoUnit, fit, State
-from torchtnt.framework.state import EntryPoint
+from torchtnt.framework.auto_unit import AutoUnit
+from torchtnt.framework.fit import fit
+from torchtnt.framework.state import EntryPoint, State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 

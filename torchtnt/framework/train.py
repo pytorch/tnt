@@ -59,7 +59,7 @@ def train(
 
     .. code-block:: python
 
-        from torchtnt.framework import train
+        from torchtnt.framework.train import train
 
         train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
         train_dataloader = torch.utils.data.DataLoader(...)

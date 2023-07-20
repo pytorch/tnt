@@ -22,7 +22,9 @@ from torchtnt.examples.mingpt.model import (
     GPTConfig,
     OptimizerConfig,
 )
-from torchtnt.framework import AutoUnit, fit, State
+from torchtnt.framework.auto_unit import AutoUnit
+from torchtnt.framework.fit import fit
+from torchtnt.framework.state import State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 

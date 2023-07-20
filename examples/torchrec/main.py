@@ -39,9 +39,11 @@ from torchrec.models.dlrm import DLRM, DLRMTrain
 from torchrec.modules.embedding_configs import EmbeddingBagConfig
 from torchrec.optim.keyed import KeyedOptimizerWrapper
 from torchrec.optim.optimizers import in_backward_optimizer_filter
-
-from torchtnt.framework import EvalUnit, fit, State, TrainUnit
 from torchtnt.framework.callbacks import TQDMProgressBar
+from torchtnt.framework.fit import fit
+from torchtnt.framework.state import State
+
+from torchtnt.framework.unit import EvalUnit, TrainUnit
 from torchtnt.utils import (
     get_process_group_backend_from_device,
     init_from_env,

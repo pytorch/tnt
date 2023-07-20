@@ -10,9 +10,9 @@ from typing import Any, Tuple
 from unittest.mock import MagicMock
 
 import torch
-
-from torchtnt.framework import AutoUnit
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
+
+from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callbacks.module_summary import ModuleSummary
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.utils.version import is_torch_version_geq_1_13
