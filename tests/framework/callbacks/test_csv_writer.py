@@ -11,7 +11,7 @@ from typing import Any, List, Union
 
 from torchtnt.framework._test_utils import DummyPredictUnit, generate_random_dataloader
 from torchtnt.framework.callbacks.base_csv_writer import BaseCSVWriter
-from torchtnt.framework.predict import init_predict_state, predict
+from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import PredictUnit, TPredictData
 
@@ -50,14 +50,13 @@ class BaseCSVWriterTest(unittest.TestCase):
 
         my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             csv_callback = CustomCSVWriter(
                 header_row=_HEADER_ROW, dir_path=temp_dir, filename=_FILENAME
             )
 
-            predict(state, my_unit, callbacks=[csv_callback])
+            predict(my_unit, dataloader, callbacks=[csv_callback])
 
             # Check file exists and is successfully opened
             csv_file = f"{temp_dir}/{_FILENAME}"
@@ -74,13 +73,12 @@ class BaseCSVWriterTest(unittest.TestCase):
 
         my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             csv_callback = CustomCSVWriterSingleRow(
                 header_row=_HEADER_ROW, dir_path=temp_dir, filename=_FILENAME
             )
-            predict(state, my_unit, callbacks=[csv_callback])
+            predict(my_unit, dataloader, callbacks=[csv_callback])
 
             # Check file exists and is successfully opened
             csv_file = f"{temp_dir}/{_FILENAME}"
@@ -97,11 +95,10 @@ class BaseCSVWriterTest(unittest.TestCase):
 
         my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
 
         # Throw exception because get_step_output_rows is not defined.
         with self.assertRaises(TypeError):
             csv_callback = BaseCSVWriter(
                 header_row=_HEADER_ROW, dir_path="", filename=_FILENAME
             )
-            predict(state, my_unit, callbacks=[csv_callback])
+            predict(my_unit, dataloader, callbacks=[csv_callback])

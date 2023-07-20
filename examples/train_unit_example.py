@@ -16,7 +16,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.framework import init_train_state, State, train, TrainUnit
+from torchtnt.framework import State, train, TrainUnit
 from torchtnt.utils import copy_data_to_device, init_from_env, seed, TLRScheduler
 
 from torchtnt.utils.loggers import TensorBoardLogger
@@ -143,12 +143,12 @@ def main(argv: List[str]) -> None:
         tb_logger,
         args.log_every_n_steps,
     )
-    state = init_train_state(
+
+    train(
+        my_unit,
         dataloader=dataloader,
         max_epochs=args.max_epochs,
     )
-
-    train(state, my_unit)
 
 
 def get_args(argv: List[str]) -> Namespace:

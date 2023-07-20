@@ -5,6 +5,4 @@ Predict
 Predict Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: init_predict_state
-
 .. autofunction:: predict

@@ -40,7 +40,7 @@ from torchrec.modules.embedding_configs import EmbeddingBagConfig
 from torchrec.optim.keyed import KeyedOptimizerWrapper
 from torchrec.optim.optimizers import in_backward_optimizer_filter
 
-from torchtnt.framework import EvalUnit, fit, init_fit_state, State, TrainUnit
+from torchtnt.framework import EvalUnit, fit, State, TrainUnit
 from torchtnt.framework.callbacks import TQDMProgressBar
 from torchtnt.utils import (
     get_process_group_backend_from_device,
@@ -366,14 +366,14 @@ def main(argv: List[str]) -> None:
         args.pin_memory,
     )
 
-    state = init_fit_state(
+    tqdm_callback = TQDMProgressBar()
+    fit(
+        my_unit,
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         max_epochs=args.epochs,
+        callbacks=[tqdm_callback],
     )
-
-    tqdm_callback = TQDMProgressBar()
-    fit(state, my_unit, callbacks=[tqdm_callback])
 
 
 if __name__ == "__main__":

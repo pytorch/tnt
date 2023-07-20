@@ -14,8 +14,8 @@ from torch import nn
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.state import EntryPoint, State
-from torchtnt.framework.train import init_train_state, train
+from torchtnt.framework.state import State
+from torchtnt.framework.train import train
 from torchtnt.framework.unit import TrainUnit
 
 
@@ -34,8 +34,7 @@ class TrainTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
-        train(state, my_unit)
+        train(my_unit, dataloader, max_epochs=max_epochs)
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
@@ -43,12 +42,6 @@ class TrainTest(unittest.TestCase):
             my_unit.train_progress.num_steps_completed,
             max_epochs * expected_steps_per_epoch,
         )
-
-        # step_output should be reset to None
-        self.assertEqual(state.train_state.step_output, None)
-
-        self.assertEqual(my_unit.module.training, initial_training_mode)
-        self.assertEqual(state.entry_point, EntryPoint.TRAIN)
 
     def test_train_max_steps_per_epoch(self) -> None:
         """
@@ -65,13 +58,12 @@ class TrainTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_train_state(
-            dataloader=dataloader,
+        train(
+            my_unit,
+            dataloader,
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
         )
-
-        train(state, my_unit)
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
@@ -79,10 +71,6 @@ class TrainTest(unittest.TestCase):
             my_unit.train_progress.num_steps_completed,
             max_epochs * max_steps_per_epoch,
         )
-        self.assertEqual(state.entry_point, EntryPoint.TRAIN)
-
-        # step_output should be reset to None
-        self.assertEqual(state.train_state.step_output, None)
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
@@ -102,13 +90,12 @@ class TrainTest(unittest.TestCase):
         )
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_train_state(
-            dataloader=dataloader,
+        train(
+            my_unit,
+            dataloader,
             max_epochs=max_epochs,
             max_steps_per_epoch=max_steps_per_epoch,
         )
-
-        train(state, my_unit)
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
@@ -130,14 +117,15 @@ class TrainTest(unittest.TestCase):
 
         my_unit = DummyTrainUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_train_state(
-            dataloader=dataloader,
-            max_epochs=max_epochs,
-            max_steps_per_epoch=max_steps_per_epoch,
-        )
 
         callback_mock = MagicMock(spec=Callback)
-        train(state, my_unit, callbacks=[callback_mock])
+        train(
+            my_unit,
+            dataloader,
+            max_epochs=max_epochs,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[callback_mock],
+        )
         self.assertEqual(callback_mock.on_train_start.call_count, 1)
         self.assertEqual(callback_mock.on_train_epoch_start.call_count, max_epochs)
         self.assertEqual(
@@ -176,19 +164,11 @@ class TrainTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_train_state(
-            dataloader=dataloader,
-            max_epochs=1,
-        )
-        train(state, my_unit)
+        train(my_unit, dataloader, max_epochs=1)
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(my_unit.train_progress.num_steps_completed, expected_steps)
-
-        # step_output should be reset to None
-        self.assertEqual(state.train_state.step_output, None)
-
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
     def test_train_max_steps(self) -> None:
@@ -202,19 +182,14 @@ class TrainTest(unittest.TestCase):
         my_unit = DummyTrainUnit(input_dim=input_dim)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_train_state(
-            dataloader=dataloader, max_epochs=None, max_steps=max_steps
-        )
-        train(state, my_unit)
+        train(my_unit, dataloader, max_epochs=None, max_steps=max_steps)
 
         self.assertEqual(my_unit.train_progress.num_steps_completed, max_steps)
 
         # hit max epoch condition before max steps
         my_unit = DummyTrainUnit(input_dim=input_dim)
-        state = init_train_state(
-            dataloader=dataloader, max_epochs=max_epochs, max_steps=100000
-        )
-        train(state, my_unit)
+
+        train(my_unit, dataloader, max_epochs=max_epochs, max_steps=100000)
         self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
@@ -235,27 +210,13 @@ class TrainTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_train_state(
-            dataloader=dataloader,
-            max_steps_per_epoch=max_steps_per_epoch,
-            max_epochs=max_epochs,
-        )
-        train(state, DummyTrainUnit(input_dim=input_dim))
-        self.assertIsNone(state.timer)
-
-        state = init_train_state(
-            dataloader=dataloader,
+        train(
+            TimingTrainUnit(input_dim=input_dim),
+            dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
             max_epochs=max_epochs,
             auto_timing=True,
         )
-        train(state, DummyTrainUnit(input_dim=input_dim))
-        for k in (
-            "DummyTrainUnit.on_train_start",
-            "DummyTrainUnit.on_train_end",
-            "train.next(data_iter)",
-        ):
-            self.assertTrue(k in state.timer.recorded_durations.keys())
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -290,3 +251,29 @@ class StopTrainUnit(TrainUnit[Batch]):
 
         self.steps_processed += 1
         return loss, outputs
+
+
+Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+class TimingTrainUnit(TrainUnit[Batch]):
+    def __init__(self, input_dim: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+
+    def train_step(self, state: State, data: Batch) -> torch.Tensor:
+        inputs, _ = data
+        outputs = self.module(inputs)
+
+        if self.train_progress.num_steps_completed == 1:
+            tc = unittest.TestCase()
+            for k in (
+                "TimingTrainUnit.on_train_start",
+                "TimingTrainUnit.on_train_epoch_start",
+                "train.next(data_iter)",
+                "TimingTrainUnit.train_step",
+            ):
+                tc.assertTrue(k in state.timer.recorded_durations.keys())
+
+        return outputs

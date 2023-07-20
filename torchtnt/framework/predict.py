@@ -28,72 +28,35 @@ from torchtnt.utils.timer import get_timer_summary, Timer
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def init_predict_state(
-    *,
-    dataloader: Iterable[TPredictData],
-    max_steps_per_epoch: Optional[int] = None,
-    auto_timing: bool = False,
-) -> State:
-    """
-    ``init_predict_state`` is a helper function that initializes a :class:`~torchtnt.framework.State` object for prediction. This :class:`~torchtnt.framework.State` object
-    can then be passed to the :func:`~torchtnt.framework.predict` entry point.
-
-    Args:
-        dataloader: dataloader to be used during prediction, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
-        max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
-        auto_timing: whether to automatically time the prediction loop, using the state's timer (enabling auto_timing may degrade performance).
-
-    Returns:
-        An initialized state object containing metadata.
-
-    Below is an example of calling :py:func:`~torchtnt.framework.init_predict_state` and :py:func:`~torchtnt.framework.predict` together.
-
-    .. code-block:: python
-
-        from torchtnt.framework import init_predict_state, predict
-
-        predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
-        dataloader = torch.utils.data.DataLoader(...)
-        state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
-        predict(state, predict_unit)
-
-    """
-
-    return State(
-        entry_point=EntryPoint.PREDICT,
-        predict_state=PhaseState(
-            dataloader=dataloader,
-            max_steps_per_epoch=max_steps_per_epoch,
-        ),
-        timer=None if not auto_timing else Timer(),
-    )
-
-
 def predict(
-    state: State,
     predict_unit: TPredictUnit,
+    predict_dataloader: Iterable[TPredictData],
     *,
+    max_steps_per_epoch: Optional[int] = None,
     callbacks: Optional[List[Callback]] = None,
+    auto_timing: bool = False,
 ) -> None:
     """
-    The ``predict`` entry point takes in a :class:`~torchtnt.framework.State` object, a :class:`~torchtnt.framework.PredictUnit` object, and an optional list of :class:`~torchtnt.framework.Callback` s,
-    and runs the prediction loop. The :class:`~torchtnt.framework.State` object can be initialized with :func:`~torchtnt.framework.init_predict_state`.
+    The ``predict`` entry point takes in a :class:`~torchtnt.framework.PredictUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
+    and runs the prediction loop.
 
     Args:
-        state: a State object containing metadata about the prediction run. This can be initialized using :func:`~torchtnt.framework.init_predict_state`.
         predict_unit: an instance of :class:`~torchtnt.framework.PredictUnit` which implements `predict_step`.
-        callbacks: an optional list of callbacks.
+        predict_dataloader: dataloader to be used during prediction, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
+        max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
+        callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
+        auto_timing: whether to automatically time the prediction loop, using the state's timer (enabling auto_timing may degrade performance).
 
-    Below is an example of calling :py:func:`~torchtnt.framework.init_predict_state` and :py:func:`~torchtnt.framework.predict` together.
+
+    Below is an example of calling :py:func:`~torchtnt.framework.predict`.
 
     .. code-block:: python
 
-        from torchtnt.framework import init_predict_state, predict
+        from torchtnt.framework import predict
 
         predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
-        dataloader = torch.utils.data.DataLoader(...)
-        state = init_predict_state(dataloader=dataloader, max_steps_per_epoch=20)
-        predict(state, predict_unit)
+        predict_dataloader = torch.utils.data.DataLoader(...)
+        predict(predict_unit, predict_dataloader, max_steps_per_epoch=20)
 
     Below is pseudocode of what the :py:func:`~torchtnt.framework.predict` entry point does.
 
@@ -116,8 +79,15 @@ def predict(
         call on_predict_end on unit first and then callbacks
     """
     log_api_usage("predict")
-    state._entry_point = EntryPoint.PREDICT
     callback_handler = CallbackHandler(callbacks or [])
+    state = State(
+        entry_point=EntryPoint.PREDICT,
+        predict_state=PhaseState(
+            dataloader=predict_dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+        ),
+        timer=None if not auto_timing else Timer(),
+    )
     try:
         _predict_impl(state, predict_unit, callback_handler)
         logger.info("Finished predict")

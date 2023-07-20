@@ -5,6 +5,4 @@ Fit
 Fit Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: init_fit_state
-
 .. autofunction:: fit

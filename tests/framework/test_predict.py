@@ -14,8 +14,8 @@ from torch import nn
 
 from torchtnt.framework._test_utils import DummyPredictUnit, generate_random_dataloader
 
-from torchtnt.framework.predict import init_predict_state, predict
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.predict import predict
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import PredictUnit
 
 
@@ -33,16 +33,11 @@ class PredictTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
-        predict(state, my_unit)
+        predict(my_unit, dataloader)
 
         self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(my_unit.predict_progress.num_steps_completed, expected_steps)
-        self.assertEqual(state.entry_point, EntryPoint.PREDICT)
-
-        # step_output should be reset to None
-        self.assertEqual(state.predict_state.step_output, None)
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
@@ -59,19 +54,13 @@ class PredictTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(
-            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
-        )
-        predict(state, my_unit)
+        predict(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
 
         self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
             my_unit.predict_progress.num_steps_completed, max_steps_per_epoch
         )
-
-        # step_output should be reset to None
-        self.assertEqual(state.predict_state.step_output, None)
 
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
@@ -89,10 +78,8 @@ class PredictTest(unittest.TestCase):
             input_dim=input_dim, steps_before_stopping=steps_before_stopping
         )
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(
-            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
-        )
-        predict(state, my_unit)
+
+        predict(my_unit, dataloader, max_steps_per_epoch=max_steps_per_epoch)
 
         self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
@@ -114,10 +101,12 @@ class PredictTest(unittest.TestCase):
         my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         callback_mock = MagicMock()
-        state = init_predict_state(
-            dataloader=dataloader, max_steps_per_epoch=max_steps_per_epoch
+        predict(
+            my_unit,
+            dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[callback_mock],
         )
-        predict(state, my_unit, callbacks=[callback_mock])
 
         self.assertEqual(callback_mock.on_predict_start.call_count, 1)
         self.assertEqual(callback_mock.on_predict_epoch_start.call_count, 1)
@@ -158,16 +147,11 @@ class PredictTest(unittest.TestCase):
         initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = init_predict_state(dataloader=dataloader)
-        predict(state, my_unit)
+        predict(my_unit, dataloader)
 
         self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
         self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(my_unit.predict_progress.num_steps_completed, expected_steps)
-
-        # step_output should be reset to None
-        self.assertEqual(state.predict_state.step_output, None)
-
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
     def test_predict_auto_timing(self) -> None:
@@ -178,35 +162,28 @@ class PredictTest(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
-        max_steps_per_epoch = 1
+        max_steps_per_epoch = 2
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
-        state = init_predict_state(
-            dataloader=dataloader,
+        predict(
+            DummyPredictUnit(input_dim=input_dim),
+            dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
         )
-        predict(state, DummyPredictUnit(input_dim=input_dim))
-        self.assertIsNone(state.timer)
 
-        state = init_predict_state(
-            dataloader=dataloader,
+        predict(
+            TimingPredictUnit(input_dim=input_dim),
+            dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
             auto_timing=True,
         )
-        predict(state, DummyPredictUnit(input_dim=input_dim))
-        for k in (
-            "DummyPredictUnit.on_predict_start",
-            "DummyPredictUnit.on_predict_epoch_start",
-            "predict.next(data_iter)",
-            "DummyPredictUnit.predict_step",
-            "DummyPredictUnit.on_predict_epoch_end",
-            "DummyPredictUnit.on_predict_end",
-        ):
-            self.assertTrue(k in state.timer.recorded_durations.keys())
 
 
-class StopPredictUnit(PredictUnit[Tuple[torch.Tensor, torch.Tensor]]):
+Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+class StopPredictUnit(PredictUnit[Batch]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
         super().__init__()
         # initialize module
@@ -214,9 +191,7 @@ class StopPredictUnit(PredictUnit[Tuple[torch.Tensor, torch.Tensor]]):
         self.steps_processed = 0
         self.steps_before_stopping = steps_before_stopping
 
-    def predict_step(
-        self, state: State, data: Tuple[torch.Tensor, torch.Tensor]
-    ) -> torch.Tensor:
+    def predict_step(self, state: State, data: Batch) -> torch.Tensor:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -228,4 +203,27 @@ class StopPredictUnit(PredictUnit[Tuple[torch.Tensor, torch.Tensor]]):
             state.stop()
 
         self.steps_processed += 1
+        return outputs
+
+
+class TimingPredictUnit(PredictUnit[Batch]):
+    def __init__(self, input_dim: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+        self.module = nn.Linear(input_dim, 2)
+
+    def predict_step(self, state: State, data: Batch) -> torch.Tensor:
+        inputs, _ = data
+        outputs = self.module(inputs)
+
+        if self.predict_progress.num_steps_completed == 1:
+            tc = unittest.TestCase()
+            for k in (
+                "TimingPredictUnit.on_predict_start",
+                "TimingPredictUnit.on_predict_epoch_start",
+                "predict.next(data_iter)",
+                "TimingPredictUnit.predict_step",
+            ):
+                tc.assertTrue(k in state.timer.recorded_durations.keys())
+
         return outputs

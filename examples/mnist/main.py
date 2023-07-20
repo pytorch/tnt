@@ -18,7 +18,7 @@ from torch.optim import Adadelta
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torcheval.metrics import MulticlassAccuracy
-from torchtnt.framework import AutoUnit, fit, init_fit_state, State
+from torchtnt.framework import AutoUnit, fit, State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 from torchvision import datasets, transforms
@@ -163,14 +163,13 @@ def main(argv: List[str]) -> None:
         clip_grad_norm=1.0,
     )
 
-    state = init_fit_state(
+    fit(
+        my_unit,
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         max_epochs=args.max_epochs,
         max_train_steps_per_epoch=args.max_train_steps_per_epoch,
     )
-
-    fit(state, my_unit)
 
     if args.save_model:
         torch.save(module.state_dict(), "mnist_cnn.pt")
