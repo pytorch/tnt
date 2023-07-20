@@ -195,11 +195,10 @@ class TorchSnapshotSaver(Callback):
     @staticmethod
     def restore(
         path: str,
-        state: State,
         unit: AppStateMixin,
         *,
+        train_dataloader: Optional[_TStateful] = None,
         restore_train_progress: bool = True,
-        restore_train_dataloader: bool = True,
         restore_eval_progress: bool = True,
         storage_options: Optional[Dict[str, Any]] = None,
     ) -> None:
@@ -217,8 +216,6 @@ class TorchSnapshotSaver(Callback):
 
         snapshot = torchsnapshot.Snapshot(path, storage_options=storage_options)
 
-        train_state = none_throws(state.train_state)
-
         rng_state = torchsnapshot.RNGState()
         app_state[_RNG_STATE_KEY] = rng_state
 
@@ -228,13 +225,13 @@ class TorchSnapshotSaver(Callback):
         if not restore_eval_progress:
             del app_state[_EVAL_PROGRESS_STATE_KEY]
 
-        if restore_train_dataloader:
+        if train_dataloader is not None:
             # request to restore the dataloader state only if
             # the persisted snapshot state includes the dataloader entry
             manifest = snapshot.get_manifest()
             for key in manifest:
                 if _TRAIN_DL_STATE_KEY in key:
-                    app_state[_TRAIN_DL_STATE_KEY] = train_state.dataloader
+                    app_state[_TRAIN_DL_STATE_KEY] = train_dataloader
                     break
 
         snapshot.restore(app_state)
