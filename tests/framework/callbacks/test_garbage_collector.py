@@ -35,7 +35,7 @@ class GarbageCollectorTest(unittest.TestCase):
         max_epochs = 2
         expected_num_total_steps = dataset_len / batch_size * max_epochs
 
-        my_unit = MagicMock(spec=DummyTrainUnit)
+        my_unit = DummyTrainUnit(2)
         gc_callback_mock = MagicMock(spec=GarbageCollector)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
@@ -57,7 +57,7 @@ class GarbageCollectorTest(unittest.TestCase):
         batch_size = 2
         max_epochs = 2
 
-        my_unit = MagicMock(spec=DummyTrainUnit)
+        my_unit = DummyTrainUnit(2)
         gc_callback = GarbageCollector(2)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
@@ -76,7 +76,7 @@ class GarbageCollectorTest(unittest.TestCase):
         batch_size = 2
         expected_num_total_steps = dataset_len / batch_size
 
-        my_unit = MagicMock(spec=DummyEvalUnit)
+        my_unit = DummyEvalUnit(2)
         gc_callback_mock = MagicMock(spec=GarbageCollector)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
@@ -97,7 +97,7 @@ class GarbageCollectorTest(unittest.TestCase):
         dataset_len = 10
         batch_size = 2
 
-        my_unit = MagicMock(spec=DummyEvalUnit)
+        my_unit = DummyEvalUnit(2)
         gc_callback = GarbageCollector(2)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
@@ -116,7 +116,7 @@ class GarbageCollectorTest(unittest.TestCase):
         batch_size = 2
         expected_num_total_steps = dataset_len / batch_size
 
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
         gc_callback_mock = MagicMock(spec=GarbageCollector)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
@@ -137,7 +137,7 @@ class GarbageCollectorTest(unittest.TestCase):
         dataset_len = 10
         batch_size = 2
 
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
         gc_callback = GarbageCollector(2)
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
@@ -163,7 +163,7 @@ class GarbageCollectorTest(unittest.TestCase):
         )
         gc_step_interval = 4
 
-        my_unit = MagicMock(spec=DummyFitUnit)
+        my_unit = DummyFitUnit(2)
         gc_callback = GarbageCollector(gc_step_interval)
 
         train_dataloader = generate_random_dataloader(
@@ -201,7 +201,7 @@ class GarbageCollectorTest(unittest.TestCase):
         max_epochs = 2
         evaluate_every_n_epochs = 1
 
-        my_unit = MagicMock(spec=DummyFitUnit)
+        my_unit = DummyFitUnit(2)
         gc_callback = GarbageCollector(2)
 
         train_dataloader = generate_random_dataloader(

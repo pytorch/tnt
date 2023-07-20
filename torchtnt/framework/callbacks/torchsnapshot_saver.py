@@ -114,9 +114,7 @@ class TorchSnapshotSaver(Callback):
         _check_app_state_collision(app_state)
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        train_progress = none_throws(state.train_state).progress
-
-        num_steps_completed = train_progress.num_steps_completed
+        num_steps_completed = unit.train_progress.num_steps_completed
         save_every_n_train_steps = self._save_every_n_train_steps
         if (
             save_every_n_train_steps is None
@@ -125,22 +123,20 @@ class TorchSnapshotSaver(Callback):
             return
 
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=True)
-        epoch = train_progress.num_epochs_completed
+        epoch = unit.train_progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
         self._async_snapshot(snapshot_path, app_state, wait=False)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
-        train_progress = none_throws(state.train_state).progress
-
-        epoch = train_progress.num_epochs_completed
+        epoch = unit.train_progress.num_epochs_completed
         save_every_n_epochs = self._save_every_n_epochs
         if save_every_n_epochs is None or epoch % save_every_n_epochs != 0:
             return
 
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
-        num_steps_completed = train_progress.num_steps_completed
+        num_steps_completed = unit.train_progress.num_steps_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
@@ -148,9 +144,8 @@ class TorchSnapshotSaver(Callback):
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
-        train_progress = none_throws(state.train_state).progress
-        num_steps_completed = train_progress.num_steps_completed
-        epoch = train_progress.num_epochs_completed
+        num_steps_completed = unit.train_progress.num_steps_completed
+        epoch = unit.train_progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
@@ -227,9 +222,11 @@ class TorchSnapshotSaver(Callback):
         rng_state = torchsnapshot.RNGState()
         app_state[_RNG_STATE_KEY] = rng_state
 
-        if restore_train_progress:
-            train_progress = train_state.progress
-            app_state[_TRAIN_PROGRESS_STATE_KEY] = train_progress
+        if not restore_train_progress:
+            del app_state[_TRAIN_PROGRESS_STATE_KEY]
+
+        if not restore_eval_progress:
+            del app_state[_EVAL_PROGRESS_STATE_KEY]
 
         if restore_train_dataloader:
             # request to restore the dataloader state only if
@@ -239,11 +236,6 @@ class TorchSnapshotSaver(Callback):
                 if _TRAIN_DL_STATE_KEY in key:
                     app_state[_TRAIN_DL_STATE_KEY] = train_state.dataloader
                     break
-
-        if state.entry_point == EntryPoint.FIT and restore_eval_progress:
-            # include evaluation states if fitting
-            eval_state = none_throws(state.eval_state)
-            app_state[_EVAL_PROGRESS_STATE_KEY] = eval_state.progress
 
         snapshot.restore(app_state)
 
@@ -274,26 +266,21 @@ def _get_app_state(
     state: State, unit: AppStateMixin, replicated: Set[str], *, intra_epoch: bool
 ) -> Dict[str, _TStateful]:
     train_state = none_throws(state.train_state)
-
-    train_progress = train_state.progress
     app_state = _app_state(unit)
 
     rng_state = torchsnapshot.RNGState()
     app_state[_RNG_STATE_KEY] = rng_state
-    app_state[_TRAIN_PROGRESS_STATE_KEY] = train_progress
-    train_prog_glob = f"{_TRAIN_PROGRESS_STATE_KEY}/*"
-    replicated.add(train_prog_glob)
 
     # for intra-epoch checkpointing, include dataloader states
     train_dl = train_state.dataloader
     if intra_epoch and isinstance(train_dl, _TStateful):
         app_state[_TRAIN_DL_STATE_KEY] = train_dl
 
-    if state.entry_point == EntryPoint.FIT:
-        # include evaluation states if fitting
-        eval_state = none_throws(state.eval_state)
+    # add progress to replicated
+    train_prog_glob = f"{_TRAIN_PROGRESS_STATE_KEY}/*"
+    replicated.add(train_prog_glob)
 
-        app_state[_EVAL_PROGRESS_STATE_KEY] = eval_state.progress
+    if state.entry_point == EntryPoint.FIT:
         eval_prog_glob = f"{_EVAL_PROGRESS_STATE_KEY}/*"
         replicated.add(eval_prog_glob)
 
@@ -302,10 +289,8 @@ def _get_app_state(
 
 def _check_app_state_collision(app_state: Dict[str, _TStateful]) -> None:
     keys_to_check = (
-        _TRAIN_PROGRESS_STATE_KEY,
         _TRAIN_DL_STATE_KEY,
         _RNG_STATE_KEY,
-        _EVAL_PROGRESS_STATE_KEY,
     )
     for key in keys_to_check:
         if key in app_state:

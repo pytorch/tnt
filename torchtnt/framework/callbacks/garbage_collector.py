@@ -47,12 +47,11 @@ class GarbageCollector(Callback):
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         gc.collect(generation=1)
 
-        train_state = none_throws(state.train_state)
-        total_num_steps_completed = train_state.progress.num_steps_completed
+        total_num_steps_completed = unit.train_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
             # if fitting, include the num eval steps completed in the total steps completed
             eval_state = none_throws(state.eval_state)
-            total_num_steps_completed += eval_state.progress.num_steps_completed
+            total_num_steps_completed += unit.eval_progress.num_steps_completed
 
         if total_num_steps_completed % self._step_interval == 0:
             gc.collect()
@@ -68,12 +67,10 @@ class GarbageCollector(Callback):
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         gc.collect(generation=1)
-        eval_state = none_throws(state.eval_state)
-        total_num_steps_completed = eval_state.progress.num_steps_completed
+        total_num_steps_completed = unit.eval_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
             # if fitting, include the num train steps completed in the total steps completed
-            train_state = none_throws(state.train_state)
-            total_num_steps_completed += train_state.progress.num_steps_completed
+            total_num_steps_completed += unit.train_progress.num_steps_completed
 
         if total_num_steps_completed % self._step_interval == 0:
             gc.collect()
@@ -89,8 +86,7 @@ class GarbageCollector(Callback):
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         gc.collect(generation=1)
-        predict_state = none_throws(state.predict_state)
-        if predict_state.progress.num_steps_completed % self._step_interval == 0:
+        if unit.predict_progress.num_steps_completed % self._step_interval == 0:
             gc.collect()
 
     def on_predict_end(self, state: State, unit: TPredictUnit) -> None:

@@ -18,7 +18,7 @@ from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
 from torchtnt.framework import AutoUnit, fit, init_fit_state, State
-from torchtnt.framework.utils import get_current_progress
+from torchtnt.framework.state import EntryPoint
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 
@@ -120,7 +120,10 @@ class MyUnit(AutoUnit[Batch]):
         self.eval_accuracy.update(outputs, targets)
 
     def on_eval_end(self, state: State) -> None:
-        step = get_current_progress(state).num_steps_completed
+        if state.entry_point == EntryPoint.FIT:
+            step = self.train_progress.num_steps_completed
+        else:
+            step = self.eval_progress.num_steps_completed
         accuracy = self.eval_accuracy.compute()
         self.tb_logger.log("eval_accuracy", accuracy, step)
         self.eval_accuracy.reset()

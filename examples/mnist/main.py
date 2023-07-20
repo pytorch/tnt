@@ -106,12 +106,6 @@ class MyUnit(AutoUnit[Batch]):
     def on_eval_step_end(
         self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
     ) -> None:
-        # step_count = state.eval_state.progress.num_steps_completed
-        # data = copy_data_to_device(data, self.device)
-        # inputs, targets = data
-
-        # outputs = self.module(inputs)
-        # loss = torch.nn.functional.nll_loss(outputs, targets)
         if step % self.log_every_n_steps == 0:
             self.tb_logger.log("evaluation loss", loss, step)
 

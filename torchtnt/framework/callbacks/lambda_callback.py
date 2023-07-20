@@ -46,7 +46,7 @@ class Lambda(Callback):
         unit = MyUnit()
 
         def print_on_step_start(state, unit) -> None:
-            print(f'starting eval step {state.eval_state.progress.num_steps_completed}')
+            print(f'starting eval step {unit.eval_progress.num_steps_completed}')
 
 
         lambda_cb = Lambda(

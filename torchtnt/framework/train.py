@@ -164,7 +164,9 @@ def _train_impl(
 
     while not (
         state.should_stop
-        or _is_done(train_state.progress, train_state.max_epochs, train_state.max_steps)
+        or _is_done(
+            train_unit.train_progress, train_state.max_epochs, train_state.max_steps
+        )
     ):
         _train_epoch_impl(state, train_unit, callback_handler)
 
@@ -204,7 +206,7 @@ def _train_epoch_impl(
     # Check the progress to conditionally run this
     # to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
-    if train_state.progress.num_steps_completed_in_epoch == 0:
+    if train_unit.train_progress.num_steps_completed_in_epoch == 0:
         with _get_timing_context(
             state, f"{train_unit.__class__.__name__}.on_train_epoch_start"
         ):
@@ -212,7 +214,7 @@ def _train_epoch_impl(
         callback_handler.on_train_epoch_start(state, train_unit)
 
     _maybe_set_distributed_sampler_epoch(
-        train_state.dataloader, train_state.progress.num_epochs_completed
+        train_state.dataloader, train_unit.train_progress.num_epochs_completed
     )
 
     with _get_timing_context(state, "train.iter(dataloader)"):
@@ -222,12 +224,14 @@ def _train_epoch_impl(
     pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
     is_auto_unit = isinstance(train_unit, AutoUnit)
 
-    prev_steps_in_epoch = train_state.progress.num_steps_completed_in_epoch
+    prev_steps_in_epoch = train_unit.train_progress.num_steps_completed_in_epoch
 
     while not (
         state.should_stop
         or _is_epoch_done(
-            train_state.progress, train_state.max_steps_per_epoch, train_state.max_steps
+            train_unit.train_progress,
+            train_state.max_steps_per_epoch,
+            train_state.max_steps,
         )
     ):
         try:
@@ -246,7 +250,7 @@ def _train_epoch_impl(
             ):
                 train_state._step_output = train_unit.train_step(state, step_input)
 
-            train_state.progress.increment_step()
+            train_unit.train_progress.increment_step()
             callback_handler.on_train_step_end(state, train_unit)
 
             # clear step_output to avoid retaining extra memory
@@ -254,7 +258,8 @@ def _train_epoch_impl(
 
             if (
                 evaluate_every_n_steps
-                and train_state.progress.num_steps_completed % evaluate_every_n_steps
+                and train_unit.train_progress.num_steps_completed
+                % evaluate_every_n_steps
                 == 0
             ):
                 _evaluate_impl(
@@ -271,13 +276,16 @@ def _train_epoch_impl(
 
     # Possibly warn about an empty dataloader
     any_steps_completed = (
-        abs(train_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch) > 0
+        abs(
+            train_unit.train_progress.num_steps_completed_in_epoch - prev_steps_in_epoch
+        )
+        > 0
     )
     if not any_steps_completed:
         logger.warning("No steps completed during train epoch!")
 
     # set progress counters for the next epoch
-    train_state.progress.increment_epoch()
+    train_unit.train_progress.increment_epoch()
 
     with _get_timing_context(
         state, f"{train_unit.__class__.__name__}.on_train_epoch_end"
@@ -287,7 +295,8 @@ def _train_epoch_impl(
 
     if (
         evaluate_every_n_epochs
-        and train_state.progress.num_epochs_completed % evaluate_every_n_epochs == 0
+        and train_unit.train_progress.num_epochs_completed % evaluate_every_n_epochs
+        == 0
     ):
         _evaluate_impl(
             state,
