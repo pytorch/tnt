@@ -124,7 +124,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
             end_num_steps_completed = my_unit.train_progress.num_steps_completed
             self.assertGreater(len(expected_paths), 0)
-            snapshot_cb.restore(expected_paths[0], state, my_unit)
+            snapshot_cb.restore(expected_paths[0], my_unit)
             restored_num_steps_completed = my_unit.train_progress.num_steps_completed
             # A snapshot is saved every n steps
             # so the first snapshot's progress will be equal to save_every_n_train_steps
@@ -165,7 +165,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             end_num_steps_completed = my_unit.train_progress.num_steps_completed
             self.assertGreater(len(expected_paths), 0)
             snapshot_cb.restore(
-                expected_paths[0], state, my_unit, restore_train_progress=False
+                expected_paths[0], my_unit, restore_train_progress=False
             )
             restored_num_steps_completed = my_unit.train_progress.num_steps_completed
             # no train progress was restored so the progress after restoration should be the same as the progress before restoration
@@ -264,7 +264,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             )
             # get latest checkpoint
             ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_step_10")
-            snapshot_cb.restore(ckpt_path, state, my_new_unit)
+            snapshot_cb.restore(ckpt_path, my_new_unit)
             tc.assertEqual(
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
             )
