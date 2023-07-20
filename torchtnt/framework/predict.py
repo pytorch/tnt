@@ -158,7 +158,7 @@ def _predict_impl(
 
     # Conditionally run this to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
-    if predict_state.progress.num_steps_completed_in_epoch == 0:
+    if predict_unit.predict_progress.num_steps_completed_in_epoch == 0:
         with _get_timing_context(
             state, f"{predict_unit.__class__.__name__}.on_predict_epoch_start"
         ):
@@ -171,12 +171,12 @@ def _predict_impl(
 
     pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
     is_auto_unit = isinstance(predict_unit, (AutoUnit, AutoPredictUnit))
-    prev_steps_in_epoch = predict_state.progress.num_steps_completed_in_epoch
+    prev_steps_in_epoch = predict_unit.predict_progress.num_steps_completed_in_epoch
 
     while not (
         state.should_stop
         or _is_epoch_done(
-            predict_state.progress,
+            predict_unit.predict_progress,
             predict_state.max_steps_per_epoch,
             predict_state.max_steps,
         )
@@ -197,7 +197,8 @@ def _predict_impl(
                 predict_state._step_output = predict_unit.predict_step(
                     state, step_input
                 )
-            predict_state.progress.increment_step()
+
+            predict_unit.predict_progress.increment_step()
             callback_handler.on_predict_step_end(state, predict_unit)
 
             # clear step_output to avoid retaining extra memory
@@ -207,14 +208,17 @@ def _predict_impl(
 
     # Possibly warn about an empty dataloader
     any_steps_completed = (
-        abs(predict_state.progress.num_steps_completed_in_epoch - prev_steps_in_epoch)
+        abs(
+            predict_unit.predict_progress.num_steps_completed_in_epoch
+            - prev_steps_in_epoch
+        )
         > 0
     )
     if not any_steps_completed:
         logger.warning("No steps completed during predict epoch!")
 
     # set progress counters for the next epoch
-    predict_state.progress.increment_epoch()
+    predict_unit.predict_progress.increment_epoch()
 
     with _get_timing_context(
         state, f"{predict_unit.__class__.__name__}.on_predict_epoch_end"

@@ -6,8 +6,6 @@
 
 from typing import Dict, List, Union
 
-from pyre_extensions import none_throws
-
 from torch.optim.optimizer import Optimizer
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
@@ -100,9 +98,7 @@ class LearningRateMonitor(Callback):
 
         lr_stats = _extract_lr(unit)
 
-        train_state = none_throws(state.train_state)
-
-        step = train_state.progress.num_steps_completed
+        step = unit.train_progress.num_steps_completed
         _write_stats(self._loggers, lr_stats, step)
 
     def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
@@ -114,7 +110,5 @@ class LearningRateMonitor(Callback):
 
         lr_stats = _extract_lr(unit)
 
-        train_state = none_throws(state.train_state)
-
-        step = train_state.progress.num_steps_completed
+        step = unit.train_progress.num_steps_completed
         _write_stats(self._loggers, lr_stats, step)

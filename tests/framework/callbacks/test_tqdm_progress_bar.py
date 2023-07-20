@@ -6,7 +6,6 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from unittest.mock import MagicMock
 
 from torchtnt.framework._test_utils import (
     DummyEvalUnit,
@@ -39,7 +38,7 @@ class TQDMProgressBarTest(unittest.TestCase):
             ),
         )
 
-        my_unit = MagicMock(spec=DummyTrainUnit)
+        my_unit = DummyTrainUnit(2)
         progress_bar = TQDMProgressBar()
         progress_bar.on_train_epoch_start(state, my_unit)
         self.assertEqual(progress_bar._train_progress_bar.total, expected_total)
@@ -56,7 +55,7 @@ class TQDMProgressBarTest(unittest.TestCase):
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_train_state(dataloader=dataloader, max_epochs=max_epochs)
 
-        my_unit = MagicMock(spec=DummyTrainUnit)
+        my_unit = DummyTrainUnit(2)
         progress_bar = TQDMProgressBar()
         train(state, my_unit, callbacks=[progress_bar])
 
@@ -79,7 +78,7 @@ class TQDMProgressBarTest(unittest.TestCase):
             ),
         )
 
-        my_unit = MagicMock(spec=DummyEvalUnit)
+        my_unit = DummyEvalUnit(2)
         progress_bar = TQDMProgressBar()
         progress_bar.on_eval_epoch_start(state, my_unit)
         self.assertEqual(progress_bar._eval_progress_bar.total, expected_total)
@@ -103,7 +102,7 @@ class TQDMProgressBarTest(unittest.TestCase):
             ),
         )
 
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
         progress_bar = TQDMProgressBar()
         progress_bar.on_predict_epoch_start(state, my_unit)
         self.assertEqual(progress_bar._predict_progress_bar.total, expected_total)
@@ -126,9 +125,8 @@ class TQDMProgressBarTest(unittest.TestCase):
                 max_epochs=max_epochs,
             ),
         )
-        state.predict_state.progress._num_steps_completed = 2
-
-        my_unit = MagicMock(spec=DummyPredictUnit)
+        my_unit = DummyPredictUnit(2)
+        my_unit.predict_progress._num_steps_completed = 2
         progress_bar = TQDMProgressBar()
         progress_bar.on_predict_epoch_start(state, my_unit)
         self.assertEqual(progress_bar._predict_progress_bar.total, expected_total)

@@ -184,7 +184,7 @@ def _fit_impl(
 
     while not (
         state.should_stop
-        or _is_done(train_state.progress, train_state.max_epochs, train_state.max_steps)
+        or _is_done(unit.train_progress, train_state.max_epochs, train_state.max_steps)
     ):
         _train_epoch_impl(state, unit, callback_handler)
 

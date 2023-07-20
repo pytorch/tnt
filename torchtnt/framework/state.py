@@ -13,7 +13,6 @@ import logging
 from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
-from torchtnt.utils.progress import Progress
 from torchtnt.utils.timer import Timer
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -69,7 +68,6 @@ class PhaseState:
         self,
         *,
         dataloader: Iterable[Any],
-        progress: Optional[Progress] = None,
         max_epochs: Optional[int] = None,  # used only for train
         max_steps: Optional[int] = None,  # used only for train
         max_steps_per_epoch: Optional[int] = None,
@@ -83,7 +81,6 @@ class PhaseState:
         _check_loop_condition("evaluate_every_n_epochs", evaluate_every_n_epochs)
 
         self._dataloader: Iterable[Any] = dataloader
-        self._progress: Progress = progress or Progress()
         self._max_epochs = max_epochs
         self._max_steps = max_steps
         self._max_steps_per_epoch = max_steps_per_epoch
@@ -96,11 +93,6 @@ class PhaseState:
     def dataloader(self) -> Iterable[Any]:
         """Dataloader defined by the user."""
         return self._dataloader
-
-    @property
-    def progress(self) -> Progress:
-        """An instance of :class:`~torchtnt.framework.Progress` which contains information about the current progress of the loop."""
-        return self._progress
 
     @property
     def max_epochs(self) -> Optional[int]:

@@ -15,6 +15,7 @@ import torch
 
 from torchtnt.framework.state import State
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.progress import Progress
 from torchtnt.utils.stateful import Stateful
 
 """
@@ -39,6 +40,7 @@ class AppStateMixin:
         self._modules: Dict[str, torch.nn.Module] = {}
         self._optimizers: Dict[str, torch.optim.Optimizer] = {}
         self._lr_schedulers: Dict[str, TLRScheduler] = {}
+        self._progress: Dict[str, Progress] = {}
         # catch-all for miscellaneous statefuls
         self._misc_statefuls: Dict[str, Any] = {}
         # TODO: include other known statefuls
@@ -53,6 +55,7 @@ class AppStateMixin:
             **self.tracked_modules(),
             **self.tracked_optimizers(),
             **self.tracked_lr_schedulers(),
+            **self.tracked_progress(),
             **self.tracked_misc_statefuls(),
         }
         return app_state
@@ -67,6 +70,9 @@ class AppStateMixin:
         self,
     ) -> Dict[str, TLRScheduler]:
         return self._lr_schedulers
+
+    def tracked_progress(self) -> Dict[str, Progress]:
+        return self._progress
 
     def tracked_misc_statefuls(self) -> Dict[str, Any]:
         return self._misc_statefuls
@@ -84,6 +90,10 @@ class AppStateMixin:
             _lr_schedulers = self.__dict__["_lr_schedulers"]
             if name in _lr_schedulers:
                 return _lr_schedulers[name]
+        if "_progress" in self.__dict__:
+            _progress = self.__dict__["_progress"]
+            if name in _progress:
+                return _progress[name]
         if "_misc_statefuls" in self.__dict__:
             _misc_statefuls = self.__dict__["_misc_statefuls"]
             if name in _misc_statefuls:
@@ -107,6 +117,7 @@ class AppStateMixin:
             self._modules,
             self._optimizers,
             self._lr_schedulers,
+            self._progress,
             self._misc_statefuls,
         )
         tracked_objects[name] = value
@@ -121,6 +132,12 @@ class AppStateMixin:
                 name,
                 value,
                 self.__dict__.get("_lr_schedulers"),
+            )
+        elif isinstance(value, Progress):
+            self._update_attr(
+                name,
+                value,
+                self.__dict__.get("_progress"),
             )
         elif isinstance(value, Stateful):
             self._update_attr(
@@ -147,6 +164,8 @@ class AppStateMixin:
             del self._optimizers[name]
         elif name in self._lr_schedulers:
             del self._lr_schedulers[name]
+        elif name in self._progress:
+            del self._progress[name]
         elif name in self._misc_statefuls:
             del self._misc_statefuls[name]
         else:
@@ -207,6 +226,10 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
 
       train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)
     """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.train_progress = Progress()
 
     def on_train_start(self, state: State) -> None:
         """Hook called before training starts.
@@ -284,6 +307,10 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
       eval_unit = MyEvalUnit(module=...)
     """
 
+    def __init__(self) -> None:
+        super().__init__()
+        self.eval_progress = Progress()
+
     def on_eval_start(self, state: State) -> None:
         """Hook called before evaluation starts.
 
@@ -330,7 +357,12 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         pass
 
 
-class PredictUnit(AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC):
+class PredictUnit(
+    AppStateMixin,
+    _OnExceptionMixin,
+    Generic[TPredictData],
+    ABC,
+):
     """
     The PredictUnit is an interface that can be used to organize your prediction logic. The core of it is the ``predict_step`` which
     is an abstract method where you can define the code you want to run each iteration of the dataloader.
@@ -361,6 +393,10 @@ class PredictUnit(AppStateMixin, _OnExceptionMixin, Generic[TPredictData], ABC):
 
       predict_unit = MyPredictUnit(module=...)
     """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.predict_progress = Progress()
 
     def on_predict_start(self, state: State) -> None:
         """Hook called before prediction starts.

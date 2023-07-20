@@ -9,8 +9,6 @@ import unittest
 
 from torchtnt.framework.state import _check_loop_condition, PhaseState
 
-from torchtnt.utils.progress import Progress
-
 
 class StateTest(unittest.TestCase):
     def test_check_loop_condition(self) -> None:
@@ -24,18 +22,18 @@ class StateTest(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "Invalid value provided for max_epochs"
         ):
-            PhaseState(progress=Progress(), dataloader=[], max_epochs=-2)
+            PhaseState(dataloader=[], max_epochs=-2)
         with self.assertRaisesRegex(ValueError, "Invalid value provided for max_steps"):
-            PhaseState(progress=Progress(), dataloader=[], max_steps=-2)
+            PhaseState(dataloader=[], max_steps=-2)
         with self.assertRaisesRegex(
             ValueError, "Invalid value provided for max_steps_per_epoch"
         ):
-            PhaseState(progress=Progress(), dataloader=[], max_steps_per_epoch=-2)
+            PhaseState(dataloader=[], max_steps_per_epoch=-2)
         with self.assertRaisesRegex(
             ValueError, "Invalid value provided for evaluate_every_n_steps"
         ):
-            PhaseState(progress=Progress(), dataloader=[], evaluate_every_n_steps=-2)
+            PhaseState(dataloader=[], evaluate_every_n_steps=-2)
         with self.assertRaisesRegex(
             ValueError, "Invalid value provided for evaluate_every_n_epochs"
         ):
-            PhaseState(progress=Progress(), dataloader=[], evaluate_every_n_epochs=-2)
+            PhaseState(dataloader=[], evaluate_every_n_epochs=-2)

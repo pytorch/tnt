@@ -50,20 +50,20 @@ class FitTest(unittest.TestCase):
         )
         fit(state, my_unit)
 
-        self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
-        self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
+        self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            state.train_state.progress.num_steps_completed,
+            my_unit.train_progress.num_steps_completed,
             max_epochs * expected_train_steps_per_epoch,
         )
 
         self.assertEqual(
-            state.eval_state.progress.num_epochs_completed,
+            my_unit.eval_progress.num_epochs_completed,
             expected_num_evaluate_calls,
         )
-        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            state.eval_state.progress.num_steps_completed,
+            my_unit.eval_progress.num_steps_completed,
             max_epochs * expected_eval_steps_per_epoch,
         )
         self.assertEqual(state.entry_point, EntryPoint.FIT)
@@ -107,20 +107,20 @@ class FitTest(unittest.TestCase):
         )
         fit(state, my_unit)
 
-        self.assertEqual(state.train_state.progress.num_epochs_completed, max_epochs)
-        self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
+        self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            state.train_state.progress.num_steps_completed,
+            my_unit.train_progress.num_steps_completed,
             max_epochs * expected_train_steps_per_epoch,
         )
 
         self.assertEqual(
-            state.eval_state.progress.num_epochs_completed,
+            my_unit.eval_progress.num_epochs_completed,
             expected_num_evaluate_calls,
         )
-        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            state.eval_state.progress.num_steps_completed,
+            my_unit.eval_progress.num_steps_completed,
             expected_num_evaluate_calls * expected_eval_steps_per_epoch,
         )
         self.assertEqual(state.entry_point, EntryPoint.FIT)
@@ -156,7 +156,7 @@ class FitTest(unittest.TestCase):
 
                 assert state.train_state
                 if (
-                    state.train_state.progress.num_steps_completed_in_epoch + 1
+                    my_unit.train_progress.num_steps_completed_in_epoch + 1
                     == self.steps_before_stopping
                 ):
                     state.stop()
@@ -194,15 +194,15 @@ class FitTest(unittest.TestCase):
         )
         fit(state, my_unit)
 
-        self.assertEqual(state.train_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.train_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.train_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            my_unit.steps_processed, state.train_state.progress.num_steps_completed
+            my_unit.steps_processed, my_unit.train_progress.num_steps_completed
         )
         self.assertEqual(my_unit.steps_processed, steps_before_stopping)
-        self.assertEqual(state.eval_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.eval_state.progress.num_steps_completed, 0)
-        self.assertEqual(state.eval_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.eval_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed, 0)
+        self.assertEqual(my_unit.eval_progress.num_steps_completed_in_epoch, 0)
 
     def test_fit_max_steps(self) -> None:
         max_steps = 3
@@ -211,8 +211,7 @@ class FitTest(unittest.TestCase):
         batch_size = 2
         expected_eval_steps_per_epoch = dataset_len / batch_size
 
-        my_unit = MagicMock(spec=DummyFitUnit)
-        my_unit.modules = MagicMock(return_value={})
+        my_unit = DummyFitUnit(2)
         train_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         eval_dl = generate_random_dataloader(dataset_len, input_dim, batch_size)
         state = init_fit_state(
@@ -220,12 +219,10 @@ class FitTest(unittest.TestCase):
         )
         fit(state, my_unit)
 
-        self.assertEqual(state.train_state.progress.num_steps_completed, max_steps)
-        self.assertEqual(my_unit.train_step.call_count, max_steps)
+        self.assertEqual(my_unit.train_progress.num_steps_completed, max_steps)
         self.assertEqual(
-            state.eval_state.progress.num_steps_completed, expected_eval_steps_per_epoch
+            my_unit.eval_progress.num_steps_completed, expected_eval_steps_per_epoch
         )
-        self.assertEqual(my_unit.eval_step.call_count, expected_eval_steps_per_epoch)
 
     def test_fit_with_callback(self) -> None:
         """
@@ -239,7 +236,7 @@ class FitTest(unittest.TestCase):
         expected_num_total_train_steps = train_dataset_len / batch_size * max_epochs
         expected_num_total_eval_steps = eval_dataset_len / batch_size * max_epochs
 
-        my_unit = MagicMock(spec=DummyFitUnit)
+        my_unit = DummyFitUnit(2)
         train_dataloader = generate_random_dataloader(
             train_dataset_len, input_dim, batch_size
         )

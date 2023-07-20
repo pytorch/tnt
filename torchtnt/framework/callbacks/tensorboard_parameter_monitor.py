@@ -8,8 +8,6 @@ from typing import Dict, Optional, Union
 
 import torch
 
-from pyre_extensions import none_throws
-
 from torch.utils.tensorboard import SummaryWriter
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
@@ -49,8 +47,6 @@ class TensorBoardParameterMonitor(Callback):
         if not writer:
             return
 
-        train_state = none_throws(state.train_state)
-
-        step = train_state.progress.num_steps_completed
+        step = unit.train_progress.num_steps_completed
         modules = unit.tracked_modules()
         _write_histogram_parameters(writer, modules, step)

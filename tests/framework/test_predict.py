@@ -36,11 +36,9 @@ class PredictTest(unittest.TestCase):
         state = init_predict_state(dataloader=dataloader)
         predict(state, my_unit)
 
-        self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)
-        self.assertEqual(
-            state.predict_state.progress.num_steps_completed, expected_steps
-        )
+        self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.predict_progress.num_steps_completed, expected_steps)
         self.assertEqual(state.entry_point, EntryPoint.PREDICT)
 
         # step_output should be reset to None
@@ -66,10 +64,10 @@ class PredictTest(unittest.TestCase):
         )
         predict(state, my_unit)
 
-        self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            state.predict_state.progress.num_steps_completed, max_steps_per_epoch
+            my_unit.predict_progress.num_steps_completed, max_steps_per_epoch
         )
 
         # step_output should be reset to None
@@ -96,10 +94,10 @@ class PredictTest(unittest.TestCase):
         )
         predict(state, my_unit)
 
-        self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
         self.assertEqual(
-            my_unit.steps_processed, state.predict_state.progress.num_steps_completed
+            my_unit.steps_processed, my_unit.predict_progress.num_steps_completed
         )
         self.assertEqual(my_unit.steps_processed, steps_before_stopping)
 
@@ -113,7 +111,7 @@ class PredictTest(unittest.TestCase):
         max_steps_per_epoch = 6
         expected_num_steps = dataset_len / batch_size
 
-        my_unit = MagicMock()
+        my_unit = DummyPredictUnit(2)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         callback_mock = MagicMock()
         state = init_predict_state(
@@ -163,11 +161,9 @@ class PredictTest(unittest.TestCase):
         state = init_predict_state(dataloader=dataloader)
         predict(state, my_unit)
 
-        self.assertEqual(state.predict_state.progress.num_epochs_completed, 1)
-        self.assertEqual(state.predict_state.progress.num_steps_completed_in_epoch, 0)
-        self.assertEqual(
-            state.predict_state.progress.num_steps_completed, expected_steps
-        )
+        self.assertEqual(my_unit.predict_progress.num_epochs_completed, 1)
+        self.assertEqual(my_unit.predict_progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(my_unit.predict_progress.num_steps_completed, expected_steps)
 
         # step_output should be reset to None
         self.assertEqual(state.predict_state.step_output, None)
@@ -226,7 +222,7 @@ class StopPredictUnit(PredictUnit[Tuple[torch.Tensor, torch.Tensor]]):
         outputs = self.module(inputs)
         assert state.predict_state
         if (
-            state.predict_state.progress.num_steps_completed_in_epoch + 1
+            self.predict_progress.num_steps_completed_in_epoch + 1
             == self.steps_before_stopping
         ):
             state.stop()
