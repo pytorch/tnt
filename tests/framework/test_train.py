@@ -17,6 +17,7 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
 from torchtnt.framework.unit import TrainUnit
+from torchtnt.utils.timer import Timer
 
 
 class TrainTest(unittest.TestCase):
@@ -197,9 +198,9 @@ class TrainTest(unittest.TestCase):
             max_epochs * expected_steps_per_epoch,
         )
 
-    def test_train_auto_timing(self) -> None:
+    def test_train_timing(self) -> None:
         """
-        Test auto timing in train
+        Test timing in train
         """
 
         input_dim = 2
@@ -210,13 +211,15 @@ class TrainTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
 
+        timer = Timer()
         train(
-            TimingTrainUnit(input_dim=input_dim),
+            DummyTrainUnit(input_dim=input_dim),
             dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
             max_epochs=max_epochs,
-            auto_timing=True,
+            timer=timer,
         )
+        self.assertTrue("train.next(data_iter)" in timer.recorded_durations.keys())
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -254,26 +257,3 @@ class StopTrainUnit(TrainUnit[Batch]):
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
-
-
-class TimingTrainUnit(TrainUnit[Batch]):
-    def __init__(self, input_dim: int) -> None:
-        super().__init__()
-        # initialize module, loss_fn, & optimizer
-        self.module = nn.Linear(input_dim, 2)
-
-    def train_step(self, state: State, data: Batch) -> torch.Tensor:
-        inputs, _ = data
-        outputs = self.module(inputs)
-
-        if self.train_progress.num_steps_completed == 1:
-            tc = unittest.TestCase()
-            for k in (
-                "TimingTrainUnit.on_train_start",
-                "TimingTrainUnit.on_train_epoch_start",
-                "train.next(data_iter)",
-                "TimingTrainUnit.train_step",
-            ):
-                tc.assertTrue(k in state.timer.recorded_durations.keys())
-
-        return outputs

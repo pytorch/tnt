@@ -16,7 +16,7 @@ from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTrainUnit
-from torchtnt.framework.utils import _construct_tracked_optimizers
+from torchtnt.framework.utils import _construct_tracked_optimizers, get_timing_context
 from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import Stateful
@@ -127,7 +127,10 @@ class TorchSnapshotSaver(Callback):
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
-        self._async_snapshot(snapshot_path, app_state, wait=False)
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.take_async_snapshot"
+        ):
+            self._async_snapshot(snapshot_path, app_state, wait=False)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         epoch = unit.train_progress.num_epochs_completed
@@ -140,7 +143,10 @@ class TorchSnapshotSaver(Callback):
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
-        self._async_snapshot(snapshot_path, app_state, wait=True)
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.take_async_snapshot"
+        ):
+            self._async_snapshot(snapshot_path, app_state, wait=True)
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
@@ -149,7 +155,10 @@ class TorchSnapshotSaver(Callback):
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
-        self._async_snapshot(snapshot_path, app_state, wait=True)
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.take_async_snapshot"
+        ):
+            self._async_snapshot(snapshot_path, app_state, wait=True)
         self._wait()
 
     def on_exception(

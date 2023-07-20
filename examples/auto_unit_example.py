@@ -21,6 +21,7 @@ from torchtnt.framework import AutoUnit, fit, State
 from torchtnt.framework.state import EntryPoint
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
+from torchtnt.utils.timer import Timer
 
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -174,6 +175,7 @@ def main(args: Namespace) -> None:
         train_dataloader=train_dataloader,
         eval_dataloader=eval_dataloader,
         max_epochs=args.max_epochs,
+        timer=Timer(),
     )
 
 

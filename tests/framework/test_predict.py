@@ -17,6 +17,7 @@ from torchtnt.framework._test_utils import DummyPredictUnit, generate_random_dat
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import PredictUnit
+from torchtnt.utils.timer import Timer
 
 
 class PredictTest(unittest.TestCase):
@@ -154,9 +155,9 @@ class PredictTest(unittest.TestCase):
         self.assertEqual(my_unit.predict_progress.num_steps_completed, expected_steps)
         self.assertEqual(my_unit.module.training, initial_training_mode)
 
-    def test_predict_auto_timing(self) -> None:
+    def test_predict_timing(self) -> None:
         """
-        Test auto timing in predict
+        Test timing in predict
         """
 
         input_dim = 2
@@ -165,19 +166,14 @@ class PredictTest(unittest.TestCase):
         max_steps_per_epoch = 2
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
+        timer = Timer()
         predict(
             DummyPredictUnit(input_dim=input_dim),
             dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
+            timer=timer,
         )
-
-        predict(
-            TimingPredictUnit(input_dim=input_dim),
-            dataloader,
-            max_steps_per_epoch=max_steps_per_epoch,
-            auto_timing=True,
-        )
+        self.assertTrue("predict.next(data_iter)" in timer.recorded_durations.keys())
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
@@ -203,27 +199,4 @@ class StopPredictUnit(PredictUnit[Batch]):
             state.stop()
 
         self.steps_processed += 1
-        return outputs
-
-
-class TimingPredictUnit(PredictUnit[Batch]):
-    def __init__(self, input_dim: int) -> None:
-        super().__init__()
-        # initialize module, loss_fn, & optimizer
-        self.module = nn.Linear(input_dim, 2)
-
-    def predict_step(self, state: State, data: Batch) -> torch.Tensor:
-        inputs, _ = data
-        outputs = self.module(inputs)
-
-        if self.predict_progress.num_steps_completed == 1:
-            tc = unittest.TestCase()
-            for k in (
-                "TimingPredictUnit.on_predict_start",
-                "TimingPredictUnit.on_predict_epoch_start",
-                "predict.next(data_iter)",
-                "TimingPredictUnit.predict_step",
-            ):
-                tc.assertTrue(k in state.timer.recorded_durations.keys())
-
         return outputs

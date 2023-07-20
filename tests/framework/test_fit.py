@@ -17,6 +17,7 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.fit import fit
 from torchtnt.framework.state import ActivePhase, State
 from torchtnt.framework.unit import EvalUnit, TrainUnit, TTrainUnit
+from torchtnt.utils.timer import Timer
 
 
 class FitTest(unittest.TestCase):
@@ -300,9 +301,9 @@ class FitTest(unittest.TestCase):
             callbacks=[PhaseTestCallback()],
         )
 
-    def test_fit_auto_timing(self) -> None:
+    def test_fit_timing(self) -> None:
         """
-        Test auto timing in fit
+        Test timing in fit
         """
 
         input_dim = 2
@@ -313,39 +314,15 @@ class FitTest(unittest.TestCase):
         evaluate_every_n_epochs = 1
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
+        timer = Timer()
         fit(
-            TimingFitUnit(input_dim=input_dim),
+            DummyFitUnit(input_dim=input_dim),
             train_dataloader=dataloader,
             eval_dataloader=dataloader,
             max_train_steps_per_epoch=max_steps_per_epoch,
             max_epochs=max_epochs,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
-            auto_timing=True,
+            timer=timer,
         )
-
-
-Batch = Tuple[torch.Tensor, torch.Tensor]
-
-
-class TimingFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
-    def __init__(self, input_dim: int) -> None:
-        super().__init__()
-        # initialize module, loss_fn, & optimizer
-        self.module = nn.Linear(input_dim, 2)
-
-    def train_step(self, state: State, data: Batch) -> torch.Tensor:
-        inputs, _ = data
-        outputs = self.module(inputs)
-
-        tc = unittest.TestCase()
-        for k in (
-            "TimingFitUnit.on_train_start",
-            "TimingFitUnit.on_train_epoch_start",
-        ):
-            tc.assertTrue(k in state.timer.recorded_durations.keys())
-
-        return outputs
-
-    def eval_step(self, state: State, data: Batch) -> None:
-        pass
+        self.assertTrue("train.next(data_iter)" in timer.recorded_durations.keys())
+        self.assertTrue("evaluate.next(data_iter)" in timer.recorded_durations.keys())

@@ -27,7 +27,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
-from torchtnt.framework.utils import _get_timing_context, _is_fsdp_module
+from torchtnt.framework.utils import _is_fsdp_module, get_timing_context
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -240,14 +240,11 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         )
 
         with self.maybe_autocast_precision, maybe_detect_anomaly:
-            with _get_timing_context(state, f"{self.__class__.__name__}.forward"):
+            with get_timing_context(state, f"{self.__class__.__name__}.forward"):
                 outputs = self.module(batch)
 
         step = self.predict_progress.num_steps_completed
-        with _get_timing_context(
-            state, f"{self.__class__.__name__}.on_predict_step_end"
-        ):
-            self.on_predict_step_end(state, batch, step, outputs)
+        self.on_predict_step_end(state, batch, step, outputs)
         return outputs
 
     def on_predict_step_end(
@@ -292,7 +289,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             self._prefetched = True
 
         if self._prefetch_stream:
-            with _get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
+            with get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
                 # wait on the CUDA stream to complete the host to device copy
                 torch.cuda.current_stream().wait_stream(self._prefetch_stream)
 
@@ -303,7 +300,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             raise StopIteration
 
         if self._prefetch_stream:
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.record_data_in_stream"
             ):
                 # record the batch in the current stream
@@ -319,7 +316,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         """Prefetch the next batch on a separate CUDA stream."""
 
         try:
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.next(data_iter)"
             ):
                 next_batch = next(data_iter)
@@ -332,7 +329,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         )
 
         # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
-        with torch.cuda.stream(self._prefetch_stream), _get_timing_context(
+        with torch.cuda.stream(self._prefetch_stream), get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
         ):
             self._next_batch = self.move_data_to_device(
@@ -566,7 +563,7 @@ class AutoUnit(
 
         phase = state.active_phase.name.lower()
         try:
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.{phase}.next(data_iter)"
             ):
                 next_batch = next(data_iter)
@@ -584,7 +581,7 @@ class AutoUnit(
         )
 
         # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
-        with torch.cuda.stream(self._prefetch_stream), _get_timing_context(
+        with torch.cuda.stream(self._prefetch_stream), get_timing_context(
             state, f"{self.__class__.__name__}.{phase}.move_data_to_device"
         ):
             self._next_batch = self.move_data_to_device(
@@ -597,7 +594,7 @@ class AutoUnit(
             self._prefetched = True
 
         if self._prefetch_stream:
-            with _get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
+            with get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
                 # wait on the CUDA stream to complete the host to device copy
                 torch.cuda.current_stream().wait_stream(self._prefetch_stream)
 
@@ -609,7 +606,7 @@ class AutoUnit(
             raise StopIteration
 
         if self._prefetch_stream:
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.record_data_in_stream"
             ):
                 # record the batch in the current stream
@@ -654,7 +651,7 @@ class AutoUnit(
         grad_scaler = self.grad_scaler
         with maybe_no_sync, maybe_detect_anomaly:
             with self.maybe_autocast_precision:
-                with _get_timing_context(
+                with get_timing_context(
                     state, f"{self.__class__.__name__}.compute_loss"
                 ):
                     # Run the forward pass and compute the loss
@@ -665,10 +662,10 @@ class AutoUnit(
 
             if grad_scaler:
                 scaled_loss = grad_scaler.scale(loss)
-                with _get_timing_context(state, f"{self.__class__.__name__}.backward"):
+                with get_timing_context(state, f"{self.__class__.__name__}.backward"):
                     scaled_loss.backward()
             else:
-                with _get_timing_context(state, f"{self.__class__.__name__}.backward"):
+                with get_timing_context(state, f"{self.__class__.__name__}.backward"):
                     loss.backward()
 
         if should_update_weights:
@@ -677,7 +674,7 @@ class AutoUnit(
             clip_grad_value = self.clip_grad_value
             if grad_scaler and (clip_grad_norm or clip_grad_value):
                 # unscale the gradients of optimizer's assigned params in-place in preparation for gradient clipping
-                with _get_timing_context(
+                with get_timing_context(
                     state, f"{self.__class__.__name__}.grad_unscale"
                 ):
                     grad_scaler.unscale_(self.optimizer)
@@ -686,7 +683,7 @@ class AutoUnit(
             if clip_grad_norm:
                 if _is_fsdp_module(module):
                     if isinstance(module, FSDP):
-                        with _get_timing_context(
+                        with get_timing_context(
                             state, f"{self.__class__.__name__}.clip_grad_norm"
                         ):
                             module.clip_grad_norm_(max_norm=clip_grad_norm)
@@ -695,7 +692,7 @@ class AutoUnit(
                             "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
                         )
                 else:
-                    with _get_timing_context(
+                    with get_timing_context(
                         state, f"{self.__class__.__name__}.clip_grad_norm"
                     ):
                         torch.nn.utils.clip_grad_norm_(
@@ -705,7 +702,7 @@ class AutoUnit(
 
             # gradient value clipping
             if clip_grad_value:
-                with _get_timing_context(
+                with get_timing_context(
                     state, f"{self.__class__.__name__}.clip_grad_value"
                 ):
                     torch.nn.utils.clip_grad_value_(
@@ -713,9 +710,7 @@ class AutoUnit(
                         clip_value=clip_grad_value,
                     )
 
-            with _get_timing_context(
-                state, f"{self.__class__.__name__}.optimizer_step"
-            ):
+            with get_timing_context(state, f"{self.__class__.__name__}.optimizer_step"):
                 if grad_scaler:
                     grad_scaler.step(self.optimizer)
                     # update the scale for next iteration
@@ -724,7 +719,7 @@ class AutoUnit(
                     self.optimizer.step()
 
             # sets gradients to zero
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.optimizer_zero_grad"
             ):
                 self.optimizer.zero_grad(set_to_none=True)
@@ -737,15 +732,14 @@ class AutoUnit(
             ):
                 lr_scheduler = self.lr_scheduler
                 if lr_scheduler and self.step_lr_interval == "step":
-                    with _get_timing_context(
+                    with get_timing_context(
                         state, f"{self.__class__.__name__}.lr_scheduler_step"
                     ):
                         lr_scheduler.step()
 
         step = self.train_progress.num_steps_completed
         # users can override this, by default this is a no-op
-        with _get_timing_context(state, f"{self.__class__.__name__}.on_train_step_end"):
-            self.on_train_step_end(state, batch, step, loss, outputs)
+        self.on_train_step_end(state, batch, step, loss, outputs)
         return loss, outputs
 
     def on_train_step_end(
@@ -773,17 +767,17 @@ class AutoUnit(
             and self.swa_params
             and self.train_progress.num_epochs_completed >= self.swa_params.epoch_start
         ):
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
             ):
                 self.swa_model.update_parameters(self.module)
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.stochastic_weight_avg_step"
             ):
                 none_throws(self.swa_scheduler).step()
         elif self.lr_scheduler and self.step_lr_interval == "epoch":
             # optionally step lr scheduler
-            with _get_timing_context(
+            with get_timing_context(
                 state, f"{self.__class__.__name__}.lr_scheduler_step"
             ):
                 self.lr_scheduler.step()
@@ -794,26 +788,26 @@ class AutoUnit(
         """
         swa_model = self.swa_model
         if swa_model:
-            with _get_timing_context(
+            with get_timing_context(
                 state,
                 f"{self.__class__.__name__}.stochastic_weight_avg_transfer_weights",
             ):
                 transfer_weights(swa_model, self.module)
-            with _get_timing_context(
+            with get_timing_context(
                 state,
                 f"{self.__class__.__name__}.stochastic_weight_avg_transfer_batch_norm_stats",
             ):
                 transfer_batch_norm_stats(swa_model, self.module)
 
     def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
-        with _get_timing_context(
+        with get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
         ):
             data = self.move_data_to_device(state, data, non_blocking=False)
 
         with self.maybe_autocast_precision:
             # users must override this
-            with _get_timing_context(state, f"{self.__class__.__name__}.compute_loss"):
+            with get_timing_context(state, f"{self.__class__.__name__}.compute_loss"):
                 loss, outputs = self.compute_loss(state, data)
 
         if state.entry_point == EntryPoint.FIT:
@@ -822,8 +816,7 @@ class AutoUnit(
             step = self.eval_progress.num_steps_completed
 
         # users can override this, by default this is a no-op
-        with _get_timing_context(state, f"{self.__class__.__name__}.on_eval_step_end"):
-            self.on_eval_step_end(state, data, step, loss, outputs)
+        self.on_eval_step_end(state, data, step, loss, outputs)
         return loss, outputs
 
     def on_eval_step_end(
