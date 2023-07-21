@@ -110,7 +110,7 @@ class ModuleSummaryTest(unittest.TestCase):
             module=my_module,
         )
 
-        module_inputs = {"module": ((torch.rand(2, 2),), {})}
+        module_inputs = {"module": ((torch.rand(2, 2, device=auto_unit.device),), {})}
         module_summary_callback = ModuleSummary(module_inputs=module_inputs)
         summaries = module_summary_callback._retrieve_module_summaries(auto_unit)
 
