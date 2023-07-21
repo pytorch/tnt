@@ -121,6 +121,10 @@ def _train_impl(
     logger.info(
         f"Started train with max_epochs={train_state.max_epochs}, max_steps={train_state.max_steps}, max_steps_per_epoch={train_state.max_steps_per_epoch}"
     )
+    if train_state.max_epochs is None and train_state.max_steps is None:
+        logger.warning(
+            "Will run infinite training, since both max_epochs and max_steps were not set."
+        )
     state._active_phase = ActivePhase.TRAIN
 
     # Set all modules to train() mode
