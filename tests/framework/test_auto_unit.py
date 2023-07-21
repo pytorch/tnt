@@ -213,7 +213,7 @@ class TestAutoUnit(unittest.TestCase):
                 return x
 
         my_module = Net()
-        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
+        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=3)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
@@ -223,8 +223,9 @@ class TestAutoUnit(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
+
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        train(auto_unit, dataloader)
+        train(auto_unit, dataloader, max_epochs=5, max_steps_per_epoch=1)
 
         orig_module = auto_unit.module
         swa_module = auto_unit.swa_model
@@ -623,7 +624,7 @@ class TestAutoUnit(unittest.TestCase):
                 return x
 
         my_module = Net()
-        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
+        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=3)
 
         auto_unit = DummyAutoUnit(
             module=my_module,
@@ -634,8 +635,9 @@ class TestAutoUnit(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
+
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        train(auto_unit, dataloader)
+        train(auto_unit, dataloader, max_epochs=5, max_steps_per_epoch=1)
 
         orig_module = auto_unit.module.module
         swa_module = auto_unit.swa_model.module.module
@@ -695,9 +697,9 @@ class TestAutoUnit(unittest.TestCase):
         input_dim = 2
         dataset_len = 10
         batch_size = 2
+
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        state = get_dummy_train_state(dataloader)
-        train(state, auto_unit)
+        train(auto_unit, dataloader, max_epochs=1, max_steps_per_epoch=1)
 
         tc = unittest.TestCase()
         tc.assertTrue(custom_noop_hook_called)
