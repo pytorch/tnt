@@ -15,6 +15,7 @@ from torchtnt.framework._test_utils import DummyEvalUnit, generate_random_datalo
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import EvalUnit
+from torchtnt.utils.timer import Timer
 
 
 class EvaluateTest(unittest.TestCase):
@@ -146,9 +147,9 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(callback_mock.on_eval_epoch_end.call_count, 1)
         self.assertEqual(callback_mock.on_eval_end.call_count, 1)
 
-    def test_evaluate_auto_timing(self) -> None:
+    def test_evaluate_timing(self) -> None:
         """
-        Test auto timing in evaluate
+        Test timing in evaluate
         """
 
         input_dim = 2
@@ -157,13 +158,14 @@ class EvaluateTest(unittest.TestCase):
         max_steps_per_epoch = 2
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-
+        timer = Timer()
         evaluate(
-            TimingEvalUnit(input_dim=input_dim),
+            DummyEvalUnit(input_dim=input_dim),
             dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
-            auto_timing=True,
+            timer=timer,
         )
+        self.assertIn("evaluate.next(data_iter)", timer.recorded_durations.keys())
 
 
 class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
@@ -196,21 +198,3 @@ class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
-
-
-class TimingEvalUnit(EvalUnit[Batch]):
-    def __init__(self, input_dim: int) -> None:
-        super().__init__()
-        # initialize module, loss_fn, & optimizer
-        self.module = nn.Linear(input_dim, 2)
-
-    def eval_step(self, state: State, data: Batch) -> torch.Tensor:
-        inputs, _ = data
-        outputs = self.module(inputs)
-
-        tc = unittest.TestCase()
-        tc.assertTrue(
-            "evaluate.next(data_iter)" in state.timer.recorded_durations.keys()
-        )
-
-        return outputs

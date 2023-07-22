@@ -22,7 +22,7 @@ from torchtnt.framework.utils import (
     get_timing_context,
     log_api_usage,
 )
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import get_timer_summary, TimerProtocol
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def evaluate(
     *,
     max_steps_per_epoch: Optional[int] = None,
     callbacks: Optional[List[Callback]] = None,
-    auto_timing: bool = False,
+    timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
     The ``evaluate`` entry point takes in a :class:`~torchtnt.framework.EvalUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
@@ -44,7 +44,7 @@ def evaluate(
         eval_dataloader: dataloader to be used during evaluation, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
         callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
-        auto_timing: whether to automatically time the evaluation loop, using the state's timer (enabling auto_timing may degrade performance).
+        timer: an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).
 
 
     Below is an example of calling :py:func:`~torchtnt.framework.evaluate`.
@@ -85,7 +85,7 @@ def evaluate(
             dataloader=eval_dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
         ),
-        timer=None if not auto_timing else Timer(),
+        timer=timer,
     )
     try:
         _evaluate_impl(state, eval_unit, callback_handler)

@@ -21,6 +21,7 @@ from torchtnt.framework import AutoUnit, fit, State
 from torchtnt.framework.state import EntryPoint
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
+from torchtnt.utils.timer import Timer
 
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

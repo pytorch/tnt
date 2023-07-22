@@ -19,7 +19,7 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import log_api_usage
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import get_timer_summary, TimerProtocol
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def fit(
     evaluate_every_n_steps: Optional[int] = None,
     evaluate_every_n_epochs: Optional[int] = 1,
     callbacks: Optional[List[Callback]] = None,
-    auto_timing: bool = False,
+    timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
     The ``fit`` entry point interleaves training and evaluation loops. The ``fit`` entry point takes in an object which subclasses both :class:`~torchtnt.framework.TrainUnit` and :class:`~torchtnt.framework.EvalUnit`, train and eval dataloaders (any Iterables), optional arguments to modify loop execution,
@@ -54,7 +54,7 @@ def fit(
         evaluate_every_n_steps: how often to run the evaluation loop in terms of training steps.
         evaluate_every_n_epochs: how often to run the evaluation loop in terms of training epochs.
         callbacks: an optional list of callbacks.
-        auto_timing: whether to automatically time the training and evaluation loop, using the state's timer (enabling auto_timing may degrade performance).
+        timer: an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).
 
     Below is an example of calling :py:func:`~torchtnt.framework.fit`.
 
@@ -115,7 +115,7 @@ def fit(
             evaluate_every_n_steps=evaluate_every_n_steps,
             evaluate_every_n_epochs=evaluate_every_n_epochs,
         ),
-        timer=None if not auto_timing else Timer(),
+        timer=timer,
     )
 
     logger.info(
