@@ -44,6 +44,7 @@ from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.timer import Timer
 
 
 class TestAutoUnit(unittest.TestCase):
@@ -839,7 +840,7 @@ class TestAutoUnit(unittest.TestCase):
             dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
             max_epochs=max_epochs,
-            auto_timing=True,
+            timer=Timer(),
         )
 
     def test_auto_unit_timing_eval(self) -> None:
@@ -859,7 +860,7 @@ class TestAutoUnit(unittest.TestCase):
             TimingAutoUnit(module=my_module),
             dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
-            auto_timing=True,
+            timer=Timer(),
         )
 
     @unittest.skipUnless(
@@ -930,7 +931,7 @@ class TestAutoUnit(unittest.TestCase):
             TimingAutoPredictUnit(module=my_module),
             predict_dl,
             max_steps_per_epoch=1,
-            auto_timing=True,
+            timer=Timer(),
         )
 
     @patch("torch.autograd.set_detect_anomaly")

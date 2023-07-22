@@ -24,7 +24,7 @@ from torchtnt.framework.utils import (
     get_timing_context,
     log_api_usage,
 )
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import get_timer_summary, TimerProtocol
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def train(
     max_steps: Optional[int] = None,
     max_steps_per_epoch: Optional[int] = None,
     callbacks: Optional[List[Callback]] = None,
-    auto_timing: bool = False,
+    timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
     The ``train`` entry point takes in a :class:`~torchtnt.framework.TrainUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
@@ -51,7 +51,7 @@ def train(
         max_steps: the max number of steps to run. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
         callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
-        auto_timing: whether to automatically time the training loop, using the state's timer (enabling auto_timing may degrade performance).
+        timer: an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).
 
 
     Below is an example of calling :py:func:`~torchtnt.framework.train`.
@@ -95,7 +95,7 @@ def train(
             max_steps=max_steps,
             max_steps_per_epoch=max_steps_per_epoch,
         ),
-        timer=None if not auto_timing else Timer(),
+        timer=timer,
     )
     try:
         _train_impl(state, train_unit, callback_handler)

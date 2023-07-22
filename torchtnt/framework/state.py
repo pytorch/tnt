@@ -13,7 +13,7 @@ import logging
 from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
-from torchtnt.utils.timer import Timer
+from torchtnt.utils.timer import TimerProtocol
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -134,7 +134,7 @@ class State:
         self,
         *,
         entry_point: EntryPoint,
-        timer: Optional[Timer] = None,
+        timer: Optional[TimerProtocol] = None,
         train_state: Optional[PhaseState] = None,
         eval_state: Optional[PhaseState] = None,
         predict_state: Optional[PhaseState] = None,
@@ -158,8 +158,8 @@ class State:
         return self._active_phase
 
     @property
-    def timer(self) -> Optional[Timer]:
-        """A :class:`~torchtnt.framework.Timer` object which can be used for debugging to record latencies of key events during loop execution."""
+    def timer(self) -> Optional[TimerProtocol]:
+        """A :class:`~torchtnt.utils.TimerProtocol` object which can be used for debugging to record latencies of key events during loop execution."""
         return self._timer
 
     @property

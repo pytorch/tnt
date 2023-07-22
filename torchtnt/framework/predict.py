@@ -22,7 +22,7 @@ from torchtnt.framework.utils import (
     get_timing_context,
     log_api_usage,
 )
-from torchtnt.utils.timer import get_timer_summary, Timer
+from torchtnt.utils.timer import get_timer_summary, TimerProtocol
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def predict(
     *,
     max_steps_per_epoch: Optional[int] = None,
     callbacks: Optional[List[Callback]] = None,
-    auto_timing: bool = False,
+    timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
     The ``predict`` entry point takes in a :class:`~torchtnt.framework.PredictUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
@@ -44,7 +44,7 @@ def predict(
         predict_dataloader: dataloader to be used during prediction, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
         callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
-        auto_timing: whether to automatically time the prediction loop, using the state's timer (enabling auto_timing may degrade performance).
+        timer: an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).
 
 
     Below is an example of calling :py:func:`~torchtnt.framework.predict`.
@@ -85,7 +85,7 @@ def predict(
             dataloader=predict_dataloader,
             max_steps_per_epoch=max_steps_per_epoch,
         ),
-        timer=None if not auto_timing else Timer(),
+        timer=timer,
     )
     try:
         _predict_impl(state, predict_unit, callback_handler)
