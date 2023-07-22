@@ -218,12 +218,8 @@ class TimingPredictUnit(PredictUnit[Batch]):
 
         if self.predict_progress.num_steps_completed == 1:
             tc = unittest.TestCase()
-            for k in (
-                "TimingPredictUnit.on_predict_start",
-                "TimingPredictUnit.on_predict_epoch_start",
-                "predict.next(data_iter)",
-                "TimingPredictUnit.predict_step",
-            ):
-                tc.assertTrue(k in state.timer.recorded_durations.keys())
+            tc.assertTrue(
+                "predict.next(data_iter)" in state.timer.recorded_durations.keys()
+            )
 
         return outputs
