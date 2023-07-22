@@ -12,7 +12,7 @@ from unittest.mock import Mock
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
-from torchtnt.framework.utils import _get_timing_context
+from torchtnt.framework.utils import get_timing_context
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -109,131 +109,131 @@ class CallbackHandler:
         fn_name = "on_exception"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_exception(state, unit, exc)
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_train_start(state, unit)
 
     def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_epoch_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_train_epoch_start(state, unit)
 
     def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_step_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_train_step_start(state, unit)
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_step_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_train_step_end(state, unit)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_epoch_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_train_epoch_end(state, unit)
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_train_end(state, unit)
 
     def on_eval_start(self, state: State, unit: TEvalUnit) -> None:
         fn_name = "on_eval_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_eval_start(state, unit)
 
     def on_eval_epoch_start(self, state: State, unit: TEvalUnit) -> None:
         fn_name = "on_eval_epoch_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_eval_epoch_start(state, unit)
 
     def on_eval_step_start(self, state: State, unit: TEvalUnit) -> None:
         fn_name = "on_eval_step_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_eval_step_start(state, unit)
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         fn_name = "on_eval_step_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_eval_step_end(state, unit)
 
     def on_eval_epoch_end(self, state: State, unit: TEvalUnit) -> None:
         fn_name = "on_eval_epoch_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_eval_epoch_end(state, unit)
 
     def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
         fn_name = "on_eval_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_eval_end(state, unit)
 
     def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
         fn_name = "on_predict_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_predict_start(state, unit)
 
     def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
         fn_name = "on_predict_epoch_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_predict_epoch_start(state, unit)
 
     def on_predict_step_start(self, state: State, unit: TPredictUnit) -> None:
         fn_name = "on_predict_step_start"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_predict_step_start(state, unit)
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         fn_name = "on_predict_step_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_predict_step_end(state, unit)
 
     def on_predict_epoch_end(self, state: State, unit: TPredictUnit) -> None:
         fn_name = "on_predict_epoch_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_predict_epoch_end(state, unit)
 
     def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
         fn_name = "on_predict_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
-            with _get_timing_context(state, f"{cb.name}.{fn_name}"):
+            with get_timing_context(state, f"{cb.name}.{fn_name}"):
                 cb.on_predict_end(state, unit)

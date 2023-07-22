@@ -31,7 +31,6 @@ from torchtnt.framework.utils import (
     _construct_tracked_optimizers_and_schedulers,
     _find_optimizers_for_module,
     _FSDPOptimizerWrapper,
-    _get_timing_context,
     _is_done,
     _is_epoch_done,
     _is_fsdp_module,
@@ -39,6 +38,7 @@ from torchtnt.framework.utils import (
     _reset_module_training_mode,
     _set_module_training_mode,
     _step_requires_iterator,
+    get_timing_context,
 )
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -202,20 +202,20 @@ class UtilsTest(unittest.TestCase):
         state = MagicMock()
         state.timer = None
 
-        ctx = _get_timing_context(state, "a")
+        ctx = get_timing_context(state, "a")
         with ctx:
             time.sleep(1)
         mock_record_function.assert_called_with("a")
 
         state.timer = Timer()
-        ctx = _get_timing_context(state, "b")
+        ctx = get_timing_context(state, "b")
         with ctx:
             time.sleep(1)
         self.assertTrue("b" in state.timer.recorded_durations.keys())
         mock_record_function.assert_called_with("b")
 
         state.timer = Timer()
-        ctx = _get_timing_context(state, "c", skip_timer=True)
+        ctx = get_timing_context(state, "c", skip_timer=True)
         with ctx:
             time.sleep(1)
         # "c" should not be in the recorded_durations because we set skip_timer to True
