@@ -92,7 +92,7 @@ def _reset_module_training_mode(
 
 @contextmanager
 # pyre-fixme[3]: Return type must be annotated.
-def get_timing_context(state: State, event_name: str, skip_timer: bool = False):
+def get_timing_context(state: State, event_name: str):
     """
     Returns a context manager that records an event to a :class:`~torchtnt.utils.timer.Timer` and to PyTorch Profiler.
 
@@ -102,7 +102,7 @@ def get_timing_context(state: State, event_name: str, skip_timer: bool = False):
     """
     timer_context = (
         state.timer.time(event_name)
-        if state.timer and not skip_timer
+        if state.timer is not None
         else contextlib.nullcontext()
     )
     profiler_context = record_function(event_name)

@@ -266,14 +266,7 @@ class TimingTrainUnit(TrainUnit[Batch]):
         inputs, _ = data
         outputs = self.module(inputs)
 
-        if self.train_progress.num_steps_completed == 1:
-            tc = unittest.TestCase()
-            for k in (
-                "TimingTrainUnit.on_train_start",
-                "TimingTrainUnit.on_train_epoch_start",
-                "train.next(data_iter)",
-                "TimingTrainUnit.train_step",
-            ):
-                tc.assertTrue(k in state.timer.recorded_durations.keys())
+        tc = unittest.TestCase()
+        tc.assertTrue("train.next(data_iter)" in state.timer.recorded_durations.keys())
 
         return outputs

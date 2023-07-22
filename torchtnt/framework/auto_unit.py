@@ -244,10 +244,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
                 outputs = self.module(batch)
 
         step = self.predict_progress.num_steps_completed
-        with get_timing_context(
-            state, f"{self.__class__.__name__}.on_predict_step_end"
-        ):
-            self.on_predict_step_end(state, batch, step, outputs)
+        self.on_predict_step_end(state, batch, step, outputs)
         return outputs
 
     def on_predict_step_end(
@@ -741,9 +738,7 @@ class AutoUnit(
                         lr_scheduler.step()
 
         step = self.train_progress.num_steps_completed
-        # users can override this, by default this is a no-op
-        with get_timing_context(state, f"{self.__class__.__name__}.on_train_step_end"):
-            self.on_train_step_end(state, batch, step, loss, outputs)
+        self.on_train_step_end(state, batch, step, loss, outputs)
         return loss, outputs
 
     def on_train_step_end(
@@ -819,9 +814,7 @@ class AutoUnit(
         else:
             step = self.eval_progress.num_steps_completed
 
-        # users can override this, by default this is a no-op
-        with get_timing_context(state, f"{self.__class__.__name__}.on_eval_step_end"):
-            self.on_eval_step_end(state, data, step, loss, outputs)
+        self.on_eval_step_end(state, data, step, loss, outputs)
         return loss, outputs
 
     def on_eval_step_end(

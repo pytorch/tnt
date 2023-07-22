@@ -208,14 +208,9 @@ class TimingEvalUnit(EvalUnit[Batch]):
         inputs, _ = data
         outputs = self.module(inputs)
 
-        if self.eval_progress.num_steps_completed == 1:
-            tc = unittest.TestCase()
-            for k in (
-                "TimingEvalUnit.on_eval_start",
-                "TimingEvalUnit.on_eval_epoch_start",
-                "evaluate.next(data_iter)",
-                "TimingEvalUnit.eval_step",
-            ):
-                tc.assertTrue(k in state.timer.recorded_durations.keys())
+        tc = unittest.TestCase()
+        tc.assertTrue(
+            "evaluate.next(data_iter)" in state.timer.recorded_durations.keys()
+        )
 
         return outputs
