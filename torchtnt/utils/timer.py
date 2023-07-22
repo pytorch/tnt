@@ -8,11 +8,20 @@
 import datetime
 import logging
 import os
-import warnings
 from collections import defaultdict
 from contextlib import contextmanager
 from time import perf_counter
-from typing import Dict, Generator, List, Optional, Sequence, Tuple, TypeVar
+from typing import (
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Protocol,
+    runtime_checkable,
+    Sequence,
+    Tuple,
+    TypeVar,
+)
 
 import numpy as np
 
@@ -20,6 +29,7 @@ import torch
 import torch.distributed as dist
 from torchtnt.utils.distributed import PGWrapper
 
+logger: logging.Logger = logging.getLogger(__name__)
 
 AsyncOperator = TypeVar("AsyncOperator")
 
@@ -28,121 +38,122 @@ _TABLE_ROW = Tuple[str, float, int, float, float]
 _TABLE_DATA = List[_TABLE_ROW]
 
 
-class Timer:
+@runtime_checkable
+class TimerProtocol(Protocol):
     """
-    A timer which records intervals between starts and stops, as well as cumulative time in seconds.
+    Defines a Timer Protocol with `time` and `reset` methods and an attribute `recorded_durations` for storing timings.
     """
 
-    def __init__(self) -> None:
-        self.recorded_durations: Dict[str, List[float]] = defaultdict(list)
-        self.reset()
-
-    def reset(self) -> None:
-        """Reset timer state."""
-        self._paused: bool = True
-        self._interval_start_time: float = 0.0
-        self._interval_stop_time: float = 0.0
-        self._total_time_seconds: float = 0.0
-
-    def start(self) -> None:
-        """Start timer interval."""
-        if not self.paused:
-            warnings.warn("Cannot start timer while timer is running.")
-            return
-        self._paused = False
-        if torch.cuda.is_available():
-            torch.cuda.synchronize()
-        self._interval_start_time = perf_counter()
-
-    def stop(self) -> None:
-        """Stop timer interval. Interval time will be added to the total."""
-        if self.paused:
-            warnings.warn("Cannot stop timer while timer is paused.")
-            return
-        if torch.cuda.is_available():
-            torch.cuda.synchronize()
-        self._interval_stop_time = perf_counter()
-        self._paused = True
-        self._total_time_seconds += self.interval_time_seconds
+    recorded_durations: Dict[str, List[float]]
 
     @contextmanager
     def time(self, action_name: str) -> Generator[None, None, None]:
-        """Yields a context manager to encapsulate the scope of a timed action.
+        """
+        A context manager for timing a code block.
 
         Args:
-            action_name: the name under which to store the timing of what is enclosed in the context manager
+            action_name: the name under which to store the timing of what is enclosed in the context manager.
         """
-        try:
-            self.start()
-            yield
-        finally:
-            self.stop()
-        self.recorded_durations[action_name].append(self.interval_time_seconds)
+        ...
 
-    @property
-    def paused(self) -> bool:
-        return self._paused
+    def reset(self) -> None:
+        """
+        A method to reset the state of the Timer.
+        """
+        ...
 
-    @property
-    def interval_time_seconds(self) -> float:
-        """
-        Interval between most recent stop and start in seconds.
-        If timer is still running, return interval between most recent start and now.
-        """
-        if self._interval_start_time == 0.0:
-            return 0.0
-        interval_stop_time = self._interval_stop_time if self.paused else perf_counter()
-        return interval_stop_time - self._interval_start_time
 
-    @property
-    def total_time_seconds(self) -> float:
-        """Sum of all interval times in seconds since the last reset.
-        If timer is still running, include the current interval time in the total.
+class Timer(TimerProtocol):
+    def __init__(
+        self,
+        *,
+        cuda_sync: Optional[bool] = None,
+        verbose: bool = False,
+    ) -> None:
         """
-        running_interval = 0 if self.paused else self.interval_time_seconds
-        return self._total_time_seconds + running_interval
+        A Timer class which implements TimerProtocol and stores timings in a dictionary `recorded_durations`.
 
-    def state_dict(self) -> Dict[str, float]:
-        """
-        Pause timer and export state_dict for checkpointing.
+        Args:
+            cuda_sync: whether to call torch.cuda.synchronize() before and after timing. Defaults to True if CUDA is available.
+            verbose: whether to enable verbose logging.
+
+        Note:
+            Enabling cuda_sync will incur a performance hit, but will ensure accurate timings on GPUs.
 
         Raises:
-            Exception:
-                If state_dict is called while timer is still running.
+            ValueError: If cuda_sync is set to True but CUDA is not available.
+
         """
-        if not self.paused:
-            raise Exception("Timer must be paused before creating state_dict.")
-        return {
-            "interval_start_time": self._interval_start_time,
-            "interval_stop_time": self._interval_stop_time,
-            "total_time_seconds": self._total_time_seconds,
-        }
+        if cuda_sync and not torch.cuda.is_available():
+            raise ValueError(
+                "CUDA must be available in order to enable CUDA synchronization."
+            )
+        self.cuda_sync: bool = (
+            cuda_sync if cuda_sync is not None else torch.cuda.is_available()
+        )
+        self.verbose = verbose
+        self.recorded_durations: Dict[str, List[float]] = defaultdict(list)
 
-    def load_state_dict(self, state_dict: Dict[str, float]) -> None:
-        """Load timer state from state dict."""
-        self._interval_start_time = state_dict["interval_start_time"]
-        self._interval_stop_time = state_dict["interval_stop_time"]
-        self._total_time_seconds = state_dict["total_time_seconds"]
+    @contextmanager
+    def time(
+        self,
+        action_name: str,
+    ) -> Generator[None, None, None]:
+        """
+        A context manager for timing a code block, with optional cuda synchronization and verbose timing.
+
+        Args:
+            action_name: the name under which to store the timing of what is enclosed in the context manager.
+        """
+        try:
+            if self.cuda_sync:
+                torch.cuda.synchronize()
+            start_time: float = perf_counter()
+            yield
+        finally:
+            if self.cuda_sync:
+                torch.cuda.synchronize()
+            interval_time: float = perf_counter() - start_time
+            if self.verbose:
+                logger.info(f"{action_name} took {interval_time} seconds.")
+        self.recorded_durations[action_name].append(interval_time)
+
+    def reset(self) -> None:
+        """
+        Reset the recorded_durations to an empty list
+        """
+        self.recorded_durations = defaultdict(list)
 
 
-def _make_report(timer: Timer) -> Tuple[_TABLE_DATA, float, float]:
+def _get_total_time(timer: TimerProtocol) -> float:
+    total_time = 0.0
+    for _, durations in timer.recorded_durations.items():
+        array_value = np.array(durations)
+        array_sum = np.sum(array_value)
+        total_time += array_sum
+
+    return total_time
+
+
+def _make_report(timer: TimerProtocol) -> Tuple[_TABLE_DATA, float, float]:
+    total_time = _get_total_time(timer)
     report = [
         (
             a,
             np.mean(d),
             len(d),
             np.sum(d),
-            100.0 * np.sum(d) / timer._total_time_seconds,
+            100.0 * np.sum(d) / total_time,
         )
         for a, d in timer.recorded_durations.items()
     ]
     report.sort(key=lambda x: x[4], reverse=True)
     total_calls = sum(x[2] for x in report)
-    return report, total_calls, timer._total_time_seconds
+    return report, total_calls, total_time
 
 
-def get_timer_summary(timer: Timer) -> str:
-    """Given a Timer, generate a summary of all the recorded actions.
+def get_timer_summary(timer: TimerProtocol) -> str:
+    """Given a timer, generate a summary of all the recorded actions.
 
     Args:
         timer: the Timer object for which to generate a summary
@@ -327,28 +338,6 @@ def _validate_percentiles(percentiles: Sequence[float]) -> None:
     for p in percentiles:
         if p < 0 or p > 100:
             raise ValueError(f"Percentile must be between 0 and 100. Got {p}")
-
-
-class VerboseTimer(Timer):
-    """Timer that is more verbose - prints information upon start/stop.
-    Requires a customizable logger.
-    """
-
-    @contextmanager
-    def time(
-        self, action_name: str, logger: logging.Logger
-    ) -> Generator[None, None, None]:
-        try:
-            logger.info(f"Starting {action_name}")
-            self.start()
-            yield
-        finally:
-            self.stop()
-            logger.info(
-                f"Stopping {action_name}. Took {self.interval_time_seconds} seconds"
-            )
-
-        self.recorded_durations[action_name].append(self.interval_time_seconds)
 
 
 class FullSyncPeriodicTimer:
