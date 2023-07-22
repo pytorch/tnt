@@ -16,13 +16,13 @@ from torchtnt.framework.evaluate import _evaluate_impl
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TTrainData, TTrainUnit
 from torchtnt.framework.utils import (
-    _get_timing_context,
     _is_done,
     _is_epoch_done,
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _set_module_training_mode,
     _step_requires_iterator,
+    get_timing_context,
     log_api_usage,
 )
 from torchtnt.utils.timer import get_timer_summary, Timer
@@ -132,7 +132,7 @@ def _train_impl(
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
-    with _get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_start"):
+    with get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_start"):
         train_unit.on_train_start(state)
     callback_handler.on_train_start(state, train_unit)
 
@@ -144,7 +144,7 @@ def _train_impl(
     ):
         _train_epoch_impl(state, train_unit, callback_handler)
 
-    with _get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_end"):
+    with get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_end"):
         train_unit.on_train_end(state)
     callback_handler.on_train_end(state, train_unit)
 
@@ -176,7 +176,7 @@ def _train_epoch_impl(
     # to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if train_unit.train_progress.num_steps_completed_in_epoch == 0:
-        with _get_timing_context(
+        with get_timing_context(
             state, f"{train_unit.__class__.__name__}.on_train_epoch_start"
         ):
             train_unit.on_train_epoch_start(state)
@@ -186,7 +186,7 @@ def _train_epoch_impl(
         train_state.dataloader, train_unit.train_progress.num_epochs_completed
     )
 
-    with _get_timing_context(state, "train.iter(dataloader)"):
+    with get_timing_context(state, "train.iter(dataloader)"):
         data_iter = iter(train_state.dataloader)
     step_input = data_iter
 
@@ -206,12 +206,12 @@ def _train_epoch_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                with _get_timing_context(state, "train.next(data_iter)"):
+                with get_timing_context(state, "train.next(data_iter)"):
                     step_input = next(data_iter)
 
             callback_handler.on_train_step_start(state, train_unit)
 
-            with _get_timing_context(
+            with get_timing_context(
                 state,
                 f"{train_unit.__class__.__name__}.train_step",
                 skip_timer=is_auto_unit,
@@ -256,7 +256,7 @@ def _train_epoch_impl(
     # set progress counters for the next epoch
     train_unit.train_progress.increment_epoch()
 
-    with _get_timing_context(
+    with get_timing_context(
         state, f"{train_unit.__class__.__name__}.on_train_epoch_end"
     ):
         train_unit.on_train_epoch_end(state)
