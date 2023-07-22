@@ -10,6 +10,7 @@ import time
 import unittest
 from datetime import timedelta
 from random import random
+from unittest import mock
 
 import torch
 import torch.distributed as dist
@@ -20,8 +21,8 @@ from torchtnt.utils.timer import (
     get_durations_histogram,
     get_synced_durations_histogram,
     get_timer_summary,
+    logger,
     Timer,
-    VerboseTimer,
 )
 
 
@@ -34,186 +35,47 @@ class TimerTest(unittest.TestCase):
         tolerance = expected * (percent_tolerance / 100)
         self.assertLess(error, tolerance)
 
-    def test_timer_basic(self) -> None:
-        """Basic test of the timer class"""
-
-        # Generate 3 intervals between 0.5 and 2 seconds
-        intervals = [(random() * 1.5) + 0.5 for _ in range(3)]
-
-        # Basic start and stop test
-        timer = Timer()
-        timer.start()
-        time.sleep(intervals[0])
-        timer.stop()
-        self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.total_time_seconds, intervals[0])
-
-        total = timer.total_time_seconds
-
-        # Test that interval time resets and total time accumulates
-        timer.start()
-        time.sleep(intervals[1])
-        timer.stop()
-        self.assertLess(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.interval_time_seconds, intervals[1])
-        self.assert_within_tolerance(timer.total_time_seconds, total + intervals[1])
-
-        # Test that reset works properly
-        timer.reset()
-        timer.start()
-        time.sleep(intervals[2])
-        timer.stop()
-        self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.total_time_seconds, intervals[2])
-
-    def test_verbose_timer(self) -> None:
-        timer = VerboseTimer()
-
-        # TODO: maybe use a magic mock would be better?
-        class MockLogger:
-            def __init__(self):
-                self._info = []
-
-            def info(self, msg: str) -> None:
-                self._info.append(msg)
-
-        mock_logger = MockLogger()
-        with timer.time("hi", logger=mock_logger):
-            self.assertTrue("Starting hi" in mock_logger._info)
-            time.sleep(1)
-            self.assertTrue(
-                not any([x.startswith("Stopping hi") for x in mock_logger._info])
-            )
-        # Assert that end hi has been called
-        self.assertTrue(any([x.startswith("Stopping hi") for x in mock_logger._info]))
-
-    def test_extra_starts_stops(self) -> None:
-        """Test behavior with extra starts and stops"""
-
-        # Generate 2 intervals between 0.5 and 2 seconds
-        intervals = [(random() * 1.5) + 0.5 for _ in range(2)]
-
-        # Test multiple starts
-        timer = Timer()
-        timer.start()
-        time.sleep(intervals[0])
-        with self.assertWarns(Warning):
-            timer.start()
-        timer.stop()
-        self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.total_time_seconds, intervals[0])
-
-        total = timer.total_time_seconds
-
-        # Test multiple stops
-        timer.start()
-        time.sleep(intervals[1])
-        timer.stop()
-        with self.assertWarns(Warning):
-            timer.stop()
-        self.assertLess(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.total_time_seconds, total + intervals[1])
-
-    def test_missing_starts_stops(self) -> None:
-        """Test behavior with missing starts and stops"""
-
-        # Generate 1 interval between 0.5 and 2 seconds
-        intervals = [(random() * 1.5) + 0.5 for _ in range(1)]
-        timer = Timer()
-
-        # Test stop without start
-        timer.reset()
-        with self.assertWarns(Warning):
-            timer.stop()
-        self.assertEqual(timer.interval_time_seconds, 0)
-        self.assertEqual(timer.total_time_seconds, 0)
-
-        # Test start without stop
-        timer.reset()
-        timer.start()
-        time.sleep(intervals[0])
-
-        # Saving values outside of asserts to reduce error from overhead
-        interval_time = timer.interval_time_seconds
-        total_time = timer.total_time_seconds
-
-        self.assert_within_tolerance(interval_time, intervals[0])
-        self.assert_within_tolerance(total_time, intervals[0])
-
-    def test_timer_state_dict(self) -> None:
-        """Test the statefulness of the timer class"""
-
-        # Generate 3 intervals between 0.5 and 2 seconds
-        intervals = [(random() * 1.5) + 0.5 for _ in range(3)]
-
-        # Test saving state dict
-        timer = Timer()
-        timer.start()
-        time.sleep(intervals[0])
-        timer.stop()
-
-        interval = timer.interval_time_seconds
-        total = timer.total_time_seconds
-
-        state_dict = timer.state_dict()
-        self.assertEqual(len(state_dict), 3)
-        self.assertIn("interval_start_time", state_dict)
-        self.assertIn("interval_stop_time", state_dict)
-        self.assertIn("total_time_seconds", state_dict)
-
-        # Test loading state dict, ensure interval is preserved and total accumulates
-        del timer
-        timer = Timer()
-        timer.load_state_dict(state_dict)
-        self.assert_within_tolerance(timer.interval_time_seconds, interval)
-
-        timer.start()
-        time.sleep(intervals[1])
-        timer.stop()
-        self.assert_within_tolerance(timer.total_time_seconds, total + intervals[1])
-
-        total = timer.total_time_seconds
-
-        # Test saving state dict on running timer, ensure timer is paused
-        timer.start()
-        time.sleep(intervals[2])
-        with self.assertRaisesRegex(
-            Exception, "Timer must be paused before creating state_dict."
-        ):
-            state_dict = timer.state_dict()
+    def test_timer_verbose(self) -> None:
+        timer = Timer(verbose=True)
+        with mock.patch.object(logger, "info") as mock_info:
+            with timer.time("Testing timer"):
+                time.sleep(0.2)
+            mock_info.assert_called_once()
+            self.assertTrue("Testing timer took" in mock_info.call_args.args[0])
 
     def test_timer_context_manager(self) -> None:
         """Test the context manager in the timer class"""
 
         # Generate 3 intervals between 0.5 and 2 seconds
-        intervals = [(random() * 1.5) + 0.5 for _ in range(3)]
+        intervals = [(random() * 1.5) + 0.5 for _ in range(4)]
 
         # Basic test of context manager
         timer = Timer()
         with timer.time("action_1"):
             time.sleep(intervals[0])
-        self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.total_time_seconds, intervals[0])
 
-        total = timer.total_time_seconds
-
-        # Ensure total accumulates with multiple context managers
         with timer.time("action_2"):
             time.sleep(intervals[1])
-        self.assertLess(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.interval_time_seconds, intervals[1])
-        self.assert_within_tolerance(timer.total_time_seconds, total + intervals[1])
-
-        total = timer.total_time_seconds
 
         # Make sure nested context managers work properly
-        with self.assertWarns(Warning):
-            with timer.time("action_3"):
-                with timer.time("action_4"):
-                    time.sleep(intervals[2])
-        self.assertLess(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.interval_time_seconds, intervals[2])
-        self.assert_within_tolerance(timer.total_time_seconds, total + intervals[2])
+        with timer.time("action_3"):
+            with timer.time("action_4"):
+                time.sleep(intervals[2])
+
+        for action in ("action_1", "action_2", "action_3", "action_4"):
+            self.assertIn(action, timer.recorded_durations.keys())
+
+        self.assertLess(
+            timer.recorded_durations["action_4"][0],
+            timer.recorded_durations["action_3"][0],
+        )
+        for i in range(3):
+            self.assert_within_tolerance(
+                timer.recorded_durations[f"action_{i+1}"][0], intervals[i]
+            )
+        self.assert_within_tolerance(
+            timer.recorded_durations["action_4"][0], intervals[2]
+        )
 
     @unittest.skipUnless(
         condition=torch.cuda.is_available(), reason="This test needs a GPU host to run."
@@ -226,21 +88,19 @@ class TimerTest(unittest.TestCase):
         timer = Timer()
 
         # Do not explicitly call synchronize, timer must call it for test to pass.
-        timer.start()
-        start_event.record()
 
-        time.sleep(0.5)
-
-        end_event.record()
-        timer.stop()
+        with timer.time("action_1"):
+            start_event.record()
+            time.sleep(0.5)
+            end_event.record()
 
         # torch.cuda.synchronize() has to be called to compute the elapsed time.
         # Otherwise, there will be runtime error.
         elapsed_time_ms = start_event.elapsed_time(end_event)
-
-        self.assertEqual(timer.interval_time_seconds, timer.total_time_seconds)
-        self.assert_within_tolerance(timer.total_time_seconds, 0.5)
-        self.assert_within_tolerance(timer.total_time_seconds, elapsed_time_ms / 1000)
+        self.assert_within_tolerance(timer.recorded_durations["action_1"][0], 0.5)
+        self.assert_within_tolerance(
+            timer.recorded_durations["action_1"][0], elapsed_time_ms / 1000
+        )
 
     def test_get_timer_summary(self) -> None:
         """Test the get_timer_summary function"""
