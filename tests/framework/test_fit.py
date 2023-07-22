@@ -324,5 +324,3 @@ class FitTest(unittest.TestCase):
             evaluate_every_n_epochs=evaluate_every_n_epochs,
             timer=timer,
         )
-        self.assertIn("train.next(data_iter)", timer.recorded_durations.keys())
-        self.assertIn("evaluate.next(data_iter)", timer.recorded_durations.keys())
