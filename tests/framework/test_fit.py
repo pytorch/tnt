@@ -337,15 +337,12 @@ class TimingFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
     def train_step(self, state: State, data: Batch) -> torch.Tensor:
         inputs, _ = data
         outputs = self.module(inputs)
-
         tc = unittest.TestCase()
-        for k in (
-            "TimingFitUnit.on_train_start",
-            "TimingFitUnit.on_train_epoch_start",
-        ):
-            tc.assertTrue(k in state.timer.recorded_durations.keys())
-
+        tc.assertTrue("train.next(data_iter)" in state.timer.recorded_durations.keys())
         return outputs
 
     def eval_step(self, state: State, data: Batch) -> None:
-        pass
+        tc = unittest.TestCase()
+        tc.assertTrue(
+            "evaluate.next(data_iter)" in state.timer.recorded_durations.keys()
+        )

@@ -11,7 +11,6 @@ import torch
 from pyre_extensions import none_throws
 
 from torchtnt.framework._callback_handler import CallbackHandler
-from torchtnt.framework.auto_unit import AutoPredictUnit, AutoUnit
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TPredictData, TPredictUnit
@@ -140,7 +139,6 @@ def _predict_impl(
     step_input = data_iter
 
     pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
-    is_auto_unit = isinstance(predict_unit, (AutoUnit, AutoPredictUnit))
     prev_steps_in_epoch = predict_unit.predict_progress.num_steps_completed_in_epoch
 
     while not (
@@ -158,15 +156,7 @@ def _predict_impl(
                     step_input = next(data_iter)
 
             callback_handler.on_predict_step_start(state, predict_unit)
-            with get_timing_context(
-                state,
-                f"{predict_unit.__class__.__name__}.predict_step",
-                skip_timer=is_auto_unit,
-                # skip timer if predict_unit is a subclass of AutoUnit because we have additional timing in the AutoUnit and all timing should be mutually exclusive
-            ):
-                predict_state._step_output = predict_unit.predict_step(
-                    state, step_input
-                )
+            predict_state._step_output = predict_unit.predict_step(state, step_input)
 
             predict_unit.predict_progress.increment_step()
             callback_handler.on_predict_step_end(state, predict_unit)
@@ -190,14 +180,10 @@ def _predict_impl(
     # set progress counters for the next epoch
     predict_unit.predict_progress.increment_epoch()
 
-    with get_timing_context(
-        state, f"{predict_unit.__class__.__name__}.on_predict_epoch_end"
-    ):
-        predict_unit.on_predict_epoch_end(state)
+    predict_unit.on_predict_epoch_end(state)
     callback_handler.on_predict_epoch_end(state, predict_unit)
 
-    with get_timing_context(state, f"{predict_unit.__class__.__name__}.on_predict_end"):
-        predict_unit.on_predict_end(state)
+    predict_unit.on_predict_end(state)
     callback_handler.on_predict_end(state, predict_unit)
 
     # Reset training mode for modules at the end of the epoch

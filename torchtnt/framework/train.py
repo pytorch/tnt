@@ -10,7 +10,6 @@ from typing import Iterable, List, Optional
 import torch
 from pyre_extensions import none_throws
 from torchtnt.framework._callback_handler import CallbackHandler
-from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.evaluate import _evaluate_impl
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
@@ -132,8 +131,7 @@ def _train_impl(
     tracked_modules = train_unit.tracked_modules()
     prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
-    with get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_start"):
-        train_unit.on_train_start(state)
+    train_unit.on_train_start(state)
     callback_handler.on_train_start(state, train_unit)
 
     while not (
@@ -144,8 +142,7 @@ def _train_impl(
     ):
         _train_epoch_impl(state, train_unit, callback_handler)
 
-    with get_timing_context(state, f"{train_unit.__class__.__name__}.on_train_end"):
-        train_unit.on_train_end(state)
+    train_unit.on_train_end(state)
     callback_handler.on_train_end(state, train_unit)
 
     # Reset training mode for modules at the end of the epoch
@@ -176,10 +173,7 @@ def _train_epoch_impl(
     # to avoid running this multiple times
     # in the case of resuming from a checkpoint mid-epoch
     if train_unit.train_progress.num_steps_completed_in_epoch == 0:
-        with get_timing_context(
-            state, f"{train_unit.__class__.__name__}.on_train_epoch_start"
-        ):
-            train_unit.on_train_epoch_start(state)
+        train_unit.on_train_epoch_start(state)
         callback_handler.on_train_epoch_start(state, train_unit)
 
     _maybe_set_distributed_sampler_epoch(
@@ -191,8 +185,6 @@ def _train_epoch_impl(
     step_input = data_iter
 
     pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
-    is_auto_unit = isinstance(train_unit, AutoUnit)
-
     prev_steps_in_epoch = train_unit.train_progress.num_steps_completed_in_epoch
 
     while not (
@@ -210,15 +202,7 @@ def _train_epoch_impl(
                     step_input = next(data_iter)
 
             callback_handler.on_train_step_start(state, train_unit)
-
-            with get_timing_context(
-                state,
-                f"{train_unit.__class__.__name__}.train_step",
-                skip_timer=is_auto_unit,
-                # skip timer if train_unit is a subclass of AutoUnit because there is additional timing in the AutoUnit, and all timing should be mutually exclusive
-            ):
-                train_state._step_output = train_unit.train_step(state, step_input)
-
+            train_state._step_output = train_unit.train_step(state, step_input)
             train_unit.train_progress.increment_step()
             callback_handler.on_train_step_end(state, train_unit)
 
@@ -256,10 +240,7 @@ def _train_epoch_impl(
     # set progress counters for the next epoch
     train_unit.train_progress.increment_epoch()
 
-    with get_timing_context(
-        state, f"{train_unit.__class__.__name__}.on_train_epoch_end"
-    ):
-        train_unit.on_train_epoch_end(state)
+    train_unit.on_train_epoch_end(state)
     callback_handler.on_train_epoch_end(state, train_unit)
 
     if (

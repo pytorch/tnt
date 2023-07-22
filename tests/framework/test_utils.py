@@ -214,14 +214,6 @@ class UtilsTest(unittest.TestCase):
         self.assertTrue("b" in state.timer.recorded_durations.keys())
         mock_record_function.assert_called_with("b")
 
-        state.timer = Timer()
-        ctx = get_timing_context(state, "c", skip_timer=True)
-        with ctx:
-            time.sleep(1)
-        # "c" should not be in the recorded_durations because we set skip_timer to True
-        self.assertFalse("c" in state.timer.recorded_durations.keys())
-        mock_record_function.assert_called_with("c")
-
     def test_find_optimizers_for_module(self) -> None:
         module1 = torch.nn.Linear(10, 10)
         module2 = torch.nn.Linear(10, 10)
