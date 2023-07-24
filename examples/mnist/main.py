@@ -18,7 +18,9 @@ from torch.optim import Adadelta
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torcheval.metrics import MulticlassAccuracy
-from torchtnt.framework import AutoUnit, fit, State
+from torchtnt.framework.auto_unit import AutoUnit
+from torchtnt.framework.fit import fit
+from torchtnt.framework.state import State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
 from torchvision import datasets, transforms

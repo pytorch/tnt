@@ -10,8 +10,7 @@ from typing import Any, Iterable, Iterator, Optional, Tuple
 import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset, IterableDataset, TensorDataset
-from torchtnt.framework import PhaseState
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 
 Batch = Tuple[torch.Tensor, torch.Tensor]

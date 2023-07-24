@@ -16,9 +16,9 @@ from typing import Any, List, Tuple
 import torch
 from torch.distributed import launcher
 from torch.optim.lr_scheduler import ExponentialLR
-from torchtnt.framework import AutoUnit
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
+from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callbacks import Lambda, TorchSnapshotSaver
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
