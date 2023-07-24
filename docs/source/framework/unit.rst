@@ -30,7 +30,7 @@ Here is an example of a unit which extends TrainUnit, EvalUnit, and PredictUnit.
 
 .. code-block:: python
 
- from torchtnt.framework import TrainUnit, EvalUnit, PredictUnit
+ from torchtnt.framework.unit import TrainUnit, EvalUnit, PredictUnit
 
  Batch = Tuple[torch.tensor, torch.tensor]
 

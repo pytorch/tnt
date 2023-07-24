@@ -51,7 +51,7 @@ def predict(
 
     .. code-block:: python
 
-        from torchtnt.framework import predict
+        from torchtnt.framework.predict import predict
 
         predict_unit = MyPredictUnit(module=..., optimizer=..., lr_scheduler=...)
         predict_dataloader = torch.utils.data.DataLoader(...)

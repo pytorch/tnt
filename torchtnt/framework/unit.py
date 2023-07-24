@@ -194,7 +194,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
 
     .. code-block:: python
 
-      from torchtnt.framework import TrainUnit
+      from torchtnt.framework.unit import TrainUnit
 
       Batch = Tuple[torch.tensor, torch.tensor]
       # specify type of the data in each batch of the dataloader to allow for typechecking
@@ -286,7 +286,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
 
     .. code-block:: python
 
-      from torchtnt.framework import EvalUnit
+      from torchtnt.framework.unit import EvalUnit
 
       Batch = Tuple[torch.tensor, torch.tensor]
       # specify type of the data in each batch of the dataloader to allow for typechecking
@@ -373,7 +373,7 @@ class PredictUnit(
 
     .. code-block:: python
 
-      from torchtnt.framework import PredictUnit
+      from torchtnt.framework.unit import PredictUnit
 
       Batch = Tuple[torch.tensor, torch.tensor]
       # specify type of the data in each batch of the dataloader to allow for typechecking

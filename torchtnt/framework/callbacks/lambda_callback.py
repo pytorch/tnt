@@ -39,8 +39,8 @@ class Lambda(Callback):
 
     Examples::
 
-        from torchtnt.framework import evaluate
         from torchtnt.framework.callbacks import Lambda
+        from torchtnt.framework.evaluate import evaluate
 
         dataloader = MyDataLoader()
         unit = MyUnit()

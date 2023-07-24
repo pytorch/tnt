@@ -16,7 +16,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.framework import State, train, TrainUnit
+from torchtnt.framework.state import State
+from torchtnt.framework.train import train
+from torchtnt.framework.unit import TrainUnit
 from torchtnt.utils import copy_data_to_device, init_from_env, seed, TLRScheduler
 
 from torchtnt.utils.loggers import TensorBoardLogger

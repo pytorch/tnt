@@ -60,7 +60,7 @@ def fit(
 
     .. code-block:: python
 
-        from torchtnt.framework import fit
+        from torchtnt.framework.fit import fit
 
         fit_unit = MyFitUnit(module=..., optimizer=..., lr_scheduler=...)
         train_dataloader = torch.utils.data.DataLoader(...)
