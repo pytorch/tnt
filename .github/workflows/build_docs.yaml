@@ -26,7 +26,7 @@ jobs:
           set -eux
           conda activate test
           conda install pytorch cpuonly -c pytorch-nightly
-          pip install -r requirements.txt
+          pip install $(grep -v '^ *#\|^torch' requirements.txt | grep .)
           pip install -r dev-requirements.txt
           python setup.py sdist bdist_wheel
           pip install dist/*.whl
@@ -36,7 +36,7 @@ jobs:
           set -eux
           conda activate test
           cd docs
-          pip install -r requirements.txt
+          pip install $(grep -v '^ *#\|^torch' requirements.txt | grep .)
           make html
           touch build/html/.nojekyll
           cd ..

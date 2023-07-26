@@ -26,7 +26,7 @@ jobs:
           set -eux
           conda activate test
           conda install pytorch cpuonly -c pytorch-nightly
-          pip install -r requirements.txt
+          pip install $(grep -v '^ *#\|^torch' requirements.txt | grep .)
           pip install -r dev-requirements.txt
           pip install  --no-build-isolation -e .
       - name: Run unit tests with coverage

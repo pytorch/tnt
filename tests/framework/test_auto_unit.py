@@ -16,7 +16,6 @@ from torchtnt.utils.version import is_torch_version_geq_1_13
 COMPILE_AVAIL = False
 if is_torch_version_geq_1_13():
     COMPILE_AVAIL = True
-    import torch._dynamo
 
 from torch.distributed import GradBucket, launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP

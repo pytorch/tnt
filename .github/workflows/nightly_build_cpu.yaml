@@ -32,7 +32,7 @@ jobs:
           set -eux
           conda activate test
           conda install pytorch cpuonly -c pytorch-nightly
-          pip install -r requirements.txt
+          pip install $(grep -v '^ *#\|^torch' requirements.txt | grep .)
           python setup.py sdist bdist_wheel
           pip install dist/*.whl
           pip install -r dev-requirements.txt
@@ -61,7 +61,7 @@ jobs:
           set -eux
           conda activate test
           conda install pytorch cpuonly -c pytorch-nightly
-          pip install -r requirements.txt
+          pip install $(grep -v '^ *#\|^torch' requirements.txt | grep .)
           pip install --no-build-isolation -e ".[dev]"
       - name: Upload to PyPI
         shell: bash -l {0}
