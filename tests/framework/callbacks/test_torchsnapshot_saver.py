@@ -14,6 +14,7 @@ import unittest
 from typing import Any, List, Tuple
 
 import torch
+import torch.distributed as dist
 from torch.distributed import launcher
 from torch.optim.lr_scheduler import ExponentialLR
 
@@ -22,7 +23,9 @@ from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callbacks import Lambda, TorchSnapshotSaver
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
-from torchtnt.utils import get_global_rank, init_from_env, TLRScheduler
+from torchtnt.utils.distributed import get_global_rank, PGWrapper
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.test_utils import get_pet_launch_config
 
 
@@ -288,6 +291,77 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 ValueError, "Invalid value passed for save_every_n_epochs.*"
             ):
                 TorchSnapshotSaver(temp_dir, save_every_n_epochs=0)
+
+    def test_latest_checkpoint_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.assertIsNone(TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir))
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            latest_path = os.path.join(temp_dir, "epoch_0_step_0")
+            os.mkdir(latest_path)
+            self.assertEqual(
+                TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir), latest_path
+            )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path_1 = os.path.join(temp_dir, "epoch_0_step_0")
+            os.mkdir(path_1)
+            path_2 = os.path.join(temp_dir, "epoch_0_step_100")
+            os.mkdir(path_2)
+            path_3 = os.path.join(temp_dir, "epoch_1_step_100")
+            os.mkdir(path_3)
+            path_4 = os.path.join(temp_dir, "epoch_700")
+            os.mkdir(path_4)
+            self.assertEqual(
+                TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir), path_3
+            )
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_latest_checkpoint_path_distributed(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(
+            config, entrypoint=self._latest_checkpoint_path_distributed
+        )()
+
+    @staticmethod
+    def _latest_checkpoint_path_distributed() -> None:
+        tc = unittest.TestCase()
+        is_rank0 = get_global_rank() == 0
+
+        if is_rank0:
+            temp_dir = tempfile.mkdtemp()
+        else:
+            temp_dir = ""
+        tc.assertIsNone(TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir))
+        if is_rank0:
+            shutil.rmtree(temp_dir)  # delete temp directory
+
+        if is_rank0:
+            temp_dir = tempfile.mkdtemp()
+            path_1 = os.path.join(temp_dir, "epoch_0_step_0")
+            os.mkdir(path_1)
+            path_2 = os.path.join(temp_dir, "epoch_0_step_100")
+            os.mkdir(path_2)
+            path_3 = os.path.join(temp_dir, "epoch_1_step_100")
+            os.mkdir(path_3)
+            path_4 = os.path.join(temp_dir, "epoch_700")
+            os.mkdir(path_4)
+        else:
+            temp_dir = ""
+            path_3 = ""
+
+        pg = PGWrapper(dist.group.WORLD)
+        path_container = [path_3] if is_rank0 else [None]
+        pg.broadcast_object_list(path_container, 0)
+        expected_path = path_container[0]
+        tc.assertEqual(
+            TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir), expected_path
+        )
+
+        if is_rank0:
+            shutil.rmtree(temp_dir)  # delete temp directory
 
 
 Batch = Tuple[torch.tensor, torch.tensor]
