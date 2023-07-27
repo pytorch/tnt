@@ -361,19 +361,23 @@
 <p>On construction, the logger creates a new events file that logs
 will be written to.  If the environment variable <cite>RANK</cite> is defined,
 logger will only log if RANK = 0.</p>
-<p>NOTE: If using the logger with distributed training:
-- This logger can call collective operations
-- Logs will be written on rank 0 only
-- Logger must be constructed synchronously <em>after</em> initializing distributed process group.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If using this logger with distributed training:</p>
+<ul class="last simple">
+<li>This logger can call collective operations</li>
+<li>Logs will be written on rank 0 only</li>
+<li>Logger must be constructed synchronously <em>after</em> initializing the distributed process group.</li>
+</ul>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>path</strong> (<em>str</em>) – path to write logs to</li>
-<li><strong>*args</strong> – Extra arguments to pass to SummaryWriter</li>
-<li><strong>**kwargs</strong> – <p>Extra arguments to pass to SummaryWriter</p>
-</li>
+<li><strong>*args</strong> – Extra positional arguments to pass to SummaryWriter</li>
+<li><strong>**kwargs</strong> – Extra keyword arguments to pass to SummaryWriter</li>
 </ul>
 </td>
 </tr>
@@ -381,7 +385,7 @@ logger will only log if RANK = 0.</p>
 </table>
 <p>Examples:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.utils.loggers</span> <span class="kn">import</span> <span class="n">TensorBoardLogger</span>
-<span class="n">logger</span> <span class="o">=</span> <span class="n">TensorBoardLogger</span><span class="p">()</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">TensorBoardLogger</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;tmp/tb_logs&quot;</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="mf">23.56</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">logger</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
@@ -419,6 +423,24 @@ Logs cannot be written after <cite>close</cite> is called.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_audio">
+<code class="sig-name descname"><span class="pre">log_audio</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_audio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add audio data to TensorBoard.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>*args</strong> (<em>Any</em>) – Positional arguments passed to SummaryWriter.add_audio</li>
+<li><strong>**kwargs</strong> (<em>Any</em>) – Keyword arguments passed to SummaryWriter.add_audio</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_dict">
 <code class="sig-name descname"><span class="pre">log_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add multiple scalar values to TensorBoard.</p>
@@ -447,6 +469,42 @@ Logs cannot be written after <cite>close</cite> is called.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>hparams</strong> (<em>dict</em>) – dictionary of hyperparameter names and corresponding values</li>
 <li><strong>metrics</strong> (<em>dict</em>) – dictionary of name of metric and corresponding values</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_image">
+<code class="sig-name descname"><span class="pre">log_image</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add image data to TensorBoard.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>*args</strong> (<em>Any</em>) – Positional arguments passed to SummaryWriter.add_image</li>
+<li><strong>**kwargs</strong> (<em>Any</em>) – Keyword arguments passed to SummaryWriter.add_image</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_images">
+<code class="sig-name descname"><span class="pre">log_images</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add batched image data to summary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>*args</strong> (<em>Any</em>) – Positional arguments passed to SummaryWriter.add_images</li>
+<li><strong>**kwargs</strong> (<em>Any</em>) – Keyword arguments passed to SummaryWriter.add_images</li>
 </ul>
 </td>
 </tr>

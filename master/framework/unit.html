@@ -364,7 +364,7 @@ is an abstract method where you can define the code you want to run each iterati
 <p>To use the TrainUnit, create a class which subclasses TrainUnit. Then implement the <code class="docutils literal notranslate"><span class="pre">train_step</span></code> method on your class, and optionally
 implement any of the hooks, which allow you to control the behavior of the loop at different points.</p>
 <p>Below is a simple example of a user’s subclass of TrainUnit that implements a basic <code class="docutils literal notranslate"><span class="pre">train_step</span></code>, and the <code class="docutils literal notranslate"><span class="pre">on_train_epoch_end</span></code> hook.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">TrainUnit</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TrainUnit</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">]</span>
 <span class="c1"># specify type of the data in each batch of the dataloader to allow for typechecking</span>
@@ -382,7 +382,7 @@ implement any of the hooks, which allow you to control the behavior of the loop 
         <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span>
 
     <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-         <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">binary_cross_entropy_with_logits</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
         <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
@@ -485,7 +485,7 @@ is an abstract method where you can define the code you want to run each iterati
 <p>To use the EvalUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>.
 Then implement the <code class="docutils literal notranslate"><span class="pre">eval_step</span></code> method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
 Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">eval_step</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">EvalUnit</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">EvalUnit</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">]</span>
 <span class="c1"># specify type of the data in each batch of the dataloader to allow for typechecking</span>
@@ -595,7 +595,7 @@ is an abstract method where you can define the code you want to run each iterati
 <p>To use the PredictUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a>.
 Then implement the <code class="docutils literal notranslate"><span class="pre">predict_step</span></code> method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
 Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">predict_step</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">PredictUnit</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">PredictUnit</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">]</span>
 <span class="c1"># specify type of the data in each batch of the dataloader to allow for typechecking</span>

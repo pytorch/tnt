@@ -371,6 +371,8 @@ straggler processes. This callback makes it convenient to configure
 all processes performing garbage collection at the same time in the loop.</p>
 <p>Synchronizing the garbage collection can lead to a performance improvement.
 The frequency of garbage collection must be tuned based on the application at hand.</p>
+<p>By default, this callback does generation 1 collection every step. This can free up
+some objects to be reaped with minimal overhead compared to the full garbage collection.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
