@@ -212,8 +212,14 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         else:
             module = module.to(self.device)
         if torch_compile_params:
-            # use in-place compile to avoid altering the state_dict keys
-            module.compile(**asdict(torch_compile_params))
+            try:
+                # use in-place compile to avoid altering the state_dict keys
+                module.compile(**asdict(torch_compile_params))
+            except AttributeError:
+                rank_zero_warn(
+                    "Please install pytorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing."
+                )
+                torch.compile(module, **asdict(torch_compile_params))
         self.module: torch.nn.Module = module
 
         # cuda stream to use for moving data to device
@@ -471,8 +477,14 @@ class AutoUnit(
                 self.compute_loss,
                 **asdict(torch_compile_params),
             )
-            # use in-place compile to avoid altering the state_dict keys
-            module.compile(**asdict(torch_compile_params))
+            try:
+                # use in-place compile to avoid altering the state_dict keys
+                module.compile(**asdict(torch_compile_params))
+            except AttributeError:
+                rank_zero_warn(
+                    "Please install pytorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing."
+                )
+                torch.compile(module, **asdict(torch_compile_params))
 
         self.module: torch.nn.Module = module
 
