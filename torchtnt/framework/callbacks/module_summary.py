@@ -6,21 +6,15 @@
 
 from typing import Any, Callable, Dict, List, MutableMapping, Optional, Tuple
 
-try:
-    from torcheval.tools import (
-        get_module_summary,
-        get_summary_table,
-        ModuleSummary as ModuleSummaryObj,
-        prune_module_summary,
-    )
-
-    _TORCHEVAL_AVAILABLE = True
-except Exception:
-    _TORCHEVAL_AVAILABLE = False
-
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTrainUnit
+from torchtnt.utils.module_summary import (
+    get_module_summary,
+    get_summary_table,
+    ModuleSummary as ModuleSummaryObj,
+    prune_module_summary,
+)
 from torchtnt.utils.rank_zero_log import rank_zero_info
 
 
@@ -31,7 +25,7 @@ def _log_module_summary_tables(module_summaries: List[ModuleSummaryObj]) -> None
 
 class ModuleSummary(Callback):
     """
-    A callback which generates and logs a summary of the modules using `TorchEval <https://pytorch.org/torcheval/>`_.
+    A callback which generates and logs a summary of the modules.
 
     Args:
         max_depth: The maximum depth of module summaries to keep.
@@ -54,12 +48,6 @@ class ModuleSummary(Callback):
             MutableMapping[str, Tuple[Tuple[Any, ...], Dict[str, Any]]]
         ] = None,
     ) -> None:
-        if not _TORCHEVAL_AVAILABLE:
-            raise RuntimeError(
-                "ModuleSummary support requires torcheval. "
-                "Please make sure ``torcheval`` is installed. "
-                "Installation: https://github.com/pytorch/torcheval#installing-torcheval"
-            )
         self._max_depth = max_depth
         self._process_fn = process_fn
         self._module_inputs = module_inputs

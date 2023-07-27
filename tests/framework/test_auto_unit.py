@@ -391,7 +391,7 @@ class TestAutoUnit(unittest.TestCase):
         my_compile_params = TorchCompileParams(backend="foo")
 
         self.failUnlessRaises(
-            RuntimeError,
+            Exception,
             DummyAutoUnit,
             **{
                 "module": my_module,

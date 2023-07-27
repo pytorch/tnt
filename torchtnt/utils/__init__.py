@@ -26,10 +26,17 @@ from .distributed import (
 )
 from .early_stop_checker import EarlyStopChecker
 from .env import init_from_env, seed
+from .flops import FlopTensorDispatchMode
 from .fsspec import get_filesystem
 from .lr_scheduler import TLRScheduler
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
 from .misc import days_to_secs, transfer_batch_norm_stats, transfer_weights
+from .module_summary import (
+    get_module_summary,
+    get_summary_table,
+    ModuleSummary,
+    prune_module_summary,
+)
 from .oom import (
     attach_oom_observer,
     is_out_of_cpu_memory,
@@ -85,6 +92,7 @@ __all__ = [
     "EarlyStopChecker",
     "init_from_env",
     "seed",
+    "FlopTensorDispatchMode",
     "get_filesystem",
     "get_tensor_size_bytes_map",
     "measure_rss_deltas",
@@ -111,6 +119,10 @@ __all__ = [
     "get_timer_summary",
     "transfer_batch_norm_stats",
     "transfer_weights",
+    "get_module_summary",
+    "get_summary_table",
+    "ModuleSummary",
+    "prune_module_summary",
     "Timer",
     "create_progress_bar",
     "close_progress_bar",
