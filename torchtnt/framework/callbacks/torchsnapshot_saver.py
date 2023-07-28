@@ -6,7 +6,8 @@
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Set, Union
+import re
+from typing import Any, Dict, List, Optional, Pattern, Set, Union
 
 import torch.distributed as dist
 
@@ -17,7 +18,8 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.framework.utils import _construct_tracked_optimizers, get_timing_context
-from torchtnt.utils.distributed import get_global_rank
+from torchtnt.utils.distributed import get_global_rank, PGWrapper
+from torchtnt.utils.fsspec import get_filesystem
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import Stateful
 
@@ -244,6 +246,83 @@ class TorchSnapshotSaver(Callback):
                     break
 
         snapshot.restore(app_state)
+
+    @staticmethod
+    def get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
+        """Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory."""
+
+        ret = None
+        rank = get_global_rank()
+        # Do all filesystem reads from rank 0 only
+        if rank == 0:
+            ret = _latest_checkpoint_path(dirpath)
+
+        # If not running in a distributed setting, return as is
+        if not (dist.is_available() and dist.is_initialized()):
+            return ret
+
+        # Otherwise, broadcast result from rank 0 to all ranks
+        pg = PGWrapper(dist.group.WORLD)
+        path_container = [ret] if rank == 0 else [None]
+        pg.broadcast_object_list(path_container, 0)
+        val = path_container[0]
+        return val
+
+
+def _latest_checkpoint_path(dirpath: str) -> Optional[str]:
+    fs = get_filesystem(dirpath)
+
+    if not fs.exists(dirpath):
+        logger.warning(f"Input dirpath doesn't exist: {dirpath}")
+        return None
+
+    contents = fs.ls(dirpath, detail=True)
+    contents = [item["name"] for item in contents if item["type"] == "directory"]
+    if len(contents) == 0:
+        logger.warning(f"Input dirpath doesn't contain any subdirectories: {dirpath}")
+        return None
+
+    # Define the regex pattern to match the directory names
+    pattern = rf"^{dirpath}/epoch_\d+_step_\d+"
+    snapshot_dirpath_pattern: Pattern[str] = re.compile(pattern)
+    candidate_dirpaths = list(filter(snapshot_dirpath_pattern.match, contents))
+
+    if len(candidate_dirpaths) == 0:
+        logger.warning(
+            f"No valid checkpoint directories were found in input dirpath: {dirpath}"
+        )
+        return None
+
+    # Initialize variables to store the largest epoch and step numbers
+    largest_subdirectory = None
+    largest_epoch = -1
+    largest_step = -1
+
+    # Iterate through all files and directories in the specified directory
+    for candidate in candidate_dirpaths:
+        # Extract the epoch and step numbers from the directory name
+        dirname = os.path.basename(candidate)
+
+        # dirname will be of the format epoch_N_step_M
+        # where N is the epoch number and M is the step number as integers
+        split = dirname.split("_")
+        if len(split) != 4:
+            raise AssertionError(
+                f"Expected exactly 4 elements for pattern of epoch_N_step_M, but received {split})"
+            )
+
+        epoch_num, step_num = int(split[1]), int(split[3])
+        # Check if the current epoch and step numbers are larger than the largest ones found so far
+        if epoch_num > largest_epoch:
+            largest_epoch = epoch_num
+            largest_step = step_num
+            largest_subdirectory = dirname
+        elif largest_epoch == epoch_num and step_num > largest_step:
+            largest_step = step_num
+            largest_subdirectory = dirname
+
+    # Rejoin with the parent directory path and return the largest subdirectory
+    return os.path.join(dirpath, none_throws(largest_subdirectory))
 
 
 def _validate_snapshot_available() -> None:
