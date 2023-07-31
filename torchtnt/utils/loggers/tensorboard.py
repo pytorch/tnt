@@ -93,7 +93,7 @@ class TensorBoardLogger(MetricLogger):
 
         Args:
             payload (dict): dictionary of tag name and scalar value
-            step (int, Optional): step value to record
+            step (int): step value to record
         """
 
         if self._writer:
@@ -106,7 +106,7 @@ class TensorBoardLogger(MetricLogger):
         Args:
             name (string): tag name used to group scalars
             data (float/int/Tensor): scalar data to log
-            step (int, optional): step value to record
+            step (int): step value to record
         """
 
         if self._writer:
