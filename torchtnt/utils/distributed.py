@@ -117,16 +117,12 @@ def get_global_rank() -> int:
 
 def get_local_rank() -> int:
     """
-    Get rank using the following sources, ordered by priority:
-        - "LOCAL_RANK" environment variable, if populated: https://pytorch.org/docs/stable/elastic/run.html#environment-variables
-        - the torch.device index, if CUDA is available
-    Defaults to 0 if conditions above are not met.
+    Get rank using the ``LOCAL_RANK`` environment variable, if populated: https://pytorch.org/docs/stable/elastic/run.html#environment-variables
+    Defaults to 0 if ``LOCAL_RANK`` is not set.
     """
     environ_local_rank = os.environ.get("LOCAL_RANK")
     if environ_local_rank:
         return int(environ_local_rank)
-    if torch.cuda.is_available():
-        return torch.cuda.current_device()
     return 0
 
 
