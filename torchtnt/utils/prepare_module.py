@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from dataclasses import asdict, dataclass
-from typing import Callable, Iterable, Optional, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Union
 
 import torch
 import torch.distributed as dist
@@ -20,7 +20,11 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 )
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.utils.rank_zero_log import rank_zero_warn
-from torchtnt.utils.version import is_torch_version_geq_1_12
+from torchtnt.utils.version import is_torch_version_geq_1_12, is_torch_version_geq_2_0
+
+if is_torch_version_geq_2_0():
+    from torch.distributed._composable_state import _get_module_state
+    from torch.distributed.fsdp._common_utils import _FSDPState
 
 
 @dataclass
@@ -181,3 +185,38 @@ def prepare_fsdp(
             module, state_dict_type, state_dict_config, optim_state_dict_config
         )
     return module
+
+
+class FSDPOptimizerWrapper:
+    """
+    Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.
+    """
+
+    def __init__(
+        self, module: torch.nn.Module, optimizer: torch.optim.Optimizer
+    ) -> None:
+        self.module = module
+        self.optimizer = optimizer
+
+    def state_dict(self) -> Dict[str, Any]:
+        optim_state_dict = FSDP.optim_state_dict(self.module, self.optimizer)
+        return optim_state_dict
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        optim_state_dict = FSDP.optim_state_dict_to_load(
+            self.module, self.optimizer, state_dict
+        )
+        self.optimizer.load_state_dict(optim_state_dict)
+
+
+def _is_fsdp_module(module: torch.nn.Module) -> bool:
+    if isinstance(module, FSDP):
+        return True
+
+    if is_torch_version_geq_2_0():
+        # Also check for composable FSDP API
+        maybe_composable_state = _get_module_state(module)
+        if maybe_composable_state is not None:
+            return isinstance(maybe_composable_state, _FSDPState)
+
+    return False

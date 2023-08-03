@@ -14,12 +14,17 @@ from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
+    _is_fsdp_module,
     DDPStrategy,
     FSDPStrategy,
     prepare_ddp,
     prepare_fsdp,
 )
 from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.version import is_torch_version_geq_2_0
+
+if is_torch_version_geq_2_0():
+    from torch.distributed._composable import fully_shard
 
 
 class PrepareModelTest(unittest.TestCase):
@@ -86,9 +91,33 @@ class PrepareModelTest(unittest.TestCase):
 
         tc = unittest.TestCase()
         with patch(
-            "torchtnt.utils.prepare_model.is_torch_version_geq_1_12", return_value=False
+            "torchtnt.utils.prepare_module.is_torch_version_geq_1_12",
+            return_value=False,
         ), tc.assertRaisesRegex(
             RuntimeError,
             "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/",
         ):
             _ = prepare_fsdp(module, device, FSDPStrategy())
+
+    @staticmethod
+    def _test_is_fsdp_module() -> None:
+        torch.distributed.init_process_group("gloo")
+        model = torch.nn.Linear(1, 1)
+        assert not _is_fsdp_module(model)
+        model = FSDP(torch.nn.Linear(1, 1))
+        assert _is_fsdp_module(model)
+        model = torch.nn.Linear(1, 1)
+        if is_torch_version_geq_2_0():
+            fully_shard(model)
+            assert _is_fsdp_module(model)
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=torch.cuda.is_available() and torch.cuda.device_count() > 2,
+        reason="This test needs 2 GPUs to run.",
+    )
+    def test_is_fsdp_module(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_is_fsdp_module)()
