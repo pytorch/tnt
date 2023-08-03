@@ -55,7 +55,7 @@ from .rank_zero_log import (
     rank_zero_warn,
 )
 from .stateful import Stateful
-from .timer import FullSyncPeriodicTimer, get_timer_summary, Timer
+from .timer import FullSyncPeriodicTimer, get_timer_summary, log_elapsed_time, Timer
 from .tqdm import close_progress_bar, create_progress_bar, update_progress_bar
 from .version import (
     get_python_version,
@@ -117,6 +117,7 @@ __all__ = [
     "Stateful",
     "FullSyncPeriodicTimer",
     "get_timer_summary",
+    "log_elapsed_time",
     "transfer_batch_norm_stats",
     "transfer_weights",
     "get_module_summary",
