@@ -14,22 +14,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 import typing_extensions
-from torch.distributed.fsdp import (
-    FullyShardedDataParallel,
-    FullyShardedDataParallel as FSDP,
-)
 from torch.profiler import record_function
-from torchtnt.utils.version import is_torch_version_geq_2_0
-
-if is_torch_version_geq_2_0():
-    from torch.distributed._composable_state import _get_module_state
-    from torch.distributed.fsdp._common_utils import _FSDPState
-
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
-
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -132,50 +122,13 @@ def _step_requires_iterator(step_func: Callable[[State, object], object]) -> boo
     return typing_extensions.get_origin(annotated_type) is collections.abc.Iterator
 
 
-def _is_fsdp_module(module: torch.nn.Module) -> bool:
-    if isinstance(module, FSDP):
-        return True
-
-    if is_torch_version_geq_2_0():
-        # Also check for composable FSDP API
-        maybe_composable_state = _get_module_state(module)
-        if maybe_composable_state is not None:
-            return isinstance(maybe_composable_state, _FSDPState)
-
-    return False
-
-
-class _FSDPOptimizerWrapper:
-    """
-    Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.
-    """
-
-    def __init__(
-        self, module: torch.nn.Module, optimizer: torch.optim.Optimizer
-    ) -> None:
-        self.module = module
-        self.optimizer = optimizer
-
-    def state_dict(self) -> Dict[str, Any]:
-        optim_state_dict = FullyShardedDataParallel.optim_state_dict(
-            self.module, self.optimizer
-        )
-        return optim_state_dict
-
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
-        optim_state_dict = FullyShardedDataParallel.optim_state_dict_to_load(
-            self.module, self.optimizer, state_dict
-        )
-        self.optimizer.load_state_dict(optim_state_dict)
-
-
 def _construct_tracked_optimizers(
     unit: AppStateMixin,
-) -> Dict[str, Union[torch.optim.Optimizer, _FSDPOptimizerWrapper]]:
+) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]]:
     """
-    Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in _FSDPOptimizerWrapper.
+    Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
     """
-    fsdp_tracked_optimizers: Dict[str, _FSDPOptimizerWrapper] = {}
+    fsdp_tracked_optimizers: Dict[str, FSDPOptimizerWrapper] = {}
     for module in unit.tracked_modules().values():
         if _is_fsdp_module(module):
             # find optimizers for module, if exists
@@ -183,13 +136,13 @@ def _construct_tracked_optimizers(
                 module, unit.tracked_optimizers()
             )
             for optim_name, optimizer in optimizer_list:
-                fsdp_tracked_optimizers[optim_name] = _FSDPOptimizerWrapper(
+                fsdp_tracked_optimizers[optim_name] = FSDPOptimizerWrapper(
                     module, optimizer
                 )
 
     # construct custom tracked optimizers with FSDP optimizers
     tracked_optimizers: Dict[
-        str, Union[torch.optim.Optimizer, _FSDPOptimizerWrapper]
+        str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]
     ] = {
         key: value
         for key, value in unit.tracked_optimizers().items()
@@ -201,9 +154,9 @@ def _construct_tracked_optimizers(
 
 def _construct_tracked_optimizers_and_schedulers(
     unit: AppStateMixin,
-) -> Dict[str, Union[torch.optim.Optimizer, _FSDPOptimizerWrapper, TLRScheduler]]:
+) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]]:
     """
-    Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in _FSDPOptimizerWrapper.
+    Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
     """
     # construct custom tracked optimizers with FSDP optimizers
     tracked_optimizers_and_schedulers = _construct_tracked_optimizers(unit)

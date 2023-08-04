@@ -14,11 +14,6 @@ import torch
 import torch.distributed as dist
 from torch import nn
 
-from torchtnt.utils.version import is_torch_version_geq_2_0
-
-if is_torch_version_geq_2_0():
-    from torch.distributed._composable import fully_shard
-
 from torch.distributed import launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.optim.lr_scheduler import ExponentialLR
@@ -30,10 +25,8 @@ from torchtnt.framework.state import State
 from torchtnt.framework.utils import (
     _construct_tracked_optimizers_and_schedulers,
     _find_optimizers_for_module,
-    _FSDPOptimizerWrapper,
     _is_done,
     _is_epoch_done,
-    _is_fsdp_module,
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _set_module_training_mode,
@@ -42,6 +35,7 @@ from torchtnt.framework.utils import (
 )
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.prepare_module import FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
 from torchtnt.utils.test_utils import get_pet_launch_config
 from torchtnt.utils.timer import Timer
@@ -49,28 +43,6 @@ from torchtnt.utils.timer import Timer
 
 class UtilsTest(unittest.TestCase):
     cuda_available = torch.cuda.is_available()
-
-    @staticmethod
-    def _test_is_fsdp_module() -> None:
-        dist.init_process_group("gloo")
-        model = nn.Linear(1, 1)
-        assert not _is_fsdp_module(model)
-        model = FSDP(nn.Linear(1, 1))
-        assert _is_fsdp_module(model)
-        if is_torch_version_geq_2_0():
-            fully_shard(model)
-            assert _is_fsdp_module(model)
-
-    @unittest.skipUnless(
-        dist.is_available(), reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=torch.cuda.is_available() and torch.cuda.device_count() > 2,
-        reason="This test needs 2 GPUs to run.",
-    )
-    def test_is_fsdp_module(self) -> None:
-        config = get_pet_launch_config(2)
-        dist.launcher.elastic_launch(config, entrypoint=self._test_is_fsdp_module)()
 
     def test_maybe_set_distributed_sampler_epoch(self) -> None:
         config = get_pet_launch_config(3)
@@ -277,7 +249,7 @@ class UtilsTest(unittest.TestCase):
 
         result = _construct_tracked_optimizers_and_schedulers(auto_unit)
         tc = unittest.TestCase()
-        tc.assertTrue(isinstance(result["optim"], _FSDPOptimizerWrapper))
+        tc.assertTrue(isinstance(result["optim"], FSDPOptimizerWrapper))
         tc.assertTrue(isinstance(result["optim2"], torch.optim.Optimizer))
         tc.assertTrue(isinstance(result["lr_scheduler"], TLRScheduler))
 
