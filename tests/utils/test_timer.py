@@ -21,6 +21,7 @@ from torchtnt.utils.timer import (
     get_durations_histogram,
     get_synced_durations_histogram,
     get_timer_summary,
+    log_elapsed_time,
     logger,
     Timer,
 )
@@ -222,6 +223,10 @@ class TimerTest(unittest.TestCase):
         launcher.elastic_launch(
             config, entrypoint=self._get_synced_durations_histogram_multi_process
         )()
+
+    def test_timer_fn(self) -> None:
+        with log_elapsed_time("test"):
+            pass
 
 
 class FullSyncPeriodicTimerTest(unittest.TestCase):

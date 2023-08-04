@@ -33,9 +33,40 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 AsyncOperator = TypeVar("AsyncOperator")
 
+logger: logging.Logger = logging.getLogger(__name__)
 
 _TABLE_ROW = Tuple[str, float, int, float, float]
 _TABLE_DATA = List[_TABLE_ROW]
+
+
+@contextmanager
+def log_elapsed_time(
+    action_name: str, *, cuda_sync: Optional[bool] = None
+) -> Generator[None, None, None]:
+    """Utility to measure and log elapsed time for a given event.
+
+    Args:
+        action_name: the name of the event being timed.
+        cuda_sync: Whether to synchronize the stream in order to measure the most accurate timings on CUDA. Defaults to True if CUDA is available.
+
+    Raises:
+        ValueError: If cuda_sync is set to True but CUDA is not available.
+    """
+    if cuda_sync and not torch.cuda.is_available():
+        raise ValueError(
+            "CUDA must be available in order to enable CUDA synchronization."
+        )
+    cuda_sync = cuda_sync if cuda_sync is not None else torch.cuda.is_available()
+    try:
+        if cuda_sync:
+            torch.cuda.synchronize()
+        start_time: float = perf_counter()
+        yield
+    finally:
+        if cuda_sync:
+            torch.cuda.synchronize()
+        interval_time: float = perf_counter() - start_time
+        logger.info(f"{action_name} took {interval_time} seconds")
 
 
 @runtime_checkable
