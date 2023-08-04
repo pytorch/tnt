@@ -1404,6 +1404,27 @@ group. Default value equals 30 minutes</li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.log_elapsed_time">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">log_elapsed_time</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">action_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">cuda_sync</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.log_elapsed_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility to measure and log elapsed time for a given event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>action_name</strong> – the name of the event being timed.</li>
+<li><strong>cuda_sync</strong> – Whether to synchronize the stream in order to measure the most accurate timings on CUDA. Defaults to True if CUDA is available.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – If cuda_sync is set to True but CUDA is not available.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.log_memory_snapshot">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">log_memory_snapshot</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.log_memory_snapshot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes the memory snapshots to the provided <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>.
