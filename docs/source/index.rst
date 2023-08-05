@@ -59,6 +59,12 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
+   :caption: Distributed
+
+   distributed
+
+.. toctree::
+   :maxdepth: 1
    :caption: Framework
 
    framework/unit
