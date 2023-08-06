@@ -36,14 +36,14 @@ def evaluate(
     timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
-    The ``evaluate`` entry point takes in a :class:`~torchtnt.framework.EvalUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
+    The ``evaluate`` entry point takes in a :class:`~torchtnt.framework.unit.EvalUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
     and runs the evaluation loop.
 
     Args:
-        eval_unit: an instance of :class:`~torchtnt.framework.EvalUnit` which implements `eval_step`.
+        eval_unit: an instance of :class:`~torchtnt.framework.unit.EvalUnit` which implements `eval_step`.
         eval_dataloader: dataloader to be used during evaluation, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means evaluate until the dataloader is exhausted.
-        callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
+        callbacks: an optional list of :class:`~torchtnt.framework.callback.Callback` s.
         timer: an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).
 
 

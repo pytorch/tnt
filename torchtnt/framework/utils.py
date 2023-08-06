@@ -87,7 +87,7 @@ def get_timing_context(state: State, event_name: str):
     Returns a context manager that records an event to a :class:`~torchtnt.utils.timer.Timer` and to PyTorch Profiler.
 
     Args:
-        state: an instance of :class:`~torchtnt.framework.State`
+        state: an instance of :class:`~torchtnt.framework.state.State`
         event_name: string identifier to use for timing
     """
     timer_context = (

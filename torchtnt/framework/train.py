@@ -41,16 +41,16 @@ def train(
     timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
-    The ``train`` entry point takes in a :class:`~torchtnt.framework.TrainUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
+    The ``train`` entry point takes in a :class:`~torchtnt.framework.unit.TrainUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
     and runs the training loop.
 
     Args:
-        train_unit: an instance of :class:`~torchtnt.framework.TrainUnit` which implements `train_step`.
+        train_unit: an instance of :class:`~torchtnt.framework.unit.TrainUnit` which implements `train_step`.
         train_dataloader: dataloader to be used during training, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_epochs: the max number of epochs to run. ``None`` means no limit (infinite training) unless stopped by max_steps.
         max_steps: the max number of steps to run. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_steps_per_epoch: the max number of steps to run per epoch. None means train until the dataloader is exhausted.
-        callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
+        callbacks: an optional list of :class:`~torchtnt.framework.callback.Callback` s.
         timer: an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).
 
 

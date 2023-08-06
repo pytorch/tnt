@@ -235,7 +235,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         """Hook called before training starts.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
         """
         pass
 
@@ -243,7 +243,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         """Hook called before a train epoch starts.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
         """
         pass
 
@@ -253,7 +253,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         train dataloader, and can return any data the user wishes.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
             data: one batch of training data.
         """
         ...
@@ -262,7 +262,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         """Hook called after a train epoch ends.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
         """
         pass
 
@@ -270,7 +270,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         """Hook called after training ends.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the training run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
         """
         pass
 
@@ -315,7 +315,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         """Hook called before evaluation starts.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.
         """
         pass
 
@@ -323,7 +323,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         """Hook called before a new eval epoch starts.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.
         """
         pass
 
@@ -335,7 +335,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         Optionally can be decorated with ``@torch.inference_mode()`` for improved performance.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.
             data: one batch of evaluation data.
         """
         ...
@@ -344,7 +344,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         """Hook called after an eval epoch ends.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.
         """
         pass
 
@@ -352,7 +352,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         """Hook called after evaluation ends.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the evaluation run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.
         """
         pass
 
@@ -402,7 +402,7 @@ class PredictUnit(
         """Hook called before prediction starts.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the prediction run.
         """
         pass
 
@@ -410,7 +410,7 @@ class PredictUnit(
         """Hook called before a predict epoch starts.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the prediction run.
         """
         pass
 
@@ -422,7 +422,7 @@ class PredictUnit(
         Optionally can be decorated with ``@torch.inference_mode()`` for improved performance.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the prediction run.
             data: one batch of prediction data.
         """
         ...
@@ -431,7 +431,7 @@ class PredictUnit(
         """Hook called after a predict epoch ends.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the prediction run.
         """
         pass
 
@@ -439,7 +439,7 @@ class PredictUnit(
         """Hook called after prediction ends.
 
         Args:
-            state: a :class:`~torchtnt.framework.State` object containing metadata about the prediction run.
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the prediction run.
         """
         pass
 

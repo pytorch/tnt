@@ -164,17 +164,17 @@ class State:
 
     @property
     def train_state(self) -> Optional[PhaseState]:
-        """A :class:`~torchtnt.framework.PhaseState` object which contains meta information about the train phase."""
+        """A :class:`~torchtnt.framework.state.PhaseState` object which contains meta information about the train phase."""
         return self._train_state
 
     @property
     def eval_state(self) -> Optional[PhaseState]:
-        """A :class:`~torchtnt.framework.PhaseState` object which contains meta information about the eval phase."""
+        """A :class:`~torchtnt.framework.state.PhaseState` object which contains meta information about the eval phase."""
         return self._eval_state
 
     @property
     def predict_state(self) -> Optional[PhaseState]:
-        """A :class:`~torchtnt.framework.PhaseState` object which contains meta information about the predict phase."""
+        """A :class:`~torchtnt.framework.state.PhaseState` object which contains meta information about the predict phase."""
         return self._predict_state
 
     @property
