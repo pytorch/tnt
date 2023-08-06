@@ -31,7 +31,7 @@ To update to the latest version from master:
 
 
 Documentation
------------
+---------------
 .. fbcode::
 
    .. toctree::

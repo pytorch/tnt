@@ -1,8 +1,7 @@
 Predict
 =======================
-.. currentmodule:: torchtnt.framework
 
 Predict Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: predict
+.. autofunction:: torchtnt.framework.predict.predict
