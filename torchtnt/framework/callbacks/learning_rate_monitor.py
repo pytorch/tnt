@@ -68,7 +68,7 @@ class LearningRateMonitor(Callback):
 
     Args:
         loggers: Either a :class:`torchtnt.loggers.logger.MetricLogger` or
-        list of :class:`torchtnt.loggers.logger.MetricLogger`
+            list of :class:`torchtnt.loggers.logger.MetricLogger`
     """
 
     def __init__(

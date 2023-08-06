@@ -263,7 +263,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         Args:
             state: a State object which is passed from the ``predict_step``
             data: a batch of data which is passed from the ``predict_step``
-            step: how many ``predict_step``s have been completed
+            step: how many ``predict_step`` s have been completed
             outputs: the outputs of the model forward pass
         """
         pass
@@ -763,7 +763,7 @@ class AutoUnit(
         Args:
             state: a State object which is passed from the ``train_step``
             data: a batch of data which is passed from the ``train_step``
-            step: how many ``train_step``s have been completed
+            step: how many ``train_step`` s have been completed
             loss: the loss computed in the ``compute_loss`` function
             outputs: the outputs of the model forward pass
         """
@@ -839,7 +839,7 @@ class AutoUnit(
         Args:
             state: a State object which is passed from the ``eval_step``
             data: a batch of data which is passed from the ``eval_step``
-            step: how many steps have been completed (``train_step``s when running fit and ``eval_step``s when running evaluation)
+            step: how many steps have been completed (``train_step`` s when running fit and ``eval_step`` s when running evaluation)
             loss: the loss computed in the ``compute_loss`` function
             outputs: the outputs of the model forward pass
         """
