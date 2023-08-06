@@ -39,11 +39,9 @@ class SystemResourcesMonitor(Callback):
     - cuda memory stats
 
     Args:
-        loggers: Logger (or iterable collection of loggers) for experiment tracking.
-        Could be either a :class:`torchtnt.loggers.logger.MetricLogger` or
-        list of :class:`torchtnt.loggers.logger.MetricLogger`
-        logging_interval: whether to print system state every step or every epoch.
-        Defaults to every epoch.
+        loggers: Either a :class:`torchtnt.loggers.logger.MetricLogger` or
+            list of :class:`torchtnt.loggers.logger.MetricLogger`
+        logging_interval: whether to print system state every step or every epoch. Defaults to every epoch.
     """
 
     def __init__(

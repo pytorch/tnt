@@ -47,15 +47,13 @@ class MultiIterator(Iterator[Dict[str, Any]]):
 
     Args:
         individual_dataloaders (Mapping[str, Union[DataLoader, Iterable]]): A mapping of DataLoaders or Iterables with dataloader name as key
-        and dataloader/iterable object as value.
+            and dataloader/iterable object as value.
         iteration_strategy (DataIterationStrategy): A dataclass indicating how the dataloaders are iterated over.
 
     Note:
-        TorchData (https://pytorch.org/data/beta/index.html) also has generic
-        multi-data sources reading support to achieve the same functionality
-        provided by MultiIterator.
-        For example, `mux`, `mux_longest`, `cycle`, `zip` etc. Please refer
-        to the documentation for more details.
+        TorchData (https://pytorch.org/data/beta/index.html) also has generic multi-data
+            sources reading support to achieve the same functionality provided by MultiIterator.
+        For example, `mux`, `mux_longest`, `cycle`, `zip` etc. Please refer to the documentation for more details.
 
     """
 
