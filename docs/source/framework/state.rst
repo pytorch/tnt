@@ -1,13 +1,12 @@
 State
 =========
-.. currentmodule:: torchtnt.framework
 
-.. autoclass:: State
+.. autoclass:: torchtnt.framework.state.State
    :members:
    :undoc-members:
 
 PhaseState
 ~~~~~~~~~~~~~~~~~
-.. autoclass:: PhaseState
+.. autoclass:: torchtnt.framework.state.PhaseState
    :members:
    :undoc-members:
