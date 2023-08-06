@@ -1,8 +1,7 @@
 Train
 =======================
-.. currentmodule:: torchtnt.framework
 
 Train Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: train
+.. autofunction:: torchtnt.framework.train.train

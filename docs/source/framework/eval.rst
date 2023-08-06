@@ -1,8 +1,7 @@
 Evaluate
 =======================
-.. currentmodule:: torchtnt.framework
 
 Evaluate Entry Point
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: evaluate
+.. autofunction:: torchtnt.framework.evaluate.evaluate
