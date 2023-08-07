@@ -39,7 +39,7 @@ def fit(
     timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
-    The ``fit`` entry point interleaves training and evaluation loops. The ``fit`` entry point takes in an object which subclasses both :class:`~torchtnt.framework.TrainUnit` and :class:`~torchtnt.framework.EvalUnit`, train and eval dataloaders (any Iterables), optional arguments to modify loop execution,
+    The ``fit`` entry point interleaves training and evaluation loops. The ``fit`` entry point takes in an object which subclasses both :class:`~torchtnt.framework.unit.TrainUnit` and :class:`~torchtnt.framework.unit.EvalUnit`, train and eval dataloaders (any Iterables), optional arguments to modify loop execution,
     and runs the fit loop.
 
     Args:

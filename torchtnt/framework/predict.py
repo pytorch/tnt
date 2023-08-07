@@ -36,14 +36,14 @@ def predict(
     timer: Optional[TimerProtocol] = None,
 ) -> None:
     """
-    The ``predict`` entry point takes in a :class:`~torchtnt.framework.PredictUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
+    The ``predict`` entry point takes in a :class:`~torchtnt.framework.unit.PredictUnit` object, a train dataloader (any Iterable), optional arguments to modify loop execution,
     and runs the prediction loop.
 
     Args:
-        predict_unit: an instance of :class:`~torchtnt.framework.PredictUnit` which implements `predict_step`.
+        predict_unit: an instance of :class:`~torchtnt.framework.unit.PredictUnit` which implements `predict_step`.
         predict_dataloader: dataloader to be used during prediction, which can be *any* iterable, including PyTorch DataLoader, DataLoader2, etc.
         max_steps_per_epoch: the max number of steps to run per epoch. None means predict until the dataloader is exhausted.
-        callbacks: an optional list of :class:`~torchtnt.framework.Callback` s.
+        callbacks: an optional list of :class:`~torchtnt.framework.callback.Callback` s.
         timer: an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).
 
 
