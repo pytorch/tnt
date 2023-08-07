@@ -57,7 +57,8 @@ class TorchSnapshotSaver(Callback):
         save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
         replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
             For more information, see https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take .
-        storage_options: Additional keyword options for the storage plugin to use. See each storage plugin's documentation for customizations.
+        storage_options: storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_.
+            See each storage plugin's documentation for customizations.
 
     Note: If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks
 
@@ -215,10 +216,17 @@ class TorchSnapshotSaver(Callback):
     ) -> None:
         """Utility method to restore snapshot state from a path.
 
-        Since the class also manages saving the progress and dataloader states,
-        this method handles their restoration. There are additional flags offered
-        should the user want to skip loading these states. By default, the train progress,
-        train dataloader, and eval progress are restored, if applicable.
+        There are additional flags offered should the user want to skip loading the train and eval progress.
+        By default, the train and eval progress are restored, if applicable.
+
+        Args:
+            path: Path of the snapshot to restore.
+            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
+            train_dataloader: An optional train dataloader to restore.
+            restore_train_progress: Whether to restore the training progress state.
+            restore_eval_progress: Whether to restore the evaluation progress state.
+            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
+
         """
 
         _validate_snapshot_available()
@@ -246,6 +254,43 @@ class TorchSnapshotSaver(Callback):
                     break
 
         snapshot.restore(app_state)
+        rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
+
+    @staticmethod
+    def restore_from_latest(
+        dirpath: str,
+        unit: AppStateMixin,
+        *,
+        train_dataloader: Optional[_TStateful] = None,
+        restore_train_progress: bool = True,
+        restore_eval_progress: bool = True,
+        storage_options: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """
+        Given a parent directory where checkpoints are saved, restore the snapshot state from the latest checkpoint in the directory.
+
+        There are additional flags offered should the user want to skip loading the train and eval progress.
+        By default, the train and eval progress are restored, if applicable.
+
+        Args:
+            dirpath: Parent directory from which to get the latest snapshot.
+            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
+            train_dataloader: An optional train dataloader to restore.
+            restore_train_progress: Whether to restore the training progress state.
+            restore_eval_progress: Whether to restore the evaluation progress state.
+            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
+        """
+        path = TorchSnapshotSaver.get_latest_checkpoint_path(dirpath)
+        if path is None:
+            return
+        TorchSnapshotSaver.restore(
+            path,
+            unit,
+            train_dataloader=train_dataloader,
+            restore_train_progress=restore_train_progress,
+            restore_eval_progress=restore_eval_progress,
+            storage_options=storage_options,
+        )
 
     @staticmethod
     def get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
