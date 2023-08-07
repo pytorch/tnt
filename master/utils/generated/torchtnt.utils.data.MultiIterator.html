@@ -371,8 +371,8 @@ iterator, like cycling order for the dataloaders.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</li>
-<li><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </li>
+<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key
+and dataloader/iterable object as value.</li>
 <li><strong>iteration_strategy</strong> (<em>DataIterationStrategy</em>) – A dataclass indicating how the dataloaders are iterated over.</li>
 </ul>
 </td>
@@ -381,11 +381,10 @@ iterator, like cycling order for the dataloaders.</p>
 </table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html" target="_blank">https://pytorch.org/data/beta/index.html</a>) also has generic
-multi-data sources reading support to achieve the same functionality
-provided by MultiIterator.
-For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer
-to the documentation for more details.</p>
+<dl class="docutils">
+<dt>TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html" target="_blank">https://pytorch.org/data/beta/index.html</a>) also has generic multi-data</dt><dd>sources reading support to achieve the same functionality provided by MultiIterator.</dd>
+</dl>
+<p class="last">For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer to the documentation for more details.</p>
 </div>
 </dd></dl>
 

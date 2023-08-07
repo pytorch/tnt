@@ -1,8 +1,7 @@
 Fit
 =======================
-.. currentmodule:: torchtnt.framework
 
 Fit Entry Point
 ~~~~~~~~~~~~~~~~~~~~
 
-.. autofunction:: fit
+.. autofunction:: torchtnt.framework.fit.fit
