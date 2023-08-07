@@ -377,7 +377,8 @@ with the train progress, train dataloader (if applicable), and random number gen
 <li><strong>save_every_n_epochs</strong> – Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.</li>
 <li><strong>replicated</strong> – A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
 For more information, see <a class="reference external" href="https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take" target="_blank">https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take</a> .</li>
-<li><strong>storage_options</strong> – Additional keyword options for the storage plugin to use. See each storage plugin’s documentation for customizations.</li>
+<li><strong>storage_options</strong> – storage_options: Additional keyword options for the storage plugin to use, to be passed to <a class="reference external" href="https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot" target="_blank">torchsnapshot.Snapshot</a>.
+See each storage plugin’s documentation for customizations.</li>
 </ul>
 </td>
 </tr>
@@ -434,10 +435,50 @@ For more information, see <a class="reference external" href="https://pytorch.or
 <dt class="sig sig-object py" id="torchtnt.framework.callbacks.TorchSnapshotSaver.restore">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">restore</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AppStateMixin</span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">train_dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Stateful</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">restore_train_progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">restore_eval_progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">storage_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TorchSnapshotSaver.restore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility method to restore snapshot state from a path.</p>
-<p>Since the class also manages saving the progress and dataloader states,
-this method handles their restoration. There are additional flags offered
-should the user want to skip loading these states. By default, the train progress,
-train dataloader, and eval progress are restored, if applicable.</p>
+<p>There are additional flags offered should the user want to skip loading the train and eval progress.
+By default, the train and eval progress are restored, if applicable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> – Path of the snapshot to restore.</li>
+<li><strong>unit</strong> – An instance of <a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a>, <a class="reference internal" href="../unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>, or <a class="reference internal" href="../unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> containing states to restore.</li>
+<li><strong>train_dataloader</strong> – An optional train dataloader to restore.</li>
+<li><strong>restore_train_progress</strong> – Whether to restore the training progress state.</li>
+<li><strong>restore_eval_progress</strong> – Whether to restore the evaluation progress state.</li>
+<li><strong>storage_options</strong> – <p>Additional keyword options for the storage plugin to use, to be passed to <a class="reference external" href="https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot" target="_blank">torchsnapshot.Snapshot</a>. See each storage plugin’s documentation for customizations.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TorchSnapshotSaver.restore_from_latest">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">restore_from_latest</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">dirpath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AppStateMixin</span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">train_dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Stateful</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">restore_train_progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">restore_eval_progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">storage_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TorchSnapshotSaver.restore_from_latest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a parent directory where checkpoints are saved, restore the snapshot state from the latest checkpoint in the directory.</p>
+<p>There are additional flags offered should the user want to skip loading the train and eval progress.
+By default, the train and eval progress are restored, if applicable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dirpath</strong> – Parent directory from which to get the latest snapshot.</li>
+<li><strong>unit</strong> – An instance of <a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a>, <a class="reference internal" href="../unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>, or <a class="reference internal" href="../unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> containing states to restore.</li>
+<li><strong>train_dataloader</strong> – An optional train dataloader to restore.</li>
+<li><strong>restore_train_progress</strong> – Whether to restore the training progress state.</li>
+<li><strong>restore_eval_progress</strong> – Whether to restore the evaluation progress state.</li>
+<li><strong>storage_options</strong> – <p>Additional keyword options for the storage plugin to use, to be passed to <a class="reference external" href="https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot" target="_blank">torchsnapshot.Snapshot</a>. See each storage plugin’s documentation for customizations.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
