@@ -12,6 +12,7 @@ import tempfile
 import time
 import unittest
 from typing import Any, List, Tuple
+from unittest import mock
 
 import torch
 import torch.distributed as dist
@@ -135,6 +136,54 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             # so the first snapshot's progress will be equal to save_every_n_train_steps
             self.assertNotEqual(restored_num_steps_completed, end_num_steps_completed)
             self.assertEqual(restored_num_steps_completed, save_every_n_train_steps)
+
+    def test_restore_from_latest(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 1
+        save_every_n_train_steps = 2
+        expected_steps_per_epoch = math.ceil(dataset_len / batch_size)
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            snapshot_cb = TorchSnapshotSaver(
+                temp_dir,
+                save_every_n_train_steps=save_every_n_train_steps,
+                replicated=["**"],
+            )
+            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
+
+            with mock.patch(
+                "torchtnt.framework.callbacks.torchsnapshot_saver.TorchSnapshotSaver.restore"
+            ) as mock_restore:
+                snapshot_cb.restore_from_latest(temp_dir, my_unit)
+                self.assertIn(
+                    temp_dir + f"/epoch_{max_epochs}_step_{expected_steps_per_epoch}",
+                    mock_restore.call_args.args,
+                )
+
+    def test_restore_from_latest_empty_dir(self) -> None:
+        input_dim = 2
+        save_every_n_train_steps = 2
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            snapshot_cb = TorchSnapshotSaver(
+                temp_dir,
+                save_every_n_train_steps=save_every_n_train_steps,
+                replicated=["**"],
+            )
+
+            with self.assertLogs(level="WARNING") as log:
+                snapshot_cb.restore_from_latest(temp_dir, my_unit)
+                self.assertEqual(
+                    log.output,
+                    [
+                        f"WARNING:torchtnt.framework.callbacks.torchsnapshot_saver:Input dirpath doesn't contain any subdirectories: {temp_dir}"
+                    ],
+                )
 
     def test_save_restore_no_train_progress(self) -> None:
         input_dim = 2
