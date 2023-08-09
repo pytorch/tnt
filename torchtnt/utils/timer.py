@@ -136,10 +136,10 @@ class Timer(TimerProtocol):
         Args:
             action_name: the name under which to store the timing of what is enclosed in the context manager.
         """
+        start_time: float = perf_counter()
         try:
             if self.cuda_sync:
                 torch.cuda.synchronize()
-            start_time: float = perf_counter()
             yield
         finally:
             if self.cuda_sync:
