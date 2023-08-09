@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import time
 import unittest
-from typing import Any, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 from unittest import mock
 
 import torch
@@ -136,6 +136,59 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             # so the first snapshot's progress will be equal to save_every_n_train_steps
             self.assertNotEqual(restored_num_steps_completed, end_num_steps_completed)
             self.assertEqual(restored_num_steps_completed, save_every_n_train_steps)
+
+    def test_save_restore_dataloader_state(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        save_every_n_train_steps = 2
+        max_steps = 3
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        stateful_dataloader = DummyStatefulDataLoader(
+            dataloader=generate_random_dataloader(dataset_len, input_dim, batch_size)
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            snapshot_cb = TorchSnapshotSaver(
+                temp_dir,
+                save_every_n_train_steps=save_every_n_train_steps,
+                replicated=["**"],
+            )
+            train(
+                my_unit,
+                stateful_dataloader,
+                max_steps=max_steps,
+                callbacks=[snapshot_cb],
+            )
+            # state_dict has been called once on dataloader
+            self.assertEqual(stateful_dataloader.state_dict_call_count, 1)
+            self.assertEqual(stateful_dataloader.load_state_dict_call_count, 0)
+
+            # restoring from first checkpoint, has dataloader in manifest
+            snapshot_cb.restore(
+                temp_dir + f"/epoch_{0}_step_{save_every_n_train_steps}",
+                my_unit,
+                train_dataloader=stateful_dataloader,
+            )
+            # load_state_dict has been called once on dataloader
+            self.assertEqual(stateful_dataloader.load_state_dict_call_count, 1)
+
+            # restoring from last checkpoint (on train end), does not have dataloader state in manifest
+
+            with self.assertLogs(level="WARNING") as log:
+                snapshot_cb.restore(
+                    temp_dir + f"/epoch_{1}_step_{max_steps}",
+                    my_unit,
+                    train_dataloader=stateful_dataloader,
+                )
+                # load_state_dict is not called again on dataloader because there is no dataloader in manifest
+                self.assertEqual(stateful_dataloader.load_state_dict_call_count, 1)
+                self.assertEqual(
+                    log.output,
+                    [
+                        "WARNING:torchtnt.utils.rank_zero_log:train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
+                    ],
+                )
 
     def test_restore_from_latest(self) -> None:
         input_dim = 2
@@ -433,3 +486,21 @@ class DummyAutoUnit(AutoUnit[Batch]):
         my_optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
         my_lr_scheduler = ExponentialLR(my_optimizer, gamma=0.9)
         return my_optimizer, my_lr_scheduler
+
+
+class DummyStatefulDataLoader:
+    def __init__(self, dataloader: Iterable):
+        self.dataloader = dataloader
+        self.state_dict_call_count = 0
+        self.load_state_dict_call_count = 0
+
+    def state_dict(self) -> Dict[str, Any]:
+        self.state_dict_call_count += 1
+        return {}
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        self.load_state_dict_call_count += 1
+        return None
+
+    def __iter__(self):
+        return iter(self.dataloader)
