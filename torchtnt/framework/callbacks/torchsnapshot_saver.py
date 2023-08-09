@@ -252,6 +252,9 @@ class TorchSnapshotSaver(Callback):
                 if _TRAIN_DL_STATE_KEY in key:
                     app_state[_TRAIN_DL_STATE_KEY] = train_dataloader
                     break
+            rank_zero_warn(
+                "train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
+            )
 
         snapshot.restore(app_state)
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
