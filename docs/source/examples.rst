@@ -39,6 +39,6 @@ It can be found here: https://github.com/pytorch/tnt/blob/master/examples/mingpt
 
 TorchRec Example
 ~~~~~~~~~~~~~~~~~~~~~
-The TorchRec example shows how to use :class:`~torchtnt.framework.auto_unit.TrainUnit` with `TorchRec <https://github.com/pytorch/torchrec>`.
+The TorchRec example shows how to use :class:`~torchtnt.framework.auto_unit.TrainUnit` with `TorchRec <https://github.com/pytorch/torchrec>`_.
 
 It can be found here: https://github.com/pytorch/tnt/blob/master/examples/torchrec/main.py
