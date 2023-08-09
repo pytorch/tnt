@@ -226,7 +226,6 @@ class TorchSnapshotSaver(Callback):
             restore_train_progress: Whether to restore the training progress state.
             restore_eval_progress: Whether to restore the evaluation progress state.
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
-
         """
 
         _validate_snapshot_available()
@@ -268,7 +267,7 @@ class TorchSnapshotSaver(Callback):
         restore_train_progress: bool = True,
         restore_eval_progress: bool = True,
         storage_options: Optional[Dict[str, Any]] = None,
-    ) -> None:
+    ) -> bool:
         """
         Given a parent directory where checkpoints are saved, restore the snapshot state from the latest checkpoint in the directory.
 
@@ -282,10 +281,13 @@ class TorchSnapshotSaver(Callback):
             restore_train_progress: Whether to restore the training progress state.
             restore_eval_progress: Whether to restore the evaluation progress state.
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
+
+        Returns:
+            True if the latest snapshot directory was found and successfully restored, otherwise False.
         """
-        path = TorchSnapshotSaver.get_latest_checkpoint_path(dirpath)
+        path = _get_latest_checkpoint_path(dirpath)
         if path is None:
-            return
+            return False
         TorchSnapshotSaver.restore(
             path,
             unit,
@@ -294,27 +296,28 @@ class TorchSnapshotSaver(Callback):
             restore_eval_progress=restore_eval_progress,
             storage_options=storage_options,
         )
+        return True
 
-    @staticmethod
-    def get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
-        """Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory."""
 
-        ret = None
-        rank = get_global_rank()
-        # Do all filesystem reads from rank 0 only
-        if rank == 0:
-            ret = _latest_checkpoint_path(dirpath)
+def _get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
+    """Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory."""
 
-        # If not running in a distributed setting, return as is
-        if not (dist.is_available() and dist.is_initialized()):
-            return ret
+    ret = None
+    rank = get_global_rank()
+    # Do all filesystem reads from rank 0 only
+    if rank == 0:
+        ret = _latest_checkpoint_path(dirpath)
 
-        # Otherwise, broadcast result from rank 0 to all ranks
-        pg = PGWrapper(dist.group.WORLD)
-        path_container = [ret] if rank == 0 else [None]
-        pg.broadcast_object_list(path_container, 0)
-        val = path_container[0]
-        return val
+    # If not running in a distributed setting, return as is
+    if not (dist.is_available() and dist.is_initialized()):
+        return ret
+
+    # Otherwise, broadcast result from rank 0 to all ranks
+    pg = PGWrapper(dist.group.WORLD)
+    path_container = [ret] if rank == 0 else [None]
+    pg.broadcast_object_list(path_container, 0)
+    val = path_container[0]
+    return val
 
 
 def _latest_checkpoint_path(dirpath: str) -> Optional[str]:
