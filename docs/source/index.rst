@@ -59,9 +59,10 @@ Documentation
 
 .. toctree::
    :maxdepth: 1
-   :caption: Distributed
+   :caption: Core Concepts
 
    distributed
+   checkpointing
 
 .. toctree::
    :maxdepth: 1
