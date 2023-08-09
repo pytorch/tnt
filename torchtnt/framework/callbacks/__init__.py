@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from .base_csv_writer import BaseCSVWriter
+from .empty_cuda_cache import EmptyCudaCache
 from .garbage_collector import GarbageCollector
 from .lambda_callback import Lambda
 from .learning_rate_monitor import LearningRateMonitor
@@ -18,6 +19,7 @@ from .train_progress_monitor import TrainProgressMonitor
 
 __all__ = [
     "BaseCSVWriter",
+    "EmptyCudaCache",
     "GarbageCollector",
     "Lambda",
     "LearningRateMonitor",
