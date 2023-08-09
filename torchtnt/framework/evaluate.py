@@ -140,7 +140,6 @@ def _evaluate_impl(
         or _is_epoch_done(
             eval_unit.eval_progress,
             eval_state.max_steps_per_epoch,
-            eval_state.max_steps,
         )
     ):
         try:
