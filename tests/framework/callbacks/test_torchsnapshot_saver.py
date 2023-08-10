@@ -21,7 +21,11 @@ from torch.optim.lr_scheduler import ExponentialLR
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.auto_unit import AutoUnit
-from torchtnt.framework.callbacks import Lambda, TorchSnapshotSaver
+from torchtnt.framework.callbacks.lambda_callback import Lambda
+from torchtnt.framework.callbacks.torchsnapshot_saver import (
+    _get_latest_checkpoint_path,
+    TorchSnapshotSaver,
+)
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
@@ -59,7 +63,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             snapshot = TorchSnapshotSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                replicated=["**"],
             )
             # Artificially increase the step duration, otherwise torchsnapshot
             # doesn't have the time to save all snapshots and will skip some.
@@ -91,7 +94,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             snapshot = TorchSnapshotSaver(
                 temp_dir,
                 save_every_n_epochs=save_every_n_train_epochs,
-                replicated=["**"],
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot])
             self.assertTrue(
@@ -124,7 +126,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                replicated=["**"],
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
@@ -152,7 +153,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                replicated=["**"],
             )
             train(
                 my_unit,
@@ -204,18 +204,18 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                replicated=["**"],
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
             with mock.patch(
                 "torchtnt.framework.callbacks.torchsnapshot_saver.TorchSnapshotSaver.restore"
             ) as mock_restore:
-                snapshot_cb.restore_from_latest(temp_dir, my_unit)
+                restored = snapshot_cb.restore_from_latest(temp_dir, my_unit)
                 self.assertIn(
                     temp_dir + f"/epoch_{max_epochs}_step_{expected_steps_per_epoch}",
                     mock_restore.call_args.args,
                 )
+                self.assertTrue(restored)
 
     def test_restore_from_latest_empty_dir(self) -> None:
         input_dim = 2
@@ -226,17 +226,17 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                replicated=["**"],
             )
 
             with self.assertLogs(level="WARNING") as log:
-                snapshot_cb.restore_from_latest(temp_dir, my_unit)
+                restored = snapshot_cb.restore_from_latest(temp_dir, my_unit)
                 self.assertEqual(
                     log.output,
                     [
                         f"WARNING:torchtnt.framework.callbacks.torchsnapshot_saver:Input dirpath doesn't contain any subdirectories: {temp_dir}"
                     ],
                 )
+                self.assertFalse(restored)
 
     def test_save_restore_no_train_progress(self) -> None:
         input_dim = 2
@@ -264,7 +264,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                replicated=["**"],
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
@@ -293,7 +292,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             self.assertFalse(os.path.exists(os.path.join(temp_dir, expected_path)))
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
-                replicated=["**"],
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
@@ -355,6 +353,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         snapshot_cb = TorchSnapshotSaver(
             temp_dir,
             save_every_n_epochs=save_every_n_epochs,
+            replicated=["**"],
         )
         temp_dir = snapshot_cb.dirpath
         train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
@@ -396,14 +395,12 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
     def test_latest_checkpoint_path(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            self.assertIsNone(TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir))
+            self.assertIsNone(_get_latest_checkpoint_path(temp_dir))
 
         with tempfile.TemporaryDirectory() as temp_dir:
             latest_path = os.path.join(temp_dir, "epoch_0_step_0")
             os.mkdir(latest_path)
-            self.assertEqual(
-                TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir), latest_path
-            )
+            self.assertEqual(_get_latest_checkpoint_path(temp_dir), latest_path)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             path_1 = os.path.join(temp_dir, "epoch_0_step_0")
@@ -414,9 +411,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             os.mkdir(path_3)
             path_4 = os.path.join(temp_dir, "epoch_700")
             os.mkdir(path_4)
-            self.assertEqual(
-                TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir), path_3
-            )
+            self.assertEqual(_get_latest_checkpoint_path(temp_dir), path_3)
 
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
@@ -436,7 +431,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             temp_dir = tempfile.mkdtemp()
         else:
             temp_dir = ""
-        tc.assertIsNone(TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir))
+        tc.assertIsNone(_get_latest_checkpoint_path(temp_dir))
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
 
@@ -458,9 +453,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         path_container = [path_3] if is_rank0 else [None]
         pg.broadcast_object_list(path_container, 0)
         expected_path = path_container[0]
-        tc.assertEqual(
-            TorchSnapshotSaver.get_latest_checkpoint_path(temp_dir), expected_path
-        )
+        tc.assertEqual(_get_latest_checkpoint_path(temp_dir), expected_path)
 
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
