@@ -358,9 +358,9 @@
               
   <div class="section" id="checkpointing">
 <h1>Checkpointing<a class="headerlink" href="#checkpointing" title="Permalink to this heading">¶</a></h1>
-<p>TorchTNT offers checkpointing via the <a class="reference internal" href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a> which uses <a class="reference external" href="https://github.com/pytorch/torchsnapshot" target="_blank">TorchSnapshot</a> under the hood.</p>
+<p>TorchTNT offers checkpointing via the <a class="reference internal" href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a> which uses <a class="reference external" href="https://pytorch.org/torchsnapshot/main/" target="_blank">TorchSnapshot</a> under the hood.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">unit</span> <span class="o">=</span> <span class="n">MyAutoUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
+<span class="n">unit</span> <span class="o">=</span> <span class="n">MyUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
 <span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_train_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
@@ -383,7 +383,8 @@
     <span class="c1"># sets state dict type of FSDP module</span>
     <span class="n">state_dict_type</span><span class="o">=</span><span class="n">STATE_DICT_TYPE</span><span class="o">.</span><span class="n">SHARDED_STATE_DICT</span>
 <span class="p">)</span>
-<span class="n">unit</span> <span class="o">=</span> <span class="n">MyAutoUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">fsdp_strategy</span><span class="p">)</span>
+<span class="n">module</span> <span class="o">=</span> <span class="n">prepare_fsdp</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">fsdp_strategy</span><span class="p">)</span>
+<span class="n">unit</span> <span class="o">=</span> <span class="n">MyUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
 <span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -398,9 +399,9 @@
 </div>
 <p>Or you can manually set this using <a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type" target="_blank">FSDP.set_state_dict_type</a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">fsdp_strategy</span> <span class="o">=</span> <span class="n">FSDPStrategy</span><span class="p">()</span>
-<span class="n">unit</span> <span class="o">=</span> <span class="n">MyAutoUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">fsdp_strategy</span><span class="p">)</span>
-<span class="n">FSDP</span><span class="o">.</span><span class="n">set_state_dict_type</span><span class="p">(</span><span class="n">unit</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">StateDictType</span><span class="o">.</span><span class="n">SHARDED_STATE_DICT</span><span class="p">)</span>
+<span class="n">module</span> <span class="o">=</span> <span class="n">FSDP</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="o">....</span><span class="p">)</span>
+<span class="n">FSDP</span><span class="o">.</span><span class="n">set_state_dict_type</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">StateDictType</span><span class="o">.</span><span class="n">SHARDED_STATE_DICT</span><span class="p">)</span>
+<span class="n">unit</span> <span class="o">=</span> <span class="n">MyUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 <span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
