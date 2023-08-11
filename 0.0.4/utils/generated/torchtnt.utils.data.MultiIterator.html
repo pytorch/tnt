@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MultiIterator &mdash; TorchTNT 0.1.0 documentation</title>
+  <title>MultiIterator &mdash; TorchTNT 0.2.0 documentation</title>
   
 
   
@@ -35,9 +35,13 @@
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="RandomizedBatchSamplerIterator" href="torchtnt.utils.data.RandomizedBatchSamplerIterator.html" />
     <link rel="prev" title="MultiDataLoader" href="torchtnt.utils.data.MultiDataLoader.html" />
-  <!-- Google Analytics -->
-  
-  <!-- End Google Analytics -->
+  <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','');</script>
+    <!-- End Google Tag Manager -->
   
 
   
@@ -223,7 +227,7 @@
               
               
                 <div class="version">
-                  0.1.0
+                  0.2.0
                 </div>
               
             
@@ -255,16 +259,21 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../distributed.html">Distributed training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../checkpointing.html">Checkpointing</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/auto_unit.html">AutoUnit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/train.html">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/eval.html">Evaluate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/fit.html">Fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/state.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="current">
@@ -339,6 +348,10 @@
         <div class="pytorch-content-left">
 
         
+          <!-- Google Tag Manager (noscript) -->
+          <noscript><iframe src="https://www.googletagmanager.com/ns.html?id="
+          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+          <!-- End Google Tag Manager (noscript) -->
           
           <div class="rst-content">
           
@@ -359,8 +372,8 @@ iterator, like cycling order for the dataloaders.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key</li>
-<li><strong>value.</strong> (<em>and dataloader/iterable object as</em>) – </li>
+<li><strong>individual_dataloaders</strong> (<em>Mapping</em><em>[</em><em>str</em><em>, </em><em>Union</em><em>[</em><em>DataLoader</em><em>, </em><em>Iterable</em><em>]</em><em>]</em>) – A mapping of DataLoaders or Iterables with dataloader name as key
+and dataloader/iterable object as value.</li>
 <li><strong>iteration_strategy</strong> (<em>DataIterationStrategy</em>) – A dataclass indicating how the dataloaders are iterated over.</li>
 </ul>
 </td>
@@ -369,11 +382,10 @@ iterator, like cycling order for the dataloaders.</p>
 </table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html" target="_blank">https://pytorch.org/data/beta/index.html</a>) also has generic
-multi-data sources reading support to achieve the same functionality
-provided by MultiIterator.
-For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer
-to the documentation for more details.</p>
+<dl class="docutils">
+<dt>TorchData (<a class="reference external" href="https://pytorch.org/data/beta/index.html" target="_blank">https://pytorch.org/data/beta/index.html</a>) also has generic multi-data</dt><dd>sources reading support to achieve the same functionality provided by MultiIterator.</dd>
+</dl>
+<p class="last">For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer to the documentation for more details.</p>
 </div>
 </dd></dl>
 

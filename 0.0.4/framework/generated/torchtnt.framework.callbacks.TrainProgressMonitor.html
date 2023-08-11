@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TrainProgressMonitor &mdash; TorchTNT 0.1.0 documentation</title>
+  <title>TrainProgressMonitor &mdash; TorchTNT 0.2.0 documentation</title>
   
 
   
@@ -33,11 +33,15 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="AutoUnit" href="../auto_unit.html" />
+    <link rel="next" title="Utils" href="../../utils/utils.html" />
     <link rel="prev" title="TQDMProgressBar" href="torchtnt.framework.callbacks.TQDMProgressBar.html" />
-  <!-- Google Analytics -->
-  
-  <!-- End Google Analytics -->
+  <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','');</script>
+    <!-- End Google Tag Manager -->
   
 
   
@@ -223,7 +227,7 @@
               
               
                 <div class="version">
-                  0.1.0
+                  0.2.0
                 </div>
               
             
@@ -255,16 +259,21 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../distributed.html">Distributed training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../checkpointing.html">Checkpointing</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../auto_unit.html">AutoUnit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../train.html">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../eval.html">Evaluate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../fit.html">Fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../state.html">State</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul>
@@ -339,6 +348,10 @@
         <div class="pytorch-content-left">
 
         
+          <!-- Google Tag Manager (noscript) -->
+          <noscript><iframe src="https://www.googletagmanager.com/ns.html?id="
+          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+          <!-- End Google Tag Manager (noscript) -->
           
           <div class="rst-content">
           
@@ -356,20 +369,20 @@ This callback writes to the logger at the beginning of training, and at the end 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loggers</strong> – Either a <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code> or</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>loggers</strong> – Either a <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code> or
+list of <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code></td>
 </tr>
 </tbody>
 </table>
-<p>:param list of <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.logger.MetricLogger</span></code>:</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor.on_train_epoch_end">
-<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after a train epoch ends.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.framework.callbacks.TrainProgressMonitor.on_train_start">
-<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_start" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TrainProgressMonitor.on_train_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called before training starts.</p>
 </dd></dl>
 
@@ -385,7 +398,7 @@ This callback writes to the logger at the beginning of training, and at the end 
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../auto_unit.html" class="btn btn-neutral float-right" title="AutoUnit" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="../../utils/utils.html" class="btn btn-neutral float-right" title="Utils" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="torchtnt.framework.callbacks.TQDMProgressBar.html" class="btn btn-neutral" title="TQDMProgressBar" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>

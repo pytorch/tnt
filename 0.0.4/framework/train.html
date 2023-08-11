@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Train &mdash; TorchTNT 0.1.0 documentation</title>
+  <title>Train &mdash; TorchTNT 0.2.0 documentation</title>
   
 
   
@@ -34,10 +34,14 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Evaluate" href="eval.html" />
-    <link rel="prev" title="Unit" href="unit.html" />
-  <!-- Google Analytics -->
-  
-  <!-- End Google Analytics -->
+    <link rel="prev" title="AutoUnit" href="auto_unit.html" />
+  <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','');</script>
+    <!-- End Google Tag Manager -->
   
 
   
@@ -223,7 +227,7 @@
               
               
                 <div class="version">
-                  0.1.0
+                  0.2.0
                 </div>
               
             
@@ -255,16 +259,21 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../distributed.html">Distributed training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../checkpointing.html">Checkpointing</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="state.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul>
@@ -337,6 +346,10 @@
         <div class="pytorch-content-left">
 
         
+          <!-- Google Tag Manager (noscript) -->
+          <noscript><iframe src="https://www.googletagmanager.com/ns.html?id="
+          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+          <!-- End Google Tag Manager (noscript) -->
           
           <div class="rst-content">
           
@@ -348,67 +361,36 @@
 <div class="section" id="train-entry-point">
 <h2>Train Entry Point<a class="headerlink" href="#train-entry-point" title="Permalink to this heading">¶</a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="torchtnt.framework.init_train_state">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.framework.</span></code><code class="sig-name descname"><span class="pre">init_train_state</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">max_epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">max_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">max_steps_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">auto_timing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></span><a class="headerlink" href="#torchtnt.framework.init_train_state" title="Permalink to this definition">¶</a></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">init_train_state</span></code> is a helper function that initializes a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object for training. This <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object
-can then be passed to the <a class="reference internal" href="#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a> entry point.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>dataloader</strong> – dataloader to be used during training, which can be <em>any</em> iterable, including PyTorch DataLoader, DataLoader2, etc.</li>
-<li><strong>max_epochs</strong> – the max number of epochs to run. <code class="docutils literal notranslate"><span class="pre">None</span></code> means no limit (infinite training) unless stopped by max_steps.</li>
-<li><strong>max_steps</strong> – the max number of steps to run. <code class="docutils literal notranslate"><span class="pre">None</span></code> means no limit (infinite training) unless stopped by max_epochs.</li>
-<li><strong>max_steps_per_epoch</strong> – the max number of steps to run per epoch. None means train until the dataloader is exhausted.</li>
-<li><strong>auto_timing</strong> – whether to automatically time the training loop, using the state’s timer (enabling auto_timing may degrade performance).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An initialized state object containing metadata.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Below is an example of calling <a class="reference internal" href="#torchtnt.framework.init_train_state" title="torchtnt.framework.init_train_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_train_state()</span></code></a> and <a class="reference internal" href="#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a> together.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">init_train_state</span><span class="p">,</span> <span class="n">train</span>
-
-<span class="n">train_unit</span> <span class="o">=</span> <span class="n">MyTrainUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=...</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=...</span><span class="p">)</span>
-<span class="n">dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">state</span> <span class="o">=</span> <span class="n">init_train_state</span><span class="p">(</span><span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">max_epochs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">train</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">train_unit</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="torchtnt.framework.train">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.framework.</span></code><code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">train_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">callbacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="callbacks.html#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><span class="pre">Callback</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.train" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">train</span></code> entry point takes in a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object, a <a class="reference internal" href="unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> object, and an optional list of <code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code> s,
-and runs the training loop. The <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object can be initialized with <a class="reference internal" href="#torchtnt.framework.init_train_state" title="torchtnt.framework.init_train_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_train_state()</span></code></a>.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.train.train">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.framework.train.</span></code><code class="sig-name descname"><span class="pre">train</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">train_unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">train_dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">max_epochs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">max_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">max_steps_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">callbacks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="callbacks.html#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><span class="pre">Callback</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">timer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">TimerProtocol</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.train.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal notranslate"><span class="pre">train</span></code> entry point takes in a <a class="reference internal" href="unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> object, a train dataloader (any Iterable), optional arguments to modify loop execution,
+and runs the training loop.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</li>
-<li><strong>train_unit</strong> – an instance of <a class="reference internal" href="unit.html#torchtnt.framework.TrainUnit" title="torchtnt.framework.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> which implements <cite>train_step</cite>.</li>
-<li><strong>callbacks</strong> – an optional list of callbacks.</li>
+<li><strong>train_unit</strong> – an instance of <a class="reference internal" href="unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> which implements <cite>train_step</cite>.</li>
+<li><strong>train_dataloader</strong> – dataloader to be used during training, which can be <em>any</em> iterable, including PyTorch DataLoader, DataLoader2, etc.</li>
+<li><strong>max_epochs</strong> – the max number of epochs to run. <code class="docutils literal notranslate"><span class="pre">None</span></code> means no limit (infinite training) unless stopped by max_steps.</li>
+<li><strong>max_steps</strong> – the max number of steps to run. <code class="docutils literal notranslate"><span class="pre">None</span></code> means no limit (infinite training) unless stopped by max_epochs.</li>
+<li><strong>max_steps_per_epoch</strong> – the max number of steps to run per epoch. None means train until the dataloader is exhausted.</li>
+<li><strong>callbacks</strong> – an optional list of <a class="reference internal" href="callbacks.html#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> s.</li>
+<li><strong>timer</strong> – an optional Timer which will be used to time key events (using a Timer with CUDA synchronization may degrade performance).</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
-<p>Below is an example of calling <a class="reference internal" href="#torchtnt.framework.init_train_state" title="torchtnt.framework.init_train_state"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_train_state()</span></code></a> and <a class="reference internal" href="#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a> together.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">init_train_state</span><span class="p">,</span> <span class="n">train</span>
+<p>Below is an example of calling <code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.train</span> <span class="kn">import</span> <span class="n">train</span>
 
 <span class="n">train_unit</span> <span class="o">=</span> <span class="n">MyTrainUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=...</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=...</span><span class="p">)</span>
-<span class="n">dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="n">state</span> <span class="o">=</span> <span class="n">init_train_state</span><span class="p">(</span><span class="n">dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">max_epochs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">train</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">train_unit</span><span class="p">)</span>
+<span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">train</span><span class="p">(</span><span class="n">train_unit</span><span class="p">,</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">max_epochs</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Below is pseudocode of what the <a class="reference internal" href="#torchtnt.framework.train" title="torchtnt.framework.train"><code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code></a> entry point does.</p>
+<p>Below is pseudocode of what the <code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code> entry point does.</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>set unit&#39;s tracked modules to train mode
 call on_train_start on unit first and then callbacks
 while training is not done:
@@ -443,7 +425,7 @@ call on_train_end on unit first and then callbacks
         <a href="eval.html" class="btn btn-neutral float-right" title="Evaluate" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="unit.html" class="btn btn-neutral" title="Unit" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="auto_unit.html" class="btn btn-neutral" title="AutoUnit" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   

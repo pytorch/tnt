@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MultiDataLoader &mdash; TorchTNT 0.1.0 documentation</title>
+  <title>MultiDataLoader &mdash; TorchTNT 0.2.0 documentation</title>
   
 
   
@@ -35,9 +35,13 @@
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="MultiIterator" href="torchtnt.utils.data.MultiIterator.html" />
     <link rel="prev" title="InOrderIterator" href="torchtnt.utils.data.InOrderIterator.html" />
-  <!-- Google Analytics -->
-  
-  <!-- End Google Analytics -->
+  <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','');</script>
+    <!-- End Google Tag Manager -->
   
 
   
@@ -223,7 +227,7 @@
               
               
                 <div class="version">
-                  0.1.0
+                  0.2.0
                 </div>
               
             
@@ -255,16 +259,21 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../examples.html">Examples</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../distributed.html">Distributed training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../checkpointing.html">Checkpointing</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../framework/auto_unit.html">AutoUnit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/train.html">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/eval.html">Evaluate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/fit.html">Fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/state.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../framework/callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../framework/auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="current">
@@ -339,6 +348,10 @@
         <div class="pytorch-content-left">
 
         
+          <!-- Google Tag Manager (noscript) -->
+          <noscript><iframe src="https://www.googletagmanager.com/ns.html?id="
+          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+          <!-- End Google Tag Manager (noscript) -->
           
           <div class="rst-content">
           
@@ -420,6 +433,28 @@ provided by MultiIterator.
 For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <cite>zip</cite> etc. Please refer
 to the documentation for more details.</p>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.load_state_dict">
+<code class="sig-name descname"><span class="pre">load_state_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.load_state_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads aggregated state dict based on individual dataloaders.</p>
+<p>The provided state dict should be keyed off the names provided by <code class="docutils literal notranslate"><span class="pre">individual_dataloaders</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only states from dataloaders that implement the <a class="reference internal" href="../utils.html#torchtnt.utils.Stateful" title="torchtnt.utils.stateful.Stateful"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stateful</span></code></a> protocol are loaded.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.state_dict">
+<code class="sig-name descname"><span class="pre">state_dict</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.state_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an aggregated state dict based on individual dataloaders.</p>
+<p>The state dict is keyed off the names provided by <code class="docutils literal notranslate"><span class="pre">individual_dataloaders</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only states from dataloaders that implement the <a class="reference internal" href="../utils.html#torchtnt.utils.Stateful" title="torchtnt.utils.stateful.Stateful"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stateful</span></code></a> protocol are included in the returned state dict.</p>
+</div>
+</dd></dl>
+
 </dd></dl>
 
 </div>

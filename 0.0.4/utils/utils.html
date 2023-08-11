@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utils &mdash; TorchTNT 0.1.0 documentation</title>
+  <title>Utils &mdash; TorchTNT 0.2.0 documentation</title>
   
 
   
@@ -34,10 +34,14 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Data" href="data.html" />
-    <link rel="prev" title="AutoUnit" href="../framework/auto_unit.html" />
-  <!-- Google Analytics -->
-  
-  <!-- End Google Analytics -->
+    <link rel="prev" title="TrainProgressMonitor" href="../framework/generated/torchtnt.framework.callbacks.TrainProgressMonitor.html" />
+  <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','');</script>
+    <!-- End Google Tag Manager -->
   
 
   
@@ -223,7 +227,7 @@
               
               
                 <div class="version">
-                  0.1.0
+                  0.2.0
                 </div>
               
             
@@ -255,16 +259,21 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../distributed.html">Distributed training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../checkpointing.html">Checkpointing</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../framework/unit.html">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../framework/auto_unit.html">AutoUnit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/train.html">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/eval.html">Evaluate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/fit.html">Fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/state.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../framework/callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../framework/auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="current">
@@ -337,6 +346,10 @@
         <div class="pytorch-content-left">
 
         
+          <!-- Google Tag Manager (noscript) -->
+          <noscript><iframe src="https://www.googletagmanager.com/ns.html?id="
+          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+          <!-- End Google Tag Manager (noscript) -->
           
           <div class="rst-content">
           
@@ -376,6 +389,73 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="torchtnt.utils.CPUStats.worker_rss">
 <code class="sig-name descname"><span class="pre">worker_rss</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#torchtnt.utils.CPUStats.worker_rss" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">DDPStrategy</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">broadcast_buffers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">process_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ProcessGroup</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">bucket_cap_mb</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">25</span></span></em>, <em><span class="n"><span class="pre">find_unused_parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">check_reduction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">gradient_as_bucket_view</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">static_graph</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">comm_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">comm_hook</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/ddp_comm_hooks.html#torch.distributed.GradBucket" target="_blank" title="(in PyTorch v2.0)"><span class="pre">GradBucket</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/futures.html#torch.futures.Future" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Future</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">sync_batchnorm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.DDPStrategy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dataclass representing the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html" target="_blank">DistributedDataParallel</a> strategy.</p>
+<p>Includes params for registering <a class="reference external" href="https://pytorch.org/docs/stable/ddp_comm_hooks.html" target="_blank">DDP communication hooks</a> and <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.SyncBatchNorm.html" target="_blank">syncing batch norm</a>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.broadcast_buffers">
+<code class="sig-name descname"><span class="pre">broadcast_buffers</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.broadcast_buffers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.bucket_cap_mb">
+<code class="sig-name descname"><span class="pre">bucket_cap_mb</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">25</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.bucket_cap_mb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.check_reduction">
+<code class="sig-name descname"><span class="pre">check_reduction</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.check_reduction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.comm_hook">
+<code class="sig-name descname"><span class="pre">comm_hook</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/ddp_comm_hooks.html#torch.distributed.GradBucket" target="_blank" title="(in PyTorch v2.0)"><span class="pre">GradBucket</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/futures.html#torch.futures.Future" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Future</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.comm_hook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.comm_state">
+<code class="sig-name descname"><span class="pre">comm_state</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.comm_state" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.dim">
+<code class="sig-name descname"><span class="pre">dim</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.dim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.find_unused_parameters">
+<code class="sig-name descname"><span class="pre">find_unused_parameters</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.find_unused_parameters" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.gradient_as_bucket_view">
+<code class="sig-name descname"><span class="pre">gradient_as_bucket_view</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.gradient_as_bucket_view" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.output_device">
+<code class="sig-name descname"><span class="pre">output_device</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.output_device" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.process_group">
+<code class="sig-name descname"><span class="pre">process_group</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ProcessGroup</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.process_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.static_graph">
+<code class="sig-name descname"><span class="pre">static_graph</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.static_graph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.DDPStrategy.sync_batchnorm">
+<code class="sig-name descname"><span class="pre">sync_batchnorm</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#torchtnt.utils.DDPStrategy.sync_batchnorm" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -492,6 +572,110 @@ This <cite>state_dict</cite> can be reloaded using <cite>load_state_dict()</cite
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">FSDPStrategy</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">process_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ProcessGroup</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">sharding_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.ShardingStrategy" target="_blank" title="(in PyTorch v2.0)"><span class="pre">ShardingStrategy</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">cpu_offload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.CPUOffload" target="_blank" title="(in PyTorch v2.0)"><span class="pre">CPUOffload</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">auto_wrap_policy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">backward_prefetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.BackwardPrefetch" target="_blank" title="(in PyTorch v2.0)"><span class="pre">BackwardPrefetch</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">BackwardPrefetch.BACKWARD_PRE</span></span></em>, <em><span class="n"><span class="pre">ignored_modules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">sync_module_states</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">forward_prefetch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">limit_all_gathers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em><span class="n"><span class="pre">use_orig_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em><span class="n"><span class="pre">state_dict_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">StateDictType</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">state_dict_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">StateDictConfig</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">optim_state_dict_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">OptimStateDictConfig</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.FSDPStrategy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dataclass representing the <a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html" target="_blank">FullyShardedDataParallel</a> strategy</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.auto_wrap_policy">
+<code class="sig-name descname"><span class="pre">auto_wrap_policy</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.auto_wrap_policy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.backward_prefetch">
+<code class="sig-name descname"><span class="pre">backward_prefetch</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.BackwardPrefetch" target="_blank" title="(in PyTorch v2.0)"><span class="pre">BackwardPrefetch</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.backward_prefetch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.cpu_offload">
+<code class="sig-name descname"><span class="pre">cpu_offload</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.CPUOffload" target="_blank" title="(in PyTorch v2.0)"><span class="pre">CPUOffload</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.cpu_offload" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.forward_prefetch">
+<code class="sig-name descname"><span class="pre">forward_prefetch</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.forward_prefetch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.ignored_modules">
+<code class="sig-name descname"><span class="pre">ignored_modules</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.ignored_modules" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.limit_all_gathers">
+<code class="sig-name descname"><span class="pre">limit_all_gathers</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.limit_all_gathers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.optim_state_dict_config">
+<code class="sig-name descname"><span class="pre">optim_state_dict_config</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">OptimStateDictConfig</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.optim_state_dict_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.process_group">
+<code class="sig-name descname"><span class="pre">process_group</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ProcessGroup</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.process_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.sharding_strategy">
+<code class="sig-name descname"><span class="pre">sharding_strategy</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.ShardingStrategy" target="_blank" title="(in PyTorch v2.0)"><span class="pre">ShardingStrategy</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.sharding_strategy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.state_dict_config">
+<code class="sig-name descname"><span class="pre">state_dict_config</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">StateDictConfig</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.state_dict_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.state_dict_type">
+<code class="sig-name descname"><span class="pre">state_dict_type</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">StateDictType</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.state_dict_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.sync_module_states">
+<code class="sig-name descname"><span class="pre">sync_module_states</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.sync_module_states" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.FSDPStrategy.use_orig_params">
+<code class="sig-name descname"><span class="pre">use_orig_params</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#torchtnt.utils.FSDPStrategy.use_orig_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.FlopTensorDispatchMode">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">FlopTensorDispatchMode</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.FlopTensorDispatchMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>A context manager to measure flops of a module. Requires PyTorch 1.13+.</p>
+<p>Flop count implementation based on
+<a class="reference external" href="https://dev-discuss.pytorch.org/t/the-ideal-pytorch-flop-counter-with-torch-dispatch/505" target="_blank">https://dev-discuss.pytorch.org/t/the-ideal-pytorch-flop-counter-with-torch-dispatch/505</a></p>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torchvision.models</span> <span class="k">as</span> <span class="nn">models</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torcheval.tools.flops</span> <span class="kn">import</span> <span class="n">FlopTensorDispatchMode</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">module</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">resnet18</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">module_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">FlopTensorDispatchMode</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="k">as</span> <span class="n">ftdm</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c1"># count forward flops</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">res</span> <span class="o">=</span> <span class="n">module</span><span class="p">(</span><span class="n">module_input</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">flops_forward</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">ftdm</span><span class="o">.</span><span class="n">flop_counts</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span>    <span class="c1"># reset count before counting backward flops</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">ftdm</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">res</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">flops_backward</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">ftdm</span><span class="o">.</span><span class="n">flop_counts</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.FlopTensorDispatchMode.reset">
+<code class="sig-name descname"><span class="pre">reset</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.FlopTensorDispatchMode.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets current flop count.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.FullSyncPeriodicTimer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">FullSyncPeriodicTimer</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">timedelta</span></span></em>, <em><span class="n"><span class="pre">cpu_pg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ProcessGroup</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.FullSyncPeriodicTimer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Measures time (resets if given interval elapses) on rank 0
@@ -546,6 +730,99 @@ in order to avoid blocking of a training process.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">ModuleSummary</span></code><a class="headerlink" href="#torchtnt.utils.ModuleSummary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Summary of module and its submodules. It collects the following information:</p>
+<ul class="simple">
+<li>Name</li>
+<li>Type</li>
+<li>Number of parameters</li>
+<li>Number of trainable parameters</li>
+<li>Estimated size in bytes</li>
+<li>Whether this module contains uninitialized parameters</li>
+<li>FLOPs for forward (“?” meaning not calculated)</li>
+<li>FLOPs for backward (“?” meaning not calculated)</li>
+<li>Input shape (“?” meaning not calculated)</li>
+<li>Output shape (“?” meaning not calculated)</li>
+<li>Forward elapsed time in ms (“?” meaning not calculated)</li>
+</ul>
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.flops_backward">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">flops_backward</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'?'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.flops_backward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total FLOPs for backward calculation using this module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.flops_forward">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">flops_forward</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'?'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.flops_forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total FLOPs for forward calculation using this module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.forward_elapsed_time_ms">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">forward_elapsed_time_ms</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'?'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.forward_elapsed_time_ms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the forward time of the module in ms.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.has_uninitialized_param">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">has_uninitialized_param</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.has_uninitialized_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns if a parameter in this module is uninitialized</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.in_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">in_size</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'?'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.in_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the input size of the module</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.module_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">module_name</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.module_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of this module</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.module_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">module_type</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.module_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the type of this module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.num_parameters">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">num_parameters</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.num_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total number of parameters in this module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.num_trainable_parameters">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">num_trainable_parameters</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.num_trainable_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total number of trainable parameters (requires_grad=True)
+in this module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.out_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">out_size</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'?'</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.out_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the output size of the module</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.size_bytes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">size_bytes</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.size_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the total estimated size in bytes of a module.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.ModuleSummary.submodule_summaries">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">submodule_summaries</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#torchtnt.utils.ModuleSummary" title="torchtnt.utils.module_summary.ModuleSummary"><span class="pre">ModuleSummary</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.utils.ModuleSummary.submodule_summaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Dict with the names of submodules as keys and corresponding <a class="reference internal" href="#torchtnt.utils.ModuleSummary" title="torchtnt.utils.ModuleSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSummary</span></code></a>
+objects as values. These can be traversed for visualization.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.PGWrapper">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">PGWrapper</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">pg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ProcessGroup</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.PGWrapper" title="Permalink to this definition">¶</a></dt>
 <dd><p>A wrapper around ProcessGroup that allows collectives to be issued in a
@@ -583,6 +860,54 @@ pg is not None:                             use pg</div></blockquote>
 <dt class="sig sig-object py" id="torchtnt.utils.PGWrapper.scatter_object_list">
 <code class="sig-name descname"><span class="pre">scatter_object_list</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">input_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.PGWrapper.scatter_object_list" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">Progress</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">num_epochs_completed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">num_steps_completed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em><span class="n"><span class="pre">num_steps_completed_in_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.Progress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to track progress during the loop. Includes state_dict/load_state_dict for convenience for checkpointing.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress.increment_epoch">
+<code class="sig-name descname"><span class="pre">increment_epoch</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Progress.increment_epoch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the epochs completed and resets the steps completed within the epoch.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress.increment_step">
+<code class="sig-name descname"><span class="pre">increment_step</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Progress.increment_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the step counts completed and completed within the epoch.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress.load_state_dict">
+<code class="sig-name descname"><span class="pre">load_state_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Progress.load_state_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restores a Progress instance from a state_dict in accordance with Stateful protocol.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress.num_epochs_completed">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">num_epochs_completed</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#torchtnt.utils.Progress.num_epochs_completed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of epochs completed thus far in loop.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress.num_steps_completed">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">num_steps_completed</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#torchtnt.utils.Progress.num_steps_completed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of steps completed thus far in loop.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress.num_steps_completed_in_epoch">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">num_steps_completed_in_epoch</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#torchtnt.utils.Progress.num_steps_completed_in_epoch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of steps completed thus far in epoch.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.Progress.state_dict">
+<code class="sig-name descname"><span class="pre">state_dict</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.Progress.state_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a state_dict of a Progress instance in accordance with Stateful protocol.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -628,6 +953,22 @@ The RSS result is stored in the rss_deltas_bytes dict of the class with the prov
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.Stateful">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">Stateful</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.Stateful" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the interface for checkpoint saving and loading.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.Stateful.load_state_dict">
+<code class="sig-name descname"><span class="pre">load_state_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Stateful.load_state_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.Stateful.state_dict">
+<code class="sig-name descname"><span class="pre">state_dict</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.Stateful.state_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="torchtnt.utils.TLRScheduler">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">TLRScheduler</span></code><a class="headerlink" href="#torchtnt.utils.TLRScheduler" title="Permalink to this definition">¶</a></dt>
@@ -636,71 +977,25 @@ The RSS result is stored in the rss_deltas_bytes dict of the class with the prov
 
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.Timer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">Timer</span></code><a class="headerlink" href="#torchtnt.utils.Timer" title="Permalink to this definition">¶</a></dt>
-<dd><p>A timer which records intervals between starts and stops, as well as cumulative time in seconds.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="torchtnt.utils.Timer.interval_time_seconds">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">interval_time_seconds</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#torchtnt.utils.Timer.interval_time_seconds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interval between most recent stop and start in seconds.
-If timer is still running, return interval between most recent start and now.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.Timer.load_state_dict">
-<code class="sig-name descname"><span class="pre">load_state_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Timer.load_state_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load timer state from state dict.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="torchtnt.utils.Timer.paused">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">paused</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#torchtnt.utils.Timer.paused" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">Timer</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">cuda_sync</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.Timer" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.Timer.reset">
 <code class="sig-name descname"><span class="pre">reset</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Timer.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset timer state.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.Timer.start">
-<code class="sig-name descname"><span class="pre">start</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Timer.start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Start timer interval.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.Timer.state_dict">
-<code class="sig-name descname"><span class="pre">state_dict</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.Timer.state_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Pause timer and export state_dict for checkpointing.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>Exception</strong> – If state_dict is called while timer is still running.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.Timer.stop">
-<code class="sig-name descname"><span class="pre">stop</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.Timer.stop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stop timer interval. Interval time will be added to the total.</p>
+<dd><p>Reset the recorded_durations to an empty list</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.Timer.time">
 <code class="sig-name descname"><span class="pre">time</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">action_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.Timer.time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Yields a context manager to encapsulate the scope of a timed action.</p>
-<p>Args:
-action_name: the name under which to store the timing of what is enclosed in the context manager</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="torchtnt.utils.Timer.total_time_seconds">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">total_time_seconds</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#torchtnt.utils.Timer.total_time_seconds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sum of all interval times in seconds since the last reset.
-If timer is still running, include the current interval time in the total.</p>
+<dd><p>A context manager for timing a code block, with optional cuda synchronization and verbose timing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>action_name</strong> – the name under which to store the timing of what is enclosed in the context manager.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -736,6 +1031,42 @@ tensors are padded, gathered and then trimmed to secure equal workload for all p
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.attach_oom_observer">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">attach_oom_observer</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">trace_max_entries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.attach_oom_observer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches a function to record the PyTorch memory snapshot when an out of memory error occurs.</p>
+<p>For more information, see this <a class="reference external" href="https://zdevito.github.io/2022/08/16/memory-snapshots.html" target="_blank">blog post</a> .</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>output_dir</strong> (<em>str</em>) – The directory to save the memory snapshot.</li>
+<li><strong>trace_max_entries</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of trace entries to record. Defaults to 1000000.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Outputs are only saved if running on a host with CUDA devices available.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.barrier">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">barrier</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.barrier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a synchronization point across all processes when using distributed.
+If torch.distributed is initialized, this function will invoke a barrier across the global process group.
+For more granular process group wrapping, please refer to <a class="reference internal" href="#torchtnt.utils.PGWrapper" title="torchtnt.utils.PGWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">PGWrapper</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.close_progress_bar">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">close_progress_bar</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">progress_bar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tqdm_asyncio</span></span></em>, <em><span class="n"><span class="pre">num_steps_completed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">refresh_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.close_progress_bar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.copy_data_to_device">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">copy_data_to_device</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em>, <em><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="headerlink" href="#torchtnt.utils.copy_data_to_device" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that recursively copies data to a torch.device.</p>
@@ -757,6 +1088,11 @@ tensors are padded, gathered and then trimmed to secure equal workload for all p
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.create_progress_bar">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">create_progress_bar</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">desc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">num_epochs_completed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">num_steps_completed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">max_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">max_steps_per_epoch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tqdm_asyncio</span></span></span><a class="headerlink" href="#torchtnt.utils.create_progress_bar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.days_to_secs">
@@ -792,6 +1128,46 @@ to be made available by the program launcher for setting the appropriate device 
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">get_global_rank</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#torchtnt.utils.get_global_rank" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get rank using torch.distributed if available. Otherwise, the RANK env var instead if initialized.
 Returns 0 if neither condition is met.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.get_local_rank">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">get_local_rank</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#torchtnt.utils.get_local_rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get rank using the <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code> environment variable, if populated: <a class="reference external" href="https://pytorch.org/docs/stable/elastic/run.html#environment-variables" target="_blank">https://pytorch.org/docs/stable/elastic/run.html#environment-variables</a>
+Defaults to 0 if <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code> is not set.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.get_module_summary">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">get_module_summary</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a></span></em>, <em><span class="n"><span class="pre">module_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">module_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">MutableMapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torchtnt.utils.ModuleSummary" title="torchtnt.utils.module_summary.ModuleSummary"><span class="pre">ModuleSummary</span></a></span></span><a class="headerlink" href="#torchtnt.utils.get_module_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a <a class="reference internal" href="#torchtnt.utils.ModuleSummary" title="torchtnt.utils.ModuleSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSummary</span></code></a> object, then assign its values and generate submodule tree.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> – The module to be summarized.</li>
+<li><strong>module_args</strong> – A tuple of arguments for the module to run and calculate FLOPs and activation sizes.</li>
+<li><strong>module_kwargs</strong> – <p>Any kwarg arguments to be passed into the module’s forward function.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">To calculate FLOPs, you must use PyTorch 1.13 or greater.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If module contains any lazy submodule, we will NOT calculate FLOPs.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently only modules that output a single tensor are supported.
+TODO: to support more flexible output for module.</p>
+</div>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="py function">
@@ -869,14 +1245,32 @@ Returns 0 if neither condition is met.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.get_summary_table">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">get_summary_table</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">module_summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#torchtnt.utils.ModuleSummary" title="torchtnt.utils.module_summary.ModuleSummary"><span class="pre">ModuleSummary</span></a></span></em>, <em><span class="n"><span class="pre">human_readable_nums</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#torchtnt.utils.get_summary_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a string summary_table, tabularizing the information in module_summary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module_summary</strong> – module_summary to be printed/tabularized</li>
+<li><strong>human_readable_nums</strong> – set to False for exact (e.g. 1234 vs 1.2 K)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.get_tensor_size_bytes_map">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">get_tensor_size_bytes_map</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.get_tensor_size_bytes_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.get_timer_summary">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">get_timer_summary</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">timer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#torchtnt.utils.Timer" title="torchtnt.utils.timer.Timer"><span class="pre">Timer</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#torchtnt.utils.get_timer_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a Timer, generate a summary of all the recorded actions.</p>
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">get_timer_summary</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">timer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TimerProtocol</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#torchtnt.utils.get_timer_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a timer, generate a summary of all the recorded actions.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -910,7 +1304,7 @@ Returns 1 if neither condition is met.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.init_from_env">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">init_from_env</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">device_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">pg_backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">pg_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">timedelta</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">datetime.timedelta(seconds=1800)</span></span></em>, <em><span class="n"><span class="pre">float32_matmul_precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'high'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a></span></span><a class="headerlink" href="#torchtnt.utils.init_from_env" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">init_from_env</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">device_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">dist_init_method_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'env'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'tcp'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'file'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'env'</span></span></em>, <em><span class="n"><span class="pre">pg_backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">pg_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">timedelta</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">datetime.timedelta(seconds=1800)</span></span></em>, <em><span class="n"><span class="pre">float32_matmul_precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'high'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a></span></span><a class="headerlink" href="#torchtnt.utils.init_from_env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility function that initializes the device and process group, if applicable.</p>
 <dl class="docutils">
 <dt>The global process group is initialized only if:</dt><dd><ul class="simple">
@@ -928,6 +1322,8 @@ a SPMD-style execution model.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>device_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Device type to initialize. If None, device will be initialized
 based on environment</li>
+<li><strong>dist_init_method_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Method to initialize the process group. Must be one of “env”, “tcp”, or “file”.
+For more information, see here: <a class="reference external" href="https://pytorch.org/docs/stable/distributed.html#initialization" target="_blank">https://pytorch.org/docs/stable/distributed.html#initialization</a></li>
 <li><strong>pg_backend</strong> (<em>str</em><em>, </em><em>optional</em>) – The process group backend to use. If None, it will use the
 default process group backend from the device</li>
 <li><strong>pg_timeout</strong> (<em>timedelta</em><em>, </em><em>optional</em>) – Timeout for operations executed against the process
@@ -1013,6 +1409,46 @@ group. Default value equals 30 minutes</li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.log_elapsed_time">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">log_elapsed_time</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">action_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">cuda_sync</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.log_elapsed_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility to measure and log elapsed time for a given event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>action_name</strong> – the name of the event being timed.</li>
+<li><strong>cuda_sync</strong> – Whether to synchronize the stream in order to measure the most accurate timings on CUDA. Defaults to True if CUDA is available.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – If cuda_sync is set to True but CUDA is not available.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.log_memory_snapshot">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">log_memory_snapshot</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.log_memory_snapshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the memory snapshots to the provided <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>.
+For more information, see this <a class="reference external" href="https://zdevito.github.io/2022/08/16/memory-snapshots.html" target="_blank">blog post</a> .</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_dir</strong> (<em>str</em>) – The directory to save the memory snapshot.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Outputs are only saved if running on a host with CUDA devices available.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.maybe_enable_tf32">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">maybe_enable_tf32</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'high'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.maybe_enable_tf32" title="Permalink to this definition">¶</a></dt>
 <dd><p>Conditionally sets the precision of float32 matrix multiplications.</p>
@@ -1041,6 +1477,79 @@ group. Default value equals 30 minutes</li>
 bytes) are appended.</li>
 <li><strong>interval</strong> – The interval at which RSS deltas are measured.</li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.prepare_ddp">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">prepare_ddp</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a></span></em>, <em><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a></span></em>, <em><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.utils.DDPStrategy" title="torchtnt.utils.prepare_module.DDPStrategy"><span class="pre">DDPStrategy</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html#torch.nn.parallel.DistributedDataParallel" target="_blank" title="(in PyTorch v2.0)"><span class="pre">DistributedDataParallel</span></a></span></span><a class="headerlink" href="#torchtnt.utils.prepare_ddp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility to move a module to device and wrap in <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html" target="_blank">DistributedDataParallel</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> – module to be wrapped in DDP</li>
+<li><strong>strategy</strong> – an instance of DDPStrategy which defines the settings of DDP APIs</li>
+<li><strong>device</strong> – device to which module will be moved</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Examples::</dt><dd>strategy = DDPStrategy(find_unused_parameters=True, gradient_as_bucket_view=True)
+module = nn.Linear(1, 1)
+device = torch.device(“cuda”)
+ddp_module = prepare_ddp(module, strategy, device)</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.prepare_fsdp">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">prepare_fsdp</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a></span></em>, <em><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a></span></em>, <em><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.utils.FSDPStrategy" title="torchtnt.utils.prepare_module.FSDPStrategy"><span class="pre">FSDPStrategy</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.dtype" target="_blank" title="(in PyTorch v2.0)"><span class="pre">dtype</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel" target="_blank" title="(in PyTorch v2.0)"><span class="pre">FullyShardedDataParallel</span></a></span></span><a class="headerlink" href="#torchtnt.utils.prepare_fsdp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility to move a module to device and wrap in <a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html" target="_blank">FullyShardedDataParallel</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>module</strong> – module to be wrapped in FSDP</li>
+<li><strong>strategy</strong> – an instance of FSDPStrategy which defines the settings of FSDP APIs</li>
+<li><strong>device</strong> – device to which module will be moved</li>
+<li><strong>precision</strong> – precision to use when wrapping in FSDP</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Examples::</dt><dd>strategy = FSDPStrategy(limit_all_gathers=True)
+module = nn.Linear(1, 1)
+device = torch.device(“cuda”)
+fsdp_module = prepare_fsdp(module, strategy, device)</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.prune_module_summary">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">prune_module_summary</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">module_summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#torchtnt.utils.ModuleSummary" title="torchtnt.utils.module_summary.ModuleSummary"><span class="pre">ModuleSummary</span></a></span></em>, <em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">max_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.prune_module_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prune the module summaries that are deeper than max_depth in the module
+summary tree. The ModuleSummary object is prunned inplace.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>module_summary</strong> – Root module summary to prune.</li>
+<li><strong>max_depth</strong> – The maximum depth of module summaries to keep.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – If <cite>max_depth</cite> is an int less than 1</p>
 </td>
 </tr>
 </tbody>
@@ -1192,6 +1701,11 @@ For more details, see <a class="reference external" href="https://pytorch.org/do
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">transfer_weights</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">src_module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a></span></em>, <em><span class="n"><span class="pre">dst_module</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Module</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.transfer_weights" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.update_progress_bar">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">update_progress_bar</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">progress_bar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tqdm_asyncio</span></span></em>, <em><span class="n"><span class="pre">num_steps_completed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">refresh_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.update_progress_bar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 
@@ -1205,7 +1719,7 @@ For more details, see <a class="reference external" href="https://pytorch.org/do
         <a href="data.html" class="btn btn-neutral float-right" title="Data" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="../framework/auto_unit.html" class="btn btn-neutral" title="AutoUnit" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="../framework/generated/torchtnt.framework.callbacks.TrainProgressMonitor.html" class="btn btn-neutral" title="TrainProgressMonitor" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   

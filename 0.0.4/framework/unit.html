@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Unit &mdash; TorchTNT 0.1.0 documentation</title>
+  <title>Unit &mdash; TorchTNT 0.2.0 documentation</title>
   
 
   
@@ -33,11 +33,15 @@
   <link rel="stylesheet" href="../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Train" href="train.html" />
-    <link rel="prev" title="Examples" href="../examples.html" />
-  <!-- Google Analytics -->
-  
-  <!-- End Google Analytics -->
+    <link rel="next" title="AutoUnit" href="auto_unit.html" />
+    <link rel="prev" title="Checkpointing" href="../checkpointing.html" />
+  <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','');</script>
+    <!-- End Google Tag Manager -->
   
 
   
@@ -223,7 +227,7 @@
               
               
                 <div class="version">
-                  0.1.0
+                  0.2.0
                 </div>
               
             
@@ -255,16 +259,21 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Core Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../distributed.html">Distributed training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../checkpointing.html">Checkpointing</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Framework</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Unit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="train.html">Train</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eval.html">Evaluate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="predict.html">Predict</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fit.html">Fit</a></li>
 <li class="toctree-l1"><a class="reference internal" href="state.html">State</a></li>
 <li class="toctree-l1"><a class="reference internal" href="callbacks.html">Callbacks</a></li>
-<li class="toctree-l1"><a class="reference internal" href="auto_unit.html">AutoUnit</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul>
@@ -337,6 +346,10 @@
         <div class="pytorch-content-left">
 
         
+          <!-- Google Tag Manager (noscript) -->
+          <noscript><iframe src="https://www.googletagmanager.com/ns.html?id="
+          height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+          <!-- End Google Tag Manager (noscript) -->
           
           <div class="rst-content">
           
@@ -349,14 +362,14 @@
 <div class="section" id="trainunit">
 <h2>TrainUnit<a class="headerlink" href="#trainunit" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.TrainUnit">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.</span></code><code class="sig-name descname"><span class="pre">TrainUnit</span></code><a class="headerlink" href="#torchtnt.framework.TrainUnit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.unit.</span></code><code class="sig-name descname"><span class="pre">TrainUnit</span></code><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit" title="Permalink to this definition">¶</a></dt>
 <dd><p>The TrainUnit is an interface that can be used to organize your training logic. The core of it is the <code class="docutils literal notranslate"><span class="pre">train_step</span></code> which
 is an abstract method where you can define the code you want to run each iteration of the dataloader.</p>
 <p>To use the TrainUnit, create a class which subclasses TrainUnit. Then implement the <code class="docutils literal notranslate"><span class="pre">train_step</span></code> method on your class, and optionally
 implement any of the hooks, which allow you to control the behavior of the loop at different points.</p>
 <p>Below is a simple example of a user’s subclass of TrainUnit that implements a basic <code class="docutils literal notranslate"><span class="pre">train_step</span></code>, and the <code class="docutils literal notranslate"><span class="pre">on_train_epoch_end</span></code> hook.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">TrainUnit</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TrainUnit</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">]</span>
 <span class="c1"># specify type of the data in each batch of the dataloader to allow for typechecking</span>
@@ -374,7 +387,7 @@ implement any of the hooks, which allow you to control the behavior of the loop 
         <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span>
 
     <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-         <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">binary_cross_entropy_with_logits</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
         <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
@@ -390,64 +403,64 @@ implement any of the hooks, which allow you to control the behavior of the loop 
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.TrainUnit.on_train_end">
-<code class="sig-name descname"><span class="pre">on_train_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.TrainUnit.on_train_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit.on_train_end">
+<code class="sig-name descname"><span class="pre">on_train_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit.on_train_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after training ends.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.TrainUnit.on_train_epoch_end">
-<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.TrainUnit.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit.on_train_epoch_end">
+<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after a train epoch ends.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.TrainUnit.on_train_epoch_start">
-<code class="sig-name descname"><span class="pre">on_train_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.TrainUnit.on_train_epoch_start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit.on_train_epoch_start">
+<code class="sig-name descname"><span class="pre">on_train_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit.on_train_epoch_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called before a train epoch starts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.TrainUnit.on_train_start">
-<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.TrainUnit.on_train_start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit.on_train_start">
+<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit.on_train_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called before training starts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.TrainUnit.train_step">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">train_step</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TTrainData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#torchtnt.framework.TrainUnit.train_step" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit.train_step">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">train_step</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TTrainData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit.train_step" title="Permalink to this definition">¶</a></dt>
 <dd><p>Core required method for user to implement. This method will be called at each iteration of the
 train dataloader, and can return any data the user wishes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -455,7 +468,7 @@ train dataloader, and can return any data the user wishes.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</li>
+<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</li>
 <li><strong>data</strong> – one batch of training data.</li>
 </ul>
 </td>
@@ -470,14 +483,14 @@ train dataloader, and can return any data the user wishes.</p>
 <div class="section" id="evalunit">
 <h2>EvalUnit<a class="headerlink" href="#evalunit" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.EvalUnit">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.</span></code><code class="sig-name descname"><span class="pre">EvalUnit</span></code><a class="headerlink" href="#torchtnt.framework.EvalUnit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.EvalUnit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.unit.</span></code><code class="sig-name descname"><span class="pre">EvalUnit</span></code><a class="headerlink" href="#torchtnt.framework.unit.EvalUnit" title="Permalink to this definition">¶</a></dt>
 <dd><p>The EvalUnit is an interface that can be used to organize your evaluation logic. The core of it is the <code class="docutils literal notranslate"><span class="pre">eval_step</span></code> which
 is an abstract method where you can define the code you want to run each iteration of the dataloader.</p>
-<p>To use the EvalUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>.
+<p>To use the EvalUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>.
 Then implement the <code class="docutils literal notranslate"><span class="pre">eval_step</span></code> method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
-Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">eval_step</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">EvalUnit</span>
+Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">eval_step</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">EvalUnit</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">]</span>
 <span class="c1"># specify type of the data in each batch of the dataloader to allow for typechecking</span>
@@ -499,8 +512,8 @@ Below is a simple example of a user’s subclass of <a class="reference internal
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.EvalUnit.eval_step">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">eval_step</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TEvalData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#torchtnt.framework.EvalUnit.eval_step" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.EvalUnit.eval_step">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">eval_step</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TEvalData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.EvalUnit.eval_step" title="Permalink to this definition">¶</a></dt>
 <dd><p>Core required method for user to implement. This method will be called at each iteration of the
 eval dataloader, and can return any data the user wishes.
 Optionally can be decorated with <code class="docutils literal notranslate"><span class="pre">&#64;torch.inference_mode()</span></code> for improved performance.</p>
@@ -509,7 +522,7 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</li>
+<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</li>
 <li><strong>data</strong> – one batch of evaluation data.</li>
 </ul>
 </td>
@@ -519,56 +532,56 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.EvalUnit.on_eval_end">
-<code class="sig-name descname"><span class="pre">on_eval_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.EvalUnit.on_eval_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.EvalUnit.on_eval_end">
+<code class="sig-name descname"><span class="pre">on_eval_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.EvalUnit.on_eval_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after evaluation ends.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.EvalUnit.on_eval_epoch_end">
-<code class="sig-name descname"><span class="pre">on_eval_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.EvalUnit.on_eval_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.EvalUnit.on_eval_epoch_end">
+<code class="sig-name descname"><span class="pre">on_eval_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.EvalUnit.on_eval_epoch_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after an eval epoch ends.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.EvalUnit.on_eval_epoch_start">
-<code class="sig-name descname"><span class="pre">on_eval_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.EvalUnit.on_eval_epoch_start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.EvalUnit.on_eval_epoch_start">
+<code class="sig-name descname"><span class="pre">on_eval_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.EvalUnit.on_eval_epoch_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called before a new eval epoch starts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.EvalUnit.on_eval_start">
-<code class="sig-name descname"><span class="pre">on_eval_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.EvalUnit.on_eval_start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.EvalUnit.on_eval_start">
+<code class="sig-name descname"><span class="pre">on_eval_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.EvalUnit.on_eval_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called before evaluation starts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</td>
 </tr>
 </tbody>
 </table>
@@ -580,14 +593,14 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 <div class="section" id="predictunit">
 <h2>PredictUnit<a class="headerlink" href="#predictunit" title="Permalink to this heading">¶</a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.PredictUnit">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.</span></code><code class="sig-name descname"><span class="pre">PredictUnit</span></code><a class="headerlink" href="#torchtnt.framework.PredictUnit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.unit.</span></code><code class="sig-name descname"><span class="pre">PredictUnit</span></code><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit" title="Permalink to this definition">¶</a></dt>
 <dd><p>The PredictUnit is an interface that can be used to organize your prediction logic. The core of it is the <code class="docutils literal notranslate"><span class="pre">predict_step</span></code> which
 is an abstract method where you can define the code you want to run each iteration of the dataloader.</p>
-<p>To use the PredictUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a>.
+<p>To use the PredictUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a>.
 Then implement the <code class="docutils literal notranslate"><span class="pre">predict_step</span></code> method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
-Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">predict_step</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">PredictUnit</span>
+Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">predict_step</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">PredictUnit</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">]</span>
 <span class="c1"># specify type of the data in each batch of the dataloader to allow for typechecking</span>
@@ -609,64 +622,64 @@ Below is a simple example of a user’s subclass of <a class="reference internal
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.PredictUnit.on_predict_end">
-<code class="sig-name descname"><span class="pre">on_predict_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.PredictUnit.on_predict_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.on_predict_end">
+<code class="sig-name descname"><span class="pre">on_predict_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.on_predict_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after prediction ends.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.PredictUnit.on_predict_epoch_end">
-<code class="sig-name descname"><span class="pre">on_predict_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.PredictUnit.on_predict_epoch_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.on_predict_epoch_end">
+<code class="sig-name descname"><span class="pre">on_predict_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.on_predict_epoch_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after a predict epoch ends.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.PredictUnit.on_predict_epoch_start">
-<code class="sig-name descname"><span class="pre">on_predict_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.PredictUnit.on_predict_epoch_start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.on_predict_epoch_start">
+<code class="sig-name descname"><span class="pre">on_predict_epoch_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.on_predict_epoch_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called before a predict epoch starts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.PredictUnit.on_predict_start">
-<code class="sig-name descname"><span class="pre">on_predict_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.PredictUnit.on_predict_start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.on_predict_start">
+<code class="sig-name descname"><span class="pre">on_predict_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.on_predict_start" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called before prediction starts.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.PredictUnit.predict_step">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">predict_step</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TPredictData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#torchtnt.framework.PredictUnit.predict_step" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.predict_step">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">predict_step</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TPredictData</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.predict_step" title="Permalink to this definition">¶</a></dt>
 <dd><p>Core required method for user to implement. This method will be called at each iteration of the
 predict dataloader, and can return any data the user wishes.
 Optionally can be decorated with <code class="docutils literal notranslate"><span class="pre">&#64;torch.inference_mode()</span></code> for improved performance.</p>
@@ -675,7 +688,7 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.State" title="torchtnt.framework.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</li>
+<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the prediction run.</li>
 <li><strong>data</strong> – one batch of prediction data.</li>
 </ul>
 </td>
@@ -692,7 +705,7 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 <p>In some cases, it is convenient to implement multiple Unit interfaces under the same class, e.g. if you plan to use your class to run several different phases;
 for example, running training and then prediction, or running training and evaluation interleaved (referred to as fitting).
 Here is an example of a unit which extends TrainUnit, EvalUnit, and PredictUnit.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework</span> <span class="kn">import</span> <span class="n">TrainUnit</span><span class="p">,</span> <span class="n">EvalUnit</span><span class="p">,</span> <span class="n">PredictUnit</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TrainUnit</span><span class="p">,</span> <span class="n">EvalUnit</span><span class="p">,</span> <span class="n">PredictUnit</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">]</span>
 
@@ -745,10 +758,10 @@ Here is an example of a unit which extends TrainUnit, EvalUnit, and PredictUnit.
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="train.html" class="btn btn-neutral float-right" title="Train" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="auto_unit.html" class="btn btn-neutral float-right" title="AutoUnit" accesskey="n" rel="next">Next <img src="../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="../examples.html" class="btn btn-neutral" title="Examples" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="../checkpointing.html" class="btn btn-neutral" title="Checkpointing" accesskey="p" rel="prev"><img src="../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
