@@ -214,7 +214,9 @@ class TestAutoUnit(unittest.TestCase):
                 return x
 
         my_module = Net()
-        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=3)
+        my_swa_params = SWAParams(
+            epoch_start=1, anneal_epochs=3, avg_fn=lambda x, y, z: x
+        )
 
         auto_unit = DummyAutoUnit(
             module=my_module,
@@ -625,7 +627,9 @@ class TestAutoUnit(unittest.TestCase):
                 return x
 
         my_module = Net()
-        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=3)
+        my_swa_params = SWAParams(
+            epoch_start=1, anneal_epochs=3, avg_fn=lambda x, y, z: x
+        )
 
         auto_unit = DummyAutoUnit(
             module=my_module,
