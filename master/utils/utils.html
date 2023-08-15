@@ -1067,6 +1067,22 @@ For more granular process group wrapping, please refer to <a class="reference in
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="torchtnt.utils.convert_precision_str_to_dtype">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">convert_precision_str_to_dtype</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.dtype" target="_blank" title="(in PyTorch v2.0)"><span class="pre">dtype</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.convert_precision_str_to_dtype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts precision as a string to a torch.dtype</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>precision</strong> – string containing the precision</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError if an invalid precision string is passed.</strong> – </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.copy_data_to_device">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.</span></code><code class="sig-name descname"><span class="pre">copy_data_to_device</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em>, <em><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.0)"><span class="pre">device</span></a></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span></span></span><a class="headerlink" href="#torchtnt.utils.copy_data_to_device" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that recursively copies data to a torch.device.</p>
