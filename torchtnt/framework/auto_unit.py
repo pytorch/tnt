@@ -95,8 +95,6 @@ class ActivationCheckpointParams:
     check_fn: Optional[Callable[[torch.nn.Module], bool]]
 
 
-# pyre-ignore: Invalid type parameters [24]
-TSelf = TypeVar("TSelf", bound="AutoUnit")
 TData = TypeVar("TData")
 
 
