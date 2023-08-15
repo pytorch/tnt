@@ -32,6 +32,7 @@ from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.misc import transfer_batch_norm_stats, transfer_weights
+from torchtnt.utils.precision import convert_precision_str_to_dtype
 from torchtnt.utils.prepare_module import (
     DDPStrategy,
     FSDPStrategy,
@@ -173,11 +174,11 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         super().__init__()
 
         self.device: torch.device = device or init_from_env()
-        self.precision: Optional[torch.dtype]
-        if isinstance(precision, str):
-            self.precision = _convert_precision_str_to_dtype(precision)
-        else:
-            self.precision = precision
+        self.precision: Optional[torch.dtype] = (
+            convert_precision_str_to_dtype(precision)
+            if isinstance(precision, str)
+            else precision
+        )
 
         # create autocast context based on precision and device type
         self.maybe_autocast_precision = torch.autocast(
@@ -420,11 +421,11 @@ class AutoUnit(
             _validate_torch_compile_available()
 
         self.device: torch.device = device or init_from_env()
-        self.precision: Optional[torch.dtype]
-        if isinstance(precision, str):
-            self.precision = _convert_precision_str_to_dtype(precision)
-        else:
-            self.precision = precision
+        self.precision: Optional[torch.dtype] = (
+            convert_precision_str_to_dtype(precision)
+            if isinstance(precision, str)
+            else precision
+        )
 
         if strategy:
             if isinstance(strategy, str):
@@ -850,29 +851,6 @@ def _validate_torch_compile_available() -> None:
             "Torch compile support is available only in PyTorch 2.0 or higher. "
             "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
         )
-
-
-def _convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:
-    """
-    Converts precision as a string to a torch.dtype
-
-    Args:
-        precision: string containing the precision
-
-    Raises:
-        ValueError if an invalid precision string is passed.
-
-    """
-    string_to_dtype_mapping = {
-        "fp16": torch.float16,
-        "bf16": torch.bfloat16,
-        "fp32": None,
-    }
-    if precision not in string_to_dtype_mapping.keys():
-        raise ValueError(
-            f"Precision {precision} not supported. Please use one of {list(string_to_dtype_mapping.keys())}"
-        )
-    return string_to_dtype_mapping[precision]
 
 
 def _convert_str_to_strategy(strategy: str) -> Union[DDPStrategy, FSDPStrategy]:

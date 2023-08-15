@@ -44,6 +44,7 @@ from .oom import (
     is_out_of_memory_error,
     log_memory_snapshot,
 )
+from .precision import convert_precision_str_to_dtype
 from .prepare_module import DDPStrategy, FSDPStrategy, prepare_ddp, prepare_fsdp
 from .progress import Progress
 from .rank_zero_log import (
@@ -103,6 +104,7 @@ __all__ = [
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
     "log_memory_snapshot",
+    "convert_precision_str_to_dtype",
     "DDPStrategy",
     "FSDPStrategy",
     "prepare_ddp",
