@@ -291,12 +291,14 @@ def get_synced_durations_histogram(
 
 
 def get_synced_timer_histogram(
-    timer: Timer, percentiles: Sequence[float], pg: Optional[dist.ProcessGroup] = None
+    timer: TimerProtocol,
+    percentiles: Sequence[float],
+    pg: Optional[dist.ProcessGroup] = None,
 ) -> Dict[str, Dict[str, float]]:
     """Synchronizes the input timer's recorded durations across ranks.
 
     Args:
-        timer: The Timer object whose recorded durations will be synced.
+        timer: The TimerProtocol object whose recorded durations will be synced.
         percentiles: The percentiles to compute. Values should be in the range [0, 100].
         pg (optional): The process group to use for synchronization. Defaults to the global process group.
 

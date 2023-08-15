@@ -11,7 +11,7 @@ from typing import Iterable, Optional
 import torch
 from torch.profiler import record_function
 from torchtnt.utils.device import copy_data_to_device
-from torchtnt.utils.timer import Timer
+from torchtnt.utils.timer import Timer, TimerProtocol
 
 _log: logging.Logger = logging.getLogger(__name__)
 
@@ -21,9 +21,9 @@ def profile_dataloader(
     profiler: torch.profiler.profile,
     *,
     max_steps: Optional[int] = None,
-    timer: Optional[Timer] = None,
+    timer: Optional[TimerProtocol] = None,
     device: Optional[torch.device] = None,
-) -> Timer:
+) -> TimerProtocol:
     """
     A helper function that profiles the dataloader iterations.
 
@@ -34,7 +34,7 @@ def profile_dataloader(
         timer (optional): timer to be used to track duration.
         device (optional): device to copy the data to. If set, this function will profile copying data to device.
     """
-    timer = timer if timer is not None else Timer()
+    timer = timer if timer is not None else Timer(cuda_sync=False)
     with timer.time("iter(dataloader)"), record_function("iter(dataloader)"):
         data_iter = iter(dataloader)
 
