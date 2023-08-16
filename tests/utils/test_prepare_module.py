@@ -11,6 +11,7 @@ from unittest.mock import patch
 import torch
 import torch.distributed.launcher as launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
@@ -121,3 +122,29 @@ class PrepareModelTest(unittest.TestCase):
     def test_is_fsdp_module(self) -> None:
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._test_is_fsdp_module)()
+
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_fdsp_precision(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._test_fdsp_precision)()
+
+    @staticmethod
+    def _test_fdsp_precision() -> None:
+        module = torch.nn.Linear(1, 1)
+        device = init_from_env()
+        mixed_precision = MixedPrecision(
+            param_dtype=torch.float64,
+        )
+        fsdp_module = prepare_fsdp(
+            module, device, FSDPStrategy(mixed_precision=mixed_precision)
+        )
+        tc = unittest.TestCase()
+        tc.assertTrue(isinstance(fsdp_module, FSDP))
+        tc.assertEqual(
+            fsdp_module.mixed_precision.param_dtype, mixed_precision.param_dtype
+        )
