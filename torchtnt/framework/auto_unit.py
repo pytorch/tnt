@@ -206,7 +206,6 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
                     module,
                     self.device,
                     strategy,
-                    self.precision,
                 )
         else:
             module = module.to(self.device)
@@ -446,7 +445,7 @@ class AutoUnit(
                 rank_zero_warn(
                     "We recommend setting FSDPStrategy's use_original_params to True when using torch compile."
                 )
-                module = prepare_fsdp(module, self.device, strategy, self.precision)
+                module = prepare_fsdp(module, self.device, strategy)
         else:
             module = module.to(self.device)
 

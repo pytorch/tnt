@@ -72,6 +72,7 @@ class FSDPStrategy(Strategy):
     cpu_offload: Optional[CPUOffload] = None
     auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
     backward_prefetch: Optional[BackwardPrefetch] = BackwardPrefetch.BACKWARD_PRE
+    mixed_precision: Optional[MixedPrecision] = None
     ignored_modules: Optional[Iterable[torch.nn.Module]] = None
     sync_module_states: bool = False
     forward_prefetch: bool = False
@@ -135,7 +136,6 @@ def prepare_fsdp(
     module: torch.nn.Module,
     device: torch.device,
     strategy: Optional[FSDPStrategy] = None,
-    precision: Optional[torch.dtype] = None,
 ) -> FSDP:
     """
     Utility to move a module to device and wrap in `FullyShardedDataParallel <https://pytorch.org/docs/stable/fsdp.html>`_.
@@ -144,7 +144,6 @@ def prepare_fsdp(
         module: module to be wrapped in FSDP
         strategy: an instance of FSDPStrategy which defines the settings of FSDP APIs
         device: device to which module will be moved
-        precision: precision to use when wrapping in FSDP
 
     Examples::
         strategy = FSDPStrategy(limit_all_gathers=True)
@@ -157,15 +156,9 @@ def prepare_fsdp(
             "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/"
         )
     strategy = strategy if strategy is not None else FSDPStrategy()
-    mixed_precision = None
-    if precision:
-        mixed_precision = MixedPrecision(
-            param_dtype=precision,
-            reduce_dtype=precision,
-            buffer_dtype=precision,
-        )
 
-    params_dict = asdict(strategy)
+    # we use __dict__ and not asdict() here because asdict() is recursively applied on nested objects
+    params_dict = strategy.__dict__.copy()
 
     # extract params to set state dict type
     state_dict_type = params_dict.pop("state_dict_type")
@@ -176,7 +169,6 @@ def prepare_fsdp(
     module = FSDP(
         module,
         device_id=device,
-        mixed_precision=mixed_precision,
         **params_dict,
     )
 
