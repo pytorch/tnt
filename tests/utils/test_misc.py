@@ -58,12 +58,26 @@ class MiscTest(unittest.TestCase):
     def test_transfer_batch_norm_stats(self) -> None:
         module1 = torch.nn.BatchNorm2d(3)
         # change running mean and var
+        # pyre-fixme[8]: Attribute has type `Optional[Tensor]`; used as `int`.
+        # pyre-fixme[58]: `+` is not supported for operand types
+        #  `Optional[torch._tensor.Tensor]` and `int`.
         module1.running_mean = module1.running_mean + 2
+        # pyre-fixme[8]: Attribute has type `Optional[Tensor]`; used as `int`.
+        # pyre-fixme[58]: `+` is not supported for operand types
+        #  `Optional[torch._tensor.Tensor]` and `int`.
         module1.running_var = module1.running_var + 4
         module2 = torch.nn.BatchNorm2d(3)
 
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Optional[Tensor]`.
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `Optional[Tensor]`.
         self.assertFalse(torch.equal(module1.running_mean, module2.running_mean))
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Optional[Tensor]`.
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `Optional[Tensor]`.
         self.assertFalse(torch.equal(module1.running_var, module2.running_var))
         transfer_batch_norm_stats(module1, module2)
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Optional[Tensor]`.
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `Optional[Tensor]`.
         self.assertTrue(torch.equal(module1.running_mean, module2.running_mean))
+        # pyre-fixme[6]: For 1st argument expected `Tensor` but got `Optional[Tensor]`.
+        # pyre-fixme[6]: For 2nd argument expected `Tensor` but got `Optional[Tensor]`.
         self.assertTrue(torch.equal(module1.running_var, module2.running_var))

@@ -78,6 +78,8 @@ class TimerTest(unittest.TestCase):
             timer.recorded_durations["action_4"][0], intervals[2]
         )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.cuda.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         condition=torch.cuda.is_available(), reason="This test needs a GPU host to run."
     )
@@ -214,6 +216,8 @@ class TimerTest(unittest.TestCase):
         tc = unittest.TestCase()
         tc.assertEqual(durations, expected_durations)
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         condition=dist.is_available(),
         reason="This test should only run if torch.distributed is available.",
@@ -235,6 +239,8 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
         dist.init_process_group("gloo")
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
+        # pyre-fixme[6]: For 2nd argument expected `ProcessGroup` but got
+        #  `Optional[ProcessGroup]`.
         fsp_timer = FullSyncPeriodicTimer(interval_threshold, process_group)
         return fsp_timer.check()
 
@@ -243,6 +249,8 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
         dist.init_process_group("gloo")
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
+        # pyre-fixme[6]: For 2nd argument expected `ProcessGroup` but got
+        #  `Optional[ProcessGroup]`.
         fsp_timer = FullSyncPeriodicTimer(interval_threshold, process_group)
         time.sleep(timeout)
         fsp_timer.check()  # self._prev_work is assigned, next time the check is called, it will be executed

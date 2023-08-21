@@ -41,6 +41,7 @@ class TQDMProgressBarTest(unittest.TestCase):
         my_unit = DummyTrainUnit(2)
         progress_bar = TQDMProgressBar()
         progress_bar.on_train_epoch_start(state, my_unit)
+        # pyre-fixme[16]: Optional type has no attribute `total`.
         self.assertEqual(progress_bar._train_progress_bar.total, expected_total)
 
     def test_progress_bar_train_integration(self) -> None:
@@ -80,6 +81,7 @@ class TQDMProgressBarTest(unittest.TestCase):
         my_unit = DummyEvalUnit(2)
         progress_bar = TQDMProgressBar()
         progress_bar.on_eval_epoch_start(state, my_unit)
+        # pyre-fixme[16]: Optional type has no attribute `total`.
         self.assertEqual(progress_bar._eval_progress_bar.total, expected_total)
 
     def test_progress_bar_predict(self) -> None:
@@ -104,6 +106,7 @@ class TQDMProgressBarTest(unittest.TestCase):
         my_unit = DummyPredictUnit(2)
         progress_bar = TQDMProgressBar()
         progress_bar.on_predict_epoch_start(state, my_unit)
+        # pyre-fixme[16]: Optional type has no attribute `total`.
         self.assertEqual(progress_bar._predict_progress_bar.total, expected_total)
 
     def test_progress_bar_mid_progress(self) -> None:
@@ -128,5 +131,7 @@ class TQDMProgressBarTest(unittest.TestCase):
         my_unit.predict_progress._num_steps_completed = 2
         progress_bar = TQDMProgressBar()
         progress_bar.on_predict_epoch_start(state, my_unit)
+        # pyre-fixme[16]: Optional type has no attribute `total`.
         self.assertEqual(progress_bar._predict_progress_bar.total, expected_total)
+        # pyre-fixme[16]: Optional type has no attribute `n`.
         self.assertEqual(progress_bar._predict_progress_bar.n, 2)

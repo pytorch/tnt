@@ -131,17 +131,39 @@ class MemoryTest(unittest.TestCase):
         self.assertEqual(len(tensor_map), 3)
         self.assertTrue(inputs["x"] in tensor_map)
         self.assertEqual(
+            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+            #  `Union[Dict[str, Tensor], Tensor]`.
             tensor_map[inputs["x"]],
+            # pyre-fixme[16]: Item `Dict` of `Union[Dict[str, torch._tensor.Tensor],
+            #  Tensor]` has no attribute `size`.
+            # pyre-fixme[16]: Item `Dict` of `Union[Dict[str, torch._tensor.Tensor],
+            #  Tensor]` has no attribute `element_size`.
             inputs["x"].size().numel() * inputs["x"].element_size(),
         )
+        # pyre-fixme[6]: For 1st argument expected `Union[None, List[typing.Any],
+        #  int, slice, Tensor, typing.Tuple[typing.Any, ...]]` but got `str`.
         self.assertTrue(inputs["y"]["z"] in tensor_map)
         self.assertEqual(
+            # pyre-fixme[6]: For 1st argument expected `Union[None,
+            #  List[typing.Any], int, slice, Tensor, typing.Tuple[typing.Any, ...]]`
+            #  but got `str`.
             tensor_map[inputs["y"]["z"]],
+            # pyre-fixme[6]: For 1st argument expected `Union[None,
+            #  List[typing.Any], int, slice, Tensor, typing.Tuple[typing.Any, ...]]`
+            #  but got `str`.
             inputs["y"]["z"].size().numel() * inputs["y"]["z"].element_size(),
         )
+        # pyre-fixme[6]: For 1st argument expected `Union[None, List[typing.Any],
+        #  int, slice, Tensor, typing.Tuple[typing.Any, ...]]` but got `str`.
         self.assertTrue(inputs["y"]["t"] in tensor_map)
         self.assertEqual(
+            # pyre-fixme[6]: For 1st argument expected `Union[None,
+            #  List[typing.Any], int, slice, Tensor, typing.Tuple[typing.Any, ...]]`
+            #  but got `str`.
             tensor_map[inputs["y"]["t"]],
+            # pyre-fixme[6]: For 1st argument expected `Union[None,
+            #  List[typing.Any], int, slice, Tensor, typing.Tuple[typing.Any, ...]]`
+            #  but got `str`.
             inputs["y"]["t"].size().numel() * inputs["y"]["t"].element_size(),
         )
 

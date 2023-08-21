@@ -21,8 +21,11 @@ from torch.nn import functional as F
 class GPTConfig:
     model_type: str = "gpt2"
     # model configurations
+    # pyre-fixme[8]: Attribute has type `int`; used as `None`.
     n_layer: int = None
+    # pyre-fixme[8]: Attribute has type `int`; used as `None`.
     n_head: int = None
+    # pyre-fixme[8]: Attribute has type `int`; used as `None`.
     n_embd: int = None
     # openai's values for gpt2
     vocab_size: int = 50257
@@ -45,6 +48,8 @@ class MultiheadAttentionLayer(nn.Module):
     A multi-head masked self-attention layer with a projection at the end.
     """
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, config, dtype=torch.float32):
         super().__init__()
         assert config.n_embd % config.n_head == 0
@@ -67,6 +72,8 @@ class MultiheadAttentionLayer(nn.Module):
             dtype=dtype,
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, x):
         _, seq_size, _ = x.size()
         y = self.attn(x, x, x, attn_mask=self.mask[0, 0, :seq_size, :seq_size])[0]
@@ -77,6 +84,7 @@ class MultiheadAttentionLayer(nn.Module):
 class Block(nn.Module):
     """an unassuming Transformer block"""
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(self, config: GPTConfig):
         super().__init__()
         self.ln1 = nn.LayerNorm(config.n_embd)
@@ -89,6 +97,8 @@ class Block(nn.Module):
             nn.Dropout(config.resid_pdrop),
         )
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, x):
         x = x + self.attn(self.ln1(x))
         x = x + self.mlp(self.ln2(x))
@@ -96,6 +106,8 @@ class Block(nn.Module):
 
 
 class EmbeddingStem(nn.Module):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, config: GPTConfig, dtype=torch.float32):
         super().__init__()
         self.tok_emb = nn.Embedding(
@@ -107,11 +119,15 @@ class EmbeddingStem(nn.Module):
             )
         )
         self.drop = nn.Dropout(config.embd_pdrop)
+        # pyre-fixme[4]: Attribute must be annotated.
         self.block_size = config.block_size
 
+    # pyre-fixme[3]: Return type must be annotated.
     def reset_parameters(self):
         self.tok_emb.reset_parameters()
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, idx):
         b, t = idx.size()
         assert (
@@ -130,8 +146,10 @@ class EmbeddingStem(nn.Module):
 class GPT(nn.Module):
     """GPT Language Model"""
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(self, config: GPTConfig):
         super().__init__()
+        # pyre-fixme[4]: Attribute must be annotated.
         self.block_size = config.block_size
         config = self._set_model_config(config)
 
@@ -153,6 +171,8 @@ class GPT(nn.Module):
         n_params = sum(p.numel() for p in self.blocks.parameters())
         print("number of parameters: %.2fM" % (n_params / 1e6,))
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _set_model_config(self, config):
         type_given = config.model_type is not None
         params_given = all(
@@ -202,6 +222,8 @@ class GPT(nn.Module):
             )
         return config
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def _init_weights(self, module):
         if isinstance(module, (nn.Linear, nn.Embedding)):
             module.weight.data.normal_(mean=0.0, std=0.02)
@@ -211,6 +233,8 @@ class GPT(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def forward(self, idx, targets=None):
         x = self.emb_stem(idx)
         x = self.blocks(x)
@@ -227,8 +251,19 @@ class GPT(nn.Module):
         return logits, loss
 
     @torch.no_grad()
+    # pyre-fixme[3]: Return type must be annotated.
     def generate(
-        self, idx, max_new_tokens, temperature=1.0, do_sample=False, top_k=None
+        self,
+        # pyre-fixme[2]: Parameter must be annotated.
+        idx,
+        # pyre-fixme[2]: Parameter must be annotated.
+        max_new_tokens,
+        # pyre-fixme[2]: Parameter must be annotated.
+        temperature=1.0,
+        # pyre-fixme[2]: Parameter must be annotated.
+        do_sample=False,
+        # pyre-fixme[2]: Parameter must be annotated.
+        top_k=None,
     ):
         """
         Take a conditioning sequence of indices idx (LongTensor of shape (b,t)) and complete
@@ -261,6 +296,7 @@ class GPT(nn.Module):
         return idx
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def create_optimizer(model: torch.nn.Module, opt_config: OptimizerConfig):
     """
     This long function is unfortunately doing something very simple and is being very defensive:

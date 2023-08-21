@@ -22,6 +22,8 @@ PROC_PER_NODE = 2
 
 class TorchrecExampleTest(unittest.TestCase):
     @skip_if_asan
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument `not
+    #  torch.cuda.is_available()` to decorator factory `unittest.skipIf`.
     @unittest.skipIf(
         not torch.cuda.is_available(),
         "Skip when CUDA is not available",

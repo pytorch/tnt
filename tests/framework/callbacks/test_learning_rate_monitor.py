@@ -54,6 +54,7 @@ class LearningRateMonitorTest(unittest.TestCase):
             my_unit,
             dataloader,
             max_epochs=max_epochs,
+            # pyre-fixme[6]: For 4th argument expected `Optional[int]` but got `float`.
             max_steps=total_steps,
             callbacks=[monitor],
         )

@@ -35,6 +35,7 @@ from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
+    # pyre-fixme[4]: Attribute must be annotated.
     cuda_available = torch.cuda.is_available()
 
     def test_save_every_n_train_steps(self) -> None:
@@ -300,6 +301,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             )
             self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -325,6 +328,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -413,6 +418,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             os.mkdir(path_4)
             self.assertEqual(_get_latest_checkpoint_path(temp_dir), path_3)
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -459,13 +466,18 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             shutil.rmtree(temp_dir)  # delete temp directory
 
 
+# pyre-fixme[5]: Global expression must be annotated.
 Batch = Tuple[torch.tensor, torch.tensor]
 
 
+# pyre-fixme[11]: Annotation `Batch` is not defined as a type.
 class DummyAutoUnit(AutoUnit[Batch]):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, input_dim: int, *args, **kwargs):
         super().__init__(module=torch.nn.Linear(input_dim, 2), *args, **kwargs)
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         outputs = self.module(inputs)
@@ -482,6 +494,8 @@ class DummyAutoUnit(AutoUnit[Batch]):
 
 
 class DummyStatefulDataLoader:
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
     def __init__(self, dataloader: Iterable):
         self.dataloader = dataloader
         self.state_dict_call_count = 0
@@ -495,5 +509,6 @@ class DummyStatefulDataLoader:
         self.load_state_dict_call_count += 1
         return None
 
+    # pyre-fixme[3]: Return type must be annotated.
     def __iter__(self):
         return iter(self.dataloader)

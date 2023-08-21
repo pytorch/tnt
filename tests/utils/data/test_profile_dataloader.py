@@ -46,6 +46,8 @@ class ProfileDataLoaderTest(unittest.TestCase):
             timer = profile_dataloader(iterable, p)
         self.assertEqual(len(timer.recorded_durations["next(iter)"]), max_length)
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.cuda.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.cuda.is_available(), reason="This test needs a GPU host to run."
     )

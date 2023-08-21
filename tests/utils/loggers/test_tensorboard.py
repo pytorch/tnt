@@ -85,6 +85,8 @@ class TensorBoardLoggerTest(unittest.TestCase):
             assert test_path in logger.path
             assert invalid_path not in logger.path
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         dist.is_available(), reason="Torch distributed is needed to run"
     )

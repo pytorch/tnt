@@ -39,7 +39,9 @@ class AppStateMixinTest(unittest.TestCase):
         self.assertEqual(my_unit.tracked_modules()["loss_fn_b"], my_unit.loss_fn_b)
 
         # delete the attributes
+        # pyre-fixme[8]: Attribute has type `Linear`; used as `None`.
         my_unit.module_a = None
+        # pyre-fixme[8]: Attribute has type `CrossEntropyLoss`; used as `None`.
         my_unit.loss_fn_b = None
 
         # the attributes should be removed from tracked_modules
@@ -58,6 +60,7 @@ class AppStateMixinTest(unittest.TestCase):
         )
 
         # delete the attribute
+        # pyre-fixme[8]: Attribute has type `SGD`; used as `None`.
         my_unit.optimizer_c = None
 
         # the attribute should be removed from tracked_optimizers
@@ -76,6 +79,7 @@ class AppStateMixinTest(unittest.TestCase):
         )
 
         # delete the attribute
+        # pyre-fixme[8]: Attribute has type `StepLR`; used as `None`.
         my_unit.lr_scheduler_d = None
 
         # the attribute should be removed from tracked_lr_schedulers
@@ -92,6 +96,7 @@ class AppStateMixinTest(unittest.TestCase):
         self.assertEqual(my_unit.app_state()["grad_scaler_e"], my_unit.grad_scaler_e)
 
         # delete the attribute
+        # pyre-fixme[8]: Attribute has type `GradScaler`; used as `None`.
         my_unit.grad_scaler_e = None
 
         # the attribute should be removed from tracked_misc_statefuls
@@ -115,10 +120,15 @@ class AppStateMixinTest(unittest.TestCase):
             self.assertTrue(key in my_unit.app_state())
 
         # delete the attributes
+        # pyre-fixme[8]: Attribute has type `Linear`; used as `None`.
         my_unit.module_a = None
+        # pyre-fixme[8]: Attribute has type `CrossEntropyLoss`; used as `None`.
         my_unit.loss_fn_b = None
+        # pyre-fixme[8]: Attribute has type `SGD`; used as `None`.
         my_unit.optimizer_c = None
+        # pyre-fixme[8]: Attribute has type `StepLR`; used as `None`.
         my_unit.lr_scheduler_d = None
+        # pyre-fixme[8]: Attribute has type `GradScaler`; used as `None`.
         my_unit.grad_scaler_e = None
 
         # the attributes should no longer be in app_state
@@ -148,23 +158,27 @@ class AppStateMixinTest(unittest.TestCase):
 
         # reassigning module_a to be an optimizer should work
         self.assertTrue("module_a" in my_unit.tracked_modules())
+        # pyre-fixme[8]: Attribute has type `Linear`; used as `SGD`.
         my_unit.module_a = optimizer_g
         self.assertTrue("module_a" not in my_unit.tracked_modules())
         self.assertTrue("module_a" in my_unit.tracked_optimizers())
 
         # reassigning optimizer_c to be an lr_scheduler should work
         self.assertTrue("optimizer_c" in my_unit.tracked_optimizers())
+        # pyre-fixme[8]: Attribute has type `SGD`; used as `StepLR`.
         my_unit.optimizer_c = lr_scheduler_h
         self.assertTrue("optimizer_c" not in my_unit.tracked_optimizers())
         self.assertTrue("optimizer_c" in my_unit.tracked_lr_schedulers())
 
         # reassigning lr_scheduler_d to be a nn.module should work
         self.assertTrue("lr_scheduler_d" in my_unit.tracked_lr_schedulers())
+        # pyre-fixme[8]: Attribute has type `StepLR`; used as `CrossEntropyLoss`.
         my_unit.lr_scheduler_d = loss_fn_f
         self.assertTrue("lr_scheduler_d" not in my_unit.tracked_lr_schedulers())
         self.assertTrue("lr_scheduler_d" in my_unit.tracked_modules())
 
         self.assertTrue("grad_scaler_e" in my_unit.tracked_misc_statefuls())
+        # pyre-fixme[8]: Attribute has type `GradScaler`; used as `CrossEntropyLoss`.
         my_unit.grad_scaler_e = loss_fn_f
         self.assertTrue("grad_scaler_e" not in my_unit.tracked_misc_statefuls())
         self.assertTrue("grad_scaler_e" in my_unit.tracked_modules())

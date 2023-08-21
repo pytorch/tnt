@@ -122,10 +122,13 @@ class ModuleSummaryTest(unittest.TestCase):
         self.assertTrue(ms.forward_elapsed_time_ms != "?")
 
 
+# pyre-fixme[5]: Global expression must be annotated.
 Batch = Tuple[torch.tensor, torch.tensor]
 
 
+# pyre-fixme[11]: Annotation `Batch` is not defined as a type.
 class DummyAutoUnit(AutoUnit[Batch]):
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         outputs = self.module(inputs)

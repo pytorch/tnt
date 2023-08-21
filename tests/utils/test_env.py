@@ -48,6 +48,7 @@ class EnvTest(unittest.TestCase):
             raise AssertionError(
                 f"Expected different process group backend: received {pg_backend}, expected {expected_pg_backend}"
             )
+        # pyre-fixme[7]: Expected `None` but got `device`.
         return device
 
     def _test_launch_worker(

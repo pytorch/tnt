@@ -21,6 +21,7 @@ class InMemoryLoggerTest(unittest.TestCase):
         logger.log(name="metric1", data=456.0, step=1)
         logger.log(name="metric1", data=789.0, step=2)
         # Test flushing.
+        # pyre-fixme[16]: `None` has no attribute `__enter__`.
         with captured_output() as (out, err):
             logger.flush()
         self.assertTrue(out.getvalue().startswith("OrderedDict(["))
@@ -54,6 +55,8 @@ def captured_output() -> None:
     old_out, old_err = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = new_out, new_err
+        # pyre-fixme[7]: Expected `None` but got `Generator[Tuple[TextIO, TextIO],
+        #  typing.Any, typing.Any]`.
         yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = old_out, old_err

@@ -13,6 +13,7 @@ from torchtnt.utils.early_stop_checker import EarlyStopChecker
 
 class EarlyStopCheckerTest(unittest.TestCase):
 
+    # pyre-fixme[4]: Attribute must be annotated.
     cuda_available = torch.cuda.is_available()
 
     def test_early_stop_patience(self) -> None:
@@ -366,6 +367,10 @@ class EarlyStopCheckerTest(unittest.TestCase):
 
         # Check for invalid mode
         with self.assertRaisesRegex(ValueError, "Got `invalid`"):
+            # pyre-fixme[6]: For 1st argument expected
+            #  `Union[typing_extensions.Literal['max'],
+            #  typing_extensions.Literal['min']]` but got
+            #  `typing_extensions.Literal['invalid']`.
             EarlyStopChecker("invalid", 3)
 
     def test_early_stop_invalid_min_delta(self) -> None:

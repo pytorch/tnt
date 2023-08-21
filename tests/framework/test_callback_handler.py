@@ -24,6 +24,7 @@ class DummyCallback(Callback):
     def __init__(self) -> None:
         self.called_hooks: Set[str] = set()
 
+    # pyre-fixme[3]: Return type must be annotated.
     def on_exception(
         self,
         state: State,
@@ -194,6 +195,8 @@ class CallbackHandlerTest(unittest.TestCase):
             "on_predict_end",
         )
 
+        # pyre-fixme[3]: Return type must be annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def dummy_fn(x, y):
             print("foo")
 

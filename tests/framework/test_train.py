@@ -253,6 +253,7 @@ class StopTrainUnit(TrainUnit[Batch]):
             state.stop()
 
         self.steps_processed += 1
+        # pyre-fixme[7]: Expected `Tensor` but got `Tuple[typing.Any, typing.Any]`.
         return loss, outputs
 
 

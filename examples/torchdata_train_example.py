@@ -40,6 +40,7 @@ def prepare_model(input_dim: int, device: torch.device) -> nn.Module:
     return nn.Linear(input_dim, 1, device=device)
 
 
+# pyre-fixme[24]: Generic type `ShufflerIterDataPipe` expects 1 type parameter.
 def _generate_datapipe(num_samples: int, input_dim: int) -> ShufflerIterDataPipe:
     """
     Returns a shuffled datapipe of random inputs and labels.
