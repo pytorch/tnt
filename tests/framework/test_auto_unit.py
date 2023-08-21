@@ -48,6 +48,7 @@ from torchtnt.utils.timer import Timer
 
 
 class TestAutoUnit(unittest.TestCase):
+    # pyre-fixme[4]: Attribute must be annotated.
     cuda_available = torch.cuda.is_available()
 
     def test_app_state_mixin(self) -> None:
@@ -119,6 +120,8 @@ class TestAutoUnit(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.autocast")
+    # pyre-fixme[30]: Terminating analysis - type
+    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def test_mixed_precision_fp16(self, mock_autocast) -> None:
         """
         Test that the mixed precision autocast context is called when fp16 precision is set
@@ -139,6 +142,8 @@ class TestAutoUnit(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.autocast")
+    # pyre-fixme[30]: Terminating analysis - type
+    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def test_mixed_precision_bf16(self, mock_autocast) -> None:
         """
         Test that the mixed precision autocast context is called when bf16 precision is set
@@ -405,6 +410,7 @@ class TestAutoUnit(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.autocast")
+    # pyre-fixme[2]: Parameter must be annotated.
     def test_eval_mixed_precision_bf16(self, mock_autocast) -> None:
         """
         Test that the mixed precision autocast context is called during evaluate when precision = bf16
@@ -425,6 +431,8 @@ class TestAutoUnit(unittest.TestCase):
             device_type="cuda", dtype=torch.bfloat16, enabled=True
         )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -440,6 +448,8 @@ class TestAutoUnit(unittest.TestCase):
         launcher.elastic_launch(config, entrypoint=self._test_fsdp_no_sync)()
 
     @staticmethod
+    # pyre-fixme[30]: Terminating analysis - type
+    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def _test_ddp_no_sync() -> None:
         """
         Test that the no_sync autocast context is correctly applied when using gradient accumulation and DDP
@@ -470,6 +480,8 @@ class TestAutoUnit(unittest.TestCase):
             no_sync_mock.assert_not_called()
 
     @staticmethod
+    # pyre-fixme[30]: Terminating analysis - type
+    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def _test_fsdp_no_sync() -> None:
         """
         Test that the no_sync autocast context is correctly applied when using gradient accumulation and FSDP
@@ -500,6 +512,8 @@ class TestAutoUnit(unittest.TestCase):
             auto_unit.train_step(state=state, data=dummy_iterator)
             no_sync_mock.assert_not_called()
 
+    # pyre-fixme[30]: Terminating analysis - type
+    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def test_move_data_to_device(self) -> None:
         """
         Test that move_data_to_device is called
@@ -558,6 +572,8 @@ class TestAutoUnit(unittest.TestCase):
             )
             self.assertEqual(configure_optimizers_and_lr_scheduler_mock.call_count, 1)
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -675,6 +691,7 @@ class TestAutoUnit(unittest.TestCase):
         ) -> torch.futures.Future[torch.Tensor]:
             nonlocal custom_noop_hook_called
 
+            # pyre-fixme[29]: `Type[torch.futures.Future]` is not a function.
             fut: torch.futures.Future[torch.Tensor] = torch.futures.Future()
             fut.set_result(bucket.buffer())
             custom_noop_hook_called = True
@@ -721,6 +738,8 @@ class TestAutoUnit(unittest.TestCase):
                 strategy="foo",
             )
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -818,6 +837,7 @@ class TestAutoUnit(unittest.TestCase):
 
         my_unit = LastBatchAutoUnit(
             module=my_module,
+            # pyre-fixme[6]: For 2nd argument expected `int` but got `float`.
             expected_steps_per_epoch=expected_steps_per_epoch,
         )
 
@@ -871,6 +891,7 @@ class TestAutoUnit(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.autocast")
+    # pyre-fixme[2]: Parameter must be annotated.
     def test_predict_mixed_precision_fp16(self, mock_autocast) -> None:
         """
         Test that the mixed precision autocast context is called during predict when precision = fp16
@@ -898,6 +919,7 @@ class TestAutoUnit(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.compile")
+    # pyre-fixme[2]: Parameter must be annotated.
     def test_compile_predict(self, mock_dynamo) -> None:
         """
         e2e torch compile on predict
@@ -939,6 +961,7 @@ class TestAutoUnit(unittest.TestCase):
         )
 
     @patch("torch.autograd.set_detect_anomaly")
+    # pyre-fixme[2]: Parameter must be annotated.
     def test_predict_detect_anomaly(self, mock_detect_anomaly) -> None:
         my_module = torch.nn.Linear(2, 2)
         auto_unit = AutoPredictUnit(module=my_module, detect_anomaly=True)
@@ -954,14 +977,19 @@ class TestAutoUnit(unittest.TestCase):
         mock_detect_anomaly.assert_called()
 
 
+# pyre-fixme[5]: Global expression must be annotated.
 Batch = Tuple[torch.tensor, torch.tensor]
 
 
+# pyre-fixme[11]: Annotation `Batch` is not defined as a type.
 class DummyAutoUnit(AutoUnit[Batch]):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._compile_used = False
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         if COMPILE_AVAIL:
             self._compile_used = torch._dynamo.is_compiling()
@@ -982,9 +1010,12 @@ class DummyAutoUnit(AutoUnit[Batch]):
 
 
 class DummyLRSchedulerAutoUnit(AutoUnit[Batch]):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         outputs = self.module(inputs)
@@ -1001,10 +1032,13 @@ class DummyLRSchedulerAutoUnit(AutoUnit[Batch]):
 
 
 class DummyComplexAutoUnit(AutoUnit[Batch]):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, lr: float, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.lr = lr
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         outputs = self.module(inputs)
@@ -1071,11 +1105,18 @@ class TimingAutoUnit(AutoUnit[Batch]):
         return my_optimizer, my_lr_scheduler
 
     def on_train_step_end(
-        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+        self,
+        state: State,
+        data: Batch,
+        step: int,
+        loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         assert state.train_state
         if self.train_progress.num_steps_completed_in_epoch == 1:
             tc = unittest.TestCase()
+            # pyre-fixme[16]: Optional type has no attribute `recorded_durations`.
             recorded_timer_keys = state.timer.recorded_durations.keys()
             for k in (
                 "TimingAutoUnit.on_train_start",
@@ -1096,10 +1137,17 @@ class TimingAutoUnit(AutoUnit[Batch]):
             tc.assertNotIn("TimingAutoUnit.train_step", recorded_timer_keys)
 
     def on_eval_step_end(
-        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+        self,
+        state: State,
+        data: Batch,
+        step: int,
+        loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         if self.eval_progress.num_steps_completed_in_epoch == 1:
             tc = unittest.TestCase()
+            # pyre-fixme[16]: Optional type has no attribute `recorded_durations`.
             recorded_timer_keys = state.timer.recorded_durations.keys()
             for k in (
                 "TimingAutoUnit.on_eval_start",
@@ -1138,10 +1186,16 @@ class TimingAutoPredictUnit(AutoPredictUnit[Batch]):
         return my_optimizer, my_lr_scheduler
 
     def on_predict_step_end(
-        self, state: State, data: TPredictData, step: int, outputs: Any
+        self,
+        state: State,
+        data: TPredictData,
+        step: int,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         if self.predict_progress.num_steps_completed_in_epoch == 1:
             tc = unittest.TestCase()
+            # pyre-fixme[16]: Optional type has no attribute `recorded_durations`.
             recorded_timer_keys = state.timer.recorded_durations.keys()
             for k in (
                 "AutoPredictUnit.on_predict_start",

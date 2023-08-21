@@ -30,11 +30,14 @@ if is_torch_version_geq_2_0():
 
 class PrepareModelTest(unittest.TestCase):
 
+    # pyre-fixme[4]: Attribute must be annotated.
     cuda_available = torch.cuda.is_available()
 
     @unittest.skipUnless(
         condition=(cuda_available), reason="This test should run on a GPU host."
     )
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -57,6 +60,8 @@ class PrepareModelTest(unittest.TestCase):
     @unittest.skipUnless(
         condition=(cuda_available), reason="This test should run on a GPU host."
     )
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -72,6 +77,8 @@ class PrepareModelTest(unittest.TestCase):
         tc = unittest.TestCase()
         tc.assertTrue(isinstance(fsdp_module, FSDP))
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
@@ -115,6 +122,9 @@ class PrepareModelTest(unittest.TestCase):
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.cuda.is_available() and torch.cuda.device_count() > 2` to decorator
+    #  factory `unittest.skipUnless`.
     @unittest.skipUnless(
         condition=torch.cuda.is_available() and torch.cuda.device_count() > 2,
         reason="This test needs 2 GPUs to run.",
@@ -123,6 +133,8 @@ class PrepareModelTest(unittest.TestCase):
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._test_is_fsdp_module)()
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )

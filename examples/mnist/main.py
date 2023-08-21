@@ -29,6 +29,7 @@ Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
 class Net(nn.Module):
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
@@ -66,6 +67,31 @@ class MyUnit(AutoUnit[Batch]):
         gamma: float,
         **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
     ) -> None:
+        # pyre-fixme[6]: For 1st argument expected `Optional[bool]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[float]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[device]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected
+        #  `Optional[ActivationCheckpointParams]` but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[SWAParams]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[TorchCompileParams]`
+        #  but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected
+        #  `Union[typing_extensions.Literal['epoch'],
+        #  typing_extensions.Literal['step']]` but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Union[None, str, dtype]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Union[None, str, Strategy]` but
+        #  got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `bool` but got `Dict[str,
+        #  typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `int` but got `Dict[str,
+        #  typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Module` but got `Dict[str,
+        #  typing.Any]`.
         super().__init__(**kwargs)
         self.tb_logger = tb_logger
         self.lr = lr
@@ -82,6 +108,7 @@ class MyUnit(AutoUnit[Batch]):
         lr_scheduler = StepLR(optimizer, step_size=1, gamma=self.gamma)
         return optimizer, lr_scheduler
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         outputs = self.module(inputs)
@@ -91,7 +118,13 @@ class MyUnit(AutoUnit[Batch]):
         return loss, outputs
 
     def on_train_step_end(
-        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+        self,
+        state: State,
+        data: Batch,
+        step: int,
+        loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         _, targets = data
         self.train_accuracy.update(outputs, targets)
@@ -106,7 +139,13 @@ class MyUnit(AutoUnit[Batch]):
         self.train_accuracy.reset()
 
     def on_eval_step_end(
-        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+        self,
+        state: State,
+        data: Batch,
+        step: int,
+        loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         if step % self.log_every_n_steps == 0:
             self.tb_logger.log("evaluation loss", loss, step)

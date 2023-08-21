@@ -22,6 +22,7 @@ from torchtnt.utils.version import is_torch_version_geq_2_0
 
 class OomTest(unittest.TestCase):
 
+    # pyre-fixme[4]: Attribute must be annotated.
     cuda_available = torch.cuda.is_available()
 
     def test_is_out_of_cpu_memory(self) -> None:
@@ -58,6 +59,9 @@ class OomTest(unittest.TestCase):
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torchtnt.utils.version.is_torch_version_geq_2_0()` to decorator factory
+    #  `unittest.skipUnless`.
     @unittest.skipUnless(
         condition=is_torch_version_geq_2_0(),
         reason="This test needs changes from PyTorch 2.0 to run.",

@@ -24,6 +24,7 @@ class CustomCSVWriter(BaseCSVWriter):
         self,
         state: State,
         unit: PredictUnit[TPredictData],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:
         return [["1"], ["2"]]
@@ -34,6 +35,7 @@ class CustomCSVWriterSingleRow(BaseCSVWriter):
         self,
         state: State,
         unit: PredictUnit[TPredictData],
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:
         return ["1"]
@@ -98,6 +100,7 @@ class BaseCSVWriterTest(unittest.TestCase):
 
         # Throw exception because get_step_output_rows is not defined.
         with self.assertRaises(TypeError):
+            # pyre-fixme[45]: Cannot instantiate abstract class `BaseCSVWriter`.
             csv_callback = BaseCSVWriter(
                 header_row=_HEADER_ROW, dir_path="", filename=_FILENAME
             )

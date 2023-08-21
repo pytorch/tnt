@@ -32,11 +32,15 @@ _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+# pyre-fixme[5]: Global expression must be annotated.
 PATH = parutil.get_file_path("data/input.txt", pkg=__package__)
 
 
 def prepare_dataloader(
-    dataset: Dataset, batch_size: int, device: torch.device
+    # pyre-fixme[24]: Generic type `Dataset` expects 1 type parameter.
+    dataset: Dataset,
+    batch_size: int,
+    device: torch.device,
 ) -> torch.utils.data.DataLoader:
     """Instantiate DataLoader"""
     # pin_memory enables faster host to GPU copies
@@ -48,6 +52,7 @@ def prepare_dataloader(
     )
 
 
+# pyre-fixme[3]: Return type must be annotated.
 def get_datasets(data_cfg: DataConfig):
     dataset = CharDataset(data_cfg)
     train_len = int(len(dataset) * data_cfg.train_split)
@@ -55,6 +60,7 @@ def get_datasets(data_cfg: DataConfig):
     return train_set, eval_set, dataset
 
 
+# pyre-fixme[24]: Generic type `AutoUnit` expects 1 type parameter.
 class MinGPTUnit(AutoUnit):
     def __init__(
         self,
@@ -63,24 +69,58 @@ class MinGPTUnit(AutoUnit):
         log_every_n_steps: int,
         **kwargs: Dict[str, Any],
     ) -> None:
+        # pyre-fixme[6]: For 1st argument expected `Optional[bool]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[float]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[device]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected
+        #  `Optional[ActivationCheckpointParams]` but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[SWAParams]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[TorchCompileParams]`
+        #  but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected
+        #  `Union[typing_extensions.Literal['epoch'],
+        #  typing_extensions.Literal['step']]` but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Union[None, str, dtype]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Union[None, str, Strategy]` but
+        #  got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `bool` but got `Dict[str,
+        #  typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `int` but got `Dict[str,
+        #  typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Module` but got `Dict[str,
+        #  typing.Any]`.
         super().__init__(**kwargs)
         self.tb_logger = tb_logger
         self.opt_cfg = opt_cfg
         self.log_every_n_steps = log_every_n_steps
 
     def configure_optimizers_and_lr_scheduler(
-        self, module
+        self,
+        # pyre-fixme[2]: Parameter must be annotated.
+        module,
     ) -> Tuple[torch.optim.Optimizer, Optional[TLRScheduler]]:
         optimizer = create_optimizer(module, self.opt_cfg)
         return optimizer, None
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         input, target = data
         outputs, loss = self.module(input, target)
         return loss, outputs
 
     def on_train_step_end(
-        self, state: State, data: Batch, step: int, loss: torch.Tensor, outputs: Any
+        self,
+        state: State,
+        data: Batch,
+        step: int,
+        loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         if step % self.log_every_n_steps == 0:
             self.tb_logger.log("loss", loss, step)
@@ -107,6 +147,7 @@ def main(args: Namespace) -> None:
         n_embd=args.n_embd,
         vocab_size=dataset.vocab_size,
         block_size=dataset.block_size,
+        # pyre-fixme[6]: For 6th argument expected `str` but got `device`.
         device=device,
     )
     module = GPT(gpt_cfg)

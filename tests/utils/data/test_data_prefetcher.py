@@ -17,6 +17,7 @@ Batch = Tuple[torch.Tensor, torch.Tensor]
 
 class DataTest(unittest.TestCase):
 
+    # pyre-fixme[4]: Attribute must be annotated.
     cuda_available = torch.cuda.is_available()
 
     def _generate_dataset(self, num_samples: int, input_dim: int) -> Dataset[Batch]:

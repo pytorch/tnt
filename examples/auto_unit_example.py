@@ -61,6 +61,7 @@ def prepare_dataloader(
 
 
 class MyUnit(AutoUnit[Batch]):
+    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         *,
@@ -70,6 +71,31 @@ class MyUnit(AutoUnit[Batch]):
         log_every_n_steps: int,
         **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
     ):
+        # pyre-fixme[6]: For 1st argument expected `Optional[bool]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[float]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[device]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected
+        #  `Optional[ActivationCheckpointParams]` but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[SWAParams]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Optional[TorchCompileParams]`
+        #  but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected
+        #  `Union[typing_extensions.Literal['epoch'],
+        #  typing_extensions.Literal['step']]` but got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Union[None, str, dtype]` but got
+        #  `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Union[None, str, Strategy]` but
+        #  got `Dict[str, typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `bool` but got `Dict[str,
+        #  typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `int` but got `Dict[str,
+        #  typing.Any]`.
+        # pyre-fixme[6]: For 1st argument expected `Module` but got `Dict[str,
+        #  typing.Any]`.
         super().__init__(**kwargs)
         self.tb_logger = tb_logger
         # create accuracy metrics to compute the accuracy of training and evaluation
@@ -84,6 +110,7 @@ class MyUnit(AutoUnit[Batch]):
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
         return optimizer, lr_scheduler
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
         inputs, targets = data
         # convert targets to float Tensor for binary_cross_entropy_with_logits
@@ -100,6 +127,7 @@ class MyUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         outputs: Any,
     ) -> None:
         _, targets = data
@@ -115,6 +143,7 @@ class MyUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         outputs: Any,
     ) -> None:
         _, targets = data
@@ -205,6 +234,7 @@ def get_args() -> Namespace:
 
 
 if __name__ == "__main__":
+    # pyre-fixme[5]: Global expression must be annotated.
     args = get_args()
     lc = pet.LaunchConfig(
         min_nodes=1,

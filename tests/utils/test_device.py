@@ -25,8 +25,12 @@ from torchtnt.utils.device import (
 
 class DeviceTest(unittest.TestCase):
 
+    # pyre-fixme[4]: Attribute must be annotated.
     cuda_available = torch.cuda.is_available()
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument `not
+    #  torchtnt.tests.utils.test_device.DeviceTest.cuda_available` to decorator factory
+    #  `unittest.skipUnless`.
     @unittest.skipUnless(
         condition=(not cuda_available), reason="This test shouldn't run on a GPU host."
     )
@@ -176,6 +180,7 @@ class DeviceTest(unittest.TestCase):
         new_data_class = copy_data_to_device(original_data_class, cuda_0)
         self.assertEqual(new_data_class.val.device.type, "cuda")
         with self.assertRaises(dataclasses.FrozenInstanceError):
+            # pyre-fixme[41]: Cannot reassign final attribute `val`.
             new_data_class.val = torch.tensor([1, 2, 3], device=cuda_0)
 
         # no-init field

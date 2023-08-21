@@ -32,4 +32,6 @@ class TensorBoardParameterMonitorTest(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[monitor])
+        # pyre-fixme[6]: For 2nd argument expected `SupportsDunderLT[Variable[_T]]`
+        #  but got `int`.
         self.assertGreater(summary_writer.add_histogram.call_count, 0)

@@ -57,9 +57,12 @@ class LambdaTest(unittest.TestCase):
         )
         checker = set()
 
+        # pyre-fixme[53]: Captured variable `checker` is not annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
+        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "train")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_train_unit = DummyTrainUnit(input_dim=input_dim)
@@ -83,9 +86,12 @@ class LambdaTest(unittest.TestCase):
         )
         checker = set()
 
+        # pyre-fixme[53]: Captured variable `checker` is not annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
+        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "eval")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_eval_unit = DummyEvalUnit(input_dim=input_dim)
@@ -104,9 +110,12 @@ class LambdaTest(unittest.TestCase):
         max_steps_per_epoch = 6
         checker = set()
 
+        # pyre-fixme[53]: Captured variable `checker` is not annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
+        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "predict")
         hooks_args = {h: partial(call, h) for h in hooks}
         predict_dataloader = generate_random_dataloader(
@@ -132,10 +141,13 @@ class LambdaTest(unittest.TestCase):
         )
         checker = set()
 
+        # pyre-fixme[53]: Captured variable `checker` is not annotated.
+        # pyre-fixme[2]: Parameter must be annotated.
         def call(hook: str, *_, **__) -> None:
             checker.add(hook)
 
         # with on_exception, training will not be ended
+        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "train") - {
             "on_train_end",
             "on_train_epoch_end",
