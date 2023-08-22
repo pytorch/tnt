@@ -6,6 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+from unittest.mock import Mock, patch
 
 import numpy as np
 
@@ -83,14 +84,14 @@ class EnvTest(unittest.TestCase):
         # should not raise any exceptions
         seed(42)
 
-    def test_deterministic_true(self) -> None:
+    @patch("torchtnt.utils.env._set_cudnn_determinstic_mode")
+    def test_deterministic_true(self, set_cudnn_determinstic_mode_mock: Mock) -> None:
         for det_debug_mode, det_debug_mode_str in [(1, "warn"), (2, "error")]:
             warn_only = det_debug_mode == 1
             for deterministic in (det_debug_mode, det_debug_mode_str):
                 with self.subTest(deterministic=deterministic):
                     seed(42, deterministic=deterministic)
-                    self.assertTrue(torch.backends.cudnn.deterministic)
-                    self.assertFalse(torch.backends.cudnn.benchmark)
+                    set_cudnn_determinstic_mode_mock.assert_called_with(True)
                     self.assertEqual(
                         det_debug_mode, torch.get_deterministic_debug_mode()
                     )
@@ -99,12 +100,12 @@ class EnvTest(unittest.TestCase):
                         warn_only, torch.is_deterministic_algorithms_warn_only_enabled()
                     )
 
-    def test_deterministic_false(self) -> None:
+    @patch("torchtnt.utils.env._set_cudnn_determinstic_mode")
+    def test_deterministic_false(self, set_cudnn_determinstic_mode_mock: Mock) -> None:
         for deterministic in ("default", 0):
             with self.subTest(deterministic=deterministic):
                 seed(42, deterministic=deterministic)
-                self.assertFalse(torch.backends.cudnn.deterministic)
-                self.assertTrue(torch.backends.cudnn.benchmark)
+                set_cudnn_determinstic_mode_mock.assert_called_with(False)
                 self.assertEqual(0, torch.get_deterministic_debug_mode())
                 self.assertFalse(torch.are_deterministic_algorithms_enabled())
                 self.assertFalse(torch.is_deterministic_algorithms_warn_only_enabled())

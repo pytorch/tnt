@@ -4,3 +4,4 @@ pytest-cov
 torchsnapshot-nightly
 pyre-check
 torchvision
+expecttest

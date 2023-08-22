@@ -143,11 +143,12 @@ def seed(seed: int, deterministic: Optional[Union[str, int]] = None) -> None:
         _log.debug(f"Setting deterministic debug mode to {deterministic}")
         torch.set_deterministic_debug_mode(deterministic)
         deterministic_debug_mode = torch.get_deterministic_debug_mode()
-        if deterministic_debug_mode == 0:
-            _log.debug("Disabling cuDNN deterministic mode")
-            torch.backends.cudnn.deterministic = False
-            torch.backends.cudnn.benchmark = True
-        else:
-            _log.debug("Enabling cuDNN deterministic mode")
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
+        _set_cudnn_determinstic_mode(deterministic_debug_mode != 0)
+
+
+def _set_cudnn_determinstic_mode(is_determinstic: bool = True) -> None:
+    _log.debug(
+        f"{'Enabling' if is_determinstic else 'Disabling'} cuDNN deterministic mode"
+    )
+    torch.backends.cudnn.deterministic = is_determinstic
+    torch.backends.cudnn.benchmark = not is_determinstic
