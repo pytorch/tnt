@@ -182,7 +182,7 @@ class FlopTensorDispatchMode(TorchDispatchMode):
         >>> import copy
         >>> import torch
         >>> import torchvision.models as models
-        >>> from torcheval.tools.flops import FlopTensorDispatchMode
+        >>> from torchtnt.utils.flops import FlopTensorDispatchMode
 
         >>> module = models.resnet18()
         >>> module_input = torch.randn(1, 3, 224, 224)
