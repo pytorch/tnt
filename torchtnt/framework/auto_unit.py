@@ -10,18 +10,12 @@
 
 import contextlib
 from abc import ABCMeta, abstractmethod
-from dataclasses import asdict, dataclass
-from functools import partial
-from typing import Any, Callable, Dict, Iterator, Optional, Tuple, TypeVar, Union
+from dataclasses import asdict
+from typing import Any, Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
-from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
-    apply_activation_checkpointing,
-    checkpoint_wrapper,
-    CheckpointImpl,
-)
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import AveragedModel, SWALR
@@ -34,66 +28,20 @@ from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.misc import transfer_batch_norm_stats, transfer_weights
 from torchtnt.utils.precision import convert_precision_str_to_dtype
 from torchtnt.utils.prepare_module import (
+    ActivationCheckpointParams,
+    convert_str_to_strategy,
     DDPStrategy,
     FSDPStrategy,
     prepare_ddp,
     prepare_fsdp,
+    prepare_module,
     Strategy,
+    SWAParams,
+    TorchCompileParams,
 )
 from torchtnt.utils.rank_zero_log import rank_zero_warn
 from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
-
-TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
-
-
-@dataclass
-class SWAParams:
-    """
-    Dataclass to store parameters for stochastic weight averaging.
-
-    Args:
-        epoch_start: number of epochs to wait for before starting SWA
-        anneal_epochs: number of epochs to anneal the SWA Scheduler to the learning rate (lr)
-        anneal_strategy: method for annealing, supports "linear" and "cos"
-        lr: learning rate for SWA
-        avg_fn: function to compute custom average of parameters
-    """
-
-    epoch_start: int
-    anneal_epochs: int
-    anneal_strategy: str = "linear"
-    lr: float = 0.05
-    avg_fn: Optional[TSWA_avg_fn] = None
-
-
-@dataclass
-class TorchCompileParams:
-    """
-    Dataclass to store parameters for torch compile. See https://pytorch.org/docs/stable/generated/torch.compile.html for details.
-    """
-
-    fullgraph: bool = False
-    dynamic: bool = False
-    # pyre-ignore: Invalid type parameters [24]
-    backend: Union[str, Callable] = "inductor"
-    mode: Union[str, None] = None
-    options: Optional[Dict[str, Union[str, int, bool]]] = None
-    disable: bool = False
-
-
-@dataclass
-class ActivationCheckpointParams:
-    """
-    Dataclass to store parameters for activation checkpointing.
-
-    Args:
-        checkpoint_impl: type of checkpointing implementation to use
-        check_fn: A lambda function which will be passed to each child submodule and return ``True`` or ``False`` depending on whether the submodule should be wrapped.
-    """
-
-    checkpoint_impl: CheckpointImpl
-    check_fn: Optional[Callable[[torch.nn.Module], bool]]
 
 
 TData = TypeVar("TData")
@@ -188,7 +136,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         )
         if strategy:
             if isinstance(strategy, str):
-                strategy = _convert_str_to_strategy(strategy)
+                strategy = convert_str_to_strategy(strategy)
             if isinstance(strategy, DDPStrategy):
                 if torch_compile_params and strategy.static_graph is True:
                     # https://dev-discuss.pytorch.org/t/torchdynamo-update-9-making-ddp-work-with-torchdynamo/860
@@ -426,41 +374,14 @@ class AutoUnit(
             else precision
         )
 
-        if strategy:
-            if isinstance(strategy, str):
-                strategy = _convert_str_to_strategy(strategy)
-            if isinstance(strategy, DDPStrategy):
-                if torch_compile_params and strategy.static_graph is True:
-                    # https://dev-discuss.pytorch.org/t/torchdynamo-update-9-making-ddp-work-with-torchdynamo/860
-                    raise RuntimeError(
-                        "Torch compile requires DDPStrategy's static_graph to be False"
-                    )
-                module = prepare_ddp(module, self.device, strategy)
-            elif isinstance(strategy, FSDPStrategy):
-                if swa_params:
-                    raise RuntimeError(
-                        "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
-                    )
-                # as stated here https://pytorch.org/get-started/pytorch-2.0/
-                rank_zero_warn(
-                    "We recommend setting FSDPStrategy's use_original_params to True when using torch compile."
-                )
-                module = prepare_fsdp(module, self.device, strategy)
-        else:
-            module = module.to(self.device)
-
-        if activation_checkpoint_params:
-            checkpoint_impl = activation_checkpoint_params.checkpoint_impl
-            check_fn = activation_checkpoint_params.check_fn
-            custom_checkpoint_wrapper = partial(
-                checkpoint_wrapper,
-                checkpoint_impl=checkpoint_impl,
-            )
-            apply_activation_checkpointing(
-                module,
-                checkpoint_wrapper_fn=custom_checkpoint_wrapper,
-                check_fn=check_fn,
-            )
+        self.module: torch.nn.Module = prepare_module(
+            module,
+            self.device,
+            strategy,
+            swa_params,
+            torch_compile_params,
+            activation_checkpoint_params,
+        )
 
         self.grad_scaler: Optional[GradScaler] = None
         if self.precision:
@@ -468,18 +389,6 @@ class AutoUnit(
                 self.precision,
                 module,
             )
-
-        if torch_compile_params:
-            try:
-                # use in-place compile to avoid altering the state_dict keys
-                module.compile(**asdict(torch_compile_params))
-            except AttributeError:
-                rank_zero_warn(
-                    "Please install pytorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing."
-                )
-                torch.compile(module, **asdict(torch_compile_params))
-
-        self.module: torch.nn.Module = module
 
         self.step_lr_interval = step_lr_interval
 
@@ -848,29 +757,6 @@ def _validate_torch_compile_available() -> None:
             "Torch compile support is available only in PyTorch 2.0 or higher. "
             "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
         )
-
-
-def _convert_str_to_strategy(strategy: str) -> Union[DDPStrategy, FSDPStrategy]:
-    """
-    Converts strategy as a string to a default instance of the Strategy dataclass.
-
-    Args:
-        strategy: string specifying the distributed strategy to use
-
-    Raises:
-        ValueError if an invalid strategy string is passed.
-
-    """
-    string_to_strategy_mapping = {
-        "ddp": DDPStrategy(),
-        "fsdp": FSDPStrategy(),
-    }
-
-    if strategy not in string_to_strategy_mapping:
-        raise ValueError(
-            f"Strategy {strategy} not supported. Please use one of {list(string_to_strategy_mapping.keys())}"
-        )
-    return string_to_strategy_mapping[strategy]
 
 
 def _get_grad_scaler_from_precision(
