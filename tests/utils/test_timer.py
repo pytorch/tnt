@@ -17,6 +17,7 @@ import torch.distributed as dist
 import torch.distributed.launcher as launcher
 from torchtnt.utils.test_utils import get_pet_launch_config
 from torchtnt.utils.timer import (
+    BoundedTimer,
     FullSyncPeriodicTimer,
     get_durations_histogram,
     get_synced_durations_histogram,
@@ -43,6 +44,24 @@ class TimerTest(unittest.TestCase):
                 time.sleep(0.2)
             mock_info.assert_called_once()
             self.assertTrue("Testing timer took" in mock_info.call_args.args[0])
+
+    def test_timer_context_manager_size_bound(self) -> None:
+        """Test that timer keeps the number of samples within bounds"""
+        TEST_ACTION_STRING: str = "test action"
+        UPPER_BOUND: int = 10
+        LOWER_BOUND: int = 5
+        timer = BoundedTimer(lower_bound=LOWER_BOUND, upper_bound=UPPER_BOUND)
+        for i in range(1000):
+            with timer.time(TEST_ACTION_STRING):
+                pass
+            if i > LOWER_BOUND:
+                self.assertGreaterEqual(
+                    len(timer.recorded_durations[TEST_ACTION_STRING]), LOWER_BOUND
+                )
+            self.assertLessEqual(
+                len(timer.recorded_durations[TEST_ACTION_STRING]),
+                UPPER_BOUND,
+            )
 
     def test_timer_context_manager(self) -> None:
         """Test the context manager in the timer class"""

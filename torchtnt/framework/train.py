@@ -198,16 +198,20 @@ def _train_epoch_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                with get_timing_context(state, "train.next(data_iter)"):
+                # If the iterator is passed to step, step is responsible for recording data_wait_time
+                with get_timing_context(
+                    state, "train.next(data_iter)"
+                ), train_state.iteration_timer.time("data_wait_time"):
                     step_input = next(data_iter)
 
-            callback_handler.on_train_step_start(state, train_unit)
-            train_state._step_output = train_unit.train_step(state, step_input)
-            train_unit.train_progress.increment_step()
-            callback_handler.on_train_step_end(state, train_unit)
+            with train_state.iteration_timer.time("train_iteration_time"):
+                callback_handler.on_train_step_start(state, train_unit)
+                train_state._step_output = train_unit.train_step(state, step_input)
+                train_unit.train_progress.increment_step()
+                callback_handler.on_train_step_end(state, train_unit)
 
-            # clear step_output to avoid retaining extra memory
-            train_state._step_output = None
+                # clear step_output to avoid retaining extra memory
+                train_state._step_output = None
 
             if (
                 evaluate_every_n_steps

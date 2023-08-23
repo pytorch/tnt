@@ -12,6 +12,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from time import perf_counter
 from typing import (
+    Any,
     Dict,
     Generator,
     List,
@@ -107,6 +108,9 @@ class Timer(TimerProtocol):
         Args:
             cuda_sync: whether to call torch.cuda.synchronize() before and after timing. Defaults to True if CUDA is available.
             verbose: whether to enable verbose logging.
+            size_bounds: defines the range of samples that should be kept in the timer. The lower bound should be smaller than
+                the upper bound. When the number of samples reaches the upper bound, the oldest (upper-lower) bound samples will
+                be removed. This range is applied per action.
 
         Note:
             Enabling cuda_sync will incur a performance hit, but will ensure accurate timings on GPUs.
@@ -154,6 +158,44 @@ class Timer(TimerProtocol):
         Reset the recorded_durations to an empty list
         """
         self.recorded_durations = defaultdict(list)
+
+
+class BoundedTimer(Timer):
+    """
+    A Timer class which implements TimerProtocol and stores timings in a dictionary `recorded_durations`.
+
+    Same behavior as timer, but with the addition of size_bounds = (lower, upper)
+
+    Args:
+        ...
+        size_bounds: defines the range of samples that should be kept in the timer. The lower bound should be smaller than
+            the upper bound. When the number of samples reaches the upper bound, the oldest (upper-lower) bound samples will
+            be removed. This range is applied per action.
+    """
+
+    def __init__(self, lower_bound: int, upper_bound: int, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        assert lower_bound > 0
+        assert lower_bound < upper_bound
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+
+    @contextmanager
+    def time(
+        self,
+        action_name: str,
+    ) -> Generator[None, None, None]:
+        with super().time(action_name):
+            yield
+        self._apply_bounds(action_name)
+
+    def _apply_bounds(self, action_name: str) -> None:
+        # Keep 'lower_bound' most recent samples, if at or over upper bound
+        n_samples: int = len(self.recorded_durations[action_name])
+        if self.upper_bound <= n_samples:
+            self.recorded_durations[action_name] = list(
+                self.recorded_durations[action_name][-self.lower_bound :]
+            )
 
 
 def _get_total_time(timer: TimerProtocol) -> float:

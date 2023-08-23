@@ -13,7 +13,7 @@ import logging
 from enum import auto, Enum
 from typing import Any, Iterable, Optional
 
-from torchtnt.utils.timer import TimerProtocol
+from torchtnt.utils.timer import BoundedTimer, TimerProtocol
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -88,6 +88,9 @@ class PhaseState:
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
         self._step_output: Any = None
+        self._iteration_timer = BoundedTimer(
+            cuda_sync=False, lower_bound=1_000, upper_bound=5_000
+        )
 
     @property
     def dataloader(self) -> Iterable[Any]:
@@ -123,6 +126,13 @@ class PhaseState:
     def step_output(self) -> Any:
         """Output of the last step."""
         return self._step_output
+
+    @property
+    def iteration_timer(self) -> TimerProtocol:
+        """An always-on :class:`~torchtnt.utils.TimerProtocol` object which contains CPU timings (without synchronisation) of the iterations. For now
+        only populated during training.
+        """
+        return self._iteration_timer
 
 
 class State:
