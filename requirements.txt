@@ -8,3 +8,4 @@ pyre_extensions
 typing_extensions
 setuptools
 tqdm
+tabulate

@@ -20,6 +20,7 @@ from torchtnt.utils.timer import (
     BoundedTimer,
     FullSyncPeriodicTimer,
     get_durations_histogram,
+    get_recorded_durations_table,
     get_synced_durations_histogram,
     get_timer_summary,
     log_elapsed_time,
@@ -250,6 +251,22 @@ class TimerTest(unittest.TestCase):
     def test_timer_fn(self) -> None:
         with log_elapsed_time("test"):
             pass
+
+    def test_get_recorded_durations_table(self) -> None:
+        # empty input
+        empty_input = get_recorded_durations_table({})
+        assert empty_input == ""
+
+        # no recorded duration values
+        no_recorded_duration_input = get_recorded_durations_table({"op": {}})
+        assert no_recorded_duration_input == ""
+
+        # valid input
+        valid_input = get_recorded_durations_table({"op": {"p50": 1, "p90": 2}})
+        assert (
+            valid_input
+            == "\n| Name   |   p50 |   p90 |\n|:-------|------:|------:|\n| op     |     1 |     2 |"
+        )
 
 
 class FullSyncPeriodicTimerTest(unittest.TestCase):
