@@ -19,8 +19,6 @@ if is_torch_version_geq_1_13():
     import torch._dynamo
 
 from torch.distributed import GradBucket, launcher
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.framework._test_utils import (
     generate_random_dataloader,
     generate_random_iterable_dataloader,
@@ -32,8 +30,6 @@ from torchtnt.framework.auto_unit import (
     AutoUnit,
     DDPStrategy,
     FSDPStrategy,
-    SWAParams,
-    TorchCompileParams,
 )
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.predict import predict
@@ -43,6 +39,7 @@ from torchtnt.framework.unit import TPredictData
 from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.prepare_module import SWAParams, TorchCompileParams
 from torchtnt.utils.test_utils import get_pet_launch_config
 from torchtnt.utils.timer import Timer
 
@@ -254,73 +251,6 @@ class TestAutoUnit(unittest.TestCase):
         )
 
     @unittest.skipUnless(
-        condition=COMPILE_AVAIL,
-        reason="This test needs PyTorch 1.13 or greater to run.",
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    def test_compile_state_dict(self) -> None:
-        """
-        e2e torch compile on train
-        """
-        device = init_from_env()
-        my_module = torch.nn.Linear(2, 2, device=device)
-        self.assertIsNone(my_module._compiled_call_impl)
-        my_module_state_dict = my_module.state_dict()
-        auto_unit = DummyAutoUnit(
-            module=my_module,
-            torch_compile_params=TorchCompileParams(backend="inductor"),
-            device=device,
-        )
-        compiled_state_dict = auto_unit.module.state_dict()
-        for k in my_module_state_dict.keys():
-            self.assertIn(k, compiled_state_dict)
-            self.assertTrue(
-                torch.allclose(my_module_state_dict[k], compiled_state_dict[k])
-            )
-        for k in compiled_state_dict.keys():
-            self.assertIn(k, my_module_state_dict)
-            self.assertTrue(
-                torch.allclose(my_module_state_dict[k], compiled_state_dict[k])
-            )
-        self.assertIsNotNone(auto_unit.module._compiled_call_impl)
-
-    @unittest.skipUnless(
-        condition=COMPILE_AVAIL,
-        reason="This test needs PyTorch 1.13 or greater to run.",
-    )
-    def test_compile_invalid_backend(self) -> None:
-        """
-        verify error is thrown on invalid backend
-        """
-
-        class Net(torch.nn.Module):
-            def __init__(self):
-                super(Net, self).__init__()
-                self.l1 = torch.nn.Linear(2, 2)
-                self.b1 = torch.nn.BatchNorm1d(2)
-                self.l2 = torch.nn.Linear(2, 2)
-
-            def forward(self, x):
-                x = self.l1(x)
-                x = self.b1(x)
-                x = self.l2(x)
-                return x
-
-        my_module = Net()
-        my_compile_params = TorchCompileParams(backend="foo")
-
-        self.failUnlessRaises(
-            Exception,
-            DummyAutoUnit,
-            **{
-                "module": my_module,
-                "torch_compile_params": my_compile_params,
-            },
-        )
-
-    @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.autocast")
@@ -493,49 +423,13 @@ class TestAutoUnit(unittest.TestCase):
     )
     def test_auto_unit_ddp(self) -> None:
         """
-        Launch tests of DDP strategy
+        Launch tests of AutoUnit with DDP strategy
         """
         config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_ddp_wrap)()
-        launcher.elastic_launch(config, entrypoint=self._test_ddp_wrap_string)()
         launcher.elastic_launch(
             config, entrypoint=self._test_stochastic_weight_averaging_with_ddp
         )()
         launcher.elastic_launch(config, entrypoint=self._test_ddp_comm_hook)()
-
-    @staticmethod
-    def _test_ddp_wrap() -> None:
-        """
-        Test that the module is correctly wrapped in DDP
-        """
-
-        my_module = torch.nn.Linear(2, 2)
-
-        auto_ddp_unit = DummyAutoUnit(
-            module=my_module,
-            strategy=DDPStrategy(),
-            gradient_accumulation_steps=2,
-        )
-        tc = unittest.TestCase()
-
-        tc.assertTrue(isinstance(auto_ddp_unit.module, DDP))
-
-    @staticmethod
-    def _test_ddp_wrap_string() -> None:
-        """
-        Test that the module is correctly wrapped in DDP when passing "ddp" as a string
-        """
-
-        my_module = torch.nn.Linear(2, 2)
-
-        auto_ddp_unit = DummyAutoUnit(
-            module=my_module,
-            strategy="ddp",
-            gradient_accumulation_steps=2,
-        )
-        tc = unittest.TestCase()
-
-        tc.assertTrue(isinstance(auto_ddp_unit.module, DDP))
 
     @staticmethod
     def _test_stochastic_weight_averaging_with_ddp() -> None:
@@ -639,104 +533,6 @@ class TestAutoUnit(unittest.TestCase):
 
         tc = unittest.TestCase()
         tc.assertTrue(custom_noop_hook_called)
-
-    def test_strategy_invalid_str(self) -> None:
-        """
-        Test that an exception is raised with an invalid strategy string
-        """
-        my_module = torch.nn.Linear(2, 2)
-
-        with self.assertRaisesRegex(ValueError, "Strategy foo not supported"):
-            _ = DummyAutoUnit(
-                module=my_module,
-                strategy="foo",
-            )
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
-    @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    def test_auto_unit_fsdp(self) -> None:
-        """
-        Launch tests of FSDP strategy
-        """
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_fsdp_wrap)()
-        launcher.elastic_launch(config, entrypoint=self._test_fsdp_wrap_string)()
-        launcher.elastic_launch(
-            config, entrypoint=self._test_stochastic_weight_averaging_with_fsdp
-        )()
-
-    @staticmethod
-    def _test_fsdp_wrap() -> None:
-        """
-        Test that the module is correctly wrapped in FSDP
-        """
-
-        my_module = torch.nn.Linear(2, 2)
-
-        auto_fsdp_unit = DummyAutoUnit(
-            module=my_module,
-            strategy=FSDPStrategy(),
-            gradient_accumulation_steps=2,
-        )
-        tc = unittest.TestCase()
-
-        tc.assertTrue(isinstance(auto_fsdp_unit.module, FSDP))
-
-    @staticmethod
-    def _test_fsdp_wrap_string() -> None:
-        """
-        Test that the module is correctly wrapped in FSDP when passing "fsdp" as a string
-        """
-
-        my_module = torch.nn.Linear(2, 2)
-
-        auto_fsdp_unit = DummyAutoUnit(
-            module=my_module,
-            strategy="fsdp",
-            gradient_accumulation_steps=2,
-        )
-        tc = unittest.TestCase()
-
-        tc.assertTrue(isinstance(auto_fsdp_unit.module, FSDP))
-
-    @staticmethod
-    def _test_stochastic_weight_averaging_with_fsdp() -> None:
-        """
-        Test that a RuntimeError is thrown when attempting to use Stochastic Weight Averaging and FSDP
-        """
-
-        class Net(torch.nn.Module):
-            def __init__(self):
-                super(Net, self).__init__()
-                self.l1 = torch.nn.Linear(2, 2)
-                self.b1 = torch.nn.BatchNorm1d(2)
-                self.l2 = torch.nn.Linear(2, 2)
-
-            def forward(self, x):
-                x = self.l1(x)
-                x = self.b1(x)
-                x = self.l2(x)
-                return x
-
-        my_module = Net()
-        my_swa_params = SWAParams(epoch_start=1, anneal_epochs=5)
-
-        tc = unittest.TestCase()
-        with tc.assertRaisesRegex(
-            RuntimeError,
-            "Stochastic Weight Averaging is currently not supported with the FSDP strategy",
-        ):
-            _ = DummyAutoUnit(
-                module=my_module,
-                strategy=FSDPStrategy(),
-                swa_params=my_swa_params,
-            )
 
     def test_is_last_batch(self) -> None:
         """
