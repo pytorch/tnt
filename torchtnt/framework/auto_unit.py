@@ -630,7 +630,10 @@ class AutoUnit(
     def train_step(
         self, state: State, data: Iterator[TData]
     ) -> Tuple[torch.Tensor, Any]:
-        batch = self._get_next_batch(state, data)
+        # In auto unit they will not be exclusive since data fetching is done as
+        # part of the training step
+        with none_throws(state.train_state).iteration_timer.time("data_wait_time"):
+            batch = self._get_next_batch(state, data)
 
         should_update_weights = (
             self.train_progress.num_steps_completed_in_epoch + 1

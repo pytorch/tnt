@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Iterator, Tuple
+from typing import Any, Iterator, Mapping, Tuple
 from unittest.mock import MagicMock
 
 import torch
@@ -16,7 +16,7 @@ from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_datal
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
-from torchtnt.framework.unit import TrainUnit
+from torchtnt.framework.unit import TrainUnit, TTrainUnit
 from torchtnt.utils.timer import Timer
 
 
@@ -32,10 +32,13 @@ class TrainTest(unittest.TestCase):
         expected_steps_per_epoch = dataset_len / batch_size
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
-        initial_training_mode = my_unit.module.training
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        train(my_unit, dataloader, max_epochs=max_epochs)
+        train(
+            my_unit,
+            dataloader,
+            max_epochs=max_epochs,
+        )
 
         self.assertEqual(my_unit.train_progress.num_epochs_completed, max_epochs)
         self.assertEqual(my_unit.train_progress.num_steps_completed_in_epoch, 0)
@@ -137,6 +140,43 @@ class TrainTest(unittest.TestCase):
         )
         self.assertEqual(callback_mock.on_train_epoch_end.call_count, max_epochs)
         self.assertEqual(callback_mock.on_train_end.call_count, 1)
+
+    def test_train_uses_iteration_timer(self) -> None:
+        """
+        Test train records time in the iteration_timer
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+        max_epochs = 1
+
+        my_unit = DummyTrainUnit(2)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        def assertInTest(key: str, mapping: Mapping[str, Any]) -> None:
+            self.assertIn(key, mapping)
+
+        class CheckTimerUsedCallback(Callback):
+            def on_train_end(self, state: State, unit: TTrainUnit) -> None:
+                assertInTest(
+                    "data_wait_time",
+                    state.train_state.iteration_timer.recorded_durations,
+                )
+                assertInTest(
+                    "train_iteration_time",
+                    state.train_state.iteration_timer.recorded_durations,
+                )
+
+        check_timer_callback = CheckTimerUsedCallback()
+
+        train(
+            my_unit,
+            dataloader,
+            max_epochs=max_epochs,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[check_timer_callback],
+        )
 
     def test_train_data_iter_step(self) -> None:
         class TrainIteratorUnit(TrainUnit[Iterator[Tuple[torch.Tensor, torch.Tensor]]]):
