@@ -439,6 +439,13 @@ Modified by the framework, read-only for the user.</p>
 </dd></dl>
 
 <dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.framework.state.PhaseState.iteration_timer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">iteration_timer</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">TimerProtocol</span></em><a class="headerlink" href="#torchtnt.framework.state.PhaseState.iteration_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>An always-on <code class="xref py py-class docutils literal notranslate"><span class="pre">TimerProtocol</span></code> object which contains CPU timings (without synchronisation) of the iterations. For now
+only populated during training.</p>
+</dd></dl>
+
+<dl class="py property">
 <dt class="sig sig-object py" id="torchtnt.framework.state.PhaseState.max_epochs">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">max_epochs</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.framework.state.PhaseState.max_epochs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Maximum number of epochs to train, defined by the user.</p>
