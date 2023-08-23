@@ -28,6 +28,7 @@ import numpy as np
 
 import torch
 import torch.distributed as dist
+from tabulate import tabulate
 from torchtnt.utils.distributed import PGWrapper
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -413,6 +414,28 @@ def _validate_percentiles(percentiles: Sequence[float]) -> None:
     for p in percentiles:
         if p < 0 or p > 100:
             raise ValueError(f"Percentile must be between 0 and 100. Got {p}")
+
+
+def get_recorded_durations_table(result: Dict[str, Dict[str, float]]) -> str:
+    r"""
+    Helper function to generate recorded duration time in tabular format
+    """
+    if len(result) == 0:
+        return ""
+    sub_dict = next(iter(result.values()))
+    if len(sub_dict) == 0:
+        return ""
+    column_headers = ["Name"] + list(sub_dict.keys())
+    row_output = []
+    for key in result:
+        row = [key] + ["{:.3f}".format(x) for x in result[key].values()]
+        row_output.append(row)
+    tabulate_output = tabulate(
+        row_output,
+        tablefmt="pipe",
+        headers=column_headers,
+    )
+    return "\n" + tabulate_output
 
 
 class FullSyncPeriodicTimer:
