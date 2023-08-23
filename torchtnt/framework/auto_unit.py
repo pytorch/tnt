@@ -470,11 +470,6 @@ class AutoUnit(
             )
 
         if torch_compile_params:
-            # pyre-ignore
-            self.compute_loss = torch.compile(
-                self.compute_loss,
-                **asdict(torch_compile_params),
-            )
             try:
                 # use in-place compile to avoid altering the state_dict keys
                 module.compile(**asdict(torch_compile_params))
