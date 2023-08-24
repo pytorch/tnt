@@ -24,7 +24,7 @@ from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_datal
 from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
-    _get_latest_checkpoint_path,
+    get_latest_checkpoint_path,
     TorchSnapshotSaver,
 )
 from torchtnt.framework.state import State
@@ -401,12 +401,12 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
     def test_latest_checkpoint_path(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            self.assertIsNone(_get_latest_checkpoint_path(temp_dir))
+            self.assertIsNone(get_latest_checkpoint_path(temp_dir))
 
         with tempfile.TemporaryDirectory() as temp_dir:
             latest_path = os.path.join(temp_dir, "epoch_0_step_0")
             os.mkdir(latest_path)
-            self.assertEqual(_get_latest_checkpoint_path(temp_dir), latest_path)
+            self.assertEqual(get_latest_checkpoint_path(temp_dir), latest_path)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             path_1 = os.path.join(temp_dir, "epoch_0_step_0")
@@ -417,7 +417,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             os.mkdir(path_3)
             path_4 = os.path.join(temp_dir, "epoch_700")
             os.mkdir(path_4)
-            self.assertEqual(_get_latest_checkpoint_path(temp_dir), path_3)
+            self.assertEqual(get_latest_checkpoint_path(temp_dir), path_3)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
     #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
@@ -439,7 +439,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             temp_dir = tempfile.mkdtemp()
         else:
             temp_dir = ""
-        tc.assertIsNone(_get_latest_checkpoint_path(temp_dir))
+        tc.assertIsNone(get_latest_checkpoint_path(temp_dir))
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
 
@@ -461,7 +461,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         path_container = [path_3] if is_rank0 else [None]
         pg.broadcast_object_list(path_container, 0)
         expected_path = path_container[0]
-        tc.assertEqual(_get_latest_checkpoint_path(temp_dir), expected_path)
+        tc.assertEqual(get_latest_checkpoint_path(temp_dir), expected_path)
 
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
