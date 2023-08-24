@@ -285,7 +285,7 @@ class TorchSnapshotSaver(Callback):
         Returns:
             True if the latest snapshot directory was found and successfully restored, otherwise False.
         """
-        path = _get_latest_checkpoint_path(dirpath)
+        path = get_latest_checkpoint_path(dirpath)
         if path is None:
             return False
         TorchSnapshotSaver.restore(
@@ -299,8 +299,16 @@ class TorchSnapshotSaver(Callback):
         return True
 
 
-def _get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
-    """Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory."""
+def get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
+    """
+    Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory.
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+
+    Raises:
+        AssertionError if the checkpoint subdirectories are not named in the format epoch_{epoch}_step_{step}.
+    """
 
     ret = None
     rank = get_global_rank()
