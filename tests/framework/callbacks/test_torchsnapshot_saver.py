@@ -18,6 +18,7 @@ import torch
 import torch.distributed as dist
 from torch.distributed import launcher
 from torch.optim.lr_scheduler import ExponentialLR
+from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 
 from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
 from torchtnt.framework.auto_unit import AutoUnit
@@ -29,7 +30,7 @@ from torchtnt.framework.callbacks.torchsnapshot_saver import (
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
-from torchtnt.utils.env import init_from_env
+from torchtnt.utils.env import init_from_env, seed
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.test_utils import get_pet_launch_config
 
@@ -464,6 +465,63 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
+
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    def test_save_restore_ddp(self) -> None:
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._save_restore_ddp)()
+
+    @staticmethod
+    def _save_restore_ddp() -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 2
+        save_every_n_epochs = 1
+        seed(0)
+
+        my_unit = DummyAutoUnit(input_dim=input_dim, strategy="ddp")
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        if get_global_rank() == 0:
+            temp_dir = tempfile.mkdtemp()
+        else:
+            temp_dir = ""
+
+        snapshot_cb = TorchSnapshotSaver(
+            temp_dir,
+            save_every_n_epochs=save_every_n_epochs,
+            replicated=["**"],
+        )
+        temp_dir = snapshot_cb.dirpath
+        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
+        tc = unittest.TestCase()
+        try:
+            my_new_unit = DummyAutoUnit(input_dim=input_dim, strategy="ddp")
+            optim_equal = check_state_dict_eq(
+                my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
+            )
+            tc.assertFalse(optim_equal)
+            module_equal = check_state_dict_eq(
+                my_new_unit.module.state_dict(), my_unit.module.state_dict()
+            )
+            tc.assertFalse(module_equal)
+            # get latest checkpoint
+            ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_step_10")
+            snapshot_cb.restore(ckpt_path, my_new_unit)
+
+            assert_state_dict_eq(
+                tc, my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
+            )
+            assert_state_dict_eq(
+                tc, my_new_unit.module.state_dict(), my_unit.module.state_dict()
+            )
+        finally:
+            if get_global_rank() == 0:
+                shutil.rmtree(temp_dir)  # delete temp directory
 
 
 # pyre-fixme[5]: Global expression must be annotated.
