@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from dataclasses import dataclass
+from typing import Dict, Tuple
 
 import fsspec
 import torch
@@ -17,18 +18,14 @@ Adapted from https://github.com/karpathy/minGPT/blob/master/projects/chargpt/cha
 
 @dataclass
 class DataConfig:
-    # pyre-fixme[8]: Attribute has type `str`; used as `None`.
-    path: str = None
-    # pyre-fixme[8]: Attribute has type `int`; used as `None`.
-    block_size: int = None
-    # pyre-fixme[8]: Attribute has type `float`; used as `None`.
-    train_split: float = None
+    path: str
+    block_size: int
+    train_split: float
     truncate: float = 1.0
 
 
 class CharDataset(Dataset):
-    # pyre-fixme[3]: Return type must be annotated.
-    def __init__(self, data_cfg: DataConfig):
+    def __init__(self, data_cfg: DataConfig) -> None:
         print(data_cfg.path)
         data = fsspec.open(data_cfg.path).open().read().decode("utf-8")
         data = data[: int(len(data) * data_cfg.truncate)]
@@ -37,24 +34,18 @@ class CharDataset(Dataset):
         data_size, vocab_size = len(data), len(chars)
         print("Data has %d characters, %d unique." % (data_size, vocab_size))
 
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.stoi = {ch: i for i, ch in enumerate(chars)}
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.itos = {i: ch for i, ch in enumerate(chars)}
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.block_size = data_cfg.block_size
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.vocab_size = vocab_size
+        self.stoi: Dict[str, int] = {ch: i for i, ch in enumerate(chars)}
+        self.itos: Dict[int, str] = {i: ch for i, ch in enumerate(chars)}
+        self.block_size: int = data_cfg.block_size
+        self.vocab_size: int = vocab_size
         # pyre-fixme[4]: Attribute must be annotated.
         self.data = data
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data) - self.block_size
 
-    # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
         # grab a chunk of (block_size + 1) characters from the data
         chunk = self.data[idx : idx + self.block_size + 1]
         # encode every character to an integer
