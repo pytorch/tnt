@@ -6,12 +6,16 @@
 # LICENSE file in the root directory of this source tree.
 
 import ctypes
+import os
+import unittest
 import uuid
 from functools import wraps
-from typing import Callable, Optional, TypeVar
+from typing import Any, Callable, Dict, Optional, TypeVar
 
 import torch.distributed.launcher as pet
 from pyre_extensions import ParameterSpecification
+from torch import distributed as dist, multiprocessing
+from torch.distributed.elastic.utils.distributed import get_free_port
 
 TParams = ParameterSpecification("TParams")
 TReturn = TypeVar("TReturn")
@@ -66,3 +70,66 @@ def skip_if_asan(
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def spawn_multi_process(
+    world_size: int,
+    backend: str,
+    test_method: Callable[TParams, TReturn],
+    *args: Any,
+) -> Dict[int, TReturn]:
+    """
+    Spawn single node, multi-rank function.
+    Uses localhost and free port to communicate.
+
+    Args:
+        world_size: number of processes
+        backend: backend to use. for example, "nccl", "gloo", etc
+        test_method: callable to spawn. first 3 arguments are rank, world_size and mp output dict
+        args: additional args for func
+
+    Returns:
+        A dictionary of rank -> func return value
+    """
+    os.environ["MASTER_PORT"] = str(get_free_port())
+    os.environ["MASTER_ADDR"] = "127.0.0.1"
+
+    processes = []
+    manager = multiprocessing.Manager()
+    mp_output_dict = manager.dict()
+    tc = unittest.TestCase()
+    ctx = multiprocessing.get_context("spawn")
+    for rank in range(world_size):
+        p = ctx.Process(
+            target=init_pg_and_rank_and_launch_test,
+            args=(
+                test_method,
+                rank,
+                world_size,
+                backend,
+                mp_output_dict,
+                *args,
+            ),
+        )
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()
+        tc.assertEqual(p.exitcode, 0)
+
+    return mp_output_dict
+
+
+def init_pg_and_rank_and_launch_test(
+    test_method: Callable[TParams, TReturn],
+    rank: int,
+    world_size: int,
+    backend: str,
+    # pyre-fixme[2]
+    mp_output_dict: Dict[int, Any],
+    *args: Any,
+) -> None:
+    dist.init_process_group(rank=rank, world_size=world_size, backend=backend)
+    os.environ["LOCAL_RANK"] = str(rank)
+    mp_output_dict[rank] = test_method(*args)  # pyre-fixme[29]

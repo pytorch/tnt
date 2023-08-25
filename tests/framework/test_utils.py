@@ -11,10 +11,8 @@ from typing import Any, Iterator, Tuple
 from unittest.mock import MagicMock, patch
 
 import torch
-import torch.distributed as dist
 from torch import nn
 
-from torch.distributed import launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
@@ -37,7 +35,7 @@ from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import Timer
 
 
@@ -46,19 +44,19 @@ class UtilsTest(unittest.TestCase):
     cuda_available = torch.cuda.is_available()
 
     def test_maybe_set_distributed_sampler_epoch(self) -> None:
-        config = get_pet_launch_config(3)
-        result = dist.launcher.elastic_launch(
-            config, entrypoint=self._test_maybe_set_distributed_sampler_epoch
-        )()
-        self.assertEqual(result[0], True)
-        self.assertEqual(result[1], True)
+        mp_dict = spawn_multi_process(
+            2,
+            "gloo",
+            self._test_maybe_set_distributed_sampler_epoch,
+        )
+        self.assertTrue(mp_dict[0])
+        self.assertTrue(mp_dict[1])
 
     @staticmethod
     def _test_maybe_set_distributed_sampler_epoch() -> bool:
         """
         Test _maybe_set_distributed_sampler_epoch util function
         """
-        dist.init_process_group("gloo")
         # pyre-fixme[6]: For 1st argument expected `Iterable[typing.Any]` but got
         #  `None`.
         _maybe_set_distributed_sampler_epoch(None, 10)
@@ -232,10 +230,7 @@ class UtilsTest(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     def test_find_optimizers_for_FSDP_module(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._find_optimizers_for_FSDP_module
-        )()
+        spawn_multi_process(2, "nccl", self._find_optimizers_for_FSDP_module)
 
     @staticmethod
     def _find_optimizers_for_FSDP_module() -> None:
@@ -268,8 +263,7 @@ class UtilsTest(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     def test_construct_tracked_optimizers_and_schedulers(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._construct_optimizers)()
+        spawn_multi_process(2, "nccl", self._construct_optimizers)
 
     @staticmethod
     def _construct_optimizers() -> None:
