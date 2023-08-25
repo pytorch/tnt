@@ -11,11 +11,11 @@ import unittest
 from datetime import timedelta
 from random import random
 from unittest import mock
+from unittest.mock import Mock, patch
 
 import torch
 import torch.distributed as dist
-import torch.distributed.launcher as launcher
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import (
     BoundedTimer,
     FullSyncPeriodicTimer,
@@ -64,7 +64,8 @@ class TimerTest(unittest.TestCase):
                 UPPER_BOUND,
             )
 
-    def test_timer_context_manager(self) -> None:
+    @patch("torch.cuda.synchronize")
+    def test_timer_context_manager(self, _) -> None:
         """Test the context manager in the timer class"""
 
         # Generate 3 intervals between 0.5 and 2 seconds
@@ -103,7 +104,8 @@ class TimerTest(unittest.TestCase):
     @unittest.skipUnless(
         condition=torch.cuda.is_available(), reason="This test needs a GPU host to run."
     )
-    def test_timer_synchronize(self) -> None:
+    @patch("torch.cuda.synchronize")
+    def test_timer_synchronize(self, mock_synchornize: Mock) -> None:
         """Make sure that torch.cuda.synchronize() is called when GPU is present."""
 
         start_event = torch.cuda.Event(enable_timing=True)
@@ -117,13 +119,7 @@ class TimerTest(unittest.TestCase):
             time.sleep(0.5)
             end_event.record()
 
-        # torch.cuda.synchronize() has to be called to compute the elapsed time.
-        # Otherwise, there will be runtime error.
-        elapsed_time_ms = start_event.elapsed_time(end_event)
-        self.assert_within_tolerance(timer.recorded_durations["action_1"][0], 0.5)
-        self.assert_within_tolerance(
-            timer.recorded_durations["action_1"][0], elapsed_time_ms / 1000
-        )
+        self.assertEqual(mock_synchornize.call_count, 2)
 
     def test_get_timer_summary(self) -> None:
         """Test the get_timer_summary function"""
@@ -188,9 +184,7 @@ class TimerTest(unittest.TestCase):
 
     @staticmethod
     def _get_synced_durations_histogram_multi_process() -> None:
-        dist.init_process_group("gloo")
-        rank = dist.get_rank()
-        if rank == 0:
+        if dist.get_rank() == 0:
             recorded_durations = {
                 "foo": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
                 "bar": [4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0],
@@ -243,10 +237,9 @@ class TimerTest(unittest.TestCase):
         reason="This test should only run if torch.distributed is available.",
     )
     def test_get_synced_durations_histogram_multi_process(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._get_synced_durations_histogram_multi_process
-        )()
+        spawn_multi_process(
+            2, "gloo", self._get_synced_durations_histogram_multi_process
+        )
 
     def test_timer_fn(self) -> None:
         with log_elapsed_time("test"):
@@ -271,8 +264,9 @@ class TimerTest(unittest.TestCase):
 
 class FullSyncPeriodicTimerTest(unittest.TestCase):
     @classmethod
-    def _full_sync_worker_without_timeout(cls) -> bool:
-        dist.init_process_group("gloo")
+    def _full_sync_worker_without_timeout(
+        cls,
+    ) -> bool:
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
         # pyre-fixme[6]: For 2nd argument expected `ProcessGroup` but got
@@ -282,7 +276,6 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
 
     @classmethod
     def _full_sync_worker_with_timeout(cls, timeout: int) -> bool:
-        dist.init_process_group("gloo")
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
         # pyre-fixme[6]: For 2nd argument expected `ProcessGroup` but got
@@ -293,41 +286,27 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
         return fsp_timer.check()  # Since 8>5, we will see flag set to True
 
     def test_full_sync_pt_multi_process_check_false(self) -> None:
-        config = get_pet_launch_config(2)
-        # Launch 2 worker processes. Each will check if time diff > interval threshold
-        result = launcher.elastic_launch(
-            config, entrypoint=self._full_sync_worker_without_timeout
-        )()
+        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_without_timeout)
         # Both processes should return False
-        self.assertFalse(result[0])
-        self.assertFalse(result[1])
+        self.assertFalse(mp_dict[0])
+        self.assertFalse(mp_dict[1])
 
     def test_full_sync_pt_multi_process_check_true(self) -> None:
-        config = get_pet_launch_config(2)
-        # Launch 2 worker processes. Each will check time diff > interval threshold
-        result = launcher.elastic_launch(
-            config, entrypoint=self._full_sync_worker_with_timeout
-        )(8)
+        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 8)
         # Both processes should return True
-        self.assertTrue(result[0])
-        self.assertTrue(result[1])
+        self.assertTrue(mp_dict[0])
+        self.assertTrue(mp_dict[1])
 
     def test_full_sync_pt_multi_process_edgecase(self) -> None:
-        config = get_pet_launch_config(2)
-        # Launch 2 worker processes. Each will check time diff >= interval threshold
-        result = launcher.elastic_launch(
-            config, entrypoint=self._full_sync_worker_with_timeout
-        )(5)
+        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 5)
 
         # Both processes should return True
-        self.assertTrue(result[0])
-        self.assertTrue(result[1])
+        self.assertTrue(mp_dict[0])
+        self.assertTrue(mp_dict[1])
 
         # Launch 2 worker processes. Each will check time diff >= interval threshold
-        result = launcher.elastic_launch(
-            config, entrypoint=self._full_sync_worker_with_timeout
-        )(4)
+        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 4)
 
         # Both processes should return False
-        self.assertFalse(result[0])
-        self.assertFalse(result[1])
+        self.assertFalse(mp_dict[0])
+        self.assertFalse(mp_dict[1])
