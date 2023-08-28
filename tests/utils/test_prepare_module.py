@@ -9,7 +9,6 @@ import unittest
 from unittest.mock import patch
 
 import torch
-import torch.distributed.launcher as launcher
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -24,7 +23,7 @@ from torchtnt.utils.prepare_module import (
     SWAParams,
     TorchCompileParams,
 )
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.version import is_torch_version_geq_1_13, is_torch_version_geq_2_0
 
 COMPILE_AVAIL = False
@@ -48,8 +47,11 @@ class PrepareModelTest(unittest.TestCase):
         distributed_available, reason="Torch distributed is needed to run"
     )
     def test_prepare_ddp(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_prepare_ddp)()
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_prepare_ddp,
+        )
 
     @staticmethod
     def _test_prepare_ddp() -> None:
@@ -70,8 +72,11 @@ class PrepareModelTest(unittest.TestCase):
         distributed_available, reason="Torch distributed is needed to run"
     )
     def test_prepare_fsdp(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_prepare_fsdp)()
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_prepare_fsdp,
+        )
 
     @staticmethod
     def _test_prepare_fsdp() -> None:
@@ -91,8 +96,11 @@ class PrepareModelTest(unittest.TestCase):
         """
         Test that a RuntimeError is thrown when using FSDP, and PyTorch < v1.12
         """
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_fsdp_pytorch_version)()
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fsdp_pytorch_version,
+        )
 
     @staticmethod
     def _test_fsdp_pytorch_version() -> None:
@@ -111,7 +119,6 @@ class PrepareModelTest(unittest.TestCase):
 
     @staticmethod
     def _test_is_fsdp_module() -> None:
-        torch.distributed.init_process_group("gloo")
         model = torch.nn.Linear(1, 1)
         assert not _is_fsdp_module(model)
         model = FSDP(torch.nn.Linear(1, 1))
@@ -132,8 +139,11 @@ class PrepareModelTest(unittest.TestCase):
         reason="This test needs 2 GPUs to run.",
     )
     def test_is_fsdp_module(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_is_fsdp_module)()
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_is_fsdp_module,
+        )
 
     @unittest.skipUnless(
         distributed_available, reason="Torch distributed is needed to run"
@@ -142,8 +152,11 @@ class PrepareModelTest(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     def test_fdsp_precision(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_fdsp_precision)()
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fdsp_precision,
+        )
 
     @staticmethod
     def _test_fdsp_precision() -> None:
@@ -184,16 +197,21 @@ class PrepareModelTest(unittest.TestCase):
         """
         Launch tests of FSDP strategy
         """
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._test_prepare_module_fsdp_strategy_wrapped_in_fsdp
-        )()
-        launcher.elastic_launch(
-            config, entrypoint=self._test_prepare_module_fsdp_string_wrapped_in_fsdp
-        )()
-        launcher.elastic_launch(
-            config, entrypoint=self._test_stochastic_weight_averaging_with_fsdp_raises
-        )()
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_prepare_module_fsdp_strategy_wrapped_in_fsdp,
+        )
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_prepare_module_fsdp_string_wrapped_in_fsdp,
+        )
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_stochastic_weight_averaging_with_fsdp_raises,
+        )
 
     @staticmethod
     def _test_prepare_module_fsdp_strategy_wrapped_in_fsdp() -> None:
@@ -250,17 +268,22 @@ class PrepareModelTest(unittest.TestCase):
         """
         Launch tests of DDP strategy
         """
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._test_prepare_module_ddp_strategy_wrapped_in_ddp
-        )()
-        launcher.elastic_launch(
-            config, entrypoint=self._test_prepare_module_ddp_string_wrapped_in_ddp
-        )()
-        launcher.elastic_launch(
-            config,
-            entrypoint=self._test_prepare_module_ddp_throws_with_compile_params_and_static_graph,
-        )()
+
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_prepare_module_ddp_strategy_wrapped_in_ddp,
+        )
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_prepare_module_ddp_string_wrapped_in_ddp,
+        )
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_prepare_module_ddp_throws_with_compile_params_and_static_graph,
+        )
 
     @staticmethod
     def _test_prepare_module_ddp_strategy_wrapped_in_ddp() -> None:
