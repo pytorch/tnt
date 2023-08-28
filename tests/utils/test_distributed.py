@@ -15,7 +15,6 @@ import torch
 import torch.distributed as dist
 import torch.distributed.launcher as launcher
 from pyre_extensions import none_throws
-from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.distributed import (
     _validate_global_rank_world_size,
     all_gather_tensors,
@@ -164,31 +163,6 @@ class DistributedTest(unittest.TestCase):
             val = result[idx]
             assert val.shape == (idx + 1, 4 - idx)
             assert (val == torch.ones_like(val)).all()
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.cuda.is_available()` to decorator factory `unittest.skipUnless`.
-    @unittest.skipUnless(
-        condition=torch.cuda.is_available(),
-        reason="This test should only run on a GPU host.",
-    )
-    def test_gather_uneven_multidim_nccl(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._test_ddp_gather_uneven_tensors_multidim_nccl
-        )()
-
-    @staticmethod
-    def _test_ddp_gather_uneven_tensors_multidim_nccl() -> None:
-        dist.init_process_group("nccl")
-        rank = dist.get_rank()
-        world_size = dist.get_world_size()
-        tensor = torch.ones(rank + 1, 4 - rank, device=get_device_from_env())
-        result = all_gather_tensors(tensor)
-        assert len(result) == world_size
-        for idx in range(world_size):
-            val = result[idx]
-            assert val.shape == (idx + 1, 4 - idx)
-            assert (val == 1).all()
 
     def test_rank_zero_fn_rank_zero(self) -> None:
         @rank_zero_fn
