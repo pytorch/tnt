@@ -4,9 +4,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# ignore errors due to `Any` type
-# pyre-ignore-all-errors[2]
-# pyre-ignore-all-errors[3]
 
 import contextlib
 from abc import ABCMeta, abstractmethod
@@ -48,6 +45,8 @@ TData = TypeVar("TData")
 
 
 class _ConfigureOptimizersCaller(ABCMeta):
+    # pyre-fixme[3]: Return type must be annotated.
+    # pyre-fixme[2]: Parameter must be annotated.
     def __call__(self, *args, **kwargs):
         x = super().__call__(*args, **kwargs)
         x.optimizer = None
@@ -180,6 +179,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
 
         self.detect_anomaly = detect_anomaly
 
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def predict_step(self, state: State, data: Iterator[TPredictData]) -> Any:
         batch = self._get_next_batch(state, data)
 
@@ -200,7 +200,12 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         return outputs
 
     def on_predict_step_end(
-        self, state: State, data: TPredictData, step: int, outputs: Any
+        self,
+        state: State,
+        data: TPredictData,
+        step: int,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         """
         This will be called at the end of every ``predict_step`` before returning. The user can implement this method with code to update and log their metrics,
@@ -437,6 +442,7 @@ class AutoUnit(
         ...
 
     @abstractmethod
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         """
         The user should implement this method with their loss computation. This will be called every ``train_step``/``eval_step``.
@@ -531,6 +537,7 @@ class AutoUnit(
 
         return batch
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def train_step(
         self, state: State, data: Iterator[TData]
     ) -> Tuple[torch.Tensor, Any]:
@@ -659,7 +666,13 @@ class AutoUnit(
         return loss, outputs
 
     def on_train_step_end(
-        self, state: State, data: TData, step: int, loss: torch.Tensor, outputs: Any
+        self,
+        state: State,
+        data: TData,
+        step: int,
+        loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         """
         This will be called at the end of every ``train_step`` before returning. The user can implement this method with code to update and log their metrics,
@@ -715,6 +728,7 @@ class AutoUnit(
             ):
                 transfer_batch_norm_stats(swa_model, self.module)
 
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         with get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
@@ -735,7 +749,13 @@ class AutoUnit(
         return loss, outputs
 
     def on_eval_step_end(
-        self, state: State, data: TData, step: int, loss: torch.Tensor, outputs: Any
+        self,
+        state: State,
+        data: TData,
+        step: int,
+        loss: torch.Tensor,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
     ) -> None:
         """
         This will be called at the end of every ``eval_step`` before returning. The user can implement this method with code to update and log their metrics,
