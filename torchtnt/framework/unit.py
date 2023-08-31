@@ -4,9 +4,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# Disable `Any` type errors
-# pyre-ignore-all-errors[2]
-# pyre-ignore-all-errors[3]
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, TypeVar
@@ -77,6 +74,7 @@ class AppStateMixin:
     def tracked_misc_statefuls(self) -> Dict[str, Any]:
         return self._misc_statefuls
 
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def __getattr__(self, name: str) -> Any:
         if "_modules" in self.__dict__:
             _modules = self.__dict__["_modules"]
@@ -104,6 +102,7 @@ class AppStateMixin:
     def _update_attr(
         self,
         name: str,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         value: Any,
         tracked_objects: Dict[str, Any],
     ) -> None:
@@ -122,6 +121,7 @@ class AppStateMixin:
         )
         tracked_objects[name] = value
 
+    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
     def __setattr__(self, name: str, value: Any) -> None:
         if isinstance(value, torch.nn.Module):
             self._update_attr(name, value, self.__dict__.get("_modules"))
@@ -248,6 +248,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         pass
 
     @abstractmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def train_step(self, state: State, data: TTrainData) -> Any:
         """Core required method for user to implement. This method will be called at each iteration of the
         train dataloader, and can return any data the user wishes.
@@ -328,6 +329,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         pass
 
     @abstractmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def eval_step(self, state: State, data: TEvalData) -> Any:
         """
         Core required method for user to implement. This method will be called at each iteration of the
@@ -415,6 +417,7 @@ class PredictUnit(
         pass
 
     @abstractmethod
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def predict_step(self, state: State, data: TPredictData) -> Any:
         """
         Core required method for user to implement. This method will be called at each iteration of the

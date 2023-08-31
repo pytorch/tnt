@@ -5,9 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 # ignore errors due to `Any` type
-# pyre-ignore-all-errors[2]
-# pyre-ignore-all-errors[3]
-# pyre-ignore-all-errors[4]
 
 import logging
 from enum import auto, Enum
@@ -67,6 +64,7 @@ class PhaseState:
     def __init__(
         self,
         *,
+        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
         dataloader: Iterable[Any],
         max_epochs: Optional[int] = None,  # used only for train
         max_steps: Optional[int] = None,  # used only for train
@@ -80,6 +78,7 @@ class PhaseState:
         _check_loop_condition("evaluate_every_n_steps", evaluate_every_n_steps)
         _check_loop_condition("evaluate_every_n_epochs", evaluate_every_n_epochs)
 
+        # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
         self._dataloader: Iterable[Any] = dataloader
         self._max_epochs = max_epochs
         self._max_steps = max_steps
@@ -87,12 +86,14 @@ class PhaseState:
         self._evaluate_every_n_steps = evaluate_every_n_steps
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
+        # pyre-fixme[4]: Attribute annotation cannot be `Any`.
         self._step_output: Any = None
         self._iteration_timer = BoundedTimer(
             cuda_sync=False, lower_bound=1_000, upper_bound=5_000
         )
 
     @property
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def dataloader(self) -> Iterable[Any]:
         """Dataloader defined by the user."""
         return self._dataloader
@@ -123,6 +124,7 @@ class PhaseState:
         return self._evaluate_every_n_epochs
 
     @property
+    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def step_output(self) -> Any:
         """Output of the last step."""
         return self._step_output
