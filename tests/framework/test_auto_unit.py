@@ -18,7 +18,7 @@ if is_torch_version_geq_1_13():
     COMPILE_AVAIL = True
     import torch._dynamo
 
-from torch.distributed import GradBucket, launcher
+from torch.distributed import GradBucket
 from torchtnt.framework._test_utils import (
     generate_random_dataloader,
     generate_random_iterable_dataloader,
@@ -40,7 +40,7 @@ from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import SWAParams, TorchCompileParams
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import Timer
 
 
@@ -287,9 +287,16 @@ class TestAutoUnit(unittest.TestCase):
         """
         Test that the no_sync autocast context is correctly applied when using gradient accumulation
         """
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_ddp_no_sync)()
-        launcher.elastic_launch(config, entrypoint=self._test_fsdp_no_sync)()
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_ddp_no_sync,
+        )
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fsdp_no_sync,
+        )
 
     @staticmethod
     # pyre-fixme[30]: Terminating analysis - type
@@ -425,11 +432,17 @@ class TestAutoUnit(unittest.TestCase):
         """
         Launch tests of AutoUnit with DDP strategy
         """
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._test_stochastic_weight_averaging_with_ddp
-        )()
-        launcher.elastic_launch(config, entrypoint=self._test_ddp_comm_hook)()
+
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_stochastic_weight_averaging_with_ddp,
+        )
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_ddp_comm_hook,
+        )
 
     @staticmethod
     def _test_stochastic_weight_averaging_with_ddp() -> None:
