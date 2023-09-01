@@ -32,7 +32,7 @@ from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.env import init_from_env, seed
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.test_utils import get_pet_launch_config, spawn_multi_process
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
@@ -308,8 +308,11 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
     def test_directory_sync_collective(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._directory_sync_collective)()
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._directory_sync_collective,
+        )
 
     @staticmethod
     def _directory_sync_collective() -> None:
@@ -338,8 +341,11 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     def test_save_restore_fsdp(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._save_restore_fsdp)()
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._save_restore_fsdp,
+        )
 
     @staticmethod
     def _save_restore_fsdp() -> None:
@@ -472,8 +478,11 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         torch.distributed.is_available(), reason="Torch distributed is needed to run"
     )
     def test_save_restore_ddp(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._save_restore_ddp)()
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._save_restore_ddp,
+        )
 
     @staticmethod
     def _save_restore_ddp() -> None:
