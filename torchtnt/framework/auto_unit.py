@@ -7,7 +7,6 @@
 
 import contextlib
 from abc import ABCMeta, abstractmethod
-from dataclasses import asdict
 from typing import Any, Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
@@ -26,17 +25,11 @@ from torchtnt.utils.misc import transfer_batch_norm_stats, transfer_weights
 from torchtnt.utils.precision import convert_precision_str_to_dtype
 from torchtnt.utils.prepare_module import (
     ActivationCheckpointParams,
-    convert_str_to_strategy,
-    DDPStrategy,
-    FSDPStrategy,
-    prepare_ddp,
-    prepare_fsdp,
     prepare_module,
     Strategy,
     SWAParams,
     TorchCompileParams,
 )
-from torchtnt.utils.rank_zero_log import rank_zero_warn
 from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
 
@@ -133,38 +126,12 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             dtype=self.precision,
             enabled=self.precision is not None,
         )
-        if strategy:
-            if isinstance(strategy, str):
-                strategy = convert_str_to_strategy(strategy)
-            if isinstance(strategy, DDPStrategy):
-                if torch_compile_params and strategy.static_graph is True:
-                    # https://dev-discuss.pytorch.org/t/torchdynamo-update-9-making-ddp-work-with-torchdynamo/860
-                    raise RuntimeError(
-                        "Torch compile requires DDPStrategy's static_graph to be False"
-                    )
-                module = prepare_ddp(module, self.device, strategy)
-            elif isinstance(strategy, FSDPStrategy):
-                if torch_compile_params and strategy.use_orig_params is False:
-                    # as stated here https://pytorch.org/get-started/pytorch-2.0/
-                    rank_zero_warn(
-                        "We recommend setting FSDPStrategy's use_orig_params to True when using torch compile."
-                    )
-                module = prepare_fsdp(
-                    module,
-                    self.device,
-                    strategy,
-                )
-        else:
-            module = module.to(self.device)
-        if torch_compile_params:
-            try:
-                # use in-place compile to avoid altering the state_dict keys
-                module.compile(**asdict(torch_compile_params))
-            except AttributeError:
-                rank_zero_warn(
-                    "Please install pytorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing."
-                )
-                torch.compile(module, **asdict(torch_compile_params))
+        self.module: torch.nn.Module = prepare_module(
+            module,
+            self.device,
+            strategy=strategy,
+            torch_compile_params=torch_compile_params,
+        )
         self.module: torch.nn.Module = module
 
         # cuda stream to use for moving data to device
@@ -382,10 +349,10 @@ class AutoUnit(
         self.module: torch.nn.Module = prepare_module(
             module,
             self.device,
-            strategy,
-            swa_params,
-            torch_compile_params,
-            activation_checkpoint_params,
+            strategy=strategy,
+            swa_params=swa_params,
+            torch_compile_params=torch_compile_params,
+            activation_checkpoint_params=activation_checkpoint_params,
         )
 
         self.grad_scaler: Optional[GradScaler] = None
