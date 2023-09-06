@@ -274,6 +274,7 @@ def _is_fsdp_module(module: torch.nn.Module) -> bool:
 def prepare_module(
     module: torch.nn.Module,
     device: torch.device,
+    *,
     strategy: Optional[Union[Strategy, str]] = None,
     swa_params: Optional[SWAParams] = None,
     torch_compile_params: Optional[TorchCompileParams] = None,
@@ -295,10 +296,11 @@ def prepare_module(
                 raise RuntimeError(
                     "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
                 )
-            # as stated here https://pytorch.org/get-started/pytorch-2.0/
-            rank_zero_warn(
-                "We recommend setting FSDPStrategy's use_original_params to True when using torch compile."
-            )
+            if torch_compile_params and strategy.use_orig_params is False:
+                # as stated here https://pytorch.org/get-started/pytorch-2.0/
+                raise RuntimeError(
+                    "Torch compile requires FSDPStrategy's use_orig_params to be True, since AOTAutograd needs to be aware of the original parameters"
+                )
             module = prepare_fsdp(module, device, strategy)
     else:
         module = module.to(device)

@@ -25,12 +25,7 @@ from torchtnt.framework._test_utils import (
     get_dummy_train_state,
 )
 
-from torchtnt.framework.auto_unit import (
-    AutoPredictUnit,
-    AutoUnit,
-    DDPStrategy,
-    FSDPStrategy,
-)
+from torchtnt.framework.auto_unit import AutoPredictUnit, AutoUnit
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
@@ -39,7 +34,12 @@ from torchtnt.framework.unit import TPredictData
 from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import SWAParams, TorchCompileParams
+from torchtnt.utils.prepare_module import (
+    DDPStrategy,
+    FSDPStrategy,
+    SWAParams,
+    TorchCompileParams,
+)
 from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import Timer
 

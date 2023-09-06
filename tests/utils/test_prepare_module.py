@@ -373,3 +373,16 @@ class PrepareModelTest(unittest.TestCase):
                 device=init_from_env(),
                 torch_compile_params=TorchCompileParams(backend="foo"),
             )
+
+    def test_prepare_module_incompatible_FSDP_torchcompile_params(self) -> None:
+        """
+        verify error is thrown when FSDP's use_orig_params and torch compile is enabled
+        """
+
+        with self.assertRaises(RuntimeError):
+            prepare_module(
+                module=torch.nn.Linear(2, 2),
+                device=init_from_env(),
+                strategy=FSDPStrategy(use_orig_params=False),
+                torch_compile_params=TorchCompileParams(),
+            )
