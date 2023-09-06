@@ -323,7 +323,7 @@ def collect_system_stats(device: torch.device) -> Dict[str, Any]:
 
 
 def maybe_enable_tf32(precision: str = "high") -> None:
-    """Conditionally sets the precision of float32 matrix multiplications.
+    """Conditionally sets the precision of float32 matrix multiplications and conv operations.
 
     For more information, see the `PyTorch docs <https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html>`_
 
@@ -331,12 +331,12 @@ def maybe_enable_tf32(precision: str = "high") -> None:
         precision: The setting to determine which datatypes to use for matrix multiplication.
     """
     if not (
-        is_torch_version_geq_1_12()  # API exposed from PyTorch 1.12 onward
-        and torch.cuda.is_available()  # Not relevant for non-CUDA devices
-        and torch.cuda.get_device_capability()
-        >= (8, 0)  # Available only for Ampere architectures onwards
-        and torch.get_float32_matmul_precision()
-        == "highest"  # Only change the setting if on highest precision
+        torch.cuda.is_available()  # Not relevant for non-CUDA devices
+        and is_torch_version_geq_1_12()  # API exposed from PyTorch 1.12 onward
     ):
         return
     torch.set_float32_matmul_precision(precision)
+    if precision == "highest":
+        torch.backends.cudnn.allow_tf32 = False
+    else:
+        torch.backends.cudnn.allow_tf32 = True

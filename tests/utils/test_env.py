@@ -5,6 +5,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import os
 import unittest
 
 import numpy as np
@@ -98,6 +99,7 @@ class EnvTest(unittest.TestCase):
                     self.assertEqual(
                         warn_only, torch.is_deterministic_algorithms_warn_only_enabled()
                     )
+                    self.assertEqual(os.environ["CUBLAS_WORKSPACE_CONFIG"], ":4096:8")
 
     def test_deterministic_false(self) -> None:
         for deterministic in ("default", 0):

@@ -151,3 +151,5 @@ def seed(seed: int, deterministic: Optional[Union[str, int]] = None) -> None:
             _log.debug("Enabling cuDNN deterministic mode")
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
+            # reference: https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
+            os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
