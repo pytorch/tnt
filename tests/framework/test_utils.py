@@ -7,19 +7,16 @@
 
 import time
 import unittest
-from typing import Any, Iterator, Tuple
+from typing import Iterator
 from unittest.mock import MagicMock, patch
 
 import torch
 from torch import nn
 
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
-from torchtnt.framework._test_utils import generate_random_dataset
-from torchtnt.framework.auto_unit import AutoUnit
-from torchtnt.framework.state import State
+from torchtnt.framework._test_utils import DummyAutoUnit, generate_random_dataset
 from torchtnt.framework.utils import (
     _construct_tracked_optimizers_and_schedulers,
     _find_optimizers_for_module,
@@ -271,40 +268,11 @@ class UtilsTest(unittest.TestCase):
         module = torch.nn.Linear(10, 10)
 
         auto_unit = DummyAutoUnit(module=module, device=device, strategy="fsdp")
+        auto_unit.module2 = torch.nn.Linear(10, 10).to(device)
+        auto_unit.optim2 = torch.optim.Adam(auto_unit.module2.parameters())
 
         result = _construct_tracked_optimizers_and_schedulers(auto_unit)
         tc = unittest.TestCase()
-        tc.assertTrue(isinstance(result["optim"], FSDPOptimizerWrapper))
+        tc.assertTrue(isinstance(result["optimizer"], FSDPOptimizerWrapper))
         tc.assertTrue(isinstance(result["optim2"], torch.optim.Optimizer))
         tc.assertTrue(isinstance(result["lr_scheduler"], TLRScheduler))
-
-
-# pyre-fixme[5]: Global expression must be annotated.
-Batch = Tuple[torch.tensor, torch.tensor]
-
-
-# pyre-fixme[11]: Annotation `Batch` is not defined as a type.
-class DummyAutoUnit(AutoUnit[Batch]):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.module2 = torch.nn.Linear(10, 10).to(self.device)
-        self.optim = torch.optim.SGD(self.module.parameters(), lr=0.01)
-        self.optim2 = torch.optim.Adam(self.module2.parameters())
-
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
-        inputs, targets = data
-        outputs = self.module(inputs)
-        loss = torch.nn.functional.cross_entropy(outputs, targets)
-
-        return loss, outputs
-
-    def configure_optimizers_and_lr_scheduler(
-        self, module: torch.nn.Module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
-        my_optimizer = self.optim
-        my_lr_scheduler = ExponentialLR(my_optimizer, gamma=0.9)
-        return my_optimizer, my_lr_scheduler

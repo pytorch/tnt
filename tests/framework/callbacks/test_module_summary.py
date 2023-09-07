@@ -6,13 +6,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Any, Tuple
 from unittest.mock import MagicMock
 
 import torch
-from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
+from torchtnt.framework._test_utils import (
+    DummyAutoUnit,
+    DummyTrainUnit,
+    generate_random_dataloader,
+)
 
-from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.callbacks.module_summary import ModuleSummary
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.utils.version import is_torch_version_geq_1_13
@@ -20,7 +22,6 @@ from torchtnt.utils.version import is_torch_version_geq_1_13
 MODULE_SUMMARY_FLOPS_AVAILABLE = False
 if is_torch_version_geq_1_13():
     MODULE_SUMMARY_FLOPS_AVAILABLE = True
-from torchtnt.utils import TLRScheduler
 
 
 class ModuleSummaryTest(unittest.TestCase):
@@ -120,27 +121,3 @@ class ModuleSummaryTest(unittest.TestCase):
         self.assertEqual(ms.flops_backward, 24)
         self.assertEqual(ms.in_size, [2, 2])
         self.assertTrue(ms.forward_elapsed_time_ms != "?")
-
-
-# pyre-fixme[5]: Global expression must be annotated.
-Batch = Tuple[torch.tensor, torch.tensor]
-
-
-# pyre-fixme[11]: Annotation `Batch` is not defined as a type.
-class DummyAutoUnit(AutoUnit[Batch]):
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
-        inputs, targets = data
-        outputs = self.module(inputs)
-        loss = torch.nn.functional.cross_entropy(outputs, targets)
-
-        return loss, outputs
-
-    def configure_optimizers_and_lr_scheduler(
-        self, module: torch.nn.Module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
-        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
-        return my_optimizer, my_lr_scheduler

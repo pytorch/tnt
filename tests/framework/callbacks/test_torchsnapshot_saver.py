@@ -11,27 +11,27 @@ import shutil
 import tempfile
 import time
 import unittest
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List
 from unittest import mock
 
 import torch
 import torch.distributed as dist
 from torch.distributed import launcher
-from torch.optim.lr_scheduler import ExponentialLR
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 
-from torchtnt.framework._test_utils import DummyTrainUnit, generate_random_dataloader
-from torchtnt.framework.auto_unit import AutoUnit
+from torchtnt.framework._test_utils import (
+    DummyAutoUnit,
+    DummyTrainUnit,
+    generate_random_dataloader,
+)
 from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
     get_latest_checkpoint_path,
     TorchSnapshotSaver,
 )
-from torchtnt.framework.state import State
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.env import init_from_env, seed
-from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.test_utils import get_pet_launch_config, spawn_multi_process
 
 
@@ -355,7 +355,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         max_epochs = 2
         save_every_n_epochs = 1
 
-        my_unit = DummyAutoUnit(input_dim=input_dim, strategy="fsdp")
+        my_unit = DummyAutoUnit(module=torch.nn.Linear(input_dim, 2), strategy="fsdp")
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         if get_global_rank() == 0:
             temp_dir = tempfile.mkdtemp()
@@ -372,7 +372,9 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         tc = unittest.TestCase()
         try:
-            my_new_unit = DummyAutoUnit(input_dim=input_dim, strategy="fsdp")
+            my_new_unit = DummyAutoUnit(
+                module=torch.nn.Linear(input_dim, 2), strategy="fsdp"
+            )
             tc.assertNotEqual(
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
             )
@@ -493,7 +495,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         save_every_n_epochs = 1
         seed(0)
 
-        my_unit = DummyAutoUnit(input_dim=input_dim, strategy="ddp")
+        my_unit = DummyAutoUnit(module=torch.nn.Linear(input_dim, 2), strategy="ddp")
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         if get_global_rank() == 0:
             temp_dir = tempfile.mkdtemp()
@@ -509,7 +511,9 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
         tc = unittest.TestCase()
         try:
-            my_new_unit = DummyAutoUnit(input_dim=input_dim, strategy="ddp")
+            my_new_unit = DummyAutoUnit(
+                module=torch.nn.Linear(input_dim, 2), strategy="ddp"
+            )
             optim_equal = check_state_dict_eq(
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
             )
@@ -531,33 +535,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         finally:
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
-
-
-# pyre-fixme[5]: Global expression must be annotated.
-Batch = Tuple[torch.tensor, torch.tensor]
-
-
-# pyre-fixme[11]: Annotation `Batch` is not defined as a type.
-class DummyAutoUnit(AutoUnit[Batch]):
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __init__(self, input_dim: int, *args, **kwargs):
-        super().__init__(module=torch.nn.Linear(input_dim, 2), *args, **kwargs)
-
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
-        inputs, targets = data
-        outputs = self.module(inputs)
-        loss = torch.nn.functional.cross_entropy(outputs, targets)
-
-        return loss, outputs
-
-    def configure_optimizers_and_lr_scheduler(
-        self, module: torch.nn.Module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
-        my_optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
-        my_lr_scheduler = ExponentialLR(my_optimizer, gamma=0.9)
-        return my_optimizer, my_lr_scheduler
 
 
 class DummyStatefulDataLoader:
