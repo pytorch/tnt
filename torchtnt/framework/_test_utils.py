@@ -5,19 +5,20 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Any, Iterable, Iterator, Optional, Tuple
+from typing import Iterable, Iterator, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset, IterableDataset, TensorDataset
+from torchtnt.framework.auto_unit import AutoUnit
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
+from torchtnt.utils.lr_scheduler import TLRScheduler
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
-# pyre-ignore
-def get_dummy_train_state(dataloader: Optional[Iterable[Any]] = None) -> State:
+def get_dummy_train_state(dataloader: Optional[Iterable[object]] = None) -> State:
     return State(
         entry_point=EntryPoint.TRAIN,
         train_state=PhaseState(
@@ -144,3 +145,21 @@ def generate_random_iterable_dataloader(
         dataset=RandomIterableDataset(input_dim, num_samples),
         batch_size=batch_size,
     )
+
+
+class DummyAutoUnit(AutoUnit[Batch]):
+    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, object]:
+        inputs, targets = data
+        outputs = self.module(inputs)
+        loss = torch.nn.functional.cross_entropy(outputs, targets)
+
+        return loss, outputs
+
+    def configure_optimizers_and_lr_scheduler(
+        self, module: torch.nn.Module
+    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
+        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+            my_optimizer, gamma=0.9
+        )
+        return my_optimizer, my_lr_scheduler

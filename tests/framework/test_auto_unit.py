@@ -20,6 +20,7 @@ if is_torch_version_geq_1_13():
 
 from torch.distributed import GradBucket
 from torchtnt.framework._test_utils import (
+    DummyAutoUnit,
     generate_random_dataloader,
     generate_random_iterable_dataloader,
     get_dummy_train_state,
@@ -117,9 +118,7 @@ class TestAutoUnit(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.autocast")
-    # pyre-fixme[30]: Terminating analysis - type
-    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
-    def test_mixed_precision_fp16(self, mock_autocast) -> None:
+    def test_mixed_precision_fp16(self, mock_autocast: MagicMock) -> None:
         """
         Test that the mixed precision autocast context is called when fp16 precision is set
         """
@@ -139,9 +138,7 @@ class TestAutoUnit(unittest.TestCase):
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
     @patch("torch.autocast")
-    # pyre-fixme[30]: Terminating analysis - type
-    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
-    def test_mixed_precision_bf16(self, mock_autocast) -> None:
+    def test_mixed_precision_bf16(self, mock_autocast: MagicMock) -> None:
         """
         Test that the mixed precision autocast context is called when bf16 precision is set
         """
@@ -299,8 +296,6 @@ class TestAutoUnit(unittest.TestCase):
         )
 
     @staticmethod
-    # pyre-fixme[30]: Terminating analysis - type
-    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def _test_ddp_no_sync() -> None:
         """
         Test that the no_sync autocast context is correctly applied when using gradient accumulation and DDP
@@ -331,8 +326,6 @@ class TestAutoUnit(unittest.TestCase):
             no_sync_mock.assert_not_called()
 
     @staticmethod
-    # pyre-fixme[30]: Terminating analysis - type
-    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def _test_fsdp_no_sync() -> None:
         """
         Test that the no_sync autocast context is correctly applied when using gradient accumulation and FSDP
@@ -363,8 +356,6 @@ class TestAutoUnit(unittest.TestCase):
             auto_unit.train_step(state=state, data=dummy_iterator)
             no_sync_mock.assert_not_called()
 
-    # pyre-fixme[30]: Terminating analysis - type
-    #  `torchtnt.tests.framework.test_auto_unit.Batch` not defined.
     def test_move_data_to_device(self) -> None:
         """
         Test that move_data_to_device is called
@@ -560,7 +551,6 @@ class TestAutoUnit(unittest.TestCase):
 
         my_unit = LastBatchAutoUnit(
             module=my_module,
-            # pyre-fixme[6]: For 2nd argument expected `int` but got `float`.
             expected_steps_per_epoch=expected_steps_per_epoch,
         )
 
@@ -700,29 +690,7 @@ class TestAutoUnit(unittest.TestCase):
         mock_detect_anomaly.assert_called()
 
 
-# pyre-fixme[5]: Global expression must be annotated.
-Batch = Tuple[torch.tensor, torch.tensor]
-
-
-# pyre-fixme[11]: Annotation `Batch` is not defined as a type.
-class DummyAutoUnit(AutoUnit[Batch]):
-
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
-        inputs, targets = data
-        outputs = self.module(inputs)
-        loss = torch.nn.functional.cross_entropy(outputs, targets)
-
-        return loss, outputs
-
-    def configure_optimizers_and_lr_scheduler(
-        self, module: torch.nn.Module
-    ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
-        my_optimizer = torch.optim.SGD(module.parameters(), lr=0.01)
-        my_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-            my_optimizer, gamma=0.9
-        )
-        return my_optimizer, my_lr_scheduler
+Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
 class DummyLRSchedulerAutoUnit(AutoUnit[Batch]):
