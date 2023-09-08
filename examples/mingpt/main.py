@@ -32,8 +32,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
-# pyre-fixme[5]: Global expression must be annotated.
-PATH = parutil.get_file_path("data/input.txt", pkg=__package__)
+PATH: str = parutil.get_file_path("data/input.txt", pkg=__package__)
 
 
 def prepare_dataloader(
@@ -101,8 +100,7 @@ class MinGPTUnit(AutoUnit):
 
     def configure_optimizers_and_lr_scheduler(
         self,
-        # pyre-fixme[2]: Parameter must be annotated.
-        module,
+        module: torch.nn.Module,
     ) -> Tuple[torch.optim.Optimizer, Optional[TLRScheduler]]:
         optimizer = create_optimizer(module, self.opt_cfg)
         return optimizer, None
