@@ -4,7 +4,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-# ignore errors due to `Any` type
 
 import logging
 from enum import auto, Enum
@@ -64,8 +63,7 @@ class PhaseState:
     def __init__(
         self,
         *,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        dataloader: Iterable[Any],
+        dataloader: Iterable[object],
         max_epochs: Optional[int] = None,  # used only for train
         max_steps: Optional[int] = None,  # used only for train
         max_steps_per_epoch: Optional[int] = None,
@@ -78,23 +76,20 @@ class PhaseState:
         _check_loop_condition("evaluate_every_n_steps", evaluate_every_n_steps)
         _check_loop_condition("evaluate_every_n_epochs", evaluate_every_n_epochs)
 
-        # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
-        self._dataloader: Iterable[Any] = dataloader
+        self._dataloader: Iterable[object] = dataloader
         self._max_epochs = max_epochs
         self._max_steps = max_steps
         self._max_steps_per_epoch = max_steps_per_epoch
         self._evaluate_every_n_steps = evaluate_every_n_steps
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
-        # pyre-fixme[4]: Attribute annotation cannot be `Any`.
-        self._step_output: Any = None
+        self._step_output: object = None
         self._iteration_timer = BoundedTimer(
             cuda_sync=False, lower_bound=1_000, upper_bound=5_000
         )
 
     @property
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def dataloader(self) -> Iterable[Any]:
+    def dataloader(self) -> Iterable[object]:
         """Dataloader defined by the user."""
         return self._dataloader
 
@@ -124,8 +119,7 @@ class PhaseState:
         return self._evaluate_every_n_epochs
 
     @property
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def step_output(self) -> Any:
+    def step_output(self) -> object:
         """Output of the last step."""
         return self._step_output
 
