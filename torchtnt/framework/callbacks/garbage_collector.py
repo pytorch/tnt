@@ -56,6 +56,9 @@ class GarbageCollector(Callback):
         if total_num_steps_completed % self._step_interval == 0:
             gc.collect()
 
+        # Ensure that GC is disabled, in case GC was reenabled elsewhere
+        gc.disable()
+
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         gc.enable()
 
