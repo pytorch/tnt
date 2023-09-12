@@ -6,15 +6,16 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Iterator, Tuple
+from typing import Any, Iterator, Mapping, Tuple
 from unittest.mock import MagicMock
 
 import torch
 from torch import nn
 from torchtnt.framework._test_utils import DummyEvalUnit, generate_random_dataloader
+from torchtnt.framework.callback import Callback
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.state import State
-from torchtnt.framework.unit import EvalUnit
+from torchtnt.framework.unit import EvalUnit, TEvalUnit
 from torchtnt.utils.timer import Timer
 
 
@@ -146,6 +147,41 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(callback_mock.on_eval_step_end.call_count, expected_num_steps)
         self.assertEqual(callback_mock.on_eval_epoch_end.call_count, 1)
         self.assertEqual(callback_mock.on_eval_end.call_count, 1)
+
+    def test_evaluate_uses_iteration_timer(self) -> None:
+        """
+        Test evaluate records time in the iteration_timer
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+
+        my_unit = DummyEvalUnit(2)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        def assertInTest(key: str, mapping: Mapping[str, Any]) -> None:
+            self.assertIn(key, mapping)
+
+        class CheckTimerUsedCallback(Callback):
+            def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
+                assertInTest(
+                    "data_wait_time",
+                    state.eval_state.iteration_timer.recorded_durations,
+                )
+                assertInTest(
+                    "eval_iteration_time",
+                    state.eval_state.iteration_timer.recorded_durations,
+                )
+
+        check_timer_callback = CheckTimerUsedCallback()
+
+        evaluate(
+            my_unit,
+            dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[check_timer_callback],
+        )
 
     def test_evaluate_timing(self) -> None:
         """

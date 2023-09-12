@@ -152,17 +152,21 @@ def _predict_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                with get_timing_context(state, "predict.next(data_iter)"):
+                with get_timing_context(
+                    state, "predict.next(data_iter)"
+                ), predict_state.iteration_timer.time("data_wait_time"):
                     step_input = next(data_iter)
+            with predict_state.iteration_timer.time("predict_iteration_time"):
+                callback_handler.on_predict_step_start(state, predict_unit)
+                predict_state._step_output = predict_unit.predict_step(
+                    state, step_input
+                )
 
-            callback_handler.on_predict_step_start(state, predict_unit)
-            predict_state._step_output = predict_unit.predict_step(state, step_input)
+                predict_unit.predict_progress.increment_step()
+                callback_handler.on_predict_step_end(state, predict_unit)
 
-            predict_unit.predict_progress.increment_step()
-            callback_handler.on_predict_step_end(state, predict_unit)
-
-            # clear step_output to avoid retaining extra memory
-            predict_state._step_output = None
+                # clear step_output to avoid retaining extra memory
+                predict_state._step_output = None
         except StopIteration:
             break
 

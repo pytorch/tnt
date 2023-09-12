@@ -148,7 +148,8 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
 
     # pyre-fixme[3]: Return annotation cannot be `Any`.
     def predict_step(self, state: State, data: Iterator[TPredictData]) -> Any:
-        batch = self._get_next_batch(state, data)
+        with none_throws(state.predict_state).iteration_timer.time("data_wait_time"):
+            batch = self._get_next_batch(state, data)
 
         # if detect_anomaly is true, run forward pass under detect_anomaly context
         detect_anomaly = self.detect_anomaly
