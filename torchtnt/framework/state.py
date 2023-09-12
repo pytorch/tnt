@@ -131,9 +131,7 @@ class PhaseState:
 
     @property
     def iteration_timer(self) -> TimerProtocol:
-        """An always-on :class:`~torchtnt.utils.TimerProtocol` object which contains CPU timings (without synchronisation) of the iterations. For now
-        only populated during training.
-        """
+        """An always-on :class:`~torchtnt.utils.TimerProtocol` object which contains CPU timings (without synchronisation) of the iterations."""
         return self._iteration_timer
 
 

@@ -146,17 +146,19 @@ def _evaluate_impl(
         try:
             if not pass_data_iter_to_step:
                 # get the next batch from the data iterator
-                with get_timing_context(state, "evaluate.next(data_iter)"):
+                with get_timing_context(
+                    state, "evaluate.next(data_iter)"
+                ), eval_state.iteration_timer.time("data_wait_time"):
                     step_input = next(data_iter)
+            with eval_state.iteration_timer.time("eval_iteration_time"):
+                callback_handler.on_eval_step_start(state, eval_unit)
+                eval_state._step_output = eval_unit.eval_step(state, step_input)
 
-            callback_handler.on_eval_step_start(state, eval_unit)
-            eval_state._step_output = eval_unit.eval_step(state, step_input)
+                eval_unit.eval_progress.increment_step()
+                callback_handler.on_eval_step_end(state, eval_unit)
 
-            eval_unit.eval_progress.increment_step()
-            callback_handler.on_eval_step_end(state, eval_unit)
-
-            # clear step_output to avoid retaining extra memory
-            eval_state._step_output = None
+                # clear step_output to avoid retaining extra memory
+                eval_state._step_output = None
         except StopIteration:
             break
 

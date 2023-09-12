@@ -6,17 +6,18 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Iterator, Tuple
+from typing import Any, Iterator, Mapping, Tuple
 from unittest.mock import MagicMock
 
 import torch
 from torch import nn
 
 from torchtnt.framework._test_utils import DummyPredictUnit, generate_random_dataloader
+from torchtnt.framework.callback import Callback
 
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
-from torchtnt.framework.unit import PredictUnit
+from torchtnt.framework.unit import PredictUnit, TPredictUnit
 from torchtnt.utils.timer import Timer
 
 
@@ -119,6 +120,41 @@ class PredictTest(unittest.TestCase):
         )
         self.assertEqual(callback_mock.on_predict_epoch_end.call_count, 1)
         self.assertEqual(callback_mock.on_predict_end.call_count, 1)
+
+    def test_predict_uses_iteration_timer(self) -> None:
+        """
+        Test predict records time in the iteration_timer
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+
+        my_unit = DummyPredictUnit(2)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        def assertInTest(key: str, mapping: Mapping[str, Any]) -> None:
+            self.assertIn(key, mapping)
+
+        class CheckTimerUsedCallback(Callback):
+            def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
+                assertInTest(
+                    "data_wait_time",
+                    state.predict_state.iteration_timer.recorded_durations,
+                )
+                assertInTest(
+                    "predict_iteration_time",
+                    state.predict_state.iteration_timer.recorded_durations,
+                )
+
+        check_timer_callback = CheckTimerUsedCallback()
+
+        predict(
+            my_unit,
+            dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            callbacks=[check_timer_callback],
+        )
 
     def test_predict_data_iter_step(self) -> None:
         class PredictIteratorUnit(
