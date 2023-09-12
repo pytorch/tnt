@@ -38,14 +38,12 @@ class CharDataset(Dataset):
         self.itos: Dict[int, str] = {i: ch for i, ch in enumerate(chars)}
         self.block_size: int = data_cfg.block_size
         self.vocab_size: int = vocab_size
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.data = data
+        self.data: str = data
 
     def __len__(self) -> int:
         return len(self.data) - self.block_size
 
-    # pyre-fixme[2]: Parameter must be annotated.
-    def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         # grab a chunk of (block_size + 1) characters from the data
         chunk = self.data[idx : idx + self.block_size + 1]
         # encode every character to an integer
