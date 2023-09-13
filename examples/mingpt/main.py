@@ -8,12 +8,12 @@ import argparse
 import logging
 import tempfile
 from argparse import Namespace
-from typing import Any, Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 import torch
 from libfb.py import parutil
 from torch.utils.data import random_split
-from torch.utils.data.dataset import Dataset
+from torch.utils.data.dataset import Dataset, Subset
 
 from torchtnt.examples.mingpt.char_dataset import CharDataset, DataConfig
 from torchtnt.examples.mingpt.model import (
@@ -36,8 +36,7 @@ PATH: str = parutil.get_file_path("data/input.txt", pkg=__package__)
 
 
 def prepare_dataloader(
-    # pyre-fixme[24]: Generic type `Dataset` expects 1 type parameter.
-    dataset: Dataset,
+    dataset: Dataset[CharDataset],
     batch_size: int,
     device: torch.device,
 ) -> torch.utils.data.DataLoader:
@@ -51,49 +50,36 @@ def prepare_dataloader(
     )
 
 
-# pyre-fixme[3]: Return type must be annotated.
-def get_datasets(data_cfg: DataConfig):
+def get_datasets(
+    data_cfg: DataConfig,
+) -> Tuple[Subset[CharDataset], Subset[CharDataset], CharDataset]:
     dataset = CharDataset(data_cfg)
     train_len = int(len(dataset) * data_cfg.train_split)
     train_set, eval_set = random_split(dataset, [train_len, len(dataset) - train_len])
     return train_set, eval_set, dataset
 
 
-# pyre-fixme[24]: Generic type `AutoUnit` expects 1 type parameter.
-class MinGPTUnit(AutoUnit):
+class MinGPTUnit(AutoUnit[Batch]):
     def __init__(
         self,
         tb_logger: TensorBoardLogger,
         opt_cfg: OptimizerConfig,
         log_every_n_steps: int,
-        **kwargs: Dict[str, Any],
+        module: torch.nn.Module,
+        device: torch.device,
+        strategy: str,
+        gradient_accumulation_steps: int,
+        detect_anomaly: bool,
+        clip_grad_norm: float,
     ) -> None:
-        # pyre-fixme[6]: For 1st argument expected `Optional[bool]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[float]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[device]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected
-        #  `Optional[ActivationCheckpointParams]` but got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[SWAParams]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[TorchCompileParams]`
-        #  but got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected
-        #  `Union[typing_extensions.Literal['epoch'],
-        #  typing_extensions.Literal['step']]` but got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Union[None, str, dtype]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Union[None, str, Strategy]` but
-        #  got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `bool` but got `Dict[str,
-        #  typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `int` but got `Dict[str,
-        #  typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Module` but got `Dict[str,
-        #  typing.Any]`.
-        super().__init__(**kwargs)
+        super().__init__(
+            module=module,
+            device=device,
+            strategy=strategy,
+            gradient_accumulation_steps=gradient_accumulation_steps,
+            detect_anomaly=detect_anomaly,
+            clip_grad_norm=clip_grad_norm,
+        )
         self.tb_logger = tb_logger
         self.opt_cfg = opt_cfg
         self.log_every_n_steps = log_every_n_steps
@@ -105,8 +91,9 @@ class MinGPTUnit(AutoUnit):
         optimizer = create_optimizer(module, self.opt_cfg)
         return optimizer, None
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         input, target = data
         outputs, loss = self.module(input, target)
         return loss, outputs
@@ -117,8 +104,7 @@ class MinGPTUnit(AutoUnit):
         data: Batch,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: object,
     ) -> None:
         if step % self.log_every_n_steps == 0:
             self.tb_logger.log("loss", loss, step)
@@ -145,8 +131,7 @@ def main(args: Namespace) -> None:
         n_embd=args.n_embd,
         vocab_size=dataset.vocab_size,
         block_size=dataset.block_size,
-        # pyre-fixme[6]: For 6th argument expected `str` but got `device`.
-        device=device,
+        device=str(device),
     )
     module = GPT(gpt_cfg)
 
