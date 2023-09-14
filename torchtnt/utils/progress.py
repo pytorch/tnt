@@ -119,3 +119,50 @@ def estimated_steps_in_loop(
         return min(total_steps, max_steps)
 
     return total_steps or max_steps
+
+
+def estimated_steps_in_fit(
+    *,
+    train_dataloader: Iterable[object],
+    eval_dataloader: Iterable[object],
+    epochs: Optional[int],
+    max_steps: Optional[int],
+    max_train_steps_per_epoch: Optional[int],
+    max_eval_steps_per_epoch: Optional[int],
+    eval_every_n_steps: Optional[int],
+    eval_every_n_epochs: Optional[int],
+) -> Optional[int]:
+    """
+    Estimate the total number of steps for fit run.
+
+    If the number of training/eval steps couldn't be calculated, None is returned.
+    """
+    training_steps = estimated_steps_in_loop(
+        train_dataloader,
+        max_steps=max_steps,
+        max_steps_per_epoch=max_train_steps_per_epoch,
+        epochs=epochs,
+    )
+    if not training_steps:
+        return None
+
+    if not eval_every_n_steps and not eval_every_n_epochs:
+        return training_steps
+
+    number_of_eval_steps_per_eval_epoch = estimated_steps_in_loop(
+        eval_dataloader,
+        max_steps=None,
+        max_steps_per_epoch=max_eval_steps_per_epoch,
+        epochs=1,
+    )
+    if not number_of_eval_steps_per_eval_epoch:
+        return None
+
+    total_eval_epochs = 0
+    if eval_every_n_epochs and epochs:
+        total_eval_epochs += epochs // eval_every_n_epochs
+
+    if eval_every_n_steps:
+        total_eval_epochs += training_steps // eval_every_n_steps
+
+    return training_steps + total_eval_epochs * number_of_eval_steps_per_eval_epoch
