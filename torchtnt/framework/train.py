@@ -110,6 +110,8 @@ def train(
         raise e
 
 
+# Enabling grad in case this function is called directly from elsewhere in the framework.
+@torch.enable_grad()
 def _train_impl(
     state: State,
     train_unit: TTrainUnit,
