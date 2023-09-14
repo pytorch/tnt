@@ -84,3 +84,38 @@ def estimated_steps_in_epoch(
     elif max_steps_per_epoch:
         total = min(total, max_steps_per_epoch)
     return total
+
+
+def estimated_steps_in_loop(
+    dataloader: Iterable[object],
+    *,
+    max_steps: Optional[int],
+    max_steps_per_epoch: Optional[int],
+    epochs: Optional[int],
+) -> Optional[int]:
+    """
+    Estimate the total number of steps for the current loop.
+
+    A return value of None indicates that the number of steps couldn't be estimated.
+    """
+
+    if not max_steps and not epochs:
+        return None
+
+    if not epochs:
+        return max_steps
+
+    total_steps = None
+    steps_per_epoch = estimated_steps_in_epoch(
+        dataloader,
+        num_steps_completed=0,
+        max_steps=max_steps,
+        max_steps_per_epoch=max_steps_per_epoch,
+    )
+    if steps_per_epoch != float("inf"):
+        total_steps = int(steps_per_epoch) * epochs
+
+    if total_steps and max_steps:
+        return min(total_steps, max_steps)
+
+    return total_steps or max_steps
