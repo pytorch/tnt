@@ -9,7 +9,11 @@ import unittest
 
 from torchtnt.framework._test_utils import generate_random_dataloader
 
-from torchtnt.utils.progress import estimated_steps_in_epoch, Progress
+from torchtnt.utils.progress import (
+    estimated_steps_in_epoch,
+    estimated_steps_in_loop,
+    Progress,
+)
 
 
 class ProgressTest(unittest.TestCase):
@@ -81,4 +85,81 @@ class ProgressTest(unittest.TestCase):
                 max_steps_per_epoch=500,
             ),
             dataloader_size,
+        )
+
+    def test_estimated_steps_in_loop(self) -> None:
+        dataset_len = 10
+        batch_size = 2
+        dataloader = generate_random_dataloader(
+            num_samples=dataset_len, input_dim=2, batch_size=batch_size
+        )
+
+        self.assertEqual(
+            estimated_steps_in_loop(
+                dataloader,
+                max_steps=20,
+                max_steps_per_epoch=6,
+                epochs=3,
+            ),
+            15,  # 5 steps per epoch because the dataset would be exhausted after that
+        )
+
+        self.assertEqual(
+            estimated_steps_in_loop(
+                dataloader,
+                max_steps=20,
+                max_steps_per_epoch=4,
+                epochs=3,
+            ),
+            12,  # 4 steps per epoch, not exhausting all samples
+        )
+
+        self.assertEqual(
+            estimated_steps_in_loop(
+                dataloader,
+                max_steps=8,
+                max_steps_per_epoch=6,
+                epochs=3,
+            ),
+            8,  # we finish in the 'middle' of an epoch because of max_steps
+        )
+
+        self.assertEqual(
+            estimated_steps_in_loop(
+                dataloader,
+                max_steps=None,
+                max_steps_per_epoch=3,
+                epochs=3,
+            ),
+            9,  # when max_steps is none, we use epochs
+        )
+
+        self.assertEqual(
+            estimated_steps_in_loop(
+                dataloader,
+                max_steps=None,
+                max_steps_per_epoch=None,
+                epochs=3,
+            ),
+            15,  # when max_steps is none, we use epochs
+        )
+
+        self.assertEqual(
+            estimated_steps_in_loop(
+                dataloader,
+                max_steps=7,
+                max_steps_per_epoch=5,
+                epochs=None,
+            ),
+            7,  # when epoch is none, we use max_steps
+        )
+
+        self.assertEqual(
+            estimated_steps_in_loop(
+                dataloader,
+                max_steps=None,
+                max_steps_per_epoch=4,
+                epochs=None,
+            ),
+            None,
         )
