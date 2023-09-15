@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TensorBoardParameterMonitor &mdash; TorchTNT master documentation</title>
+  <title>IterationTimeLogger &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="IterationTimeLogger" href="torchtnt.framework.callbacks.IterationTimeLogger.html" />
-    <link rel="prev" title="SystemResourcesMonitor" href="torchtnt.framework.callbacks.SystemResourcesMonitor.html" />
+    <link rel="next" title="TorchSnapshotSaver" href="torchtnt.framework.callbacks.TorchSnapshotSaver.html" />
+    <link rel="prev" title="TensorBoardParameterMonitor" href="torchtnt.framework.callbacks.TensorBoardParameterMonitor.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -322,13 +322,13 @@
         
           <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
         
-      <li>TensorBoardParameterMonitor</li>
+      <li>IterationTimeLogger</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.IterationTimeLogger.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -358,26 +358,30 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="tensorboardparametermonitor">
-<h1>TensorBoardParameterMonitor<a class="headerlink" href="#tensorboardparametermonitor" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="iterationtimelogger">
+<h1>IterationTimeLogger<a class="headerlink" href="#iterationtimelogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TensorBoardParameterMonitor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TensorBoardParameterMonitor</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger" title="torchtnt.utils.loggers.tensorboard.TensorBoardLogger"><span class="pre">TensorBoardLogger</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter" target="_blank" title="(in PyTorch v2.0)"><span class="pre">SummaryWriter</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.TensorBoardParameterMonitor" title="Permalink to this definition">¶</a></dt>
-<dd><p>A callback which logs module parameters as histograms to TensorBoard.
-<a class="reference external" href="https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter" target="_blank">https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter</a></p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.IterationTimeLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">IterationTimeLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger" title="torchtnt.utils.loggers.tensorboard.TensorBoardLogger"><span class="pre">TensorBoardLogger</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter" target="_blank" title="(in PyTorch v2.0)"><span class="pre">SummaryWriter</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">moving_avg_window</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">log_every_n_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.callbacks.IterationTimeLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback which logs iteration times as scalars to TensorBoard.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>logger</strong> – Either a <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.tensorboard.TensorBoardLogger</span></code>
-or a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.tensorboard.SummaryWriter</span></code> instance.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>logger</strong> – Either a <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.loggers.tensorboard.TensorBoardLogger</span></code>
+or a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.tensorboard.SummaryWriter</span></code> instance.</li>
+<li><strong>moving_avg_window</strong> – an optional int to control the moving average window</li>
+<li><strong>log_every_n_steps</strong> – an optional int to control the log frequency</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TensorBoardParameterMonitor.on_train_epoch_end">
-<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.TensorBoardParameterMonitor.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after a train epoch ends.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.IterationTimeLogger.on_train_step_end">
+<code class="sig-name descname"><span class="pre">on_train_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.framework.callbacks.IterationTimeLogger.on_train_step_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after a train step ends.</p>
 </dd></dl>
 
 </dd></dl>
@@ -392,10 +396,10 @@ or a <code class="xref py py-class docutils literal notranslate"><span class="pr
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.framework.callbacks.IterationTimeLogger.html" class="btn btn-neutral float-right" title="IterationTimeLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.framework.callbacks.TorchSnapshotSaver.html" class="btn btn-neutral float-right" title="TorchSnapshotSaver" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.framework.callbacks.SystemResourcesMonitor.html" class="btn btn-neutral" title="SystemResourcesMonitor" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.framework.callbacks.TensorBoardParameterMonitor.html" class="btn btn-neutral" title="TensorBoardParameterMonitor" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -427,7 +431,7 @@ or a <code class="xref py py-class docutils literal notranslate"><span class="pr
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">TensorBoardParameterMonitor</a></li>
+<li><a class="reference internal" href="#">IterationTimeLogger</a></li>
 </ul>
 
             </div>
