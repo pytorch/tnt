@@ -7,6 +7,7 @@
 from .base_csv_writer import BaseCSVWriter
 from .empty_cuda_cache import EmptyCudaCache
 from .garbage_collector import GarbageCollector
+from .iteration_time_logger import IterationTimeLogger
 from .lambda_callback import Lambda
 from .learning_rate_monitor import LearningRateMonitor
 from .module_summary import ModuleSummary
@@ -21,6 +22,7 @@ __all__ = [
     "BaseCSVWriter",
     "EmptyCudaCache",
     "GarbageCollector",
+    "IterationTimeLogger",
     "Lambda",
     "LearningRateMonitor",
     "ModuleSummary",
