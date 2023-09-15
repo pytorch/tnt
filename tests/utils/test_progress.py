@@ -6,11 +6,13 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+from unittest.mock import patch
 
 from torchtnt.framework._test_utils import generate_random_dataloader
 
 from torchtnt.utils.progress import (
     estimated_steps_in_epoch,
+    estimated_steps_in_fit,
     estimated_steps_in_loop,
     Progress,
 )
@@ -163,3 +165,105 @@ class ProgressTest(unittest.TestCase):
             ),
             None,
         )
+
+    def test_estimated_steps_in_fit(self) -> None:
+        dl = generate_random_dataloader(
+            num_samples=1,
+            input_dim=1,
+            batch_size=1,
+        )
+
+        with patch(
+            "torchtnt.utils.progress.estimated_steps_in_loop",
+            side_effect=[100, 20]
+            * 4,  # for 4 test cases, make sure that number of steps returned is 100 for training and 20 for eval
+        ):
+            self.assertEqual(
+                estimated_steps_in_fit(
+                    train_dataloader=dl,
+                    eval_dataloader=dl,
+                    epochs=4,
+                    max_steps=None,
+                    max_train_steps_per_epoch=None,
+                    max_eval_steps_per_epoch=None,
+                    eval_every_n_steps=10,
+                    eval_every_n_epochs=2,
+                ),
+                340,  # 100 (training) + 20 * 12 (steps per eval epoch * number of eval epochs: 100/10 + 4/2)
+            )
+
+            self.assertEqual(
+                estimated_steps_in_fit(
+                    train_dataloader=dl,
+                    eval_dataloader=dl,
+                    epochs=3,
+                    max_steps=None,
+                    max_train_steps_per_epoch=None,
+                    max_eval_steps_per_epoch=None,
+                    eval_every_n_steps=None,
+                    eval_every_n_epochs=2,
+                ),
+                120,  # 100 (training) + 20 (single eval epoch)
+            )
+
+            self.assertEqual(
+                estimated_steps_in_fit(
+                    train_dataloader=dl,
+                    eval_dataloader=dl,
+                    epochs=3,
+                    max_steps=None,
+                    max_train_steps_per_epoch=None,
+                    max_eval_steps_per_epoch=None,
+                    eval_every_n_steps=49,
+                    eval_every_n_epochs=None,
+                ),
+                140,  # 100 (training) + 20 * 2 (two eval epochs)
+            )
+
+            self.assertEqual(
+                estimated_steps_in_fit(
+                    train_dataloader=dl,
+                    eval_dataloader=dl,
+                    epochs=3,
+                    max_steps=None,
+                    max_train_steps_per_epoch=None,
+                    max_eval_steps_per_epoch=None,
+                    eval_every_n_steps=None,
+                    eval_every_n_epochs=None,
+                ),
+                100,  # just training
+            )
+
+        with patch(
+            "torchtnt.utils.progress.estimated_steps_in_loop", side_effect=[100, None]
+        ):
+            self.assertEqual(
+                estimated_steps_in_fit(
+                    train_dataloader=dl,
+                    eval_dataloader=dl,
+                    epochs=4,
+                    max_steps=None,
+                    max_train_steps_per_epoch=None,
+                    max_eval_steps_per_epoch=None,
+                    eval_every_n_steps=10,
+                    eval_every_n_epochs=2,
+                ),
+                None,  # if the returned number of eval steps per eval epoch is None, we return None
+            )
+
+        with patch(
+            "torchtnt.utils.progress.estimated_steps_in_loop", side_effect=[None, 20]
+        ):
+            self.assertEqual(
+                estimated_steps_in_fit(
+                    train_dataloader=dl,
+                    eval_dataloader=dl,
+                    epochs=4,
+                    max_steps=None,
+                    max_train_steps_per_epoch=None,
+                    max_eval_steps_per_epoch=None,
+                    eval_every_n_steps=10,
+                    eval_every_n_epochs=2,
+                ),
+                None,  # if the returned number of training steps is None, we return None
+            )
