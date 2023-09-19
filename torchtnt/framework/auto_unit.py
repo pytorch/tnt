@@ -54,10 +54,8 @@ class _ConfigureOptimizersCaller(ABCMeta):
 
             if x.swa_params:
                 if not x.swa_params.avg_fn:
-                    # pyre-ignore: Unexpected keyword [28]
                     x.swa_model = AveragedModel(x.module, use_buffers=True)
                 else:
-                    # pyre-ignore: Unexpected keyword [28]
                     x.swa_model = AveragedModel(
                         x.module, avg_fn=x.swa_params.avg_fn, use_buffers=True
                     )
