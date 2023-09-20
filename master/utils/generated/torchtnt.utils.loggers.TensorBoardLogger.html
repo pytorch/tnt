@@ -370,6 +370,7 @@ logger will only log if RANK = 0.</p>
 <p class="first admonition-title">Note</p>
 <p>If using this logger with distributed training:</p>
 <ul class="last simple">
+<li>This logger should be constructed on all ranks</li>
 <li>This logger can call collective operations</li>
 <li>Logs will be written on rank 0 only</li>
 <li>Logger must be constructed synchronously <em>after</em> initializing the distributed process group.</li>
