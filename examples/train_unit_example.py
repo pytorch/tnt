@@ -146,10 +146,9 @@ def main(argv: List[str]) -> None:
         args.log_every_n_steps,
     )
 
-    # pyre-fixme[28]: Unexpected keyword argument `dataloader`.
     train(
         my_unit,
-        dataloader=dataloader,
+        train_dataloader=dataloader,
         max_epochs=args.max_epochs,
     )
 
