@@ -263,13 +263,14 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
 class AutoUnit(
     TrainUnit[TData],
     EvalUnit[TData],
+    PredictUnit[TData],
     metaclass=_ConfigureOptimizersCaller,
 ):
     """
     The AutoUnit is a convenience for users who are training with stochastic gradient descent and would like to have model optimization
     and data parallel replication handled for them.
-    The AutoUnit subclasses :class:`~torchtnt.framework.unit.TrainUnit` and :class:`~torchtnt.framework.unit.EvalUnit`,
-    and implements the ``train_step`` and ``eval_step`` methods for the user.
+    The AutoUnit subclasses :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, and
+    :class:`~torchtnt.framework.unit.PredictUnit` and implements the ``train_step``, ``eval_step``, and ``predict_step`` methods for the user.
 
     For the ``train_step`` it runs:
 
@@ -279,15 +280,20 @@ class AutoUnit(
 
     For the ``eval_step`` it only runs forward and loss computation.
 
+    For the ``predict_step`` it only runs forward computation.
+
     To benefit from the AutoUnit, the user must subclass it and implement the ``compute_loss`` and ``configure_optimizers_and_lr_scheduler`` methods.
     Additionally, the AutoUnit offers these optional hooks:
 
     - ``on_train_step_end``
     - ``on_eval_step_end``
+    - ``on_predict_step_end``
 
-    Then use with the :py:func:`~torchtnt.framework.train`, :py:func:`~torchtnt.framework.evaluate`, or :py:func:`~torchtnt.framework.fit` entry point as normal.
+    Then use with the :py:func:`~torchtnt.framework.train`, :py:func:`~torchtnt.framework.evaluate`, :py:func:`~torchtnt.framework.fit`, or
+    :py:func:`~torchtnt.framework.predict` entry point as normal.
 
-    For more advanced customization, directly use the :class:`~torchtnt.framework.unit.TrainUnit` and :class:`~torchtnt.framework.unit.EvalUnit` interfaces.
+    For more advanced customization, directly use the :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`,
+    and :class:`~torchtnt.framework.unit.PredictUnit` interfaces.
 
     Args:
         module: module to be used during training/evaluation.
@@ -732,6 +738,45 @@ class AutoUnit(
             data: a batch of data which is passed from the ``eval_step``
             step: how many steps have been completed (``train_step`` s when running fit and ``eval_step`` s when running evaluation)
             loss: the loss computed in the ``compute_loss`` function
+            outputs: the outputs of the model forward pass
+        """
+        pass
+
+    # pyre-fixme[3]: Return annotation cannot contain `Any`.
+    def predict_step(self, state: State, data: TData) -> Any:
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.move_data_to_device"
+        ):
+            data = self.move_data_to_device(state, data, non_blocking=False)
+
+        with self.maybe_autocast_precision:
+            with get_timing_context(state, f"{self.__class__.__name__}.forward"):
+                outputs = self.module(data)
+
+        step = self.predict_progress.num_steps_completed
+        # users can override this, by default this is a no-op
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.on_predict_step_end"
+        ):
+            self.on_predict_step_end(state, data, step, outputs)
+        return outputs
+
+    def on_predict_step_end(
+        self,
+        state: State,
+        data: TData,
+        step: int,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
+    ) -> None:
+        """
+        This will be called at the end of every ``predict_step`` before returning. The user can implement this method with code to update and log their metrics,
+        or do anything else.
+
+        Args:
+            state: a State object which is passed from the ``predict_step``
+            data: a batch of data which is passed from the ``predict_step``
+            step: how many ``predict_step``s have been completed
             outputs: the outputs of the model forward pass
         """
         pass

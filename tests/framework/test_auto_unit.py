@@ -167,6 +167,29 @@ class TestAutoUnit(unittest.TestCase):
                 precision="foo",
             )
 
+    def test_predict_step(self) -> None:
+        """
+        Test predict step functionality
+        """
+        my_module = torch.nn.Linear(2, 2)
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+        )
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        dataloader_iter = iter(dataloader)
+        pred_dataloader = (x[0] for x in dataloader_iter)  # only need data, not target
+
+        with patch(
+            "torchtnt.framework._test_utils.DummyAutoUnit.on_predict_step_end"
+        ) as mock_predict_step_end:
+            predict(auto_unit, pred_dataloader, max_steps_per_epoch=1)
+            mock_predict_step_end.assert_called_once()
+
     def test_stochastic_weight_averaging_basic(self) -> None:
         """
         Basic stochastic weight averaging tests
@@ -600,6 +623,28 @@ class TestAutoUnit(unittest.TestCase):
             timer=Timer(),
         )
 
+    def test_auto_unit_timing_predict(self) -> None:
+        """
+        Test auto timing in AutoUnit for predict
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        dataloader_iter = iter(dataloader)
+        pred_dataloader = (x[0] for x in dataloader_iter)  # only need data, not targets
+
+        my_module = torch.nn.Linear(2, 2)
+
+        predict(
+            TimingAutoUnit(module=my_module),
+            pred_dataloader,
+            max_steps_per_epoch=max_steps_per_epoch,
+            timer=Timer(),
+        )
+
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
     )
@@ -846,6 +891,31 @@ class TimingAutoUnit(AutoUnit[Batch]):
 
             # eval_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's eval_step
             tc.assertNotIn("TimingAutoUnit.eval_step", recorded_timer_keys)
+
+    def on_predict_step_end(
+        self,
+        state: State,
+        data: Batch,
+        step: int,
+        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
+        outputs: Any,
+    ) -> None:
+        if self.predict_progress.num_steps_completed_in_epoch == 1:
+            tc = unittest.TestCase()
+            # pyre-fixme[16]: Optional type has no attribute `recorded_durations`.
+            recorded_timer_keys = state.timer.recorded_durations.keys()
+            for k in (
+                "TimingAutoUnit.on_predict_start",
+                "TimingAutoUnit.on_predict_epoch_start",
+                "predict.iter(dataloader)",
+                "predict.next(data_iter)",
+                "TimingAutoUnit.move_data_to_device",
+                "TimingAutoUnit.on_predict_step_end",
+            ):
+                tc.assertIn(k, recorded_timer_keys)
+
+            # eval_step should not be in the timer's recorded_durations because it overlaps with other timings in the AutoUnit's eval_step
+            tc.assertNotIn("TimingAutoUnit.predict_step", recorded_timer_keys)
 
 
 class TimingAutoPredictUnit(AutoPredictUnit[Batch]):
