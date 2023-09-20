@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import atexit
 import logging
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import torch.distributed as dist
 
@@ -175,6 +175,30 @@ class TensorBoardLogger(MetricLogger):
         writer = self._writer
         if writer:
             writer.add_audio(*args, **kwargs)
+
+    def log_scalars(
+        self: TensorBoardLogger,
+        main_tag: str,
+        tag_scalar_dict: Dict[str, Union[float, int]],
+        global_step: Optional[int] = None,
+        walltime: Optional[float] = None,
+    ) -> None:
+        """Log multiple values to TensorBoard.
+        Args:
+            main_tag (string): Parent name for the tags
+            tag_scalar_dict (dict): dictionary of tag name and scalar value
+            global_step (int): global step value to record
+            walltime (float): Optional override default walltime (time.time())
+        Returns:
+            None
+        """
+        if self._writer:
+            self._writer.add_scalars(
+                main_tag=main_tag,
+                tag_scalar_dict=tag_scalar_dict,
+                global_step=global_step,
+                walltime=walltime,
+            )
 
     def flush(self: TensorBoardLogger) -> None:
         """Writes pending logs to disk."""
