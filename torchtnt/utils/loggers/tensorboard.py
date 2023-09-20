@@ -5,6 +5,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+from __future__ import annotations
+
 import atexit
 import logging
 from typing import Any, Dict, List, Mapping, Optional
@@ -47,7 +49,7 @@ class TensorBoardLogger(MetricLogger):
         logger.close()
     """
 
-    def __init__(self, path: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(self: TensorBoardLogger, path: str, *args: Any, **kwargs: Any) -> None:
         self._writer: Optional[SummaryWriter] = None
 
         self._rank: int = get_global_rank()
@@ -65,7 +67,7 @@ class TensorBoardLogger(MetricLogger):
 
         atexit.register(self.close)
 
-    def _sync_path_to_workers(self, path: str) -> None:
+    def _sync_path_to_workers(self: TensorBoardLogger, path: str) -> None:
         if not (dist.is_available() and dist.is_initialized()):
             self._path: str = path
             return
@@ -82,14 +84,16 @@ class TensorBoardLogger(MetricLogger):
         self._path: str = updated_path
 
     @property
-    def writer(self) -> Optional[SummaryWriter]:
+    def writer(self: TensorBoardLogger) -> Optional[SummaryWriter]:
         return self._writer
 
     @property
-    def path(self) -> str:
+    def path(self: TensorBoardLogger) -> str:
         return self._path
 
-    def log_dict(self, payload: Mapping[str, Scalar], step: int) -> None:
+    def log_dict(
+        self: TensorBoardLogger, payload: Mapping[str, Scalar], step: int
+    ) -> None:
         """Add multiple scalar values to TensorBoard.
 
         Args:
@@ -101,7 +105,7 @@ class TensorBoardLogger(MetricLogger):
             for k, v in payload.items():
                 self.log(k, v, step)
 
-    def log(self, name: str, data: Scalar, step: int) -> None:
+    def log(self: TensorBoardLogger, name: str, data: Scalar, step: int) -> None:
         """Add scalar data to TensorBoard.
 
         Args:
@@ -113,7 +117,7 @@ class TensorBoardLogger(MetricLogger):
         if self._writer:
             self._writer.add_scalar(name, data, global_step=step, new_style=True)
 
-    def log_text(self, name: str, data: str, step: int) -> None:
+    def log_text(self: TensorBoardLogger, name: str, data: str, step: int) -> None:
         """Add text data to summary.
 
         Args:
@@ -126,7 +130,7 @@ class TensorBoardLogger(MetricLogger):
             self._writer.add_text(name, data, global_step=step)
 
     def log_hparams(
-        self, hparams: Dict[str, Scalar], metrics: Dict[str, Scalar]
+        self: TensorBoardLogger, hparams: Dict[str, Scalar], metrics: Dict[str, Scalar]
     ) -> None:
         """Add hyperparameter data to TensorBoard.
 
@@ -138,7 +142,7 @@ class TensorBoardLogger(MetricLogger):
         if self._writer:
             self._writer.add_hparams(hparams, metrics)
 
-    def log_image(self, *args: Any, **kwargs: Any) -> None:
+    def log_image(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
         """Add image data to TensorBoard.
 
 
@@ -150,7 +154,7 @@ class TensorBoardLogger(MetricLogger):
         if writer:
             writer.add_image(*args, **kwargs)
 
-    def log_images(self, *args: Any, **kwargs: Any) -> None:
+    def log_images(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
         """Add batched image data to summary.
 
         Args:
@@ -161,7 +165,7 @@ class TensorBoardLogger(MetricLogger):
         if writer:
             writer.add_images(*args, **kwargs)
 
-    def log_audio(self, *args: Any, **kwargs: Any) -> None:
+    def log_audio(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
         """Add audio data to TensorBoard.
 
         Args:
@@ -172,13 +176,13 @@ class TensorBoardLogger(MetricLogger):
         if writer:
             writer.add_audio(*args, **kwargs)
 
-    def flush(self) -> None:
+    def flush(self: TensorBoardLogger) -> None:
         """Writes pending logs to disk."""
 
         if self._writer:
             self._writer.flush()
 
-    def close(self) -> None:
+    def close(self: TensorBoardLogger) -> None:
         """Close writer, flushing pending logs to disk.
         Logs cannot be written after `close` is called.
         """
