@@ -5,6 +5,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+from __future__ import annotations
+
 import os
 import tempfile
 import unittest
@@ -19,7 +21,7 @@ from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class TensorBoardLoggerTest(unittest.TestCase):
-    def test_log(self) -> None:
+    def test_log(self: TensorBoardLoggerTest) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             logger = TensorBoardLogger(path=log_dir)
             for i in range(5):
@@ -32,7 +34,7 @@ class TensorBoardLoggerTest(unittest.TestCase):
                 self.assertAlmostEqual(event.tensor_proto.float_val[0], float(i) ** 2)
                 self.assertEqual(event.step, i)
 
-    def test_log_dict(self) -> None:
+    def test_log_dict(self: TensorBoardLoggerTest) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             logger = TensorBoardLogger(path=log_dir)
             metric_dict = {f"log_dict_{i}": float(i) ** 2 for i in range(5)}
@@ -48,7 +50,7 @@ class TensorBoardLoggerTest(unittest.TestCase):
                 )
                 self.assertEqual(tensor_tag.step, 1)
 
-    def test_log_text(self) -> None:
+    def test_log_text(self: TensorBoardLoggerTest) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             logger = TensorBoardLogger(path=log_dir)
             for i in range(5):
@@ -64,7 +66,7 @@ class TensorBoardLoggerTest(unittest.TestCase):
                 )
                 self.assertEqual(test_text_event.step, i)
 
-    def test_log_rank_zero(self) -> None:
+    def test_log_rank_zero(self: TensorBoardLoggerTest) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             with patch.dict("os.environ", {"RANK": "1"}):
                 logger = TensorBoardLogger(path=log_dir)
@@ -90,6 +92,6 @@ class TensorBoardLoggerTest(unittest.TestCase):
     @unittest.skipUnless(
         dist.is_available(), reason="Torch distributed is needed to run"
     )
-    def test_multiple_workers(self) -> None:
+    def test_multiple_workers(self: TensorBoardLoggerTest) -> None:
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._test_distributed)()
