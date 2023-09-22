@@ -1514,8 +1514,8 @@ bytes) are appended.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>module</strong> – module to be wrapped in DDP</li>
-<li><strong>strategy</strong> – an instance of DDPStrategy which defines the settings of DDP APIs</li>
 <li><strong>device</strong> – device to which module will be moved</li>
+<li><strong>strategy</strong> – an instance of DDPStrategy which defines the settings of DDP APIs</li>
 </ul>
 </td>
 </tr>
@@ -1525,7 +1525,7 @@ bytes) are appended.</li>
 <dt>Examples::</dt><dd>strategy = DDPStrategy(find_unused_parameters=True, gradient_as_bucket_view=True)
 module = nn.Linear(1, 1)
 device = torch.device(“cuda”)
-ddp_module = prepare_ddp(module, strategy, device)</dd>
+ddp_module = prepare_ddp(module, device, strategy)</dd>
 </dl>
 </dd></dl>
 
@@ -1539,8 +1539,8 @@ ddp_module = prepare_ddp(module, strategy, device)</dd>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>module</strong> – module to be wrapped in FSDP</li>
-<li><strong>strategy</strong> – an instance of FSDPStrategy which defines the settings of FSDP APIs</li>
 <li><strong>device</strong> – device to which module will be moved</li>
+<li><strong>strategy</strong> – an instance of FSDPStrategy which defines the settings of FSDP APIs</li>
 </ul>
 </td>
 </tr>
@@ -1550,7 +1550,7 @@ ddp_module = prepare_ddp(module, strategy, device)</dd>
 <dt>Examples::</dt><dd>strategy = FSDPStrategy(limit_all_gathers=True)
 module = nn.Linear(1, 1)
 device = torch.device(“cuda”)
-fsdp_module = prepare_fsdp(module, strategy, device)</dd>
+fsdp_module = prepare_fsdp(module, device, strategy)</dd>
 </dl>
 </dd></dl>
 
