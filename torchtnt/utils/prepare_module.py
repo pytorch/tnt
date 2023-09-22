@@ -153,14 +153,14 @@ def prepare_ddp(
 
     Args:
         module: module to be wrapped in DDP
-        strategy: an instance of DDPStrategy which defines the settings of DDP APIs
         device: device to which module will be moved
+        strategy: an instance of DDPStrategy which defines the settings of DDP APIs
 
     Examples::
         strategy = DDPStrategy(find_unused_parameters=True, gradient_as_bucket_view=True)
         module = nn.Linear(1, 1)
         device = torch.device("cuda")
-        ddp_module = prepare_ddp(module, strategy, device)
+        ddp_module = prepare_ddp(module, device, strategy)
     """
     strategy = strategy if strategy is not None else DDPStrategy()
     # wrap module in DDP
@@ -199,14 +199,14 @@ def prepare_fsdp(
 
     Args:
         module: module to be wrapped in FSDP
-        strategy: an instance of FSDPStrategy which defines the settings of FSDP APIs
         device: device to which module will be moved
+        strategy: an instance of FSDPStrategy which defines the settings of FSDP APIs
 
     Examples::
         strategy = FSDPStrategy(limit_all_gathers=True)
         module = nn.Linear(1, 1)
         device = torch.device("cuda")
-        fsdp_module = prepare_fsdp(module, strategy, device)
+        fsdp_module = prepare_fsdp(module, device, strategy)
     """
     if not is_torch_version_geq_1_12():
         raise RuntimeError(
