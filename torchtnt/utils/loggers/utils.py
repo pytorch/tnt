@@ -18,7 +18,7 @@ def scalar_to_float(scalar: Scalar) -> float:
                 f"Scalar tensor must contain a single item, {numel} given."
             )
 
-        return float(scalar.cpu().numpy().item())
+        return float(scalar.cpu().detach().numpy().item())
     elif isinstance(scalar, ndarray):
         numel = scalar.size
         if numel != 1:
