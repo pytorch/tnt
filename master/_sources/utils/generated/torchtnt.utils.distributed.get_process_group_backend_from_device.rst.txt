@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.get\_process\_group\_backend\_from\_device
+=====================================================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: get_process_group_backend_from_device

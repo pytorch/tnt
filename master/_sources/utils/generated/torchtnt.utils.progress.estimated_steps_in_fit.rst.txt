@@ -1,0 +1,6 @@
+﻿torchtnt.utils.progress.estimated\_steps\_in\_fit
+=================================================
+
+.. currentmodule:: torchtnt.utils.progress
+
+.. autofunction:: estimated_steps_in_fit

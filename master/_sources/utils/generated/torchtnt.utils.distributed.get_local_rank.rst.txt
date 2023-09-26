@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.get\_local\_rank
+===========================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: get_local_rank

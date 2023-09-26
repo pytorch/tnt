@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.sync\_bool
+=====================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: sync_bool

@@ -1,10 +1,32 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.loggers.JSONLogger
+=================================
+
 .. currentmodule:: torchtnt.utils.loggers
 
-
-JSONLogger
-==========
-
 .. autoclass:: JSONLogger
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~JSONLogger.__init__
+      ~JSONLogger.close
+      ~JSONLogger.flush
+      ~JSONLogger.log
+      ~JSONLogger.log_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~JSONLogger.path
+   
+   

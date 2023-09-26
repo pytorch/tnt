@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.get\_tcp\_init\_method
+=================================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: get_tcp_init_method

@@ -1,10 +1,39 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.loggers.TensorBoardLogger
+========================================
+
 .. currentmodule:: torchtnt.utils.loggers
 
-
-TensorBoardLogger
-=================
-
 .. autoclass:: TensorBoardLogger
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TensorBoardLogger.__init__
+      ~TensorBoardLogger.close
+      ~TensorBoardLogger.flush
+      ~TensorBoardLogger.log
+      ~TensorBoardLogger.log_audio
+      ~TensorBoardLogger.log_dict
+      ~TensorBoardLogger.log_hparams
+      ~TensorBoardLogger.log_image
+      ~TensorBoardLogger.log_images
+      ~TensorBoardLogger.log_scalars
+      ~TensorBoardLogger.log_text
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TensorBoardLogger.path
+      ~TensorBoardLogger.writer
+   
+   

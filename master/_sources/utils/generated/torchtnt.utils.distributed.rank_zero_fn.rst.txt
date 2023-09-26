@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.rank\_zero\_fn
+=========================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: rank_zero_fn

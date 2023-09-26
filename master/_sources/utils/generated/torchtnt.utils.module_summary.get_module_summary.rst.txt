@@ -1,0 +1,6 @@
+﻿torchtnt.utils.module\_summary.get\_module\_summary
+===================================================
+
+.. currentmodule:: torchtnt.utils.module_summary
+
+.. autofunction:: get_module_summary

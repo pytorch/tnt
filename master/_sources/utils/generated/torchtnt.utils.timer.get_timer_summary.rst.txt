@@ -1,0 +1,6 @@
+﻿torchtnt.utils.timer.get\_timer\_summary
+========================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autofunction:: get_timer_summary

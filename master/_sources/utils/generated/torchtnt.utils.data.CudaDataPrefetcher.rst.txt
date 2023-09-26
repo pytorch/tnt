@@ -1,10 +1,22 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.data.CudaDataPrefetcher
+======================================
+
 .. currentmodule:: torchtnt.utils.data
 
-
-CudaDataPrefetcher
-==================
-
 .. autoclass:: CudaDataPrefetcher
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CudaDataPrefetcher.__init__
+   
+   
+
+   
+   
+   

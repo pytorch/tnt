@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.get\_global\_rank
+============================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: get_global_rank

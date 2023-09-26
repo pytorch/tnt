@@ -1,0 +1,6 @@
+﻿torchtnt.utils.misc.transfer\_batch\_norm\_stats
+================================================
+
+.. currentmodule:: torchtnt.utils.misc
+
+.. autofunction:: transfer_batch_norm_stats

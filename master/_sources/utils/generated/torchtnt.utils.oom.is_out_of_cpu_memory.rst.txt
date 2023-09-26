@@ -1,0 +1,6 @@
+﻿torchtnt.utils.oom.is\_out\_of\_cpu\_memory
+===========================================
+
+.. currentmodule:: torchtnt.utils.oom
+
+.. autofunction:: is_out_of_cpu_memory

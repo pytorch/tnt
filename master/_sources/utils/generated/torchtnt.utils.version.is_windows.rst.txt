@@ -1,0 +1,6 @@
+﻿torchtnt.utils.version.is\_windows
+==================================
+
+.. currentmodule:: torchtnt.utils.version
+
+.. autofunction:: is_windows

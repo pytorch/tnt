@@ -1,0 +1,23 @@
+﻿torchtnt.utils.timer.FullSyncPeriodicTimer
+==========================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autoclass:: FullSyncPeriodicTimer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FullSyncPeriodicTimer.__init__
+      ~FullSyncPeriodicTimer.check
+   
+   
+
+   
+   
+   

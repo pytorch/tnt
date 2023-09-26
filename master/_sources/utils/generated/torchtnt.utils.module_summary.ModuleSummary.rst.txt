@@ -1,0 +1,39 @@
+﻿torchtnt.utils.module\_summary.ModuleSummary
+============================================
+
+.. currentmodule:: torchtnt.utils.module_summary
+
+.. autoclass:: ModuleSummary
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ModuleSummary.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ModuleSummary.flops_backward
+      ~ModuleSummary.flops_forward
+      ~ModuleSummary.forward_elapsed_time_ms
+      ~ModuleSummary.has_uninitialized_param
+      ~ModuleSummary.in_size
+      ~ModuleSummary.module_name
+      ~ModuleSummary.module_type
+      ~ModuleSummary.num_parameters
+      ~ModuleSummary.num_trainable_parameters
+      ~ModuleSummary.out_size
+      ~ModuleSummary.size_bytes
+      ~ModuleSummary.submodule_summaries
+   
+   

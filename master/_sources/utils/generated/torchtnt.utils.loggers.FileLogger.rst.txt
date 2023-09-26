@@ -1,0 +1,32 @@
+﻿torchtnt.utils.loggers.FileLogger
+=================================
+
+.. currentmodule:: torchtnt.utils.loggers
+
+.. autoclass:: FileLogger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FileLogger.__init__
+      ~FileLogger.close
+      ~FileLogger.flush
+      ~FileLogger.log
+      ~FileLogger.log_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FileLogger.path
+   
+   

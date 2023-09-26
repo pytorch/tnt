@@ -1,0 +1,25 @@
+﻿torchtnt.utils.loggers.MetricLogger
+===================================
+
+.. currentmodule:: torchtnt.utils.loggers
+
+.. autoclass:: MetricLogger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MetricLogger.__init__
+      ~MetricLogger.close
+      ~MetricLogger.log
+      ~MetricLogger.log_dict
+   
+   
+
+   
+   
+   

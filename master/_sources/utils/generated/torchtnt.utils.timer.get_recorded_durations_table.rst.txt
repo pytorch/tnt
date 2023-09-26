@@ -1,0 +1,6 @@
+﻿torchtnt.utils.timer.get\_recorded\_durations\_table
+====================================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autofunction:: get_recorded_durations_table

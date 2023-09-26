@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.destroy\_process\_group
+==================================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: destroy_process_group

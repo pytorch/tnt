@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.revert\_sync\_batchnorm
+==================================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: revert_sync_batchnorm

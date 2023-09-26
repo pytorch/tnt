@@ -1,0 +1,6 @@
+﻿torchtnt.utils.device.get\_nvidia\_smi\_gpu\_stats
+==================================================
+
+.. currentmodule:: torchtnt.utils.device
+
+.. autofunction:: get_nvidia_smi_gpu_stats

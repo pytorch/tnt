@@ -1,0 +1,6 @@
+﻿torchtnt.utils.fsspec.get\_filesystem
+=====================================
+
+.. currentmodule:: torchtnt.utils.fsspec
+
+.. autofunction:: get_filesystem

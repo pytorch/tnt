@@ -1,10 +1,24 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.data.MultiDataLoader
+===================================
+
 .. currentmodule:: torchtnt.utils.data
 
-
-MultiDataLoader
-===============
-
 .. autoclass:: MultiDataLoader
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiDataLoader.__init__
+      ~MultiDataLoader.load_state_dict
+      ~MultiDataLoader.state_dict
+   
+   
+
+   
+   
+   

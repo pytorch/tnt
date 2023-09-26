@@ -1,0 +1,6 @@
+﻿torchtnt.utils.device.get\_psutil\_cpu\_stats
+=============================================
+
+.. currentmodule:: torchtnt.utils.device
+
+.. autofunction:: get_psutil_cpu_stats

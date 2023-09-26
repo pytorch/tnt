@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MultiDataLoader &mdash; TorchTNT master documentation</title>
+  <title>torchtnt.utils.data.MultiDataLoader &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="MultiIterator" href="torchtnt.utils.data.MultiIterator.html" />
-    <link rel="prev" title="InOrderIterator" href="torchtnt.utils.data.InOrderIterator.html" />
+    <link rel="next" title="torchtnt.utils.data.MultiIterator" href="torchtnt.utils.data.MultiIterator.html" />
+    <link rel="prev" title="torchtnt.utils.data.InOrderIterator" href="torchtnt.utils.data.InOrderIterator.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -277,9 +277,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utils</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../loggers.html">Loggers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../utils.html">Utils</a></li>
 </ul>
 
             
@@ -320,9 +318,9 @@
       </li>
 
         
-          <li><a href="../data.html">Data</a> &gt;</li>
+          <li><a href="../utils.html">Utils</a> &gt;</li>
         
-      <li>MultiDataLoader</li>
+      <li>torchtnt.utils.data.MultiDataLoader</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -358,8 +356,8 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="multidataloader">
-<h1>MultiDataLoader<a class="headerlink" href="#multidataloader" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="torchtnt-utils-data-multidataloader">
+<h1>torchtnt.utils.data.MultiDataLoader<a class="headerlink" href="#torchtnt-utils-data-multidataloader" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">MultiDataLoader</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataIterationStrategy</span></span></em>, <em><span class="n"><span class="pre">iterator_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator" title="torchtnt.utils.data.MultiIterator"><span class="pre">MultiIterator</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">ignore_empty_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader" title="Permalink to this definition">¶</a></dt>
@@ -434,27 +432,24 @@ For example, <cite>mux</cite>, <cite>mux_longest</cite>, <cite>cycle</cite>, <ci
 to the documentation for more details.</p>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.load_state_dict">
-<code class="sig-name descname"><span class="pre">load_state_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.load_state_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads aggregated state dict based on individual dataloaders.</p>
-<p>The provided state dict should be keyed off the names provided by <code class="docutils literal notranslate"><span class="pre">individual_dataloaders</span></code>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Only states from dataloaders that implement the <a class="reference internal" href="../utils.html#torchtnt.utils.Stateful" title="torchtnt.utils.stateful.Stateful"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stateful</span></code></a> protocol are loaded.</p>
-</div>
-</dd></dl>
+<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataIterationStrategy</span></span></em>, <em><span class="n"><span class="pre">iterator_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator" title="torchtnt.utils.data.MultiIterator"><span class="pre">MultiIterator</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">ignore_empty_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.data.MultiDataLoader.state_dict">
-<code class="sig-name descname"><span class="pre">state_dict</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#torchtnt.utils.data.MultiDataLoader.state_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return an aggregated state dict based on individual dataloaders.</p>
-<p>The state dict is keyed off the names provided by <code class="docutils literal notranslate"><span class="pre">individual_dataloaders</span></code>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Only states from dataloaders that implement the <a class="reference internal" href="../utils.html#torchtnt.utils.Stateful" title="torchtnt.utils.stateful.Stateful"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stateful</span></code></a> protocol are included in the returned state dict.</p>
-</div>
-</dd></dl>
-
+<p class="rubric">Methods</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.data.MultiDataLoader.__init__" title="torchtnt.utils.data.MultiDataLoader.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(individual_dataloaders,&nbsp;...[,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict)</td>
+<td>Loads aggregated state dict based on individual dataloaders.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_dict</span></code>()</td>
+<td>Return an aggregated state dict based on individual dataloaders.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -467,10 +462,10 @@ to the documentation for more details.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.utils.data.MultiIterator.html" class="btn btn-neutral float-right" title="MultiIterator" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.data.MultiIterator.html" class="btn btn-neutral float-right" title="torchtnt.utils.data.MultiIterator" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.utils.data.InOrderIterator.html" class="btn btn-neutral" title="InOrderIterator" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.utils.data.InOrderIterator.html" class="btn btn-neutral" title="torchtnt.utils.data.InOrderIterator" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -502,7 +497,7 @@ to the documentation for more details.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">MultiDataLoader</a></li>
+<li><a class="reference internal" href="#">torchtnt.utils.data.MultiDataLoader</a></li>
 </ul>
 
             </div>

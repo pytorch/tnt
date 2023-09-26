@@ -1,0 +1,6 @@
+﻿torchtnt.utils.test\_utils.get\_pet\_launch\_config
+===================================================
+
+.. currentmodule:: torchtnt.utils.test_utils
+
+.. autofunction:: get_pet_launch_config

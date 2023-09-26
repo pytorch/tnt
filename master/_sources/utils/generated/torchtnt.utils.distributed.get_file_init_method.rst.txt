@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.get\_file\_init\_method
+==================================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: get_file_init_method

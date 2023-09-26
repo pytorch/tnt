@@ -1,0 +1,38 @@
+﻿torchtnt.utils.early\_stop\_checker.EarlyStopChecker
+====================================================
+
+.. currentmodule:: torchtnt.utils.early_stop_checker
+
+.. autoclass:: EarlyStopChecker
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EarlyStopChecker.__init__
+      ~EarlyStopChecker.check
+      ~EarlyStopChecker.load_state_dict
+      ~EarlyStopChecker.reset
+      ~EarlyStopChecker.state_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~EarlyStopChecker.check_finite
+      ~EarlyStopChecker.divergence_threshold
+      ~EarlyStopChecker.min_delta
+      ~EarlyStopChecker.mode
+      ~EarlyStopChecker.patience
+      ~EarlyStopChecker.stopping_threshold
+      ~EarlyStopChecker.threshold_mode
+   
+   

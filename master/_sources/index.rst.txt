@@ -82,8 +82,6 @@ Documentation
    :caption: Utils
 
    utils/utils
-   utils/data
-   utils/loggers
 
 .. fbcode::
 
