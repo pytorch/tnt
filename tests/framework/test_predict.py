@@ -158,7 +158,10 @@ class PredictTest(unittest.TestCase):
 
     def test_predict_data_iter_step(self) -> None:
         class PredictIteratorUnit(
-            PredictUnit[Iterator[Tuple[torch.Tensor, torch.Tensor]]]
+            PredictUnit[
+                Iterator[Tuple[torch.Tensor, torch.Tensor]],
+                Tuple[torch.Tensor, torch.Tensor],
+            ]
         ):
             def __init__(self, input_dim: int) -> None:
                 super().__init__()
@@ -213,9 +216,10 @@ class PredictTest(unittest.TestCase):
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+StepOutput = torch.Tensor
 
 
-class StopPredictUnit(PredictUnit[Batch]):
+class StopPredictUnit(PredictUnit[Batch, StepOutput]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
         super().__init__()
         # initialize module
@@ -223,7 +227,7 @@ class StopPredictUnit(PredictUnit[Batch]):
         self.steps_processed = 0
         self.steps_before_stopping = steps_before_stopping
 
-    def predict_step(self, state: State, data: Batch) -> torch.Tensor:
+    def predict_step(self, state: State, data: Batch) -> StepOutput:
         inputs, targets = data
 
         outputs = self.module(inputs)

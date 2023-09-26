@@ -123,8 +123,9 @@ class FitTest(unittest.TestCase):
 
     def test_fit_stop(self) -> None:
         Batch = Tuple[torch.Tensor, torch.Tensor]
+        StepOutput = Tuple[torch.Tensor, torch.Tensor]
 
-        class FitStop(TrainUnit[Batch], EvalUnit[Batch]):
+        class FitStop(TrainUnit[Batch, StepOutput], EvalUnit[Batch, StepOutput]):
             def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
                 super().__init__()
                 # initialize module, loss_fn, & optimizer
@@ -134,9 +135,7 @@ class FitTest(unittest.TestCase):
                 self.steps_processed = 0
                 self.steps_before_stopping = steps_before_stopping
 
-            def train_step(
-                self, state: State, data: Batch
-            ) -> Tuple[torch.Tensor, torch.Tensor]:
+            def train_step(self, state: State, data: Batch) -> StepOutput:
                 inputs, targets = data
 
                 outputs = self.module(inputs)
@@ -156,9 +155,7 @@ class FitTest(unittest.TestCase):
                 self.steps_processed += 1
                 return loss, outputs
 
-            def eval_step(
-                self, state: State, data: Batch
-            ) -> Tuple[torch.Tensor, torch.Tensor]:
+            def eval_step(self, state: State, data: Batch) -> StepOutput:
                 inputs, targets = data
                 outputs = self.module(inputs)
                 loss = self.loss_fn(outputs, targets)

@@ -180,10 +180,10 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-Batch = Tuple[torch.Tensor, torch.Tensor]
+Batch = Iterator[Tuple[torch.Tensor, torch.Tensor]]
 
 
-class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
+class MyUnit(TrainUnit[Batch, None], EvalUnit[Batch, None]):
     def __init__(
         self,
         module: torch.nn.Module,
@@ -205,9 +205,7 @@ class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
         self.tb_logger = tb_logger
         self.log_every_n_steps = log_every_n_steps
 
-    # pyre-fixme[14]: `train_step` overrides method defined in `TrainUnit`
-    #  inconsistently.
-    def train_step(self, state: State, data: Iterator[Batch]) -> None:
+    def train_step(self, state: State, data: Batch) -> None:
         step = self.train_progress.num_steps_completed
         loss, logits, labels = self.pipeline.progress(data)
         preds = torch.sigmoid(logits)
@@ -222,8 +220,7 @@ class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
         # reset the metric every epoch
         self.train_auroc.reset()
 
-    # pyre-fixme[14]: `eval_step` overrides method defined in `EvalUnit` inconsistently.
-    def eval_step(self, state: State, data: Iterator[Batch]) -> None:
+    def eval_step(self, state: State, data: Batch) -> None:
         step = self.eval_progress.num_steps_completed
         loss, _, _ = self.pipeline.progress(data)
         if step % self.log_every_n_steps == 0:

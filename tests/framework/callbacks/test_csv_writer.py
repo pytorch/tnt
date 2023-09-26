@@ -13,7 +13,7 @@ from torchtnt.framework._test_utils import DummyPredictUnit, generate_random_dat
 from torchtnt.framework.callbacks.base_csv_writer import BaseCSVWriter
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
-from torchtnt.framework.unit import PredictUnit, TPredictData
+from torchtnt.framework.unit import TPredictUnit
 
 _HEADER_ROW = ["output"]
 _FILENAME = "test_csv_writer.csv"
@@ -23,7 +23,7 @@ class CustomCSVWriter(BaseCSVWriter):
     def get_step_output_rows(
         self,
         state: State,
-        unit: PredictUnit[TPredictData],
+        unit: TPredictUnit,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:
@@ -34,7 +34,7 @@ class CustomCSVWriterSingleRow(BaseCSVWriter):
     def get_step_output_rows(
         self,
         state: State,
-        unit: PredictUnit[TPredictData],
+        unit: TPredictUnit,
         # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:

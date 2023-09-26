@@ -16,6 +16,8 @@ from torchtnt.framework.unit import EvalUnit, PredictUnit, TrainUnit
 from torchtnt.utils.lr_scheduler import TLRScheduler
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+StepOutput = Tuple[torch.Tensor, torch.Tensor]
+PredictStepOutput = torch.Tensor
 
 
 def get_dummy_train_state(dataloader: Optional[Iterable[object]] = None) -> State:
@@ -31,14 +33,14 @@ def get_dummy_train_state(dataloader: Optional[Iterable[object]] = None) -> Stat
     )
 
 
-class DummyEvalUnit(EvalUnit[Batch]):
+class DummyEvalUnit(EvalUnit[Batch, StepOutput]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module & loss_fn
         self.module = nn.Linear(input_dim, 2)
         self.loss_fn = nn.CrossEntropyLoss()
 
-    def eval_step(self, state: State, data: Batch) -> Tuple[torch.Tensor, torch.Tensor]:
+    def eval_step(self, state: State, data: Batch) -> StepOutput:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -46,20 +48,20 @@ class DummyEvalUnit(EvalUnit[Batch]):
         return loss, outputs
 
 
-class DummyPredictUnit(PredictUnit[Batch]):
+class DummyPredictUnit(PredictUnit[Batch, PredictStepOutput]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module
         self.module = nn.Linear(input_dim, 2)
 
-    def predict_step(self, state: State, data: Batch) -> torch.Tensor:
+    def predict_step(self, state: State, data: Batch) -> PredictStepOutput:
         inputs, targets = data
 
         outputs = self.module(inputs)
         return outputs
 
 
-class DummyTrainUnit(TrainUnit[Batch]):
+class DummyTrainUnit(TrainUnit[Batch, StepOutput]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module, loss_fn, & optimizer
@@ -67,9 +69,7 @@ class DummyTrainUnit(TrainUnit[Batch]):
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
 
-    def train_step(
-        self, state: State, data: Batch
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def train_step(self, state: State, data: Batch) -> StepOutput:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -82,7 +82,7 @@ class DummyTrainUnit(TrainUnit[Batch]):
         return loss, outputs
 
 
-class DummyFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
+class DummyFitUnit(TrainUnit[Batch, StepOutput], EvalUnit[Batch, StepOutput]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
         # initialize module, loss_fn, & optimizer
@@ -90,9 +90,7 @@ class DummyFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(self.module.parameters(), lr=0.01)
 
-    def train_step(
-        self, state: State, data: Batch
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def train_step(self, state: State, data: Batch) -> StepOutput:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -104,7 +102,7 @@ class DummyFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
 
         return loss, outputs
 
-    def eval_step(self, state: State, data: Batch) -> Tuple[torch.Tensor, torch.Tensor]:
+    def eval_step(self, state: State, data: Batch) -> StepOutput:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -147,7 +145,7 @@ def generate_random_iterable_dataloader(
     )
 
 
-class DummyAutoUnit(AutoUnit[Batch]):
+class DummyAutoUnit(AutoUnit[Batch, object]):
     def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, object]:
         inputs, targets = data
         outputs = self.module(inputs)

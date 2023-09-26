@@ -179,7 +179,12 @@ class TrainTest(unittest.TestCase):
         )
 
     def test_train_data_iter_step(self) -> None:
-        class TrainIteratorUnit(TrainUnit[Iterator[Tuple[torch.Tensor, torch.Tensor]]]):
+        class TrainIteratorUnit(
+            TrainUnit[
+                Iterator[Tuple[torch.Tensor, torch.Tensor]],
+                Tuple[torch.Tensor, torch.Tensor],
+            ]
+        ):
             def __init__(self, input_dim: int) -> None:
                 super().__init__()
                 self.module = nn.Linear(input_dim, 2)
@@ -263,9 +268,10 @@ class TrainTest(unittest.TestCase):
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+StepOutput = torch.Tensor
 
 
-class StopTrainUnit(TrainUnit[Batch]):
+class StopTrainUnit(TrainUnit[Batch, StepOutput]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
         super().__init__()
         # initialize module, loss_fn, & optimizer
@@ -275,7 +281,7 @@ class StopTrainUnit(TrainUnit[Batch]):
         self.steps_processed = 0
         self.steps_before_stopping = steps_before_stopping
 
-    def train_step(self, state: State, data: Batch) -> torch.Tensor:
+    def train_step(self, state: State, data: Batch) -> StepOutput:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -295,6 +301,3 @@ class StopTrainUnit(TrainUnit[Batch]):
         self.steps_processed += 1
         # pyre-fixme[7]: Expected `Tensor` but got `Tuple[typing.Any, typing.Any]`.
         return loss, outputs
-
-
-Batch = Tuple[torch.Tensor, torch.Tensor]

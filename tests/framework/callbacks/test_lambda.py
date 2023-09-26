@@ -28,7 +28,7 @@ from torchtnt.framework.unit import TrainUnit
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
-class DummyTrainExceptUnit(TrainUnit[Batch]):
+class DummyTrainExceptUnit(TrainUnit[Batch, None]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
 
