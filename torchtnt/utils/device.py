@@ -125,6 +125,7 @@ def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any
 
 def record_data_in_stream(data: T, stream: torch.cuda.streams.Stream) -> None:
     """
+    Records the tensor element on certain streams, to avoid memory from being reused for another tensor.
     As mentioned in
     https://pytorch.org/docs/stable/generated/torch.Tensor.record_stream.html, PyTorch
     uses the "caching allocator" for memory allocation for tensors. When a tensor is

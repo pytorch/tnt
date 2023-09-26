@@ -56,6 +56,7 @@ from .rank_zero_log import (
     rank_zero_warn,
 )
 from .stateful import Stateful
+from .test_utils import get_pet_launch_config, spawn_multi_process
 from .timer import FullSyncPeriodicTimer, get_timer_summary, log_elapsed_time, Timer
 from .tqdm import close_progress_bar, create_progress_bar, update_progress_bar
 from .version import (
@@ -143,4 +144,6 @@ __all__ = [
     "is_torch_version_geq_1_9",
     "is_torch_version_geq_2_0",
     "is_windows",
+    "get_pet_launch_config",
+    "spawn_multi_process",
 ]
