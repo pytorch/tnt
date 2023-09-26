@@ -23,6 +23,16 @@ def create_progress_bar(
     max_steps: Optional[int],
     max_steps_per_epoch: Optional[int],
 ) -> tqdm:
+    """Constructs a :func:`tqdm` progress bar. The number of steps in an epoch is inferred from the dataloader, num_steps_completed, max_steps and max_steps_per_epoch.
+
+    Args:
+        dataloader: an iterable of data, used to infer number of steps in an epoch.
+        desc: a description for the progress bar.
+        num_epochs_completed: an integer for the number of epochs completed so far int he loop.
+        num_steps_completed: an integer for the number of steps completed so far in the loop.
+        max_steps: an optional integer for the number of max steps in the loop.
+        max_steps_per_epoch: an optional integer for the number of max steps per epoch.
+    """
     current_epoch = num_epochs_completed
     total = estimated_steps_in_epoch(
         dataloader,
@@ -41,6 +51,7 @@ def create_progress_bar(
 def update_progress_bar(
     progress_bar: tqdm, num_steps_completed: int, refresh_rate: int
 ) -> None:
+    """Updates a progress bar to reflect the number of steps completed."""
     if num_steps_completed % refresh_rate == 0:
         progress_bar.update(refresh_rate)
 
@@ -48,6 +59,7 @@ def update_progress_bar(
 def close_progress_bar(
     progress_bar: tqdm, num_steps_completed: int, refresh_rate: int
 ) -> None:
+    """Updates and closes a progress bar."""
     # complete remaining progress in bar
     progress_bar.update(num_steps_completed % refresh_rate)
     progress_bar.close()

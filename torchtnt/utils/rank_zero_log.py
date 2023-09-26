@@ -17,6 +17,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 def rank_zero_print(*args: Any, **kwargs: Any) -> None:
+    """Call print function only from rank 0."""
     if get_global_rank() != 0:
         return
     print(*args, **kwargs)
@@ -25,6 +26,7 @@ def rank_zero_print(*args: Any, **kwargs: Any) -> None:
 def rank_zero_debug(
     *args: Any, logger: Optional[logging.Logger] = None, **kwargs: Any
 ) -> None:
+    """Log debug message only from rank 0."""
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
@@ -36,6 +38,7 @@ def rank_zero_debug(
 def rank_zero_info(
     *args: Any, logger: Optional[logging.Logger] = None, **kwargs: Any
 ) -> None:
+    """Log info message only from rank 0."""
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
@@ -47,6 +50,7 @@ def rank_zero_info(
 def rank_zero_warn(
     *args: Any, logger: Optional[logging.Logger] = None, **kwargs: Any
 ) -> None:
+    """Log warn message only from rank 0."""
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
@@ -58,6 +62,7 @@ def rank_zero_warn(
 def rank_zero_error(
     *args: Any, logger: Optional[logging.Logger] = None, **kwargs: Any
 ) -> None:
+    """Log error message only from rank 0."""
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
@@ -69,6 +74,7 @@ def rank_zero_error(
 def rank_zero_critical(
     *args: Any, logger: Optional[logging.Logger] = None, **kwargs: Any
 ) -> None:
+    """Log critical message only from rank 0."""
     if get_global_rank() != 0:
         return
     logger = logger or _LOGGER
