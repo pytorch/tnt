@@ -20,6 +20,7 @@ from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTra
 from torchtnt.framework.utils import _construct_tracked_optimizers, get_timing_context
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.fsspec import get_filesystem
+from torchtnt.utils.optimizer import init_optim_state
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import Stateful
 
@@ -229,6 +230,11 @@ class TorchSnapshotSaver(Callback):
         """
 
         _validate_snapshot_available()
+
+        # initialize optimizer state skeletons for in-place loading of optimizer state with torchsnapshot
+        for optimizer in unit.tracked_optimizers().values():
+            init_optim_state(optimizer)
+
         app_state = _app_state(unit)
         _check_app_state_collision(app_state)
 

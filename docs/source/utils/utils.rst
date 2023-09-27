@@ -168,6 +168,17 @@ OOM Utils
    attach_oom_observer
 
 
+Optimizer Utils
+~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: torchtnt.utils.optimizer
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   init_optim_state
+
+
 Precision Utils
 ~~~~~~~~~~~~~~~~~~~~~
 
