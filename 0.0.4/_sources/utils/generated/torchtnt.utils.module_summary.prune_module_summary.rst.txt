@@ -1,0 +1,6 @@
+﻿torchtnt.utils.module\_summary.prune\_module\_summary
+=====================================================
+
+.. currentmodule:: torchtnt.utils.module_summary
+
+.. autofunction:: prune_module_summary

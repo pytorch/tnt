@@ -1,0 +1,6 @@
+﻿torchtnt.utils.tqdm.close\_progress\_bar
+========================================
+
+.. currentmodule:: torchtnt.utils.tqdm
+
+.. autofunction:: close_progress_bar

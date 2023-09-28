@@ -1,10 +1,22 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.data.RoundRobinIterator
+======================================
+
 .. currentmodule:: torchtnt.utils.data
 
-
-RoundRobinIterator
-==================
-
 .. autoclass:: RoundRobinIterator
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RoundRobinIterator.__init__
+   
+   
+
+   
+   
+   

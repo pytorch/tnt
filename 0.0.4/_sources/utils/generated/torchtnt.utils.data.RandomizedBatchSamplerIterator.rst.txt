@@ -1,10 +1,22 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.data.RandomizedBatchSamplerIterator
+==================================================
+
 .. currentmodule:: torchtnt.utils.data
 
-
-RandomizedBatchSamplerIterator
-==============================
-
 .. autoclass:: RandomizedBatchSamplerIterator
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RandomizedBatchSamplerIterator.__init__
+   
+   
+
+   
+   
+   

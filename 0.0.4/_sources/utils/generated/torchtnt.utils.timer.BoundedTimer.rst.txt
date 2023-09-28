@@ -1,0 +1,30 @@
+﻿torchtnt.utils.timer.BoundedTimer
+=================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autoclass:: BoundedTimer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BoundedTimer.__init__
+      ~BoundedTimer.reset
+      ~BoundedTimer.time
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BoundedTimer.recorded_durations
+   
+   

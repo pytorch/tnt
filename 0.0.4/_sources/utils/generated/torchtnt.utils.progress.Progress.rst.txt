@@ -1,0 +1,34 @@
+﻿torchtnt.utils.progress.Progress
+================================
+
+.. currentmodule:: torchtnt.utils.progress
+
+.. autoclass:: Progress
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Progress.__init__
+      ~Progress.increment_epoch
+      ~Progress.increment_step
+      ~Progress.load_state_dict
+      ~Progress.state_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Progress.num_epochs_completed
+      ~Progress.num_steps_completed
+      ~Progress.num_steps_completed_in_epoch
+   
+   

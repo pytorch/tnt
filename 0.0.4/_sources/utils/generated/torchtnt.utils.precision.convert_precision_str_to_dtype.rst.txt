@@ -1,0 +1,6 @@
+﻿torchtnt.utils.precision.convert\_precision\_str\_to\_dtype
+===========================================================
+
+.. currentmodule:: torchtnt.utils.precision
+
+.. autofunction:: convert_precision_str_to_dtype

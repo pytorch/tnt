@@ -1,10 +1,22 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.data.AllDatasetBatchesIterator
+=============================================
+
 .. currentmodule:: torchtnt.utils.data
 
-
-AllDatasetBatchesIterator
-=========================
-
 .. autoclass:: AllDatasetBatchesIterator
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AllDatasetBatchesIterator.__init__
+   
+   
+
+   
+   
+   

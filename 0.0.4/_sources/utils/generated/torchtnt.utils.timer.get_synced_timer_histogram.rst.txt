@@ -1,0 +1,6 @@
+﻿torchtnt.utils.timer.get\_synced\_timer\_histogram
+==================================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autofunction:: get_synced_timer_histogram

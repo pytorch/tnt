@@ -1,0 +1,6 @@
+﻿torchtnt.utils.version.get\_python\_version
+===========================================
+
+.. currentmodule:: torchtnt.utils.version
+
+.. autofunction:: get_python_version

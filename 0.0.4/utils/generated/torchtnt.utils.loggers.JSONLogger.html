@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>JSONLogger &mdash; TorchTNT 0.2.0 documentation</title>
+  <title>torchtnt.utils.loggers.JSONLogger &mdash; TorchTNT 0.2.1 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="TensorBoardLogger" href="torchtnt.utils.loggers.TensorBoardLogger.html" />
-    <link rel="prev" title="InMemoryLogger" href="torchtnt.utils.loggers.InMemoryLogger.html" />
+    <link rel="next" title="torchtnt.utils.loggers.TensorBoardLogger" href="torchtnt.utils.loggers.TensorBoardLogger.html" />
+    <link rel="prev" title="torchtnt.utils.loggers.InMemoryLogger" href="torchtnt.utils.loggers.InMemoryLogger.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -227,7 +227,7 @@
               
               
                 <div class="version">
-                  0.2.0
+                  0.2.1
                 </div>
               
             
@@ -277,9 +277,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../loggers.html">Loggers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../utils.html">Utils</a></li>
 </ul>
 
             
@@ -320,9 +318,9 @@
       </li>
 
         
-          <li><a href="../loggers.html">Loggers</a> &gt;</li>
+          <li><a href="../utils.html">Utils</a> &gt;</li>
         
-      <li>JSONLogger</li>
+      <li>torchtnt.utils.loggers.JSONLogger</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -358,8 +356,8 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="jsonlogger">
-<h1>JSONLogger<a class="headerlink" href="#jsonlogger" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="torchtnt-utils-loggers-jsonlogger">
+<h1>torchtnt.utils.loggers.JSONLogger<a class="headerlink" href="#torchtnt-utils-loggers-jsonlogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.JSONLogger">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">JSONLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">steps_before_flushing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em><span class="n"><span class="pre">log_all_ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.JSONLogger" title="Permalink to this definition">¶</a></dt>
@@ -378,12 +376,38 @@
 </tbody>
 </table>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.JSONLogger.close">
-<code class="sig-name descname"><span class="pre">close</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.JSONLogger.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close log resource, flushing if necessary.
-Logs should not be written after <cite>close</cite> is called.</p>
-</dd></dl>
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.JSONLogger.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">steps_before_flushing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em><span class="n"><span class="pre">log_all_ranks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.JSONLogger.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
+<p class="rubric">Methods</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.loggers.JSONLogger.__init__" title="torchtnt.utils.loggers.JSONLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path[,&nbsp;steps_before_flushing,&nbsp;...])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>()</td>
+<td>Close log resource, flushing if necessary.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">flush</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code>(name,&nbsp;data,&nbsp;step)</td>
+<td>Log scalar data to file.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_dict</span></code>(payload,&nbsp;step)</td>
+<td>Add multiple scalar values.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -396,10 +420,10 @@ Logs should not be written after <cite>close</cite> is called.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.utils.loggers.TensorBoardLogger.html" class="btn btn-neutral float-right" title="TensorBoardLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.loggers.TensorBoardLogger.html" class="btn btn-neutral float-right" title="torchtnt.utils.loggers.TensorBoardLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.utils.loggers.InMemoryLogger.html" class="btn btn-neutral" title="InMemoryLogger" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.utils.loggers.InMemoryLogger.html" class="btn btn-neutral" title="torchtnt.utils.loggers.InMemoryLogger" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -431,7 +455,7 @@ Logs should not be written after <cite>close</cite> is called.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">JSONLogger</a></li>
+<li><a class="reference internal" href="#">torchtnt.utils.loggers.JSONLogger</a></li>
 </ul>
 
             </div>

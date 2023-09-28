@@ -1,0 +1,6 @@
+﻿torchtnt.utils.timer.get\_durations\_histogram
+==============================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autofunction:: get_durations_histogram

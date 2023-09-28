@@ -1,0 +1,30 @@
+﻿torchtnt.utils.timer.TimerProtocol
+==================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autoclass:: TimerProtocol
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TimerProtocol.__init__
+      ~TimerProtocol.reset
+      ~TimerProtocol.time
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TimerProtocol.recorded_durations
+   
+   

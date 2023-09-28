@@ -1,0 +1,6 @@
+﻿torchtnt.utils.device.copy\_data\_to\_device
+============================================
+
+.. currentmodule:: torchtnt.utils.device
+
+.. autofunction:: copy_data_to_device

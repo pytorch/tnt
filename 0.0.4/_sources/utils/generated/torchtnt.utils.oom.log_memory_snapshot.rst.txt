@@ -1,0 +1,6 @@
+﻿torchtnt.utils.oom.log\_memory\_snapshot
+========================================
+
+.. currentmodule:: torchtnt.utils.oom
+
+.. autofunction:: log_memory_snapshot

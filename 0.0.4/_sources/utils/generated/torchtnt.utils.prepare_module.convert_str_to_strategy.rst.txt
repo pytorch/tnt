@@ -1,0 +1,6 @@
+﻿torchtnt.utils.prepare\_module.convert\_str\_to\_strategy
+=========================================================
+
+.. currentmodule:: torchtnt.utils.prepare_module
+
+.. autofunction:: convert_str_to_strategy

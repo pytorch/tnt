@@ -1,0 +1,6 @@
+﻿torchtnt.utils.timer.log\_elapsed\_time
+=======================================
+
+.. currentmodule:: torchtnt.utils.timer
+
+.. autofunction:: log_elapsed_time

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Distributed training &mdash; TorchTNT 0.2.0 documentation</title>
+  <title>Distributed training &mdash; TorchTNT 0.2.1 documentation</title>
   
 
   
@@ -227,7 +227,7 @@
               
               
                 <div class="version">
-                  0.2.0
+                  0.2.1
                 </div>
               
             
@@ -278,8 +278,6 @@
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="utils/utils.html">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils/data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils/loggers.html">Loggers</a></li>
 </ul>
 
             
@@ -359,7 +357,7 @@
   <div class="section" id="distributed-training">
 <h1>Distributed training<a class="headerlink" href="#distributed-training" title="Permalink to this heading">¶</a></h1>
 <p>The core TNT framework makes no assumptions about distributed training or devices, and expects the user to handle configuring distributed training on their own. As a convenience, the framework offers the <a class="reference internal" href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit" title="torchtnt.framework.auto_unit.AutoUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoUnit</span></code></a> for users who prefer for this to be handled automatically. The framework-provided checkpointing callbacks handle distributed model checkpointing and loading.</p>
-<p>If you are using the the <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a>/ <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>/ <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> interface, you are expected to initialize the CUDA device, if applicable, along with the global process group from torch.distributed. We offer a convenience function <a class="reference internal" href="utils/utils.html#torchtnt.utils.init_from_env" title="torchtnt.utils.init_from_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">init_from_env()</span></code></a> that works with TorchElastic to automatically handle these settings for you, which you should invoke at the beginning of your script.</p>
+<p>If you are using the the <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a>/ <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>/ <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> interface, you are expected to initialize the CUDA device, if applicable, along with the global process group from torch.distributed. We offer a convenience function <code class="xref py py-func docutils literal notranslate"><span class="pre">init_from_env()</span></code> that works with TorchElastic to automatically handle these settings for you, which you should invoke at the beginning of your script.</p>
 <div class="section" id="distributed-data-parallel">
 <h2>Distributed Data Parallel<a class="headerlink" href="#distributed-data-parallel" title="Permalink to this heading">¶</a></h2>
 <p>If you are using the the <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a>/ <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>/ <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> interface, <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html" target="_blank">DDP</a> can be simply be wrapped around your model like so:</p>
@@ -372,7 +370,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">DistributedDataParallel</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="n">device_ids</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We also offer <a class="reference internal" href="utils/utils.html#torchtnt.utils.prepare_ddp" title="torchtnt.utils.prepare_ddp"><code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_ddp()</span></code></a> which can assist in wrapping the model for you.</p>
+<p>We also offer <code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_ddp()</span></code> which can assist in wrapping the model for you.</p>
 <p>The <a class="reference internal" href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit" title="torchtnt.framework.auto_unit.AutoUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoUnit</span></code></a> automatically wraps the module in DDP when either</p>
 <ol class="arabic">
 <li><p class="first">The string <code class="docutils literal notranslate"><span class="pre">ddp</span></code> is passed in the strategy argument</p>
@@ -383,7 +381,7 @@
 </div>
 </div></blockquote>
 </li>
-<li><p class="first">The dataclass <a class="reference internal" href="utils/utils.html#torchtnt.utils.DDPStrategy" title="torchtnt.utils.DDPStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DDPStrategy</span></code></a> is passed in to the strategy argument. This is helpful when wanting to customize the settings in DDP</p>
+<li><p class="first">The dataclass <code class="xref py py-class docutils literal notranslate"><span class="pre">DDPStrategy</span></code> is passed in to the strategy argument. This is helpful when wanting to customize the settings in DDP</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">ddp_strategy</span> <span class="o">=</span> <span class="n">DDPStrategy</span><span class="p">(</span><span class="n">broadcast_buffers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">check_reduction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -405,7 +403,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">fsdp</span><span class="o">.</span><span class="n">FullyShardedDataParallel</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device_id</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We also offer <a class="reference internal" href="utils/utils.html#torchtnt.utils.prepare_fsdp" title="torchtnt.utils.prepare_fsdp"><code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_fsdp()</span></code></a> which can assist in wrapping the model for you.</p>
+<p>We also offer <code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_fsdp()</span></code> which can assist in wrapping the model for you.</p>
 <p>The <a class="reference internal" href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit" title="torchtnt.framework.auto_unit.AutoUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoUnit</span></code></a> automatically wraps the module in FSDP when either</p>
 <ol class="arabic">
 <li><p class="first">The string <code class="docutils literal notranslate"><span class="pre">fsdp</span></code> is passed in the strategy argument</p>
@@ -416,7 +414,7 @@
 </div>
 </div></blockquote>
 </li>
-<li><p class="first">The dataclass <a class="reference internal" href="utils/utils.html#torchtnt.utils.FSDPStrategy" title="torchtnt.utils.FSDPStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSDPStrategy</span></code></a> is passed in to the strategy argument. This is helpful when wanting to customize the settings in FSDP</p>
+<li><p class="first">The dataclass <code class="xref py py-class docutils literal notranslate"><span class="pre">FSDPStrategy</span></code> is passed in to the strategy argument. This is helpful when wanting to customize the settings in FSDP</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">fsdp_strategy</span> <span class="o">=</span> <span class="n">FSDPStrategy</span><span class="p">(</span><span class="n">forward_prefetch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">limit_all_gathers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

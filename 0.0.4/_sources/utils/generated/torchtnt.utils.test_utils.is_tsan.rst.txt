@@ -1,0 +1,6 @@
+﻿torchtnt.utils.test\_utils.is\_tsan
+===================================
+
+.. currentmodule:: torchtnt.utils.test_utils
+
+.. autofunction:: is_tsan

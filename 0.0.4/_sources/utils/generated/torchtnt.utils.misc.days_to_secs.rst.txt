@@ -1,0 +1,6 @@
+﻿torchtnt.utils.misc.days\_to\_secs
+==================================
+
+.. currentmodule:: torchtnt.utils.misc
+
+.. autofunction:: days_to_secs

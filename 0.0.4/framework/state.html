@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>State &mdash; TorchTNT 0.2.0 documentation</title>
+  <title>State &mdash; TorchTNT 0.2.1 documentation</title>
   
 
   
@@ -227,7 +227,7 @@
               
               
                 <div class="version">
-                  0.2.0
+                  0.2.1
                 </div>
               
             
@@ -278,8 +278,6 @@
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../utils/utils.html">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utils/data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utils/loggers.html">Loggers</a></li>
 </ul>
 
             
@@ -360,7 +358,7 @@
 <h1>State<a class="headerlink" href="#state" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.framework.state.State">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.state.</span></code><code class="sig-name descname"><span class="pre">State</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">entry_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EntryPoint</span></span></em>, <em><span class="n"><span class="pre">timer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">TimerProtocol</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">train_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.framework.state.PhaseState" title="torchtnt.framework.state.PhaseState"><span class="pre">PhaseState</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">eval_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.framework.state.PhaseState" title="torchtnt.framework.state.PhaseState"><span class="pre">PhaseState</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">predict_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.framework.state.PhaseState" title="torchtnt.framework.state.PhaseState"><span class="pre">PhaseState</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.state.State" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.state.</span></code><code class="sig-name descname"><span class="pre">State</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">entry_point</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">EntryPoint</span></span></em>, <em><span class="n"><span class="pre">timer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../utils/generated/torchtnt.utils.timer.TimerProtocol.html#torchtnt.utils.timer.TimerProtocol" title="torchtnt.utils.timer.TimerProtocol"><span class="pre">TimerProtocol</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">train_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.framework.state.PhaseState" title="torchtnt.framework.state.PhaseState"><span class="pre">PhaseState</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">eval_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.framework.state.PhaseState" title="torchtnt.framework.state.PhaseState"><span class="pre">PhaseState</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">predict_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#torchtnt.framework.state.PhaseState" title="torchtnt.framework.state.PhaseState"><span class="pre">PhaseState</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.framework.state.State" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parent State class which can contain up to 3 instances of PhaseState, for the 3 phases.
 Modified by the framework, read-only for the user.</p>
 <dl class="py property">
@@ -401,7 +399,7 @@ Modified by the framework, read-only for the user.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="torchtnt.framework.state.State.timer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">timer</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">TimerProtocol</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.framework.state.State.timer" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">timer</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../utils/generated/torchtnt.utils.timer.TimerProtocol.html#torchtnt.utils.timer.TimerProtocol" title="torchtnt.utils.timer.TimerProtocol"><span class="pre">TimerProtocol</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.framework.state.State.timer" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">TimerProtocol</span></code> object which can be used for debugging to record latencies of key events during loop execution.</p>
 </dd></dl>
 
@@ -436,6 +434,12 @@ Modified by the framework, read-only for the user.</p>
 <dt class="sig sig-object py" id="torchtnt.framework.state.PhaseState.evaluate_every_n_steps">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">evaluate_every_n_steps</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#torchtnt.framework.state.PhaseState.evaluate_every_n_steps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Frequency with which to evaluate in terms of training steps, when running <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code>. Defined by the user.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="torchtnt.framework.state.PhaseState.iteration_timer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><code class="sig-name descname"><span class="pre">iteration_timer</span></code><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../utils/generated/torchtnt.utils.timer.TimerProtocol.html#torchtnt.utils.timer.TimerProtocol" title="torchtnt.utils.timer.TimerProtocol"><span class="pre">TimerProtocol</span></a></em><a class="headerlink" href="#torchtnt.framework.state.PhaseState.iteration_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>An always-on <code class="xref py py-class docutils literal notranslate"><span class="pre">TimerProtocol</span></code> object which contains CPU timings (without synchronisation) of the iterations.</p>
 </dd></dl>
 
 <dl class="py property">

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TensorBoardLogger &mdash; TorchTNT 0.2.0 documentation</title>
+  <title>torchtnt.utils.loggers.TensorBoardLogger &mdash; TorchTNT 0.2.1 documentation</title>
   
 
   
@@ -33,7 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="prev" title="JSONLogger" href="torchtnt.utils.loggers.JSONLogger.html" />
+    <link rel="next" title="torchtnt.utils.memory.RSSProfiler" href="torchtnt.utils.memory.RSSProfiler.html" />
+    <link rel="prev" title="torchtnt.utils.loggers.JSONLogger" href="torchtnt.utils.loggers.JSONLogger.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -226,7 +227,7 @@
               
               
                 <div class="version">
-                  0.2.0
+                  0.2.1
                 </div>
               
             
@@ -276,9 +277,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utils</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../data.html">Data</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../loggers.html">Loggers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../utils.html">Utils</a></li>
 </ul>
 
             
@@ -319,9 +318,9 @@
       </li>
 
         
-          <li><a href="../loggers.html">Loggers</a> &gt;</li>
+          <li><a href="../utils.html">Utils</a> &gt;</li>
         
-      <li>TensorBoardLogger</li>
+      <li>torchtnt.utils.loggers.TensorBoardLogger</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -357,8 +356,8 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="tensorboardlogger">
-<h1>TensorBoardLogger<a class="headerlink" href="#tensorboardlogger" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="torchtnt-utils-loggers-tensorboardlogger">
+<h1>torchtnt.utils.loggers.TensorBoardLogger<a class="headerlink" href="#torchtnt-utils-loggers-tensorboardlogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">TensorBoardLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger" title="Permalink to this definition">¶</a></dt>
@@ -370,6 +369,7 @@ logger will only log if RANK = 0.</p>
 <p class="first admonition-title">Note</p>
 <p>If using this logger with distributed training:</p>
 <ul class="last simple">
+<li>This logger should be constructed on all ranks</li>
 <li>This logger can call collective operations</li>
 <li>Logs will be written on rank 0 only</li>
 <li>Logger must be constructed synchronously <em>after</em> initializing the distributed process group.</li>
@@ -396,146 +396,59 @@ logger will only log if RANK = 0.</p>
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.close">
-<code class="sig-name descname"><span class="pre">close</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close writer, flushing pending logs to disk.
-Logs cannot be written after <cite>close</cite> is called.</p>
-</dd></dl>
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.flush">
-<code class="sig-name descname"><span class="pre">flush</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.flush" title="Permalink to this definition">¶</a></dt>
-<dd><p>Writes pending logs to disk.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log">
-<code class="sig-name descname"><span class="pre">log</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add scalar data to TensorBoard.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
+<p class="rubric">Methods</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<em>string</em>) – tag name used to group scalars</li>
-<li><strong>data</strong> (<em>float/int/Tensor</em>) – scalar data to log</li>
-<li><strong>step</strong> (<em>int</em>) – step value to record</li>
-</ul>
-</td>
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.loggers.TensorBoardLogger.__init__" title="torchtnt.utils.loggers.TensorBoardLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path,&nbsp;*args,&nbsp;**kwargs)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>()</td>
+<td>Close writer, flushing pending logs to disk.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">flush</span></code>()</td>
+<td>Writes pending logs to disk.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code>(name,&nbsp;data,&nbsp;step)</td>
+<td>Add scalar data to TensorBoard.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_audio</span></code>(*args,&nbsp;**kwargs)</td>
+<td>Add audio data to TensorBoard.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_dict</span></code>(payload,&nbsp;step)</td>
+<td>Add multiple scalar values to TensorBoard.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_hparams</span></code>(hparams,&nbsp;metrics)</td>
+<td>Add hyperparameter data to TensorBoard.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_image</span></code>(*args,&nbsp;**kwargs)</td>
+<td>Add image data to TensorBoard.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_images</span></code>(*args,&nbsp;**kwargs)</td>
+<td>Add batched image data to summary.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_scalars</span></code>(main_tag,&nbsp;tag_scalar_dict[,&nbsp;...])</td>
+<td>Log multiple values to TensorBoard.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_text</span></code>(name,&nbsp;data,&nbsp;step)</td>
+<td>Add text data to summary.</td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_audio">
-<code class="sig-name descname"><span class="pre">log_audio</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_audio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add audio data to TensorBoard.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
+<p class="rubric">Attributes</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>*args</strong> (<em>Any</em>) – Positional arguments passed to SummaryWriter.add_audio</li>
-<li><strong>**kwargs</strong> (<em>Any</em>) – Keyword arguments passed to SummaryWriter.add_audio</li>
-</ul>
-</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">path</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">writer</span></code></td>
+<td></td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_dict">
-<code class="sig-name descname"><span class="pre">log_dict</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add multiple scalar values to TensorBoard.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>payload</strong> (<em>dict</em>) – dictionary of tag name and scalar value</li>
-<li><strong>step</strong> (<em>int</em>) – step value to record</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_hparams">
-<code class="sig-name descname"><span class="pre">log_hparams</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">hparams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" target="_blank" title="(in PyTorch v2.0)"><span class="pre">Tensor</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_hparams" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add hyperparameter data to TensorBoard.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>hparams</strong> (<em>dict</em>) – dictionary of hyperparameter names and corresponding values</li>
-<li><strong>metrics</strong> (<em>dict</em>) – dictionary of name of metric and corresponding values</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_image">
-<code class="sig-name descname"><span class="pre">log_image</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add image data to TensorBoard.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>*args</strong> (<em>Any</em>) – Positional arguments passed to SummaryWriter.add_image</li>
-<li><strong>**kwargs</strong> (<em>Any</em>) – Keyword arguments passed to SummaryWriter.add_image</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_images">
-<code class="sig-name descname"><span class="pre">log_images</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_images" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add batched image data to summary.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>*args</strong> (<em>Any</em>) – Positional arguments passed to SummaryWriter.add_images</li>
-<li><strong>**kwargs</strong> (<em>Any</em>) – Keyword arguments passed to SummaryWriter.add_images</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.log_text">
-<code class="sig-name descname"><span class="pre">log_text</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.log_text" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add text data to summary.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<em>string</em>) – tag name used to identify data</li>
-<li><strong>data</strong> (<em>string</em>) – string to save</li>
-<li><strong>step</strong> (<em>int</em>) – step value to record</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -548,8 +461,10 @@ Logs cannot be written after <cite>close</cite> is called.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="torchtnt.utils.memory.RSSProfiler.html" class="btn btn-neutral float-right" title="torchtnt.utils.memory.RSSProfiler" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
-        <a href="torchtnt.utils.loggers.JSONLogger.html" class="btn btn-neutral" title="JSONLogger" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+        <a href="torchtnt.utils.loggers.JSONLogger.html" class="btn btn-neutral" title="torchtnt.utils.loggers.JSONLogger" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -581,7 +496,7 @@ Logs cannot be written after <cite>close</cite> is called.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">TensorBoardLogger</a></li>
+<li><a class="reference internal" href="#">torchtnt.utils.loggers.TensorBoardLogger</a></li>
 </ul>
 
             </div>

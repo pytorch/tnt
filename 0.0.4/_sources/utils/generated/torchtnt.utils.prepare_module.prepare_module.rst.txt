@@ -1,0 +1,6 @@
+﻿torchtnt.utils.prepare\_module.prepare\_module
+==============================================
+
+.. currentmodule:: torchtnt.utils.prepare_module
+
+.. autofunction:: prepare_module

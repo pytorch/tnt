@@ -1,10 +1,22 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.data.MultiIterator
+=================================
+
 .. currentmodule:: torchtnt.utils.data
 
-
-MultiIterator
-=============
-
 .. autoclass:: MultiIterator
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiIterator.__init__
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.barrier
+==================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: barrier

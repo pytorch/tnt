@@ -1,0 +1,6 @@
+﻿torchtnt.utils.device.record\_data\_in\_stream
+==============================================
+
+.. currentmodule:: torchtnt.utils.device
+
+.. autofunction:: record_data_in_stream

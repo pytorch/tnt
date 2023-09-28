@@ -1,0 +1,6 @@
+﻿torchtnt.utils.distributed.get\_world\_size
+===========================================
+
+.. currentmodule:: torchtnt.utils.distributed
+
+.. autofunction:: get_world_size

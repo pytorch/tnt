@@ -1,10 +1,22 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.data.InOrderIterator
+===================================
+
 .. currentmodule:: torchtnt.utils.data
 
-
-InOrderIterator
-===============
-
 .. autoclass:: InOrderIterator
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InOrderIterator.__init__
+   
+   
+
+   
+   
+   

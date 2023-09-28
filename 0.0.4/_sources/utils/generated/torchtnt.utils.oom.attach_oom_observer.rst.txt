@@ -1,0 +1,6 @@
+﻿torchtnt.utils.oom.attach\_oom\_observer
+========================================
+
+.. currentmodule:: torchtnt.utils.oom
+
+.. autofunction:: attach_oom_observer

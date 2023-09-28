@@ -1,0 +1,6 @@
+﻿torchtnt.utils.oom.is\_out\_of\_memory\_error
+=============================================
+
+.. currentmodule:: torchtnt.utils.oom
+
+.. autofunction:: is_out_of_memory_error

@@ -1,0 +1,6 @@
+﻿torchtnt.utils.optimizer.init\_optim\_state
+===========================================
+
+.. currentmodule:: torchtnt.utils.optimizer
+
+.. autofunction:: init_optim_state

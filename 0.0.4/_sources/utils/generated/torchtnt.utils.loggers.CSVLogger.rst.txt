@@ -1,10 +1,32 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.loggers.CSVLogger
+================================
+
 .. currentmodule:: torchtnt.utils.loggers
 
-
-CSVLogger
-=========
-
 .. autoclass:: CSVLogger
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CSVLogger.__init__
+      ~CSVLogger.close
+      ~CSVLogger.flush
+      ~CSVLogger.log
+      ~CSVLogger.log_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CSVLogger.path
+   
+   

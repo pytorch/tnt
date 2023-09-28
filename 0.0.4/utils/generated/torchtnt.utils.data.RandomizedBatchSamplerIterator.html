@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RandomizedBatchSamplerIterator &mdash; TorchTNT 0.2.0 documentation</title>
+  <title>torchtnt.utils.data.RandomizedBatchSamplerIterator &mdash; TorchTNT 0.2.1 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="RoundRobinIterator" href="torchtnt.utils.data.RoundRobinIterator.html" />
-    <link rel="prev" title="MultiIterator" href="torchtnt.utils.data.MultiIterator.html" />
+    <link rel="next" title="torchtnt.utils.data.RoundRobinIterator" href="torchtnt.utils.data.RoundRobinIterator.html" />
+    <link rel="prev" title="torchtnt.utils.data.MultiIterator" href="torchtnt.utils.data.MultiIterator.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -227,7 +227,7 @@
               
               
                 <div class="version">
-                  0.2.0
+                  0.2.1
                 </div>
               
             
@@ -277,9 +277,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Utils</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../utils.html">Utils</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../data.html">Data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../loggers.html">Loggers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../utils.html">Utils</a></li>
 </ul>
 
             
@@ -320,9 +318,9 @@
       </li>
 
         
-          <li><a href="../data.html">Data</a> &gt;</li>
+          <li><a href="../utils.html">Utils</a> &gt;</li>
         
-      <li>RandomizedBatchSamplerIterator</li>
+      <li>torchtnt.utils.data.RandomizedBatchSamplerIterator</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -358,8 +356,8 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="randomizedbatchsampleriterator">
-<h1>RandomizedBatchSamplerIterator<a class="headerlink" href="#randomizedbatchsampleriterator" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="torchtnt-utils-data-randomizedbatchsampleriterator">
+<h1>torchtnt.utils.data.RandomizedBatchSamplerIterator<a class="headerlink" href="#torchtnt-utils-data-randomizedbatchsampleriterator" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.data.RandomizedBatchSamplerIterator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">RandomizedBatchSamplerIterator</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RandomizedBatchSampler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.data.RandomizedBatchSamplerIterator" title="Permalink to this definition">¶</a></dt>
@@ -396,6 +394,19 @@ by setting another stopping mechanism.</p>
 <span class="go">{&#39;b&#39;: tensor([10, 11, 12, 13, 14])}</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.data.RandomizedBatchSamplerIterator.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">individual_dataloaders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">DataLoader</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">iteration_strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">RandomizedBatchSampler</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.data.RandomizedBatchSamplerIterator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.data.RandomizedBatchSamplerIterator.__init__" title="torchtnt.utils.data.RandomizedBatchSamplerIterator.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(individual_dataloaders,&nbsp;...)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -408,10 +419,10 @@ by setting another stopping mechanism.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.utils.data.RoundRobinIterator.html" class="btn btn-neutral float-right" title="RoundRobinIterator" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.data.RoundRobinIterator.html" class="btn btn-neutral float-right" title="torchtnt.utils.data.RoundRobinIterator" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.utils.data.MultiIterator.html" class="btn btn-neutral" title="MultiIterator" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.utils.data.MultiIterator.html" class="btn btn-neutral" title="torchtnt.utils.data.MultiIterator" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -443,7 +454,7 @@ by setting another stopping mechanism.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">RandomizedBatchSamplerIterator</a></li>
+<li><a class="reference internal" href="#">torchtnt.utils.data.RandomizedBatchSamplerIterator</a></li>
 </ul>
 
             </div>

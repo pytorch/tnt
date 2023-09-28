@@ -1,0 +1,6 @@
+﻿torchtnt.utils.tqdm.create\_progress\_bar
+=========================================
+
+.. currentmodule:: torchtnt.utils.tqdm
+
+.. autofunction:: create_progress_bar

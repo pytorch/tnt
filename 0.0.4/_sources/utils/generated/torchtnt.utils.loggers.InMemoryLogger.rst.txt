@@ -1,10 +1,32 @@
-﻿.. role:: hidden
-    :class: hidden-section
+﻿torchtnt.utils.loggers.InMemoryLogger
+=====================================
+
 .. currentmodule:: torchtnt.utils.loggers
 
-
-InMemoryLogger
-==============
-
 .. autoclass:: InMemoryLogger
-    :members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InMemoryLogger.__init__
+      ~InMemoryLogger.close
+      ~InMemoryLogger.flush
+      ~InMemoryLogger.log
+      ~InMemoryLogger.log_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InMemoryLogger.log_buffer
+   
+   
