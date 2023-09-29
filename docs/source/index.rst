@@ -99,6 +99,4 @@ Documentation
       :caption: Utils (Meta)
       :glob:
 
-      meta/utils/utils
-      meta/utils/data
-      meta/utils/loggers
+      meta/utils
