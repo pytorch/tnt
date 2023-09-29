@@ -7,15 +7,20 @@
 
 import ctypes
 import os
+
+import sys
 import unittest
 import uuid
+from contextlib import contextmanager
 from functools import wraps
+from io import StringIO
 from typing import Any, Callable, Dict, Optional, TypeVar
 
 import torch.distributed.launcher as pet
 from pyre_extensions import ParameterSpecification
 from torch import distributed as dist, multiprocessing
 from torch.distributed.elastic.utils.distributed import get_free_port
+
 
 TParams = ParameterSpecification("TParams")
 TReturn = TypeVar("TReturn")
@@ -133,3 +138,16 @@ def init_pg_and_rank_and_launch_test(
     dist.init_process_group(rank=rank, world_size=world_size, backend=backend)
     os.environ["LOCAL_RANK"] = str(rank)
     mp_output_dict[rank] = test_method(*args)  # pyre-fixme[29]
+
+
+@contextmanager
+def captured_output() -> None:
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        # pyre-fixme[7]: Expected `None` but got `Generator[Tuple[TextIO, TextIO],
+        #  typing.Any, typing.Any]`.
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
