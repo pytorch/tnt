@@ -5,13 +5,11 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import sys
 import unittest
 from collections import OrderedDict
-from contextlib import contextmanager
-from io import StringIO
 
 from torchtnt.utils.loggers.in_memory import InMemoryLogger
+from torchtnt.utils.test_utils import captured_output
 
 
 class InMemoryLoggerTest(unittest.TestCase):
@@ -47,16 +45,3 @@ class InMemoryLoggerTest(unittest.TestCase):
         # Closing the log clears the buffer.
         logger.close()
         self.assertEqual(logger.log_buffer, OrderedDict([]))
-
-
-@contextmanager
-def captured_output() -> None:
-    new_out, new_err = StringIO(), StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        # pyre-fixme[7]: Expected `None` but got `Generator[Tuple[TextIO, TextIO],
-        #  typing.Any, typing.Any]`.
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err

@@ -123,6 +123,7 @@ Logger Utils
    MetricLogger
    CSVLogger
    InMemoryLogger
+   StdoutLogger
    JSONLogger
    TensorBoardLogger
 

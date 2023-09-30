@@ -9,6 +9,7 @@ from .file import FileLogger
 from .in_memory import InMemoryLogger
 from .json import JSONLogger
 from .logger import MetricLogger, Scalar
+from .stdout import StdoutLogger
 from .tensorboard import TensorBoardLogger
 from .utils import scalar_to_float
 
@@ -20,6 +21,7 @@ __all__ = [
     "JSONLogger",
     "MetricLogger",
     "Scalar",
+    "StdoutLogger",
     "TensorBoardLogger",
     "scalar_to_float",
 ]
