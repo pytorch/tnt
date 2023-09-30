@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>torchtnt.utils.loggers.InMemoryLogger &mdash; TorchTNT master documentation</title>
+  <title>torchtnt.utils.loggers.StdoutLogger &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="torchtnt.utils.loggers.StdoutLogger" href="torchtnt.utils.loggers.StdoutLogger.html" />
-    <link rel="prev" title="torchtnt.utils.loggers.CSVLogger" href="torchtnt.utils.loggers.CSVLogger.html" />
+    <link rel="next" title="torchtnt.utils.loggers.JSONLogger" href="torchtnt.utils.loggers.JSONLogger.html" />
+    <link rel="prev" title="torchtnt.utils.loggers.InMemoryLogger" href="torchtnt.utils.loggers.InMemoryLogger.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -320,13 +320,13 @@
         
           <li><a href="../utils.html">Utils</a> &gt;</li>
         
-      <li>torchtnt.utils.loggers.InMemoryLogger</li>
+      <li>torchtnt.utils.loggers.StdoutLogger</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/utils/generated/torchtnt.utils.loggers.InMemoryLogger.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/utils/generated/torchtnt.utils.loggers.StdoutLogger.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -356,47 +356,55 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="torchtnt-utils-loggers-inmemorylogger">
-<h1>torchtnt.utils.loggers.InMemoryLogger<a class="headerlink" href="#torchtnt-utils-loggers-inmemorylogger" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="torchtnt-utils-loggers-stdoutlogger">
+<h1>torchtnt.utils.loggers.StdoutLogger<a class="headerlink" href="#torchtnt-utils-loggers-stdoutlogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.InMemoryLogger">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">InMemoryLogger</span></code><a class="headerlink" href="#torchtnt.utils.loggers.InMemoryLogger" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simple logger that buffers data in-memory.</p>
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.StdoutLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">StdoutLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchtnt.utils.loggers.StdoutLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logger that prints metrics to stdout on rank 0. Each step is logged on a different line.
+Metrics belonging to the same step will be printed in the order they were logged on
+the same line. Step number is treated as an opaque identifier, successive steps do
+not have to be consecutive, but it is generally good practice to make them so.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>precision</strong> (<em>int</em>) – The number of digits to print after the decimal point. The default value is</li>
+<li><strong>rules.</strong> (<em>set to 4. The output will be rounded per the usual rounding</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Example</p>
-<p>from torchtnt.utils.loggers import InMemoryLogger
-logger = InMemoryLogger()
-logger.log(“accuracy”, 23.56, 10)
-logger.close()</p>
+<p>from torchtnt.utils.loggers import StdoutLogger</p>
+<p>logger = StdoutLogger()
+logger.log(step=1, name=”accuracy”, data=0.982378)
+logger.log(step=1, name=”loss”, data=0.23112)
+logger.log_dict(step=2, payload={“accuracy”: 0.99123, “loss”: 0.18787})</p>
+<p>This will print the following to stdout in order:
+[Step 1] accuracy=0.9824, loss=0.2311
+[Step 2] accuracy=0.9912, loss=0.1879</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.utils.loggers.InMemoryLogger.__init__">
-<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.InMemoryLogger.__init__" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.utils.loggers.StdoutLogger.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.loggers.StdoutLogger.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
 <table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.loggers.InMemoryLogger.__init__" title="torchtnt.utils.loggers.InMemoryLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.loggers.StdoutLogger.__init__" title="torchtnt.utils.loggers.StdoutLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([precision])</td>
 <td></td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>()</td>
 <td>Close log resource, flushing if necessary.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">flush</span></code>()</td>
-<td></td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code>(name,&nbsp;data,&nbsp;step)</td>
+<td>Log scalar data.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code>(name,&nbsp;data,&nbsp;step)</td>
-<td>Log scalar data to the in-memory buffer.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_dict</span></code>(payload,&nbsp;step)</td>
-<td>Add multiple scalar values.</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Attributes</p>
-<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_buffer</span></code></td>
-<td>Directly access the buffer.</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_dict</span></code>(payload,&nbsp;step)</td>
+<td>Log multiple scalar values.</td>
 </tr>
 </tbody>
 </table>
@@ -412,10 +420,10 @@ logger.close()</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.utils.loggers.StdoutLogger.html" class="btn btn-neutral float-right" title="torchtnt.utils.loggers.StdoutLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.loggers.JSONLogger.html" class="btn btn-neutral float-right" title="torchtnt.utils.loggers.JSONLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.utils.loggers.CSVLogger.html" class="btn btn-neutral" title="torchtnt.utils.loggers.CSVLogger" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.utils.loggers.InMemoryLogger.html" class="btn btn-neutral" title="torchtnt.utils.loggers.InMemoryLogger" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -447,7 +455,7 @@ logger.close()</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">torchtnt.utils.loggers.InMemoryLogger</a></li>
+<li><a class="reference internal" href="#">torchtnt.utils.loggers.StdoutLogger</a></li>
 </ul>
 
             </div>

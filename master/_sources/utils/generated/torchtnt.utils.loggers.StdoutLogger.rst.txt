@@ -1,0 +1,25 @@
+﻿torchtnt.utils.loggers.StdoutLogger
+===================================
+
+.. currentmodule:: torchtnt.utils.loggers
+
+.. autoclass:: StdoutLogger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StdoutLogger.__init__
+      ~StdoutLogger.close
+      ~StdoutLogger.log
+      ~StdoutLogger.log_dict
+   
+   
+
+   
+   
+   
