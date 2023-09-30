@@ -57,7 +57,7 @@ def prepare_dataloader(
     )
 
 
-class MyTrainUnit(TrainUnit[Batch]):
+class MyTrainUnit(TrainUnit[Batch, None]):
     def __init__(
         self,
         module: torch.nn.Module,

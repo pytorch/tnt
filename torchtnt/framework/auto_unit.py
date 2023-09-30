@@ -7,7 +7,7 @@
 
 import contextlib
 from abc import ABCMeta, abstractmethod
-from typing import Any, Iterator, Optional, Tuple, TypeVar, Union
+from typing import Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
@@ -35,6 +35,7 @@ from typing_extensions import Literal
 
 
 TData = TypeVar("TData")
+TStepOutput = TypeVar("TStepOutput")
 
 
 class _ConfigureOptimizersCaller(ABCMeta):
@@ -70,7 +71,7 @@ class _ConfigureOptimizersCaller(ABCMeta):
         return x
 
 
-class AutoPredictUnit(PredictUnit[TPredictData]):
+class AutoPredictUnit(PredictUnit[TPredictData, TStepOutput]):
     def __init__(
         self,
         *,
@@ -144,8 +145,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
 
         self.detect_anomaly = detect_anomaly
 
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def predict_step(self, state: State, data: Iterator[TPredictData]) -> Any:
+    def predict_step(self, state: State, data: Iterator[TPredictData]) -> TStepOutput:
         with none_throws(state.predict_state).iteration_timer.time("data_wait_time"):
             batch = self._get_next_batch(state, data)
 
@@ -170,8 +170,7 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         state: State,
         data: TPredictData,
         step: int,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: TStepOutput,
     ) -> None:
         """
         This will be called at the end of every ``predict_step`` before returning. The user can implement this method with code to update and log their metrics,
@@ -261,9 +260,9 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
 
 
 class AutoUnit(
-    TrainUnit[TData],
-    EvalUnit[TData],
-    PredictUnit[TData],
+    TrainUnit[TData, Tuple[torch.Tensor, TStepOutput]],
+    EvalUnit[TData, Tuple[torch.Tensor, TStepOutput]],
+    PredictUnit[TData, TStepOutput],
     metaclass=_ConfigureOptimizersCaller,
 ):
     """
@@ -414,8 +413,9 @@ class AutoUnit(
         ...
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
+    def compute_loss(
+        self, state: State, data: TData
+    ) -> Tuple[torch.Tensor, TStepOutput]:
         """
         The user should implement this method with their loss computation. This will be called every ``train_step``/``eval_step``.
 
@@ -509,10 +509,9 @@ class AutoUnit(
 
         return batch
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def train_step(
         self, state: State, data: Iterator[TData]
-    ) -> Tuple[torch.Tensor, Any]:
+    ) -> Tuple[torch.Tensor, TStepOutput]:
         # In auto unit they will not be exclusive since data fetching is done as
         # part of the training step
         with none_throws(state.train_state).iteration_timer.time("data_wait_time"):
@@ -643,8 +642,7 @@ class AutoUnit(
         data: TData,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: TStepOutput,
     ) -> None:
         """
         This will be called at the end of every ``train_step`` before returning. The user can implement this method with code to update and log their metrics,
@@ -700,8 +698,7 @@ class AutoUnit(
             ):
                 transfer_batch_norm_stats(swa_model, self.module)
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
+    def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, TStepOutput]:
         with get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
         ):
@@ -726,8 +723,7 @@ class AutoUnit(
         data: TData,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: TStepOutput,
     ) -> None:
         """
         This will be called at the end of every ``eval_step`` before returning. The user can implement this method with code to update and log their metrics,
@@ -742,8 +738,7 @@ class AutoUnit(
         """
         pass
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def predict_step(self, state: State, data: TData) -> Any:
+    def predict_step(self, state: State, data: TData) -> TStepOutput:
         with get_timing_context(
             state, f"{self.__class__.__name__}.move_data_to_device"
         ):
@@ -766,8 +761,7 @@ class AutoUnit(
         state: State,
         data: TData,
         step: int,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: TStepOutput,
     ) -> None:
         """
         This will be called at the end of every ``predict_step`` before returning. The user can implement this method with code to update and log their metrics,

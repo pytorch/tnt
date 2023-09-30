@@ -738,14 +738,15 @@ class TestAutoUnit(unittest.TestCase):
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
-class DummyLRSchedulerAutoUnit(AutoUnit[Batch]):
+class DummyLRSchedulerAutoUnit(AutoUnit[Batch, torch.Tensor]):
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         inputs, targets = data
         outputs = self.module(inputs)
         loss = torch.nn.functional.cross_entropy(outputs, targets)
@@ -760,15 +761,16 @@ class DummyLRSchedulerAutoUnit(AutoUnit[Batch]):
         return my_optimizer, my_lr_scheduler
 
 
-class DummyComplexAutoUnit(AutoUnit[Batch]):
+class DummyComplexAutoUnit(AutoUnit[Batch, torch.Tensor]):
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
     def __init__(self, lr: float, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.lr = lr
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         inputs, targets = data
         outputs = self.module(inputs)
         loss = torch.nn.functional.cross_entropy(outputs, targets)
@@ -783,7 +785,7 @@ class DummyComplexAutoUnit(AutoUnit[Batch]):
         return my_optimizer, my_lr_scheduler
 
 
-class LastBatchAutoUnit(AutoUnit[Batch]):
+class LastBatchAutoUnit(AutoUnit[Batch, torch.Tensor]):
     def __init__(self, module: torch.nn.Module, expected_steps_per_epoch: int) -> None:
         super().__init__(module=module)
         self.expected_steps_per_epoch = expected_steps_per_epoch
@@ -812,7 +814,7 @@ class LastBatchAutoUnit(AutoUnit[Batch]):
         return my_optimizer, my_lr_scheduler
 
 
-class TimingAutoUnit(AutoUnit[Batch]):
+class TimingAutoUnit(AutoUnit[Batch, torch.Tensor]):
     def __init__(self, module: torch.nn.Module) -> None:
         super().__init__(module=module)
         self.loss_fn = torch.nn.CrossEntropyLoss()
@@ -839,8 +841,7 @@ class TimingAutoUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: torch.Tensor,
     ) -> None:
         assert state.train_state
         if self.train_progress.num_steps_completed_in_epoch == 1:
@@ -871,8 +872,7 @@ class TimingAutoUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: torch.Tensor,
     ) -> None:
         if self.eval_progress.num_steps_completed_in_epoch == 1:
             tc = unittest.TestCase()
@@ -918,7 +918,7 @@ class TimingAutoUnit(AutoUnit[Batch]):
             tc.assertNotIn("TimingAutoUnit.predict_step", recorded_timer_keys)
 
 
-class TimingAutoPredictUnit(AutoPredictUnit[Batch]):
+class TimingAutoPredictUnit(AutoPredictUnit[Batch, torch.Tensor]):
     def __init__(self, module: torch.nn.Module) -> None:
         super().__init__(module=module)
         self.loss_fn = torch.nn.CrossEntropyLoss()
@@ -944,8 +944,7 @@ class TimingAutoPredictUnit(AutoPredictUnit[Batch]):
         state: State,
         data: TPredictData,
         step: int,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: torch.Tensor,
     ) -> None:
         if self.predict_progress.num_steps_completed_in_epoch == 1:
             tc = unittest.TestCase()

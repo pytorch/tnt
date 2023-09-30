@@ -32,6 +32,7 @@ _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+ModelStepOutput = torch.Tensor
 PATH: str = parutil.get_file_path("data/input.txt", pkg=__package__)
 
 
@@ -59,7 +60,7 @@ def get_datasets(
     return train_set, eval_set, dataset
 
 
-class MinGPTUnit(AutoUnit[Batch]):
+class MinGPTUnit(AutoUnit[Batch, ModelStepOutput]):
     def __init__(
         self,
         tb_logger: TensorBoardLogger,

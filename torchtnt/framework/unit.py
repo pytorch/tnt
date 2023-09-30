@@ -180,9 +180,14 @@ class _OnExceptionMixin:
 TTrainData = TypeVar("TTrainData")
 TEvalData = TypeVar("TEvalData")
 TPredictData = TypeVar("TPredictData")
+TTrainStepOutput = TypeVar("TStepOutput")
+TEvalStepOutput = TypeVar("TEvalStepOutput")
+TPredictStepOutput = TypeVar("TPredictStepOutput")
 
 
-class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
+class TrainUnit(
+    AppStateMixin, _OnExceptionMixin, Generic[TTrainData, TTrainStepOutput], ABC
+):
     """
     The TrainUnit is an interface that can be used to organize your training logic. The core of it is the ``train_step`` which
     is an abstract method where you can define the code you want to run each iteration of the dataloader.
@@ -248,8 +253,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def train_step(self, state: State, data: TTrainData) -> Any:
+    def train_step(self, state: State, data: TTrainData) -> TTrainStepOutput:
         """Core required method for user to implement. This method will be called at each iteration of the
         train dataloader, and can return any data the user wishes.
 
@@ -276,7 +280,9 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         pass
 
 
-class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
+class EvalUnit(
+    AppStateMixin, _OnExceptionMixin, Generic[TEvalData, TEvalStepOutput], ABC
+):
     """
     The EvalUnit is an interface that can be used to organize your evaluation logic. The core of it is the ``eval_step`` which
     is an abstract method where you can define the code you want to run each iteration of the dataloader.
@@ -329,8 +335,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def eval_step(self, state: State, data: TEvalData) -> Any:
+    def eval_step(self, state: State, data: TEvalData) -> TEvalStepOutput:
         """
         Core required method for user to implement. This method will be called at each iteration of the
         eval dataloader, and can return any data the user wishes.
@@ -362,7 +367,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
 class PredictUnit(
     AppStateMixin,
     _OnExceptionMixin,
-    Generic[TPredictData],
+    Generic[TPredictData, TPredictStepOutput],
     ABC,
 ):
     """
@@ -417,8 +422,7 @@ class PredictUnit(
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def predict_step(self, state: State, data: TPredictData) -> Any:
+    def predict_step(self, state: State, data: TPredictData) -> TPredictStepOutput:
         """
         Core required method for user to implement. This method will be called at each iteration of the
         predict dataloader, and can return any data the user wishes.
@@ -447,6 +451,6 @@ class PredictUnit(
         pass
 
 
-TTrainUnit = TrainUnit[TTrainData]
-TEvalUnit = EvalUnit[TEvalData]
-TPredictUnit = PredictUnit[TPredictData]
+TTrainUnit = TrainUnit[TTrainData, TTrainStepOutput]
+TEvalUnit = EvalUnit[TEvalData, TEvalStepOutput]
+TPredictUnit = PredictUnit[TPredictData, TPredictStepOutput]

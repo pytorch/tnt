@@ -28,6 +28,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+ModelStepOutput = torch.Tensor
 NUM_PROCESSES = 2
 
 
@@ -60,7 +61,7 @@ def prepare_dataloader(
     )
 
 
-class MyUnit(AutoUnit[Batch]):
+class MyUnit(AutoUnit[Batch, ModelStepOutput]):
     # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
@@ -110,8 +111,9 @@ class MyUnit(AutoUnit[Batch]):
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
         return optimizer, lr_scheduler
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, ModelStepOutput]:
         inputs, targets = data
         # convert targets to float Tensor for binary_cross_entropy_with_logits
         targets = targets.float()
@@ -127,8 +129,7 @@ class MyUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: ModelStepOutput,
     ) -> None:
         _, targets = data
         self.train_accuracy.update(outputs, targets)
@@ -143,8 +144,7 @@ class MyUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: ModelStepOutput,
     ) -> None:
         _, targets = data
         self.eval_accuracy.update(outputs, targets)

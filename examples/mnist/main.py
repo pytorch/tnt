@@ -26,6 +26,7 @@ from torchtnt.utils.loggers import TensorBoardLogger
 from torchvision import datasets, transforms
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
+ModelStepOutput = torch.Tensor
 
 
 class Net(nn.Module):
@@ -56,7 +57,7 @@ class Net(nn.Module):
         return output
 
 
-class MyUnit(AutoUnit[Batch]):
+class MyUnit(AutoUnit[Batch, ModelStepOutput]):
     def __init__(
         self,
         *,

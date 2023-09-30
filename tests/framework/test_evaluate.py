@@ -85,7 +85,12 @@ class EvaluateTest(unittest.TestCase):
         self.assertEqual(my_unit.steps_processed, steps_before_stopping)
 
     def test_evaluate_data_iter_step(self) -> None:
-        class EvalIteratorUnit(EvalUnit[Iterator[Tuple[torch.Tensor, torch.Tensor]]]):
+        class EvalIteratorUnit(
+            EvalUnit[
+                Iterator[Tuple[torch.Tensor, torch.Tensor]],
+                Tuple[torch.Tensor, torch.Tensor],
+            ]
+        ):
             def __init__(self, input_dim: int) -> None:
                 super().__init__()
                 self.module = nn.Linear(input_dim, 2)
@@ -204,7 +209,11 @@ class EvaluateTest(unittest.TestCase):
         self.assertIn("evaluate.next(data_iter)", timer.recorded_durations.keys())
 
 
-class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
+Batch = Tuple[torch.Tensor, torch.Tensor]
+StepOutput = Tuple[torch.Tensor, torch.Tensor]
+
+
+class StopEvalUnit(EvalUnit[Batch, StepOutput]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
         super().__init__()
         # initialize module & loss_fn
@@ -213,9 +222,7 @@ class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
         self.steps_processed = 0
         self.steps_before_stopping = steps_before_stopping
 
-    def eval_step(
-        self, state: State, data: Tuple[torch.Tensor, torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def eval_step(self, state: State, data: Batch) -> StepOutput:
 
         inputs, targets = data
 
@@ -231,6 +238,3 @@ class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
 
         self.steps_processed += 1
         return loss, outputs
-
-
-Batch = Tuple[torch.Tensor, torch.Tensor]
