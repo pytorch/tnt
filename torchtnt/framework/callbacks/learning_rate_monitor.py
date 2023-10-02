@@ -6,23 +6,11 @@
 
 from typing import Dict, List, Union
 
-from torch.optim.optimizer import Optimizer
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import TTrainUnit
+from torchtnt.framework.utils import extract_lr
 from torchtnt.utils.loggers.logger import MetricLogger
-
-
-def _extract_lr_from_optimizer(
-    optim: Optimizer, prefix: str, lr_stats: Dict[str, float]
-) -> None:
-    seen_pg_keys = {}
-    for pg in optim.param_groups:
-        lr = pg["lr"]
-        name = _get_deduped_name(seen_pg_keys, pg.get("name", "pg"))
-        key = f"{prefix}/{name}"
-        assert key not in lr_stats
-        lr_stats[key] = lr
 
 
 def _write_stats(
@@ -33,32 +21,6 @@ def _write_stats(
 
     for writer in writers:
         writer.log_dict(lr_stats, step)
-
-
-def _get_deduped_name(seen_keys: Dict[str, int], name: str) -> str:
-    if name not in seen_keys:
-        seen_keys[name] = 0
-
-    seen_keys[name] += 1
-    return name + f":{seen_keys[name]-1}"
-
-
-def _extract_lr(unit: TTrainUnit) -> Dict[str, float]:
-    lr_stats: Dict[str, float] = {}
-
-    # go through tracked optimizers
-    optimizers = unit.tracked_optimizers()
-    for name, optim in optimizers.items():
-        _extract_lr_from_optimizer(optim, f"optimizers/{name}", lr_stats)
-
-    # go through tracked LR schedulers
-    lr_schedulers = unit.tracked_lr_schedulers()
-    for name, lr_scheduler in lr_schedulers.items():
-        _extract_lr_from_optimizer(
-            lr_scheduler.optimizer, f"lr_schedulers/{name}", lr_stats
-        )
-
-    return lr_stats
 
 
 class LearningRateMonitor(Callback):
@@ -96,7 +58,7 @@ class LearningRateMonitor(Callback):
         if self.logging_interval != "epoch":
             return
 
-        lr_stats = _extract_lr(unit)
+        lr_stats = extract_lr(unit)
 
         step = unit.train_progress.num_steps_completed
         _write_stats(self._loggers, lr_stats, step)
@@ -108,7 +70,7 @@ class LearningRateMonitor(Callback):
         if self.logging_interval != "step":
             return
 
-        lr_stats = _extract_lr(unit)
+        lr_stats = extract_lr(unit)
 
         step = unit.train_progress.num_steps_completed
         _write_stats(self._loggers, lr_stats, step)
