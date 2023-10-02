@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Pattern, Set, Union
 import torch.distributed as dist
 
 from pyre_extensions import none_throws
-from torchsnapshot.snapshot import PendingSnapshot, Snapshot
+from torchsnapshot.snapshot import PendingSnapshot, Snapshot, SNAPSHOT_METADATA_FNAME
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
@@ -294,6 +294,7 @@ class TorchSnapshotSaver(Callback):
         path = get_latest_checkpoint_path(dirpath)
         if path is None:
             return False
+        logger.info(f"Restoring from path: {path}")
         TorchSnapshotSaver.restore(
             path,
             unit,
@@ -365,6 +366,16 @@ def _latest_checkpoint_path(dirpath: str) -> Optional[str]:
 
     # Iterate through all files and directories in the specified directory
     for candidate in candidate_dirpaths:
+        full_path = os.path.join(dirpath, candidate)
+        dir_contents = fs.ls(full_path)
+        if not any(
+            SNAPSHOT_METADATA_FNAME == os.path.basename(f) for f in dir_contents
+        ):
+            logger.warning(
+                f"Snapshot metadata is missing from {full_path}! Skipping this path"
+            )
+            continue
+
         # Extract the epoch and step numbers from the directory name
         dirname = os.path.basename(candidate)
 

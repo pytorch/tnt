@@ -17,6 +17,7 @@ from unittest import mock
 import torch
 import torch.distributed as dist
 from torch.distributed import launcher
+from torchsnapshot.snapshot import SNAPSHOT_METADATA_FNAME
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 
 from torchtnt.framework._test_utils import (
@@ -208,6 +209,10 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 save_every_n_train_steps=save_every_n_train_steps,
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
+
+            # Include a directory that does not have snapshot metadata saved
+            # The restore function should skip this
+            os.mkdir(os.path.join(temp_dir, "epoch_100_step_200"))
 
             with mock.patch(
                 "torchtnt.framework.callbacks.torchsnapshot_saver.TorchSnapshotSaver.restore"
@@ -414,18 +419,31 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             latest_path = os.path.join(temp_dir, "epoch_0_step_0")
             os.mkdir(latest_path)
+            self._create_snapshot_metadata(latest_path)
             self.assertEqual(get_latest_checkpoint_path(temp_dir), latest_path)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             path_1 = os.path.join(temp_dir, "epoch_0_step_0")
             os.mkdir(path_1)
+            self._create_snapshot_metadata(path_1)
             path_2 = os.path.join(temp_dir, "epoch_0_step_100")
             os.mkdir(path_2)
+            self._create_snapshot_metadata(path_2)
+
+            # Missing metadata file
             path_3 = os.path.join(temp_dir, "epoch_1_step_100")
             os.mkdir(path_3)
+
+            # Ill-formatted name
             path_4 = os.path.join(temp_dir, "epoch_700")
             os.mkdir(path_4)
-            self.assertEqual(get_latest_checkpoint_path(temp_dir), path_3)
+            self.assertEqual(get_latest_checkpoint_path(temp_dir), path_2)
+
+    @staticmethod
+    def _create_snapshot_metadata(output_dir: str) -> None:
+        path = os.path.join(output_dir, SNAPSHOT_METADATA_FNAME)
+        with open(path, "w"):
+            pass
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
     #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
@@ -455,18 +473,24 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             temp_dir = tempfile.mkdtemp()
             path_1 = os.path.join(temp_dir, "epoch_0_step_0")
             os.mkdir(path_1)
+            TorchSnapshotSaverTest._create_snapshot_metadata(path_1)
             path_2 = os.path.join(temp_dir, "epoch_0_step_100")
             os.mkdir(path_2)
+            TorchSnapshotSaverTest._create_snapshot_metadata(path_2)
+
+            # Missing metadata file
             path_3 = os.path.join(temp_dir, "epoch_1_step_100")
             os.mkdir(path_3)
+
+            # Ill-formatted name
             path_4 = os.path.join(temp_dir, "epoch_700")
             os.mkdir(path_4)
         else:
             temp_dir = ""
-            path_3 = ""
+            path_2 = ""
 
         pg = PGWrapper(dist.group.WORLD)
-        path_container = [path_3] if is_rank0 else [None]
+        path_container = [path_2] if is_rank0 else [None]
         pg.broadcast_object_list(path_container, 0)
         expected_path = path_container[0]
         tc.assertEqual(get_latest_checkpoint_path(temp_dir), expected_path)
