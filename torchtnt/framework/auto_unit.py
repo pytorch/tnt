@@ -397,6 +397,11 @@ class AutoUnit(
         # whether the current batch is the last train batch
         self._is_last_train_batch: bool = False
 
+        self.optimizer: Optional[torch.optim.Optimizer] = None
+        self.lr_scheduler: Optional[TLRScheduler] = None
+        self.swa_model: Optional[AveragedModel] = None
+        self.swa_scheduler: Optional[SWALR] = None
+
     @abstractmethod
     def configure_optimizers_and_lr_scheduler(
         self, module: torch.nn.Module
@@ -565,6 +570,7 @@ class AutoUnit(
                     loss.backward()
 
         if should_update_weights:
+            optimizer = none_throws(self.optimizer)
             # Run gradient clipping, optimizer step, and zero_grad
             clip_grad_norm = self.clip_grad_norm
             clip_grad_value = self.clip_grad_value
@@ -573,7 +579,7 @@ class AutoUnit(
                 with get_timing_context(
                     state, f"{self.__class__.__name__}.grad_unscale"
                 ):
-                    grad_scaler.unscale_(self.optimizer)
+                    grad_scaler.unscale_(optimizer)
 
             # gradient norm clipping
             if clip_grad_norm:
@@ -608,17 +614,17 @@ class AutoUnit(
 
             with get_timing_context(state, f"{self.__class__.__name__}.optimizer_step"):
                 if grad_scaler:
-                    grad_scaler.step(self.optimizer)
+                    grad_scaler.step(optimizer)
                     # update the scale for next iteration
                     grad_scaler.update()
                 else:
-                    self.optimizer.step()
+                    optimizer.step()
 
             # sets gradients to zero
             with get_timing_context(
                 state, f"{self.__class__.__name__}.optimizer_zero_grad"
             ):
-                self.optimizer.zero_grad(set_to_none=True)
+                optimizer.zero_grad(set_to_none=True)
 
             # optionally step lr scheduler if SWA not in use
             if (
@@ -663,15 +669,16 @@ class AutoUnit(
         """
         Note: if overriding ``on_train_epoch_end``, remember to call ``super().on_train_epoch_end()``
         """
+        swa_model = self.swa_model
         if (
-            self.swa_model
+            swa_model
             and self.swa_params
             and self.train_progress.num_epochs_completed >= self.swa_params.epoch_start
         ):
             with get_timing_context(
                 state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
             ):
-                self.swa_model.update_parameters(self.module)
+                swa_model.update_parameters(self.module)
             with get_timing_context(
                 state, f"{self.__class__.__name__}.stochastic_weight_avg_step"
             ):
@@ -681,7 +688,7 @@ class AutoUnit(
             with get_timing_context(
                 state, f"{self.__class__.__name__}.lr_scheduler_step"
             ):
-                self.lr_scheduler.step()
+                none_throws(self.lr_scheduler).step()
 
     def on_train_end(self, state: State) -> None:
         """

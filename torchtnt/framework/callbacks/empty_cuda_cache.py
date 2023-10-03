@@ -4,6 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import cast
+
 import torch
 
 from torchtnt.framework.callback import Callback
@@ -31,8 +33,12 @@ class EmptyCudaCache(Callback):
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         total_num_steps_completed = unit.train_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
+            # if fitting, unit should also subclass EvalUnit
+            unit_as_eval_unit = cast(TEvalUnit, unit)
             # if fitting, include the num eval steps completed in the total steps completed
-            total_num_steps_completed += unit.eval_progress.num_steps_completed
+            total_num_steps_completed += (
+                unit_as_eval_unit.eval_progress.num_steps_completed
+            )
 
         if total_num_steps_completed % self._step_interval == 0:
             torch.cuda.empty_cache()
@@ -40,8 +46,12 @@ class EmptyCudaCache(Callback):
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         total_num_steps_completed = unit.eval_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
+            # if fitting, unit should also subclass TrainUnit
+            unit_as_train_unit = cast(TTrainUnit, unit)
             # if fitting, include the num train steps completed in the total steps completed
-            total_num_steps_completed += unit.train_progress.num_steps_completed
+            total_num_steps_completed += (
+                unit_as_train_unit.train_progress.num_steps_completed
+            )
 
         if total_num_steps_completed % self._step_interval == 0:
             torch.cuda.empty_cache()

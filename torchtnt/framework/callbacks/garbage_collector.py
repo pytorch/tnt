@@ -5,12 +5,14 @@
 # LICENSE file in the root directory of this source tree.
 
 import gc
+from typing import cast
 
 from pyre_extensions import none_throws
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
+from torchtnt.utils.progress import Progress
 
 
 class GarbageCollector(Callback):
@@ -50,8 +52,12 @@ class GarbageCollector(Callback):
         total_num_steps_completed = unit.train_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
             # if fitting, include the num eval steps completed in the total steps completed
-            eval_state = none_throws(state.eval_state)
-            total_num_steps_completed += unit.eval_progress.num_steps_completed
+            none_throws(state.eval_state)
+            # if fitting, unit should also subclass EvalUnit
+            unit_as_eval_unit = cast(TEvalUnit, unit)
+            total_num_steps_completed += (
+                unit_as_eval_unit.eval_progress.num_steps_completed
+            )
 
         if total_num_steps_completed % self._step_interval == 0:
             gc.collect()
@@ -72,8 +78,9 @@ class GarbageCollector(Callback):
         gc.collect(generation=1)
         total_num_steps_completed = unit.eval_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
+            train_progress = cast(Progress, unit.train_progress)
             # if fitting, include the num train steps completed in the total steps completed
-            total_num_steps_completed += unit.train_progress.num_steps_completed
+            total_num_steps_completed += train_progress.num_steps_completed
 
         if total_num_steps_completed % self._step_interval == 0:
             gc.collect()
