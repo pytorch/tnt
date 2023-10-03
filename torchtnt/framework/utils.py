@@ -16,8 +16,9 @@ import torch.nn as nn
 import typing_extensions
 from torch.profiler import record_function
 from torchtnt.framework.state import State
-from torchtnt.framework.unit import AppStateMixin
+from torchtnt.framework.unit import AppStateMixin, TTrainUnit
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.optimizer import extract_lr_from_optimizer
 from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
 
@@ -189,3 +190,24 @@ def _find_optimizers_for_module(
         if all(module_param in optimizer_params for module_param in module_params):
             optimizer_list.append((optim_name, optimizer))
     return optimizer_list
+
+
+def extract_lr(unit: TTrainUnit) -> Dict[str, float]:
+    """
+    Extracts learning rates from optimizers and LR schedulers and returns them as a dictionary.
+    """
+    lr_stats: Dict[str, float] = {}
+
+    # go through tracked optimizers
+    optimizers = unit.tracked_optimizers()
+    for name, optim in optimizers.items():
+        lr_stats.update(extract_lr_from_optimizer(optim, f"optimizers/{name}"))
+
+    # go through tracked LR schedulers
+    lr_schedulers = unit.tracked_lr_schedulers()
+    for name, lr_scheduler in lr_schedulers.items():
+        lr_stats.update(
+            extract_lr_from_optimizer(lr_scheduler.optimizer, f"lr_schedulers/{name}")
+        )
+
+    return lr_stats

@@ -5,6 +5,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+from typing import Dict
+
 import torch
 
 
@@ -33,3 +35,28 @@ def init_optim_state(optimizer: torch.optim.Optimizer) -> None:
                 param.grad = torch.zeros_like(param)
     optimizer.step(closure=None)
     optimizer.zero_grad(set_to_none=True)
+
+
+def extract_lr_from_optimizer(
+    optim: torch.optim.Optimizer, prefix: str
+) -> Dict[str, float]:
+    """
+    Retrieves the learning rate values from an optimizer and returns them as a dictionary.
+    """
+    lr_stats = {}
+    seen_pg_keys = {}
+    for pg in optim.param_groups:
+        lr = pg["lr"]
+        name = _get_deduped_name(seen_pg_keys, pg.get("name", "pg"))
+        key = f"{prefix}/{name}"
+        assert key not in lr_stats
+        lr_stats[key] = lr
+    return lr_stats
+
+
+def _get_deduped_name(seen_keys: Dict[str, int], name: str) -> str:
+    if name not in seen_keys:
+        seen_keys[name] = 0
+
+    seen_keys[name] += 1
+    return name + f":{seen_keys[name]-1}"

@@ -44,6 +44,7 @@ from .oom import (
     is_out_of_memory_error,
     log_memory_snapshot,
 )
+from .optimizer import extract_lr_from_optimizer, init_optim_state
 from .precision import convert_precision_str_to_dtype
 from .prepare_module import DDPStrategy, FSDPStrategy, prepare_ddp, prepare_fsdp
 from .progress import Progress
@@ -105,6 +106,8 @@ __all__ = [
     "is_out_of_cuda_memory",
     "is_out_of_memory_error",
     "log_memory_snapshot",
+    "extract_lr_from_optimizer",
+    "init_optim_state",
     "convert_precision_str_to_dtype",
     "DDPStrategy",
     "FSDPStrategy",
