@@ -74,8 +74,7 @@ class AppStateMixin:
     def tracked_misc_statefuls(self) -> Dict[str, Any]:
         return self._misc_statefuls
 
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> object:
         if "_modules" in self.__dict__:
             _modules = self.__dict__["_modules"]
             if name in _modules:
@@ -102,8 +101,7 @@ class AppStateMixin:
     def _update_attr(
         self,
         name: str,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        value: Any,
+        value: object,
         tracked_objects: Dict[str, Any],
     ) -> None:
         if tracked_objects is None:
@@ -121,8 +119,7 @@ class AppStateMixin:
         )
         tracked_objects[name] = value
 
-    # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-    def __setattr__(self, name: str, value: Any) -> None:
+    def __setattr__(self, name: str, value: object) -> None:
         if isinstance(value, torch.nn.Module):
             self._update_attr(name, value, self.__dict__.get("_modules"))
         elif isinstance(value, torch.optim.Optimizer):
