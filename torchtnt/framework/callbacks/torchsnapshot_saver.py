@@ -366,13 +366,12 @@ def _latest_checkpoint_path(dirpath: str) -> Optional[str]:
 
     # Iterate through all files and directories in the specified directory
     for candidate in candidate_dirpaths:
-        full_path = os.path.join(dirpath, candidate)
-        dir_contents = fs.ls(full_path)
+        dir_contents = fs.ls(candidate, False)
         if not any(
             SNAPSHOT_METADATA_FNAME == os.path.basename(f) for f in dir_contents
         ):
             logger.warning(
-                f"Snapshot metadata is missing from {full_path}! Skipping this path"
+                f"Snapshot metadata is missing from {candidate}! Skipping this path"
             )
             continue
 
