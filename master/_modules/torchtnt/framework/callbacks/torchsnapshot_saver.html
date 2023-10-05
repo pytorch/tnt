@@ -719,13 +719,12 @@
 
     <span class="c1"># Iterate through all files and directories in the specified directory</span>
     <span class="k">for</span> <span class="n">candidate</span> <span class="ow">in</span> <span class="n">candidate_dirpaths</span><span class="p">:</span>
-        <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">candidate</span><span class="p">)</span>
-        <span class="n">dir_contents</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span>
+        <span class="n">dir_contents</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="n">candidate</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span>
             <span class="n">SNAPSHOT_METADATA_FNAME</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dir_contents</span>
         <span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Snapshot metadata is missing from </span><span class="si">{</span><span class="n">full_path</span><span class="si">}</span><span class="s2">! Skipping this path&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Snapshot metadata is missing from </span><span class="si">{</span><span class="n">candidate</span><span class="si">}</span><span class="s2">! Skipping this path&quot;</span>
             <span class="p">)</span>
             <span class="k">continue</span>
 
