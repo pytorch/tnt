@@ -244,10 +244,10 @@ class TorchSnapshotSaver(Callback):
         app_state[_RNG_STATE_KEY] = rng_state
 
         if not restore_train_progress:
-            del app_state[_TRAIN_PROGRESS_STATE_KEY]
+            app_state.pop(_TRAIN_PROGRESS_STATE_KEY, None)
 
         if not restore_eval_progress:
-            del app_state[_EVAL_PROGRESS_STATE_KEY]
+            app_state.pop(_EVAL_PROGRESS_STATE_KEY, None)
 
         if train_dataloader is not None:
             # request to restore the dataloader state only if
