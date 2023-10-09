@@ -597,10 +597,10 @@
         <span class="n">app_state</span><span class="p">[</span><span class="n">_RNG_STATE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng_state</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_train_progress</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">app_state</span><span class="p">[</span><span class="n">_TRAIN_PROGRESS_STATE_KEY</span><span class="p">]</span>
+            <span class="n">app_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_TRAIN_PROGRESS_STATE_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_eval_progress</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">app_state</span><span class="p">[</span><span class="n">_EVAL_PROGRESS_STATE_KEY</span><span class="p">]</span>
+            <span class="n">app_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_EVAL_PROGRESS_STATE_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">train_dataloader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># request to restore the dataloader state only if</span>
