@@ -11,11 +11,6 @@ from typing import Any, Callable, Dict, Iterable, Optional, Union
 import torch
 import torch.distributed as dist
 from torch.distributed import ProcessGroup
-from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
-    apply_activation_checkpointing,
-    checkpoint_wrapper,
-    CheckpointImpl,
-)
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, StateDictType
 from torch.distributed.fsdp.api import OptimStateDictConfig, StateDictConfig
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
@@ -30,6 +25,11 @@ from torchtnt.utils.version import is_torch_version_geq_1_12, is_torch_version_g
 
 if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
+    from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
+        apply_activation_checkpointing,
+        checkpoint_wrapper,
+        CheckpointImpl,
+    )
     from torch.distributed.fsdp._common_utils import _FSDPState
 
 TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
@@ -139,7 +139,7 @@ class ActivationCheckpointParams:
         check_fn: A lambda function which will be passed to each child submodule and return ``True`` or ``False`` depending on whether the submodule should be wrapped.
     """
 
-    checkpoint_impl: CheckpointImpl
+    checkpoint_impl: "CheckpointImpl"
     check_fn: Optional[Callable[[torch.nn.Module], bool]]
 
 
@@ -317,6 +317,8 @@ def prepare_module(
         module = module.to(device)
 
     if activation_checkpoint_params:
+        if not is_torch_version_geq_2_0():
+            raise RuntimeError("Activation checkpointing requires torch>=2.0")
         checkpoint_impl = activation_checkpoint_params.checkpoint_impl
         check_fn = activation_checkpoint_params.check_fn
         custom_checkpoint_wrapper = partial(
