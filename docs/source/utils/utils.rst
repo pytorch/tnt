@@ -246,6 +246,17 @@ Stateful
    Stateful
 
 
+SWA
+~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: torchtnt.utils.swa
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   AveragedModel
+
+
 Test Utils
 ~~~~~~~~~~~~~~~~~~~~~
 
