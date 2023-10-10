@@ -129,6 +129,17 @@ def get_local_rank() -> int:
     return 0
 
 
+def get_local_world_size() -> int:
+    """
+    Get local world size using the ``LOCAL_WORLD_SIZE`` environment variable, if populated: https://pytorch.org/docs/stable/elastic/run.html#environment-variables
+    Defaults to 1 if ``LOCAL_WORLD_SIZE`` is not set.
+    """
+    environ_local_world_size = os.environ.get("LOCAL_WORLD_SIZE")
+    if environ_local_world_size:
+        return int(environ_local_world_size)
+    return 1
+
+
 def get_world_size() -> int:
     """
     Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.
