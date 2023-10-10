@@ -20,7 +20,6 @@ from torchtnt.utils.prepare_module import (
     prepare_ddp,
     prepare_fsdp,
     prepare_module,
-    SWAParams,
     TorchCompileParams,
 )
 from torchtnt.utils.test_utils import spawn_multi_process
@@ -207,11 +206,6 @@ class PrepareModelTest(unittest.TestCase):
             "nccl",
             self._test_prepare_module_fsdp_string_wrapped_in_fsdp,
         )
-        spawn_multi_process(
-            2,
-            "nccl",
-            self._test_stochastic_weight_averaging_with_fsdp_raises,
-        )
 
     @staticmethod
     def _test_prepare_module_fsdp_strategy_wrapped_in_fsdp() -> None:
@@ -242,24 +236,6 @@ class PrepareModelTest(unittest.TestCase):
         tc = unittest.TestCase()
 
         tc.assertTrue(isinstance(fsdp_module, FSDP))
-
-    @staticmethod
-    def _test_stochastic_weight_averaging_with_fsdp_raises() -> None:
-        """
-        Test that a RuntimeError is thrown when attempting to use Stochastic Weight Averaging and FSDP
-        """
-
-        tc = unittest.TestCase()
-        with tc.assertRaisesRegex(
-            RuntimeError,
-            "Stochastic Weight Averaging is currently not supported with the FSDP strategy",
-        ):
-            prepare_module(
-                module=torch.nn.Linear(2, 2),
-                device=init_from_env(),
-                strategy=FSDPStrategy(),
-                swa_params=SWAParams(epoch_start=1, anneal_epochs=5),
-            )
 
     @unittest.skipUnless(
         distributed_available, reason="Torch distributed is needed to run"

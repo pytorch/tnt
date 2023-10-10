@@ -18,8 +18,12 @@ if is_torch_version_geq_1_13():
     COMPILE_AVAIL = True
     import torch._dynamo
 
+from copy import deepcopy
+
 from pyre_extensions import none_throws, ParameterSpecification as ParamSpec
+
 from torch.distributed import GradBucket
+from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
     generate_random_dataloader,
@@ -27,21 +31,22 @@ from torchtnt.framework._test_utils import (
     get_dummy_train_state,
 )
 
-from torchtnt.framework.auto_unit import AutoPredictUnit, AutoUnit
+from torchtnt.framework.auto_unit import (
+    AutoPredictUnit,
+    AutoUnit,
+    SWALRParams,
+    SWAParams,
+)
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
 from torchtnt.framework.unit import TPredictData
 from torchtnt.utils.device import copy_data_to_device
-from torchtnt.utils.env import init_from_env
+from torchtnt.utils.env import init_from_env, seed
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import (
-    DDPStrategy,
-    FSDPStrategy,
-    SWAParams,
-    TorchCompileParams,
-)
+from torchtnt.utils.prepare_module import DDPStrategy, FSDPStrategy, TorchCompileParams
+from torchtnt.utils.progress import Progress
 from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import Timer
 
@@ -205,7 +210,13 @@ class TestAutoUnit(unittest.TestCase):
 
         auto_unit2 = DummyAutoUnit(
             module=my_module,
-            swa_params=SWAParams(epoch_start=1, anneal_epochs=5),
+            swa_params=SWAParams(
+                warmup_steps_or_epochs=1,
+                step_or_epoch_update_freq=1,
+                swalr_params=SWALRParams(
+                    anneal_steps_or_epochs=5,
+                ),
+            ),
         )
 
         self.assertIsNone(auto_unit.swa_model)
@@ -220,11 +231,74 @@ class TestAutoUnit(unittest.TestCase):
         self.assertIn("swa_scheduler", auto_unit2.app_state())
         self.assertIn("swa_scheduler", auto_unit2.tracked_lr_schedulers())
 
-    def test_stochastic_weight_averaging_e2e(self) -> None:
+    def test_stochastic_weight_averaging_update_freq(self) -> None:
         """
-        e2e stochastic weight averaging test
+        e2e stochastic weight averaging test to ensure that the SWA model is updated at the correct frequency
         """
 
+        my_module = torch.nn.Linear(2, 2)
+        swa_params = SWAParams(
+            warmup_steps_or_epochs=2,
+            step_or_epoch_update_freq=1,
+            swalr_params=SWALRParams(
+                anneal_steps_or_epochs=5,
+            ),
+            # pyre-ignore: Undefined attribute [16]: Module
+            multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(),
+        )
+        auto_unit = DummyAutoUnit(
+            module=my_module,
+            step_lr_interval="step",
+            swa_params=swa_params,
+        )
+
+        input_dim = 2
+        dataset_len = 12
+        batch_size = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+
+        with patch.object(auto_unit, "_update_swa") as update_swa_mock:
+            train(auto_unit, dataloader, max_epochs=1, max_steps_per_epoch=4)
+            # 2 warmup + 2 steps = 4
+            self.assertEqual(update_swa_mock.call_count, 2)
+
+        auto_unit.train_progress = Progress()  # reset progress
+        auto_unit.swa_params.step_or_epoch_update_freq = 2
+        with patch.object(auto_unit, "_update_swa") as update_swa_mock:
+            train(auto_unit, dataloader, max_epochs=1, max_steps_per_epoch=6)
+            # 2 warmup + step 4 + step 6 = 2
+            self.assertEqual(update_swa_mock.call_count, 2)
+
+        auto_unit.step_lr_interval = "epoch"
+        auto_unit.train_progress = Progress()  # reset progress
+        auto_unit.swa_params.warmup_steps_or_epochs = 1
+        auto_unit.swa_params.step_or_epoch_update_freq = 1
+        with patch.object(auto_unit, "_update_swa") as update_swa_mock:
+            with patch.object(auto_unit.lr_scheduler, "step") as lr_scheduler_step_mock:
+                train(auto_unit, dataloader, max_epochs=3, max_steps_per_epoch=2)
+                self.assertEqual(lr_scheduler_step_mock.call_count, 1)
+            # 1 warmup + epoch 2 + epoch 3 = 2
+            self.assertEqual(update_swa_mock.call_count, 2)
+
+    @unittest.skipUnless(
+        condition=distributed_available, reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_stochastic_weight_averaging_fsdp(self) -> None:
+        """
+        Test that swa params with FSDP is identical to non-FSDP swa
+        """
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_stochastic_weight_averaging_fsdp,
+        )
+
+    @staticmethod
+    def _test_stochastic_weight_averaging_fsdp() -> None:
         class Net(torch.nn.Module):
             def __init__(self):
                 super(Net, self).__init__()
@@ -238,14 +312,40 @@ class TestAutoUnit(unittest.TestCase):
                 x = self.l2(x)
                 return x
 
+        # so all ranks start with same initialized weights
+        seed(0)
+        device = init_from_env()
         my_module = Net()
-        my_swa_params = SWAParams(
-            epoch_start=1, anneal_epochs=3, avg_fn=lambda x, y, z: x
-        )
 
         auto_unit = DummyAutoUnit(
+            module=deepcopy(my_module),
+            device=device,
+            step_lr_interval="step",
+            swa_params=SWAParams(
+                warmup_steps_or_epochs=1,
+                step_or_epoch_update_freq=1,
+                swalr_params=SWALRParams(
+                    anneal_steps_or_epochs=3,
+                ),
+                # pyre-ignore: Undefined attribute [16]
+                multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(),
+            ),
+        )
+
+        auto_unit_fsdp = DummyAutoUnit(
             module=my_module,
-            swa_params=my_swa_params,
+            device=device,
+            step_lr_interval="step",
+            strategy=FSDPStrategy(),
+            swa_params=SWAParams(
+                warmup_steps_or_epochs=1,
+                step_or_epoch_update_freq=1,
+                swalr_params=SWALRParams(
+                    anneal_steps_or_epochs=3,
+                ),
+                # pyre-ignore: Undefined attribute [16]
+                multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(),
+            ),
         )
 
         input_dim = 2
@@ -253,25 +353,16 @@ class TestAutoUnit(unittest.TestCase):
         batch_size = 2
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        train(auto_unit, dataloader, max_epochs=5, max_steps_per_epoch=1)
+        train(auto_unit, dataloader, max_epochs=1, max_steps_per_epoch=5)
+        train(auto_unit_fsdp, dataloader, max_epochs=1, max_steps_per_epoch=5)
 
-        orig_module = auto_unit.module
-        swa_module = auto_unit.swa_model
+        swa_params = list(auto_unit.swa_model.module.parameters())
+        with FSDP.summon_full_params(auto_unit_fsdp.swa_model):
+            swa_fsdp_params = list(auto_unit_fsdp.swa_model.module.parameters())
 
-        self.assertTrue(
-            torch.allclose(
-                orig_module.b1.running_mean, swa_module.module.b1.running_mean
-            )
-        )
-        self.assertTrue(
-            torch.allclose(orig_module.b1.running_var, swa_module.module.b1.running_var)
-        )
-        self.assertTrue(
-            torch.allclose(orig_module.l1.weight, swa_module.module.l1.weight)
-        )
-        self.assertTrue(
-            torch.allclose(orig_module.l2.weight, swa_module.module.l2.weight)
-        )
+            # Iterate and compare each parameter
+            for p1, p2 in zip(swa_params, swa_fsdp_params, strict=True):
+                torch.testing.assert_close(p2, p1, check_device=False)
 
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
@@ -477,7 +568,12 @@ class TestAutoUnit(unittest.TestCase):
 
         my_module = Net()
         my_swa_params = SWAParams(
-            epoch_start=1, anneal_epochs=3, avg_fn=lambda x, y, z: x
+            warmup_steps_or_epochs=1,
+            step_or_epoch_update_freq=1,
+            swalr_params=SWALRParams(
+                anneal_steps_or_epochs=3,
+            ),
+            avg_fn=lambda x, y, z: x,
         )
 
         auto_unit = DummyAutoUnit(
@@ -492,25 +588,6 @@ class TestAutoUnit(unittest.TestCase):
 
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         train(auto_unit, dataloader, max_epochs=5, max_steps_per_epoch=1)
-
-        orig_module = auto_unit.module.module
-        swa_module = auto_unit.swa_model.module.module
-
-        tc = unittest.TestCase()
-        tc.assertTrue(
-            torch.allclose(
-                orig_module.b1.running_mean,
-                swa_module.b1.running_mean,
-            )
-        )
-        tc.assertTrue(
-            torch.allclose(
-                orig_module.b1.running_var,
-                swa_module.b1.running_var,
-            )
-        )
-        tc.assertTrue(torch.allclose(orig_module.l1.weight, swa_module.l1.weight))
-        tc.assertTrue(torch.allclose(orig_module.l2.weight, swa_module.l2.weight))
 
     @staticmethod
     def _test_ddp_comm_hook() -> None:

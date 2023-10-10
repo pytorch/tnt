@@ -7,34 +7,86 @@
 
 import contextlib
 from abc import ABCMeta, abstractmethod
-from typing import Any, Iterator, Optional, Tuple, TypeVar, Union
+from copy import deepcopy
+from dataclasses import dataclass
+from typing import Any, Callable, Iterator, List, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
 from torch.cuda.amp import GradScaler
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.optim.swa_utils import AveragedModel, SWALR
+from torch.optim.swa_utils import SWALR
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
 from torchtnt.framework.utils import _is_fsdp_module, get_timing_context
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.misc import transfer_batch_norm_stats, transfer_weights
 from torchtnt.utils.precision import convert_precision_str_to_dtype
 from torchtnt.utils.prepare_module import (
     ActivationCheckpointParams,
+    FSDPStrategy,
+    prepare_fsdp,
     prepare_module,
     Strategy,
-    SWAParams,
     TorchCompileParams,
 )
+from torchtnt.utils.swa import AveragedModel
 from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
 
 
 TData = TypeVar("TData")
+
+TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
+# pyre-ignore Invalid type parameters [24]: Generic type `Callable` expects 2 type parameters.
+TSWA_multi_avg_fn = Callable
+
+
+@dataclass
+class SWALRParams:
+    """
+    Dataclass to store parameters for SWALR learning rate scheduler.
+    See https://github.com/pytorch/pytorch/blob/main/torch/optim/swa_utils.py#L279
+    for more details.
+
+    Args:
+        anneal_steps_or_epochs: number of steps or epochs to anneal the SWA Scheduler
+        anneal_strategy: method for annealing, supports "linear" and "cos"
+        swa_lrs: the learning rate value for all param groups together or separately for each group
+
+        Note: Whether steps or epochs is used based on what `step_lr_interval` is set on the AutoUnit.
+    """
+
+    anneal_steps_or_epochs: int
+    anneal_strategy: str = "linear"
+    swa_lrs: Union[List[float], float] = 0.05
+
+
+@dataclass
+class SWAParams:
+    """
+    Dataclass to store parameters for stochastic weight averaging.
+
+    Args:
+        warmup_steps_or_epochs: number of steps or epochs before starting SWA
+        step_or_epoch_update_freq: number of steps or epochs between each SWA update
+        avg_fn: function to compute custom average of parameters
+        multi_avg_fn: function used to update parameters inplace
+        swalr_params: params for SWA learning rate scheduler
+
+        Note: Whether steps or epochs is used based on what `step_lr_interval` is set on the AutoUnit.
+
+        Note: Only one of avg_fn, multi_avg_fn should be specified
+
+    """
+
+    warmup_steps_or_epochs: int
+    step_or_epoch_update_freq: int
+    avg_fn: Optional[TSWA_avg_fn] = None
+    multi_avg_fn: Optional[TSWA_multi_avg_fn] = None
+    swalr_params: Optional[SWALRParams] = None
 
 
 class _ConfigureOptimizersCaller(ABCMeta):
@@ -44,7 +96,6 @@ class _ConfigureOptimizersCaller(ABCMeta):
         x = super().__call__(*args, **kwargs)
         x.optimizer = None
         x.lr_scheduler = None
-        x.swa_model = None
         x.swa_scheduler = None
 
         if x.training:
@@ -52,19 +103,13 @@ class _ConfigureOptimizersCaller(ABCMeta):
                 x.module
             )
 
-            if x.swa_params:
-                if not x.swa_params.avg_fn:
-                    x.swa_model = AveragedModel(x.module, use_buffers=True)
-                else:
-                    x.swa_model = AveragedModel(
-                        x.module, avg_fn=x.swa_params.avg_fn, use_buffers=True
-                    )
-
+            if x.swa_params and x.swa_params.swalr_params:
+                swalr_params = x.swa_params.swalr_params
                 x.swa_scheduler = SWALR(
                     optimizer=x.optimizer,
-                    swa_lr=x.swa_params.lr,
-                    anneal_epochs=x.swa_params.anneal_epochs,
-                    anneal_strategy=x.swa_params.anneal_strategy,
+                    swa_lr=swalr_params.swa_lrs,
+                    anneal_epochs=swalr_params.anneal_steps_or_epochs,
+                    anneal_strategy=swalr_params.anneal_strategy,
                 )
 
         return x
@@ -311,7 +356,7 @@ class AutoUnit(
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
     Note:
-        Stochastic Weight Averaging is currently not supported with the FSDP strategy.
+        If FSDPStrategy and SWAParams are passed in, the swa model will be sharded with the same FSDP parameters.
 
     Note:
         Torch compile support is only available in PyTorch 2.0 or higher.
@@ -351,11 +396,31 @@ class AutoUnit(
             else precision
         )
 
+        self.swa_params: Optional[SWAParams] = swa_params
+        self.swa_model: Optional[AveragedModel] = None
+        if swa_params and training:
+            module_for_swa = module
+            skip_deepcopy = False
+            if isinstance(strategy, FSDPStrategy):
+                # must use exact same FSDPStrategy as original module
+                # so each rank can computes EMA for its own local shard
+                # since models are sharded identically if FSDP params are the same
+                module_for_swa = prepare_fsdp(deepcopy(module), self.device, strategy)
+                skip_deepcopy = True
+
+            self.swa_model = AveragedModel(
+                module_for_swa,
+                device=device,
+                avg_fn=swa_params.avg_fn,
+                multi_avg_fn=swa_params.multi_avg_fn,
+                use_buffers=True,
+                skip_deepcopy=skip_deepcopy,
+            )
+
         self.module: torch.nn.Module = prepare_module(
             module,
             self.device,
             strategy=strategy,
-            swa_params=swa_params,
             torch_compile_params=torch_compile_params,
             activation_checkpoint_params=activation_checkpoint_params,
         )
@@ -382,8 +447,6 @@ class AutoUnit(
             enabled=self.precision is not None,
         )
 
-        self.swa_params: Optional[SWAParams] = swa_params
-
         self.training = training
 
         # cuda stream to use for moving data to device
@@ -399,7 +462,6 @@ class AutoUnit(
 
         self.optimizer: Optional[torch.optim.Optimizer] = None
         self.lr_scheduler: Optional[TLRScheduler] = None
-        self.swa_model: Optional[AveragedModel] = None
         self.swa_scheduler: Optional[SWALR] = None
 
     @abstractmethod
@@ -514,6 +576,29 @@ class AutoUnit(
 
         return batch
 
+    def _should_update_swa(self) -> bool:
+        if not self.swa_params:
+            return False
+
+        swa_params = none_throws(self.swa_params)
+        if self.step_lr_interval == "step":
+            current_progress = self.train_progress.num_steps_completed
+        else:
+            # since num_epochs_completed is incremented prior to updating swa
+            current_progress = self.train_progress.num_epochs_completed - 1
+
+        if current_progress >= swa_params.warmup_steps_or_epochs:
+            progress_since = current_progress - swa_params.warmup_steps_or_epochs
+            update_freq = swa_params.step_or_epoch_update_freq
+            return progress_since % update_freq == 0
+        return False
+
+    def _update_swa(self, state: State) -> None:
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
+        ):
+            none_throws(self.swa_model).update_parameters(self.module)
+
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def train_step(
         self, state: State, data: Iterator[TData]
@@ -626,18 +711,27 @@ class AutoUnit(
             ):
                 optimizer.zero_grad(set_to_none=True)
 
-            # optionally step lr scheduler if SWA not in use
-            if (
-                self.swa_params is None
-                or self.train_progress.num_epochs_completed
-                < self.swa_params.epoch_start
-            ):
-                lr_scheduler = self.lr_scheduler
-                if lr_scheduler and self.step_lr_interval == "step":
+            if self.step_lr_interval == "step":
+                if self._should_update_swa():
+                    self._update_swa(state)
+
+                # uses swa_scheduler if applicable, otherwise the regular lr_scheduler
+                if self.swa_scheduler and (
+                    self.train_progress.num_steps_completed
+                    >= none_throws(self.swa_params).warmup_steps_or_epochs
+                ):
                     with get_timing_context(
-                        state, f"{self.__class__.__name__}.lr_scheduler_step"
+                        state, f"{self.__class__.__name__}.swa_lr_scheduler_step"
                     ):
-                        lr_scheduler.step()
+                        none_throws(self.swa_scheduler).step()
+                else:
+                    # optionally step lr scheduler if SWA not in use
+                    lr_scheduler = self.lr_scheduler
+                    if lr_scheduler:
+                        with get_timing_context(
+                            state, f"{self.__class__.__name__}.lr_scheduler_step"
+                        ):
+                            lr_scheduler.step()
 
         step = self.train_progress.num_steps_completed
         self.on_train_step_end(state, batch, step, loss, outputs)
@@ -669,43 +763,26 @@ class AutoUnit(
         """
         Note: if overriding ``on_train_epoch_end``, remember to call ``super().on_train_epoch_end()``
         """
-        swa_model = self.swa_model
-        if (
-            swa_model
-            and self.swa_params
-            and self.train_progress.num_epochs_completed >= self.swa_params.epoch_start
-        ):
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
-            ):
-                swa_model.update_parameters(self.module)
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.stochastic_weight_avg_step"
-            ):
-                none_throws(self.swa_scheduler).step()
-        elif self.lr_scheduler and self.step_lr_interval == "epoch":
-            # optionally step lr scheduler
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.lr_scheduler_step"
-            ):
-                none_throws(self.lr_scheduler).step()
+        if self.step_lr_interval == "epoch":
+            if self._should_update_swa():
+                self._update_swa(state)
 
-    def on_train_end(self, state: State) -> None:
-        """
-        Note that if using SWA and implementing `on_train_end()`, must call `super().on_train_end()`.
-        """
-        swa_model = self.swa_model
-        if swa_model:
-            with get_timing_context(
-                state,
-                f"{self.__class__.__name__}.stochastic_weight_avg_transfer_weights",
+            if self.swa_scheduler and (
+                self.train_progress.num_epochs_completed
+                > none_throws(self.swa_params).warmup_steps_or_epochs
             ):
-                transfer_weights(swa_model, self.module)
-            with get_timing_context(
-                state,
-                f"{self.__class__.__name__}.stochastic_weight_avg_transfer_batch_norm_stats",
-            ):
-                transfer_batch_norm_stats(swa_model, self.module)
+                with get_timing_context(
+                    state, f"{self.__class__.__name__}.swa_lr_scheduler_step"
+                ):
+                    none_throws(self.swa_scheduler).step()
+            else:
+                # optionally step lr scheduler if SWA not in use
+                lr_scheduler = self.lr_scheduler
+                if lr_scheduler:
+                    with get_timing_context(
+                        state, f"{self.__class__.__name__}.lr_scheduler_step"
+                    ):
+                        lr_scheduler.step()
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
