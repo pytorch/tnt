@@ -57,6 +57,7 @@ from .rank_zero_log import (
     rank_zero_warn,
 )
 from .stateful import Stateful
+from .swa import AveragedModel
 from .test_utils import get_pet_launch_config, spawn_multi_process
 from .timer import FullSyncPeriodicTimer, get_timer_summary, log_elapsed_time, Timer
 from .tqdm import close_progress_bar, create_progress_bar, update_progress_bar
@@ -121,6 +122,7 @@ __all__ = [
     "rank_zero_print",
     "rank_zero_warn",
     "Stateful",
+    "AveragedModel",
     "FullSyncPeriodicTimer",
     "get_timer_summary",
     "log_elapsed_time",
