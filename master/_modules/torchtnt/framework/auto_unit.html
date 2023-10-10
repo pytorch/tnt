@@ -360,34 +360,86 @@
 
 <span class="kn">import</span> <span class="nn">contextlib</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
 <span class="kn">from</span> <span class="nn">torch.cuda.amp</span> <span class="kn">import</span> <span class="n">GradScaler</span>
 <span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">FSDP</span>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DistributedDataParallel</span> <span class="k">as</span> <span class="n">DDP</span>
-<span class="kn">from</span> <span class="nn">torch.optim.swa_utils</span> <span class="kn">import</span> <span class="n">AveragedModel</span><span class="p">,</span> <span class="n">SWALR</span>
+<span class="kn">from</span> <span class="nn">torch.optim.swa_utils</span> <span class="kn">import</span> <span class="n">SWALR</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">ActivePhase</span><span class="p">,</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">EvalUnit</span><span class="p">,</span> <span class="n">PredictUnit</span><span class="p">,</span> <span class="n">TPredictData</span><span class="p">,</span> <span class="n">TrainUnit</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">_is_fsdp_module</span><span class="p">,</span> <span class="n">get_timing_context</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.device</span> <span class="kn">import</span> <span class="n">copy_data_to_device</span><span class="p">,</span> <span class="n">record_data_in_stream</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.env</span> <span class="kn">import</span> <span class="n">init_from_env</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.lr_scheduler</span> <span class="kn">import</span> <span class="n">TLRScheduler</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.misc</span> <span class="kn">import</span> <span class="n">transfer_batch_norm_stats</span><span class="p">,</span> <span class="n">transfer_weights</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.precision</span> <span class="kn">import</span> <span class="n">convert_precision_str_to_dtype</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.prepare_module</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ActivationCheckpointParams</span><span class="p">,</span>
+    <span class="n">FSDPStrategy</span><span class="p">,</span>
+    <span class="n">prepare_fsdp</span><span class="p">,</span>
     <span class="n">prepare_module</span><span class="p">,</span>
     <span class="n">Strategy</span><span class="p">,</span>
-    <span class="n">SWAParams</span><span class="p">,</span>
     <span class="n">TorchCompileParams</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.swa</span> <span class="kn">import</span> <span class="n">AveragedModel</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="n">is_torch_version_ge_1_13_1</span>
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
 
 
 <span class="n">TData</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TData&quot;</span><span class="p">)</span>
+
+<span class="n">TSWA_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
+<span class="c1"># pyre-ignore Invalid type parameters [24]: Generic type `Callable` expects 2 type parameters.</span>
+<span class="n">TSWA_multi_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SWALRParams</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass to store parameters for SWALR learning rate scheduler.</span>
+<span class="sd">    See https://github.com/pytorch/pytorch/blob/main/torch/optim/swa_utils.py#L279</span>
+<span class="sd">    for more details.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        anneal_steps_or_epochs: number of steps or epochs to anneal the SWA Scheduler</span>
+<span class="sd">        anneal_strategy: method for annealing, supports &quot;linear&quot; and &quot;cos&quot;</span>
+<span class="sd">        swa_lrs: the learning rate value for all param groups together or separately for each group</span>
+
+<span class="sd">        Note: Whether steps or epochs is used based on what `step_lr_interval` is set on the AutoUnit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">anneal_steps_or_epochs</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">anneal_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span>
+    <span class="n">swa_lrs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SWAParams</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass to store parameters for stochastic weight averaging.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        warmup_steps_or_epochs: number of steps or epochs before starting SWA</span>
+<span class="sd">        step_or_epoch_update_freq: number of steps or epochs between each SWA update</span>
+<span class="sd">        avg_fn: function to compute custom average of parameters</span>
+<span class="sd">        multi_avg_fn: function used to update parameters inplace</span>
+<span class="sd">        swalr_params: params for SWA learning rate scheduler</span>
+
+<span class="sd">        Note: Whether steps or epochs is used based on what `step_lr_interval` is set on the AutoUnit.</span>
+
+<span class="sd">        Note: Only one of avg_fn, multi_avg_fn should be specified</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">warmup_steps_or_epochs</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">step_or_epoch_update_freq</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">multi_avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_multi_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">swalr_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SWALRParams</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="k">class</span> <span class="nc">_ConfigureOptimizersCaller</span><span class="p">(</span><span class="n">ABCMeta</span><span class="p">):</span>
@@ -397,7 +449,6 @@
         <span class="n">x</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">x</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">x</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">x</span><span class="o">.</span><span class="n">swa_model</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">x</span><span class="o">.</span><span class="n">swa_scheduler</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
@@ -405,19 +456,13 @@
                 <span class="n">x</span><span class="o">.</span><span class="n">module</span>
             <span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">avg_fn</span><span class="p">:</span>
-                    <span class="n">x</span><span class="o">.</span><span class="n">swa_model</span> <span class="o">=</span> <span class="n">AveragedModel</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">use_buffers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">x</span><span class="o">.</span><span class="n">swa_model</span> <span class="o">=</span> <span class="n">AveragedModel</span><span class="p">(</span>
-                        <span class="n">x</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">avg_fn</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">avg_fn</span><span class="p">,</span> <span class="n">use_buffers</span><span class="o">=</span><span class="kc">True</span>
-                    <span class="p">)</span>
-
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">swa_params</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">swalr_params</span><span class="p">:</span>
+                <span class="n">swalr_params</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">swalr_params</span>
                 <span class="n">x</span><span class="o">.</span><span class="n">swa_scheduler</span> <span class="o">=</span> <span class="n">SWALR</span><span class="p">(</span>
                     <span class="n">optimizer</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
-                    <span class="n">swa_lr</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span>
-                    <span class="n">anneal_epochs</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">anneal_epochs</span><span class="p">,</span>
-                    <span class="n">anneal_strategy</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">anneal_strategy</span><span class="p">,</span>
+                    <span class="n">swa_lr</span><span class="o">=</span><span class="n">swalr_params</span><span class="o">.</span><span class="n">swa_lrs</span><span class="p">,</span>
+                    <span class="n">anneal_epochs</span><span class="o">=</span><span class="n">swalr_params</span><span class="o">.</span><span class="n">anneal_steps_or_epochs</span><span class="p">,</span>
+                    <span class="n">anneal_strategy</span><span class="o">=</span><span class="n">swalr_params</span><span class="o">.</span><span class="n">anneal_strategy</span><span class="p">,</span>
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">x</span>
@@ -664,7 +709,7 @@
 <span class="sd">        training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.</span>
 
 <span class="sd">    Note:</span>
-<span class="sd">        Stochastic Weight Averaging is currently not supported with the FSDP strategy.</span>
+<span class="sd">        If FSDPStrategy and SWAParams are passed in, the swa model will be sharded with the same FSDP parameters.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Torch compile support is only available in PyTorch 2.0 or higher.</span>
@@ -704,11 +749,31 @@
             <span class="k">else</span> <span class="n">precision</span>
         <span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SWAParams</span><span class="p">]</span> <span class="o">=</span> <span class="n">swa_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AveragedModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">swa_params</span> <span class="ow">and</span> <span class="n">training</span><span class="p">:</span>
+            <span class="n">module_for_swa</span> <span class="o">=</span> <span class="n">module</span>
+            <span class="n">skip_deepcopy</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">FSDPStrategy</span><span class="p">):</span>
+                <span class="c1"># must use exact same FSDPStrategy as original module</span>
+                <span class="c1"># so each rank can computes EMA for its own local shard</span>
+                <span class="c1"># since models are sharded identically if FSDP params are the same</span>
+                <span class="n">module_for_swa</span> <span class="o">=</span> <span class="n">prepare_fsdp</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">module</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
+                <span class="n">skip_deepcopy</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span> <span class="o">=</span> <span class="n">AveragedModel</span><span class="p">(</span>
+                <span class="n">module_for_swa</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                <span class="n">avg_fn</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">avg_fn</span><span class="p">,</span>
+                <span class="n">multi_avg_fn</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">multi_avg_fn</span><span class="p">,</span>
+                <span class="n">use_buffers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">skip_deepcopy</span><span class="o">=</span><span class="n">skip_deepcopy</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">prepare_module</span><span class="p">(</span>
             <span class="n">module</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
             <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
-            <span class="n">swa_params</span><span class="o">=</span><span class="n">swa_params</span><span class="p">,</span>
             <span class="n">torch_compile_params</span><span class="o">=</span><span class="n">torch_compile_params</span><span class="p">,</span>
             <span class="n">activation_checkpoint_params</span><span class="o">=</span><span class="n">activation_checkpoint_params</span><span class="p">,</span>
         <span class="p">)</span>
@@ -735,8 +800,6 @@
             <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SWAParams</span><span class="p">]</span> <span class="o">=</span> <span class="n">swa_params</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="o">=</span> <span class="n">training</span>
 
         <span class="c1"># cuda stream to use for moving data to device</span>
@@ -752,7 +815,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TLRScheduler</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AveragedModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SWALR</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="AutoUnit.configure_optimizers_and_lr_scheduler"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.configure_optimizers_and_lr_scheduler">[docs]</a>    <span class="nd">@abstractmethod</span>
@@ -867,6 +929,29 @@
 
         <span class="k">return</span> <span class="n">batch</span>
 
+    <span class="k">def</span> <span class="nf">_should_update_swa</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">swa_params</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
+            <span class="n">current_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># since num_epochs_completed is incremented prior to updating swa</span>
+            <span class="n">current_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">current_progress</span> <span class="o">&gt;=</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span><span class="p">:</span>
+            <span class="n">progress_since</span> <span class="o">=</span> <span class="n">current_progress</span> <span class="o">-</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
+            <span class="n">update_freq</span> <span class="o">=</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">step_or_epoch_update_freq</span>
+            <span class="k">return</span> <span class="n">progress_since</span> <span class="o">%</span> <span class="n">update_freq</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_update_swa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.stochastic_weight_avg_update&quot;</span>
+        <span class="p">):</span>
+            <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span><span class="p">)</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
+
     <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
 <div class="viewcode-block" id="AutoUnit.train_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.train_step">[docs]</a>    <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">]</span>
@@ -979,18 +1064,27 @@
             <span class="p">):</span>
                 <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-            <span class="c1"># optionally step lr scheduler if SWA not in use</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span> <span class="ow">is</span> <span class="kc">None</span>
-                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span>
-                <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">epoch_start</span>
-            <span class="p">):</span>
-                <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span>
-                <span class="k">if</span> <span class="n">lr_scheduler</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_update_swa</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_update_swa</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+                <span class="c1"># uses swa_scheduler if applicable, otherwise the regular lr_scheduler</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span> <span class="ow">and</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
+                    <span class="o">&gt;=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
+                <span class="p">):</span>
                     <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
+                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.swa_lr_scheduler_step&quot;</span>
                     <span class="p">):</span>
-                        <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+                        <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># optionally step lr scheduler if SWA not in use</span>
+                    <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span>
+                    <span class="k">if</span> <span class="n">lr_scheduler</span><span class="p">:</span>
+                        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
+                        <span class="p">):</span>
+                            <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
         <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_train_step_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -1022,43 +1116,26 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Note: if overriding ``on_train_epoch_end``, remember to call ``super().on_train_epoch_end()``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">swa_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">swa_model</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="o">.</span><span class="n">epoch_start</span>
-        <span class="p">):</span>
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.stochastic_weight_avg_update&quot;</span>
-            <span class="p">):</span>
-                <span class="n">swa_model</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.stochastic_weight_avg_step&quot;</span>
-            <span class="p">):</span>
-                <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;epoch&quot;</span><span class="p">:</span>
-            <span class="c1"># optionally step lr scheduler</span>
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
-            <span class="p">):</span>
-                <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;epoch&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_update_swa</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_swa</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AutoUnit.on_train_end"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.on_train_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Note that if using SWA and implementing `on_train_end()`, must call `super().on_train_end()`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">swa_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span>
-        <span class="k">if</span> <span class="n">swa_model</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.stochastic_weight_avg_transfer_weights&quot;</span><span class="p">,</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span> <span class="ow">and</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span>
+                <span class="o">&gt;</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
             <span class="p">):</span>
-                <span class="n">transfer_weights</span><span class="p">(</span><span class="n">swa_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.stochastic_weight_avg_transfer_batch_norm_stats&quot;</span><span class="p">,</span>
-            <span class="p">):</span>
-                <span class="n">transfer_batch_norm_stats</span><span class="p">(</span><span class="n">swa_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">)</span></div>
+                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                    <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.swa_lr_scheduler_step&quot;</span>
+                <span class="p">):</span>
+                    <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># optionally step lr scheduler if SWA not in use</span>
+                <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span>
+                <span class="k">if</span> <span class="n">lr_scheduler</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
+                    <span class="p">):</span>
+                        <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
 
     <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
 <div class="viewcode-block" id="AutoUnit.eval_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.eval_step">[docs]</a>    <span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>

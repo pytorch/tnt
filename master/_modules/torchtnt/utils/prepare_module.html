@@ -385,8 +385,6 @@
     <span class="kn">from</span> <span class="nn">torch.distributed._composable_state</span> <span class="kn">import</span> <span class="n">_get_module_state</span>
     <span class="kn">from</span> <span class="nn">torch.distributed.fsdp._common_utils</span> <span class="kn">import</span> <span class="n">_FSDPState</span>
 
-<span class="n">TSWA_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
-
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Strategy</span><span class="p">:</span>
@@ -460,26 +458,6 @@
     <span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">disable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-
-
-<span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">SWAParams</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Dataclass to store parameters for stochastic weight averaging.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        epoch_start: number of epochs to wait for before starting SWA</span>
-<span class="sd">        anneal_epochs: number of epochs to anneal the SWA Scheduler to the learning rate (lr)</span>
-<span class="sd">        anneal_strategy: method for annealing, supports &quot;linear&quot; and &quot;cos&quot;</span>
-<span class="sd">        lr: learning rate for SWA</span>
-<span class="sd">        avg_fn: function to compute custom average of parameters</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">epoch_start</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">anneal_epochs</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">anneal_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span>
-    <span class="n">lr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span>
-    <span class="n">avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <span class="nd">@dataclass</span>
@@ -629,7 +607,6 @@
     <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">swa_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SWAParams</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">torch_compile_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TorchCompileParams</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">activation_checkpoint_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ActivationCheckpointParams</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
@@ -656,10 +633,6 @@
                 <span class="p">)</span>
             <span class="n">module</span> <span class="o">=</span> <span class="n">prepare_ddp</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">FSDPStrategy</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">swa_params</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;Stochastic Weight Averaging is currently not supported with the FSDP strategy&quot;</span>
-                <span class="p">)</span>
             <span class="k">if</span> <span class="n">torch_compile_params</span> <span class="ow">and</span> <span class="n">strategy</span><span class="o">.</span><span class="n">use_orig_params</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
                 <span class="c1"># as stated here https://pytorch.org/get-started/pytorch-2.0/</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>

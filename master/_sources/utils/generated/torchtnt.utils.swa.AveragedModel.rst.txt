@@ -1,0 +1,78 @@
+﻿torchtnt.utils.swa.AveragedModel
+================================
+
+.. currentmodule:: torchtnt.utils.swa
+
+.. autoclass:: AveragedModel
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AveragedModel.__init__
+      ~AveragedModel.add_module
+      ~AveragedModel.apply
+      ~AveragedModel.bfloat16
+      ~AveragedModel.buffers
+      ~AveragedModel.children
+      ~AveragedModel.compile
+      ~AveragedModel.cpu
+      ~AveragedModel.cuda
+      ~AveragedModel.double
+      ~AveragedModel.eval
+      ~AveragedModel.extra_repr
+      ~AveragedModel.float
+      ~AveragedModel.forward
+      ~AveragedModel.get_buffer
+      ~AveragedModel.get_extra_state
+      ~AveragedModel.get_parameter
+      ~AveragedModel.get_submodule
+      ~AveragedModel.half
+      ~AveragedModel.ipu
+      ~AveragedModel.load_state_dict
+      ~AveragedModel.modules
+      ~AveragedModel.named_buffers
+      ~AveragedModel.named_children
+      ~AveragedModel.named_modules
+      ~AveragedModel.named_parameters
+      ~AveragedModel.parameters
+      ~AveragedModel.register_backward_hook
+      ~AveragedModel.register_buffer
+      ~AveragedModel.register_forward_hook
+      ~AveragedModel.register_forward_pre_hook
+      ~AveragedModel.register_full_backward_hook
+      ~AveragedModel.register_full_backward_pre_hook
+      ~AveragedModel.register_load_state_dict_post_hook
+      ~AveragedModel.register_module
+      ~AveragedModel.register_parameter
+      ~AveragedModel.register_state_dict_pre_hook
+      ~AveragedModel.requires_grad_
+      ~AveragedModel.set_extra_state
+      ~AveragedModel.share_memory
+      ~AveragedModel.state_dict
+      ~AveragedModel.to
+      ~AveragedModel.to_empty
+      ~AveragedModel.train
+      ~AveragedModel.type
+      ~AveragedModel.update_parameters
+      ~AveragedModel.xpu
+      ~AveragedModel.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AveragedModel.T_destination
+      ~AveragedModel.call_super_init
+      ~AveragedModel.dump_patches
+      ~AveragedModel.training
+   
+   
