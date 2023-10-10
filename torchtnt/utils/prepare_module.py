@@ -32,8 +32,6 @@ if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
     from torch.distributed.fsdp._common_utils import _FSDPState
 
-TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
-
 
 @dataclass
 class Strategy:
@@ -107,26 +105,6 @@ class TorchCompileParams:
     mode: Union[str, None] = None
     options: Optional[Dict[str, Union[str, int, bool]]] = None
     disable: bool = False
-
-
-@dataclass
-class SWAParams:
-    """
-    Dataclass to store parameters for stochastic weight averaging.
-
-    Args:
-        epoch_start: number of epochs to wait for before starting SWA
-        anneal_epochs: number of epochs to anneal the SWA Scheduler to the learning rate (lr)
-        anneal_strategy: method for annealing, supports "linear" and "cos"
-        lr: learning rate for SWA
-        avg_fn: function to compute custom average of parameters
-    """
-
-    epoch_start: int
-    anneal_epochs: int
-    anneal_strategy: str = "linear"
-    lr: float = 0.05
-    avg_fn: Optional[TSWA_avg_fn] = None
 
 
 @dataclass
@@ -276,7 +254,6 @@ def prepare_module(
     device: torch.device,
     *,
     strategy: Optional[Union[Strategy, str]] = None,
-    swa_params: Optional[SWAParams] = None,
     torch_compile_params: Optional[TorchCompileParams] = None,
     activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
 ) -> torch.nn.Module:
@@ -303,10 +280,6 @@ def prepare_module(
                 )
             module = prepare_ddp(module, device, strategy)
         elif isinstance(strategy, FSDPStrategy):
-            if swa_params:
-                raise RuntimeError(
-                    "Stochastic Weight Averaging is currently not supported with the FSDP strategy"
-                )
             if torch_compile_params and strategy.use_orig_params is False:
                 # as stated here https://pytorch.org/get-started/pytorch-2.0/
                 raise RuntimeError(
