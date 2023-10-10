@@ -364,11 +364,6 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
 <span class="kn">from</span> <span class="nn">torch.distributed</span> <span class="kn">import</span> <span class="n">ProcessGroup</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.algorithms._checkpoint.checkpoint_wrapper</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">apply_activation_checkpointing</span><span class="p">,</span>
-    <span class="n">checkpoint_wrapper</span><span class="p">,</span>
-    <span class="n">CheckpointImpl</span><span class="p">,</span>
-<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">FSDP</span><span class="p">,</span> <span class="n">StateDictType</span>
 <span class="kn">from</span> <span class="nn">torch.distributed.fsdp.api</span> <span class="kn">import</span> <span class="n">OptimStateDictConfig</span><span class="p">,</span> <span class="n">StateDictConfig</span>
 <span class="kn">from</span> <span class="nn">torch.distributed.fsdp.fully_sharded_data_parallel</span> <span class="kn">import</span> <span class="p">(</span>
@@ -383,6 +378,11 @@
 
 <span class="k">if</span> <span class="n">is_torch_version_geq_2_0</span><span class="p">():</span>
     <span class="kn">from</span> <span class="nn">torch.distributed._composable_state</span> <span class="kn">import</span> <span class="n">_get_module_state</span>
+    <span class="kn">from</span> <span class="nn">torch.distributed.algorithms._checkpoint.checkpoint_wrapper</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">apply_activation_checkpointing</span><span class="p">,</span>
+        <span class="n">checkpoint_wrapper</span><span class="p">,</span>
+        <span class="n">CheckpointImpl</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="kn">from</span> <span class="nn">torch.distributed.fsdp._common_utils</span> <span class="kn">import</span> <span class="n">_FSDPState</span>
 
 
@@ -470,7 +470,7 @@
 <span class="sd">        check_fn: A lambda function which will be passed to each child submodule and return ``True`` or ``False`` depending on whether the submodule should be wrapped.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">checkpoint_impl</span><span class="p">:</span> <span class="n">CheckpointImpl</span>
+    <span class="n">checkpoint_impl</span><span class="p">:</span> <span class="s2">&quot;CheckpointImpl&quot;</span>
     <span class="n">check_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span>
 
 
@@ -643,6 +643,8 @@
         <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">activation_checkpoint_params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_torch_version_geq_2_0</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Activation checkpointing requires torch&gt;=2.0&quot;</span><span class="p">)</span>
         <span class="n">checkpoint_impl</span> <span class="o">=</span> <span class="n">activation_checkpoint_params</span><span class="o">.</span><span class="n">checkpoint_impl</span>
         <span class="n">check_fn</span> <span class="o">=</span> <span class="n">activation_checkpoint_params</span><span class="o">.</span><span class="n">check_fn</span>
         <span class="n">custom_checkpoint_wrapper</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
