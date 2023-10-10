@@ -374,8 +374,15 @@ with the train progress, train dataloader (if applicable), and random number gen
 <li><strong>dirpath</strong> – Parent directory to save snapshots to.</li>
 <li><strong>save_every_n_train_steps</strong> – Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.</li>
 <li><strong>save_every_n_epochs</strong> – Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.</li>
-<li><strong>replicated</strong> – A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
-For more information, see <a class="reference external" href="https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take" target="_blank">https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take</a> .</li>
+<li><strong>replicated</strong> – <p>A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
+For more information, see <a class="reference external" href="https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take" target="_blank">https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take</a>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The replication property is safer to not set, and should only be used if really needed.
+Things like metrics, grad_scalers, etc should not be marked as replicated as they
+may contain different values across processes. If unsure, leave this field unset.</p>
+</div>
+</li>
 <li><strong>storage_options</strong> – storage_options: Additional keyword options for the storage plugin to use, to be passed to <a class="reference external" href="https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot" target="_blank">torchsnapshot.Snapshot</a>.
 See each storage plugin’s documentation for customizations.</li>
 </ul>
@@ -383,7 +390,10 @@ See each storage plugin’s documentation for customizations.</li>
 </tr>
 </tbody>
 </table>
-<p>Note: If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks</p>
+</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If checkpointing FSDP model, you can set state_dict type calling <a class="reference external" href="https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type" target="_blank">set_state_dict_type</a> prior to starting training.</p>
