@@ -560,6 +560,44 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
+    # pyre-fixme[56]: Pyre was not able to infer the type of argument
+    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
+    @unittest.skipUnless(
+        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_process_group_plumbing(self) -> None:
+        """
+        Creates a new process group and verifies that it's passed through correctly
+        """
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_process_group_plumbing,
+        )
+
+    @staticmethod
+    def _test_process_group_plumbing() -> None:
+        new_pg = dist.new_group(backend="gloo")
+
+        if get_global_rank() == 0:
+            temp_dir = tempfile.mkdtemp()
+        else:
+            temp_dir = ""
+
+        snapshot_cb = TorchSnapshotSaver(
+            temp_dir,
+            process_group=new_pg,
+        )
+        tc = unittest.TestCase()
+        try:
+            tc.assertEqual(snapshot_cb._process_group, new_pg)
+        finally:
+            if get_global_rank() == 0:
+                shutil.rmtree(temp_dir)  # delete temp directory
+
 
 class DummyStatefulDataLoader:
     # pyre-fixme[3]: Return type must be annotated.

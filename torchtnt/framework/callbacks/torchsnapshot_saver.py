@@ -56,6 +56,7 @@ class TorchSnapshotSaver(Callback):
         dirpath: Parent directory to save snapshots to.
         save_every_n_train_steps: Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.
         save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
+        process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
         replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
             For more information, see https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take.
 
@@ -79,6 +80,7 @@ class TorchSnapshotSaver(Callback):
         *,
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
         replicated: Optional[List[str]] = None,
         storage_options: Optional[Dict[str, Any]] = None,
     ) -> None:
@@ -93,6 +95,7 @@ class TorchSnapshotSaver(Callback):
             )
         self._save_every_n_epochs = save_every_n_epochs
         self._save_every_n_train_steps = save_every_n_train_steps
+        self._process_group = process_group
         self._sync_dirpath_to_all_ranks(dirpath)
         self._replicated: Set[str] = set(replicated or [])
 
@@ -106,7 +109,7 @@ class TorchSnapshotSaver(Callback):
 
         dirpath_container = [dirpath] if get_global_rank() == 0 else [""]
         # broadcast directory from global rank 0
-        dist.broadcast_object_list(dirpath_container, src=0)
+        dist.broadcast_object_list(dirpath_container, src=0, group=self._process_group)
         updated_dirpath = dirpath_container[0]
         if updated_dirpath != dirpath:
             logger.warning(f"Updating dirpath to match rank 0: {updated_dirpath}")
@@ -205,6 +208,7 @@ class TorchSnapshotSaver(Callback):
         self._prev_snapshot = Snapshot.async_take(
             str(snapshot_path),
             app_state=app_state,
+            pg=self._process_group,
             replicated=list(self._replicated),
             storage_options=self._storage_options,
         )
@@ -219,6 +223,7 @@ class TorchSnapshotSaver(Callback):
         train_dataloader: Optional[_TStateful] = None,
         restore_train_progress: bool = True,
         restore_eval_progress: bool = True,
+        process_group: Optional[dist.ProcessGroup] = None,
         storage_options: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Utility method to restore snapshot state from a path.
@@ -232,6 +237,7 @@ class TorchSnapshotSaver(Callback):
             train_dataloader: An optional train dataloader to restore.
             restore_train_progress: Whether to restore the training progress state.
             restore_eval_progress: Whether to restore the evaluation progress state.
+            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
         """
 
@@ -244,7 +250,9 @@ class TorchSnapshotSaver(Callback):
         app_state = _app_state(unit)
         _check_app_state_collision(app_state)
 
-        snapshot = torchsnapshot.Snapshot(path, storage_options=storage_options)
+        snapshot = torchsnapshot.Snapshot(
+            path, pg=process_group, storage_options=storage_options
+        )
 
         rng_state = torchsnapshot.RNGState()
         app_state[_RNG_STATE_KEY] = rng_state
@@ -278,6 +286,7 @@ class TorchSnapshotSaver(Callback):
         train_dataloader: Optional[_TStateful] = None,
         restore_train_progress: bool = True,
         restore_eval_progress: bool = True,
+        process_group: Optional[dist.ProcessGroup] = None,
         storage_options: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
@@ -292,12 +301,13 @@ class TorchSnapshotSaver(Callback):
             train_dataloader: An optional train dataloader to restore.
             restore_train_progress: Whether to restore the training progress state.
             restore_eval_progress: Whether to restore the evaluation progress state.
+            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
 
         Returns:
             True if the latest snapshot directory was found and successfully restored, otherwise False.
         """
-        path = get_latest_checkpoint_path(dirpath)
+        path = get_latest_checkpoint_path(dirpath, process_group=process_group)
         if path is None:
             return False
         logger.info(f"Restoring from path: {path}")
@@ -307,17 +317,21 @@ class TorchSnapshotSaver(Callback):
             train_dataloader=train_dataloader,
             restore_train_progress=restore_train_progress,
             restore_eval_progress=restore_eval_progress,
+            process_group=process_group,
             storage_options=storage_options,
         )
         return True
 
 
-def get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
+def get_latest_checkpoint_path(
+    dirpath: str, process_group: Optional[dist.ProcessGroup] = None
+) -> Optional[str]:
     """
     Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory.
 
     Args:
         dirpath: parent directory where checkpoints are saved.
+        process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Raises:
         AssertionError if the checkpoint subdirectories are not named in the format epoch_{epoch}_step_{step}.
@@ -334,7 +348,7 @@ def get_latest_checkpoint_path(dirpath: str) -> Optional[str]:
         return ret
 
     # Otherwise, broadcast result from rank 0 to all ranks
-    pg = PGWrapper(dist.group.WORLD)
+    pg = PGWrapper(dist.group.WORLD if process_group is None else process_group)
     path_container = [ret] if rank == 0 else [None]
     pg.broadcast_object_list(path_container, 0)
     val = path_container[0]
