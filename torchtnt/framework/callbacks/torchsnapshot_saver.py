@@ -348,7 +348,7 @@ def get_latest_checkpoint_path(
         return ret
 
     # Otherwise, broadcast result from rank 0 to all ranks
-    pg = PGWrapper(dist.group.WORLD if process_group is None else process_group)
+    pg = PGWrapper(process_group)
     path_container = [ret] if rank == 0 else [None]
     pg.broadcast_object_list(path_container, 0)
     val = path_container[0]
