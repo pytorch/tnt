@@ -175,7 +175,6 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             strategy=strategy,
             torch_compile_params=torch_compile_params,
         )
-        self.module: torch.nn.Module = module
 
         # cuda stream to use for moving data to device
         self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
