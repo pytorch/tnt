@@ -22,6 +22,7 @@ from torchtnt.utils.distributed import (
     get_file_init_method,
     get_global_rank,
     get_local_rank,
+    get_local_world_size,
     get_process_group_backend_from_device,
     get_tcp_init_method,
     get_world_size,
@@ -84,6 +85,7 @@ class DistributedTest(unittest.TestCase):
 
     def test_get_local_rank_single(self) -> None:
         self.assertEqual(get_local_rank(), 0)
+        self.assertEqual(get_local_world_size(), 1)
 
     # pyre-fixme[56]: Pyre was not able to infer the type of argument
     #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
@@ -98,6 +100,7 @@ class DistributedTest(unittest.TestCase):
     def _test_get_local_rank() -> None:
         # when launched on a single node, these should be equal
         assert get_local_rank() == get_global_rank()
+        assert get_local_world_size() == get_world_size()
 
     @staticmethod
     def _destroy_process_group() -> None:
