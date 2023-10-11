@@ -701,7 +701,7 @@
         <span class="k">return</span> <span class="n">ret</span>
 
     <span class="c1"># Otherwise, broadcast result from rank 0 to all ranks</span>
-    <span class="n">pg</span> <span class="o">=</span> <span class="n">PGWrapper</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">WORLD</span> <span class="k">if</span> <span class="n">process_group</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">process_group</span><span class="p">)</span>
+    <span class="n">pg</span> <span class="o">=</span> <span class="n">PGWrapper</span><span class="p">(</span><span class="n">process_group</span><span class="p">)</span>
     <span class="n">path_container</span> <span class="o">=</span> <span class="p">[</span><span class="n">ret</span><span class="p">]</span> <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
     <span class="n">pg</span><span class="o">.</span><span class="n">broadcast_object_list</span><span class="p">(</span><span class="n">path_container</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">val</span> <span class="o">=</span> <span class="n">path_container</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
