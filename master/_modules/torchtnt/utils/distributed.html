@@ -482,6 +482,17 @@
     <span class="k">return</span> <span class="mi">0</span></div>
 
 
+<span class="k">def</span> <span class="nf">get_local_world_size</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get local world size using the ``LOCAL_WORLD_SIZE`` environment variable, if populated: https://pytorch.org/docs/stable/elastic/run.html#environment-variables</span>
+<span class="sd">    Defaults to 1 if ``LOCAL_WORLD_SIZE`` is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">environ_local_world_size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LOCAL_WORLD_SIZE&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">environ_local_world_size</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">environ_local_world_size</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span>
+
+
 <div class="viewcode-block" id="get_world_size"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_world_size.html#torchtnt.utils.distributed.get_world_size">[docs]</a><span class="k">def</span> <span class="nf">get_world_size</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.</span>
