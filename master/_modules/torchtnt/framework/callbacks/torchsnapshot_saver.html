@@ -409,6 +409,7 @@
 <span class="sd">        dirpath: Parent directory to save snapshots to.</span>
 <span class="sd">        save_every_n_train_steps: Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.</span>
 <span class="sd">        save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.</span>
+<span class="sd">        process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
 <span class="sd">        replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.</span>
 <span class="sd">            For more information, see https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take.</span>
 
@@ -432,6 +433,7 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">save_every_n_train_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_every_n_epochs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">replicated</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">storage_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -446,6 +448,7 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_save_every_n_epochs</span> <span class="o">=</span> <span class="n">save_every_n_epochs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_save_every_n_train_steps</span> <span class="o">=</span> <span class="n">save_every_n_train_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span> <span class="o">=</span> <span class="n">process_group</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sync_dirpath_to_all_ranks</span><span class="p">(</span><span class="n">dirpath</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">replicated</span> <span class="ow">or</span> <span class="p">[])</span>
 
@@ -459,7 +462,7 @@
 
         <span class="n">dirpath_container</span> <span class="o">=</span> <span class="p">[</span><span class="n">dirpath</span><span class="p">]</span> <span class="k">if</span> <span class="n">get_global_rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span>
         <span class="c1"># broadcast directory from global rank 0</span>
-        <span class="n">dist</span><span class="o">.</span><span class="n">broadcast_object_list</span><span class="p">(</span><span class="n">dirpath_container</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">dist</span><span class="o">.</span><span class="n">broadcast_object_list</span><span class="p">(</span><span class="n">dirpath_container</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span><span class="p">)</span>
         <span class="n">updated_dirpath</span> <span class="o">=</span> <span class="n">dirpath_container</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">updated_dirpath</span> <span class="o">!=</span> <span class="n">dirpath</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Updating dirpath to match rank 0: </span><span class="si">{</span><span class="n">updated_dirpath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -558,6 +561,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_prev_snapshot</span> <span class="o">=</span> <span class="n">Snapshot</span><span class="o">.</span><span class="n">async_take</span><span class="p">(</span>
             <span class="nb">str</span><span class="p">(</span><span class="n">snapshot_path</span><span class="p">),</span>
             <span class="n">app_state</span><span class="o">=</span><span class="n">app_state</span><span class="p">,</span>
+            <span class="n">pg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span><span class="p">,</span>
             <span class="n">replicated</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span><span class="p">),</span>
             <span class="n">storage_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage_options</span><span class="p">,</span>
         <span class="p">)</span>
@@ -572,6 +576,7 @@
         <span class="n">train_dataloader</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_TStateful</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">restore_train_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">restore_eval_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">storage_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Utility method to restore snapshot state from a path.</span>
@@ -585,6 +590,7 @@
 <span class="sd">            train_dataloader: An optional train dataloader to restore.</span>
 <span class="sd">            restore_train_progress: Whether to restore the training progress state.</span>
 <span class="sd">            restore_eval_progress: Whether to restore the evaluation progress state.</span>
+<span class="sd">            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
 <span class="sd">            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot &lt;https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot&gt;`_. See each storage plugin&#39;s documentation for customizations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -597,7 +603,9 @@
         <span class="n">app_state</span> <span class="o">=</span> <span class="n">_app_state</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
         <span class="n">_check_app_state_collision</span><span class="p">(</span><span class="n">app_state</span><span class="p">)</span>
 
-        <span class="n">snapshot</span> <span class="o">=</span> <span class="n">torchsnapshot</span><span class="o">.</span><span class="n">Snapshot</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">storage_options</span><span class="o">=</span><span class="n">storage_options</span><span class="p">)</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="n">torchsnapshot</span><span class="o">.</span><span class="n">Snapshot</span><span class="p">(</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">pg</span><span class="o">=</span><span class="n">process_group</span><span class="p">,</span> <span class="n">storage_options</span><span class="o">=</span><span class="n">storage_options</span>
+        <span class="p">)</span>
 
         <span class="n">rng_state</span> <span class="o">=</span> <span class="n">torchsnapshot</span><span class="o">.</span><span class="n">RNGState</span><span class="p">()</span>
         <span class="n">app_state</span><span class="p">[</span><span class="n">_RNG_STATE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng_state</span>
@@ -631,6 +639,7 @@
         <span class="n">train_dataloader</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_TStateful</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">restore_train_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">restore_eval_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">storage_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -645,12 +654,13 @@
 <span class="sd">            train_dataloader: An optional train dataloader to restore.</span>
 <span class="sd">            restore_train_progress: Whether to restore the training progress state.</span>
 <span class="sd">            restore_eval_progress: Whether to restore the evaluation progress state.</span>
+<span class="sd">            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
 <span class="sd">            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot &lt;https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot&gt;`_. See each storage plugin&#39;s documentation for customizations.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            True if the latest snapshot directory was found and successfully restored, otherwise False.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">get_latest_checkpoint_path</span><span class="p">(</span><span class="n">dirpath</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">get_latest_checkpoint_path</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">process_group</span><span class="o">=</span><span class="n">process_group</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Restoring from path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -660,17 +670,21 @@
             <span class="n">train_dataloader</span><span class="o">=</span><span class="n">train_dataloader</span><span class="p">,</span>
             <span class="n">restore_train_progress</span><span class="o">=</span><span class="n">restore_train_progress</span><span class="p">,</span>
             <span class="n">restore_eval_progress</span><span class="o">=</span><span class="n">restore_eval_progress</span><span class="p">,</span>
+            <span class="n">process_group</span><span class="o">=</span><span class="n">process_group</span><span class="p">,</span>
             <span class="n">storage_options</span><span class="o">=</span><span class="n">storage_options</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">get_latest_checkpoint_path</span><span class="p">(</span><span class="n">dirpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span> <span class="nf">get_latest_checkpoint_path</span><span class="p">(</span>
+    <span class="n">dirpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        dirpath: parent directory where checkpoints are saved.</span>
+<span class="sd">        process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        AssertionError if the checkpoint subdirectories are not named in the format epoch_{epoch}_step_{step}.</span>
@@ -687,7 +701,7 @@
         <span class="k">return</span> <span class="n">ret</span>
 
     <span class="c1"># Otherwise, broadcast result from rank 0 to all ranks</span>
-    <span class="n">pg</span> <span class="o">=</span> <span class="n">PGWrapper</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">WORLD</span><span class="p">)</span>
+    <span class="n">pg</span> <span class="o">=</span> <span class="n">PGWrapper</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">WORLD</span> <span class="k">if</span> <span class="n">process_group</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">process_group</span><span class="p">)</span>
     <span class="n">path_container</span> <span class="o">=</span> <span class="p">[</span><span class="n">ret</span><span class="p">]</span> <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
     <span class="n">pg</span><span class="o">.</span><span class="n">broadcast_object_list</span><span class="p">(</span><span class="n">path_container</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">val</span> <span class="o">=</span> <span class="n">path_container</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
