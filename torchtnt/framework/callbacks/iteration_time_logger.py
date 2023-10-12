@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 
-from typing import Union
+from typing import Optional, Union
 
 from pyre_extensions import none_throws
 from torch.utils.tensorboard import SummaryWriter
@@ -36,14 +36,13 @@ class IterationTimeLogger(Callback):
     ) -> None:
         if isinstance(logger, TensorBoardLogger):
             logger = logger.writer
-        self._writer: SummaryWriter = none_throws(
-            logger, "TensorBoardLogger.writer should not be None"
-        )
+        self._writer: Optional[SummaryWriter] = logger
         self.moving_avg_window = moving_avg_window
         self.log_every_n_steps = log_every_n_steps
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        if get_global_rank() != 0:  # only write from the main rank
+        writer = self._writer
+        if get_global_rank() != 0 or not writer:  # only write from the main rank
             return
 
         step_logging_for = unit.train_progress.num_steps_completed
@@ -58,7 +57,7 @@ class IterationTimeLogger(Callback):
             return
 
         last_n_values = train_iteration_time_list[-self.moving_avg_window :]
-        self._writer.add_scalar(
+        writer.add_scalar(
             "Train Iteration Time (seconds)",
             sum(last_n_values) / len(last_n_values),
             step_logging_for,
