@@ -41,6 +41,17 @@ class Strategy:
 
 
 @dataclass
+class NOOPStrategy(Strategy):
+    """
+    Dataclass representing a no-op strategy. Nothing is applied to the module, and no device transfer occurs
+    Use this strategy if applying custom wrapping to module prior to passing it into class:`~torchtnt.framework.auto_unit.AutoUnit`
+    or into :py:func:`~torchtnt.utils.prepare_module.prepare_module`
+    """
+
+    pass
+
+
+@dataclass
 class DDPStrategy(Strategy):
     """
     Dataclass representing the `DistributedDataParallel <https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html>`_ strategy.
@@ -317,7 +328,9 @@ def prepare_module(
     return module
 
 
-def convert_str_to_strategy(strategy: str) -> Union[DDPStrategy, FSDPStrategy]:
+def convert_str_to_strategy(
+    strategy: str,
+) -> Union[DDPStrategy, FSDPStrategy, NOOPStrategy]:
     """
     Converts strategy as a string to a default instance of the Strategy dataclass.
 
@@ -331,6 +344,7 @@ def convert_str_to_strategy(strategy: str) -> Union[DDPStrategy, FSDPStrategy]:
     string_to_strategy_mapping = {
         "ddp": DDPStrategy(),
         "fsdp": FSDPStrategy(),
+        "noop": NOOPStrategy(),
     }
 
     if strategy not in string_to_strategy_mapping:

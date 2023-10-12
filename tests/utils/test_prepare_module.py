@@ -17,6 +17,7 @@ from torchtnt.utils.prepare_module import (
     _is_fsdp_module,
     DDPStrategy,
     FSDPStrategy,
+    NOOPStrategy,
     prepare_ddp,
     prepare_fsdp,
     prepare_module,
@@ -38,6 +39,28 @@ class PrepareModelTest(unittest.TestCase):
 
     cuda_available: bool = torch.cuda.is_available()
     distributed_available: bool = torch.distributed.is_available()
+
+    @unittest.skipUnless(
+        condition=(cuda_available), reason="This test should run on a GPU host."
+    )
+    def test_prepare_no_strategy(self) -> None:
+        module = torch.nn.Linear(2, 2)  # initialize on cpu
+        device = init_from_env()  # should be cuda device
+        module = prepare_module(module, device, strategy=None)
+        self.assertEqual(next(module.parameters()).device, device)
+
+    @unittest.skipUnless(
+        condition=(cuda_available), reason="This test should run on a GPU host."
+    )
+    def test_prepare_noop(self) -> None:
+        module = torch.nn.Linear(2, 2)  # initialize on cpu
+        device = init_from_env()  # should be cuda device
+        module = prepare_module(module, device, strategy=NOOPStrategy())
+        self.assertNotEqual(next(module.parameters()).device, device)
+
+        module2 = torch.nn.Linear(2, 2)  # initialize on cpu
+        module2 = prepare_module(module2, device, strategy="noop")
+        self.assertNotEqual(next(module2.parameters()).device, device)
 
     @unittest.skipUnless(
         condition=(cuda_available), reason="This test should run on a GPU host."

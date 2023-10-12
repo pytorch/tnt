@@ -46,7 +46,13 @@ from .oom import (
 )
 from .optimizer import extract_lr_from_optimizer, init_optim_state
 from .precision import convert_precision_str_to_dtype
-from .prepare_module import DDPStrategy, FSDPStrategy, prepare_ddp, prepare_fsdp
+from .prepare_module import (
+    DDPStrategy,
+    FSDPStrategy,
+    NOOPStrategy,
+    prepare_ddp,
+    prepare_fsdp,
+)
 from .progress import Progress
 from .rank_zero_log import (
     rank_zero_critical,
@@ -112,6 +118,7 @@ __all__ = [
     "convert_precision_str_to_dtype",
     "DDPStrategy",
     "FSDPStrategy",
+    "NOOPStrategy",
     "prepare_ddp",
     "prepare_fsdp",
     "Progress",
