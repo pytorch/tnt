@@ -28,6 +28,8 @@ class IterationTimeLogger(Callback):
         log_every_n_steps: an optional int to control the log frequency
     """
 
+    _writer: Optional[SummaryWriter] = None
+
     def __init__(
         self,
         logger: Union[TensorBoardLogger, SummaryWriter],
@@ -36,13 +38,16 @@ class IterationTimeLogger(Callback):
     ) -> None:
         if isinstance(logger, TensorBoardLogger):
             logger = logger.writer
-        self._writer: Optional[SummaryWriter] = logger
+
+        if get_global_rank() == 0:  # only write from the main rank
+            self._writer = none_throws(
+                logger, "TensorBoardLogger.writer should not be None"
+            )
         self.moving_avg_window = moving_avg_window
         self.log_every_n_steps = log_every_n_steps
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        writer = self._writer
-        if get_global_rank() != 0 or not writer:  # only write from the main rank
+        if self._writer is None:
             return
 
         step_logging_for = unit.train_progress.num_steps_completed
@@ -57,7 +62,7 @@ class IterationTimeLogger(Callback):
             return
 
         last_n_values = train_iteration_time_list[-self.moving_avg_window :]
-        writer.add_scalar(
+        none_throws(self._writer).add_scalar(
             "Train Iteration Time (seconds)",
             sum(last_n_values) / len(last_n_values),
             step_logging_for,
