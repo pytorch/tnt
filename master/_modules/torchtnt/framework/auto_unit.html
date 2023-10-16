@@ -533,11 +533,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">streams</span><span class="o">.</span><span class="n">Stream</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Stream</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
-        <span class="c1"># the next batch which has been prefetched and is ready to be used</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># dict mapping phase to whether the next batch which has been prefetched for that phase and is ready to be used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">ActivePhase</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
 
-        <span class="c1"># whether the next batch has been prefetched and is ready to be used</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># dict mapping phase to whether the next batch for that phase has been prefetched and is ready to be used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">ActivePhase</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">detect_anomaly</span> <span class="o">=</span> <span class="n">detect_anomaly</span>
 
@@ -604,9 +612,10 @@
     <span class="k">def</span> <span class="nf">_get_next_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TPredictData</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span><span class="p">:</span>
+        <span class="n">active_phase</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">active_phase</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_next_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.wait_stream&quot;</span><span class="p">):</span>
@@ -614,9 +623,9 @@
                 <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">current_stream</span><span class="p">()</span><span class="o">.</span><span class="n">wait_stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">)</span>
 
         <span class="c1"># get the next batch which was stored by _prefetch_next_batch</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">raise</span> <span class="ne">StopIteration</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span>
@@ -634,25 +643,25 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prefetch the next batch on a separate CUDA stream.&quot;&quot;&quot;</span>
-
+        <span class="n">active_phase</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">active_phase</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
                 <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.next(data_iter)&quot;</span>
             <span class="p">):</span>
                 <span class="n">next_batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">return</span>
 
-        <span class="n">non_blocking</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="kc">True</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="n">non_blocking</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="c1"># if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">),</span> <span class="n">get_timing_context</span><span class="p">(</span>
             <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.move_data_to_device&quot;</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span>
                 <span class="n">state</span><span class="p">,</span> <span class="n">next_batch</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="n">non_blocking</span>
             <span class="p">)</span></div>
 
@@ -805,10 +814,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">streams</span><span class="o">.</span><span class="n">Stream</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Stream</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
-        <span class="c1"># the next batch which has been prefetched and is ready to be used</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TData</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="c1"># whether the next batch has been prefetched and is ready to be used</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># dict mapping phase to whether the next batch which has been prefetched for that phase and is ready to be used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">ActivePhase</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TData</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># dict mapping phase to whether the next batch for that phase has been prefetched and is ready to be used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">ActivePhase</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
         <span class="c1"># whether the current batch is the last train batch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_train_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -871,7 +889,7 @@
 
     <span class="k">def</span> <span class="nf">_prefetch_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prefetch the next batch on a separate CUDA stream.&quot;&quot;&quot;</span>
-
+        <span class="n">active_phase</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">active_phase</span>
         <span class="n">phase</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">active_phase</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
@@ -879,30 +897,27 @@
             <span class="p">):</span>
                 <span class="n">next_batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_train_batch</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">return</span>
 
-        <span class="n">non_blocking</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="kc">True</span>
-            <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">active_phase</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span>
-            <span class="k">else</span> <span class="kc">False</span>
+        <span class="n">non_blocking</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span>
         <span class="p">)</span>
 
         <span class="c1"># if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">),</span> <span class="n">get_timing_context</span><span class="p">(</span>
             <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">phase</span><span class="si">}</span><span class="s2">.move_data_to_device&quot;</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span>
                 <span class="n">state</span><span class="p">,</span> <span class="n">next_batch</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="n">non_blocking</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TData</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span><span class="p">:</span>
+        <span class="n">active_phase</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">active_phase</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_next_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.wait_stream&quot;</span><span class="p">):</span>
@@ -910,9 +925,9 @@
                 <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">current_stream</span><span class="p">()</span><span class="o">.</span><span class="n">wait_stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">)</span>
 
         <span class="c1"># get the next batch which was stored by _prefetch_next_batch</span>
-        <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_next_batch</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_train_batch</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">raise</span> <span class="ne">StopIteration</span>
 
@@ -1137,23 +1152,23 @@
                         <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
 
     <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
-<div class="viewcode-block" id="AutoUnit.eval_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.eval_step">[docs]</a>    <span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.move_data_to_device&quot;</span>
-        <span class="p">):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="viewcode-block" id="AutoUnit.eval_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.eval_step">[docs]</a>    <span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">with</span> <span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">eval_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="s2">&quot;data_wait_time&quot;</span><span class="p">):</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_next_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_autocast_precision</span><span class="p">:</span>
             <span class="c1"># users must override this</span>
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.compute_loss&quot;</span><span class="p">):</span>
-                <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">entry_point</span> <span class="o">==</span> <span class="n">EntryPoint</span><span class="o">.</span><span class="n">FIT</span><span class="p">:</span>
             <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_eval_step_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">on_eval_step_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span></div>
 
 <div class="viewcode-block" id="AutoUnit.on_eval_step_end"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.on_eval_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_step_end</span><span class="p">(</span>
@@ -1179,22 +1194,20 @@
         <span class="k">pass</span></div>
 
     <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
-<div class="viewcode-block" id="AutoUnit.predict_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.predict_step">[docs]</a>    <span class="k">def</span> <span class="nf">predict_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.move_data_to_device&quot;</span>
-        <span class="p">):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="viewcode-block" id="AutoUnit.predict_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.predict_step">[docs]</a>    <span class="k">def</span> <span class="nf">predict_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">predict_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="s2">&quot;data_wait_time&quot;</span><span class="p">):</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_next_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">maybe_autocast_precision</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.forward&quot;</span><span class="p">):</span>
-                <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
 
         <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="c1"># users can override this, by default this is a no-op</span>
         <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
             <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.on_predict_step_end&quot;</span>
         <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">on_predict_step_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">on_predict_step_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outputs</span></div>
 
 <div class="viewcode-block" id="AutoUnit.on_predict_step_end"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.on_predict_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_step_end</span><span class="p">(</span>
