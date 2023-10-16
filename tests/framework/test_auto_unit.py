@@ -6,7 +6,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
-from typing import Any, Literal, Tuple
+from typing import Any, Literal, Optional, Tuple, TypeVar
 from unittest.mock import MagicMock, patch
 
 import torch
@@ -39,7 +39,7 @@ from torchtnt.framework.auto_unit import (
 )
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.predict import predict
-from torchtnt.framework.state import State
+from torchtnt.framework.state import ActivePhase, State
 from torchtnt.framework.train import train
 from torchtnt.framework.unit import TPredictData
 from torchtnt.utils.device import copy_data_to_device
@@ -51,6 +51,7 @@ from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import Timer
 
 TParams = ParamSpec("TParams")
+T = TypeVar("T")
 
 
 class TestAutoUnit(unittest.TestCase):
@@ -806,12 +807,14 @@ class TestAutoUnit(unittest.TestCase):
         predict(auto_unit, predict_dl, max_steps_per_epoch=1)
         mock_detect_anomaly.assert_called()
 
-    def test_get_next_batch(self) -> None:
+    def test_get_next_batch_with_single_phase(self) -> None:
         auto_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2))
-        data = iter([1, 2])
+        first_data_iter = iter([1, 2])
+        second_data_iter = iter([3])
         state = get_dummy_train_state()
-        self.assertFalse(auto_unit._prefetched)
-        self.assertIsNone(auto_unit._next_batch)
+        state._active_phase = ActivePhase.TRAIN
+        self._assert_next_batch_dicts(auto_unit)
+
         move_data_to_device_mock = patch.object(
             auto_unit,
             "move_data_to_device",
@@ -819,23 +822,107 @@ class TestAutoUnit(unittest.TestCase):
         )
 
         with move_data_to_device_mock:
-            batch = auto_unit._get_next_batch(state, data)
+            batch = auto_unit._get_next_batch(state, first_data_iter)
         self.assertEqual(batch, 1)
-        self.assertEqual(auto_unit._next_batch, 2)
-        self.assertTrue(auto_unit._prefetched)
+        self._assert_next_batch_dicts(
+            auto_unit, train_prefetched=True, train_next_batch=2
+        )
 
         with move_data_to_device_mock:
-            batch = auto_unit._get_next_batch(state, data)
+            batch = auto_unit._get_next_batch(state, second_data_iter)
+        # prefetched data is still from the previous data iter even though the new data iter is passed
         self.assertEqual(batch, 2)
-        self.assertIsNone(auto_unit._next_batch)
-        self.assertTrue(auto_unit._prefetched)
+        self._assert_next_batch_dicts(
+            auto_unit, train_prefetched=True, train_next_batch=3
+        )
+
+        with move_data_to_device_mock:
+            batch = auto_unit._get_next_batch(state, second_data_iter)
+        self.assertEqual(batch, 3)
+        self._assert_next_batch_dicts(auto_unit, train_prefetched=True)
         self.assertTrue(auto_unit._is_last_train_batch)
 
         with move_data_to_device_mock, self.assertRaises(StopIteration):
-            auto_unit._get_next_batch(state, data)
-        self.assertIsNone(auto_unit._next_batch)
-        self.assertFalse(auto_unit._prefetched)
+            auto_unit._get_next_batch(state, second_data_iter)
+        self._assert_next_batch_dicts(auto_unit)
         self.assertFalse(auto_unit._is_last_train_batch)
+
+    def test_get_next_batch_with_multiple_phases(self) -> None:
+        auto_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2))
+        train_data_iter = iter([1, 2])
+        eval_data_iter = iter([3, 4])
+        predict_data_iter = iter([5, 6])
+        state = get_dummy_train_state()
+        state._active_phase = ActivePhase.TRAIN
+        self._assert_next_batch_dicts(auto_unit)
+
+        move_data_to_device_mock = patch.object(
+            auto_unit,
+            "move_data_to_device",
+            side_effect=lambda state, data, non_blocking: data,
+        )
+
+        with move_data_to_device_mock:
+            batch = auto_unit._get_next_batch(state, train_data_iter)
+        self.assertEqual(batch, 1)
+        self._assert_next_batch_dicts(
+            auto_unit, train_prefetched=True, train_next_batch=2
+        )
+
+        state._active_phase = ActivePhase.EVALUATE
+        with move_data_to_device_mock:
+            batch = auto_unit._get_next_batch(state, eval_data_iter)
+        self.assertEqual(batch, 3)
+        self._assert_next_batch_dicts(
+            auto_unit,
+            train_prefetched=True,
+            train_next_batch=2,
+            eval_prefetched=True,
+            eval_next_batch=4,
+        )
+
+        state._active_phase = ActivePhase.PREDICT
+        with move_data_to_device_mock:
+            batch = auto_unit._get_next_batch(state, predict_data_iter)
+        self.assertEqual(batch, 5)
+        self._assert_next_batch_dicts(
+            auto_unit,
+            train_prefetched=True,
+            train_next_batch=2,
+            eval_prefetched=True,
+            eval_next_batch=4,
+            predict_prefetched=True,
+            predict_next_batch=6,
+        )
+
+    @staticmethod
+    def _assert_next_batch_dicts(
+        auto_unit: AutoUnit[T],
+        *,
+        train_prefetched: bool = False,
+        eval_prefetched: bool = False,
+        predict_prefetched: bool = False,
+        train_next_batch: Optional[T] = None,
+        eval_next_batch: Optional[T] = None,
+        predict_next_batch: Optional[T] = None,
+    ) -> None:
+        tc = unittest.TestCase()
+        tc.assertDictEqual(
+            auto_unit._phase_to_prefetched,
+            {
+                ActivePhase.TRAIN: train_prefetched,
+                ActivePhase.EVALUATE: eval_prefetched,
+                ActivePhase.PREDICT: predict_prefetched,
+            },
+        )
+        tc.assertDictEqual(
+            auto_unit._phase_to_next_batch,
+            {
+                ActivePhase.TRAIN: train_next_batch,
+                ActivePhase.EVALUATE: eval_next_batch,
+                ActivePhase.PREDICT: predict_next_batch,
+            },
+        )
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
