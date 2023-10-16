@@ -7,7 +7,7 @@
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional, Pattern, Set, Union
+from typing import Any, cast, Dict, List, Optional, Pattern, Set, Union
 
 import torch.distributed as dist
 
@@ -137,6 +137,10 @@ class TorchSnapshotSaver(Callback):
 
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=True)
         epoch = unit.train_progress.num_epochs_completed
+        if state.entry_point == EntryPoint.FIT:
+            num_steps_completed += cast(
+                TEvalUnit, unit
+            ).eval_progress.num_steps_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
@@ -153,6 +157,10 @@ class TorchSnapshotSaver(Callback):
 
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
         num_steps_completed = unit.train_progress.num_steps_completed
+        if state.entry_point == EntryPoint.FIT:
+            num_steps_completed += cast(
+                TEvalUnit, unit
+            ).eval_progress.num_steps_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed
         )
@@ -164,6 +172,10 @@ class TorchSnapshotSaver(Callback):
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
         num_steps_completed = unit.train_progress.num_steps_completed
+        if state.entry_point == EntryPoint.FIT:
+            num_steps_completed += cast(
+                TEvalUnit, unit
+            ).eval_progress.num_steps_completed
         epoch = unit.train_progress.num_epochs_completed
         snapshot_path = _get_snapshot_save_path(
             self._dirpath, epoch, num_steps_completed

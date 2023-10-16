@@ -13,6 +13,7 @@ import time
 import unittest
 from typing import Any, Dict, Iterable, List
 from unittest import mock
+from unittest.mock import Mock, patch
 
 import torch
 import torch.distributed as dist
@@ -22,8 +23,11 @@ from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
+    DummyFitUnit,
     DummyTrainUnit,
     generate_random_dataloader,
+    get_dummy_fit_state,
+    get_dummy_train_state,
 )
 from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
@@ -102,6 +106,36 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             self.assertTrue(
                 os.path.exists(expected_path) and os.path.isdir(expected_path)
             )
+
+    @patch.object(TorchSnapshotSaver, "_async_snapshot", autospec=True)
+    def test_save_fit_entrypoint(self, mock_async_snapshot: Mock) -> None:
+        input_dim = 2
+
+        my_unit = DummyFitUnit(input_dim=input_dim)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            snapshot = TorchSnapshotSaver(
+                temp_dir, save_every_n_train_steps=1, save_every_n_epochs=1
+            )
+            train_state = get_dummy_train_state()
+            fit_state = get_dummy_fit_state()
+            my_unit.train_progress._num_steps_completed = 15
+            my_unit.eval_progress._num_steps_completed = 10
+
+            snapshot.on_train_step_end(train_state, my_unit)
+            snapshot_path = mock_async_snapshot.call_args.args[1]
+            self.assertIn(f"epoch_0_step_{15}", snapshot_path)
+
+            snapshot.on_train_step_end(fit_state, my_unit)
+            snapshot_path = mock_async_snapshot.call_args.args[1]
+            self.assertIn(f"epoch_0_step_{15 + 10}", snapshot_path)
+
+            snapshot.on_train_epoch_end(train_state, my_unit)
+            snapshot_path = mock_async_snapshot.call_args.args[1]
+            self.assertIn(f"epoch_0_step_{15}", snapshot_path)
+
+            snapshot.on_train_epoch_end(fit_state, my_unit)
+            snapshot_path = mock_async_snapshot.call_args.args[1]
+            self.assertIn(f"epoch_0_step_{15 + 10}", snapshot_path)
 
     def test_save_restore(self) -> None:
         input_dim = 2
