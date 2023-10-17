@@ -274,7 +274,7 @@ def prepare_module(
     Args:
         module: module to be used.
         device: device to which module will be moved.
-        strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.
+        strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp``, ``fsdp``, or ``noop``.
         swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging.
         torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html.
         activation_checkpoint_params: params for enabling activation checkpointing.
