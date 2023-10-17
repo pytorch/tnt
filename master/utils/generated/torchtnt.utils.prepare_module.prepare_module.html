@@ -85,7 +85,19 @@
           </li>
 
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+          <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
+              <a class="resource-option with-down-arrow">
+                PyTorch Edge
+              </a>
+              <div class="resources-dropdown-menu">
+                <a class="nav-dropdown-item" href="https://pytorch.org/edge">
+                  <span class="dropdown-title">About PyTorch Edge</span>
+                </a>
+                <a class="nav-dropdown-item" href="https://pytorch.org/executorch">
+                  <span class="dropdown-title">ExecuTorch</span>
+                </a>
+              </div>
+            </div>  
           </li>
 
           <li>
@@ -370,7 +382,6 @@
 <li><strong>module</strong> – module to be used.</li>
 <li><strong>device</strong> – device to which module will be moved.</li>
 <li><strong>strategy</strong> – the data parallelization strategy to be used. if a string, must be one of <code class="docutils literal notranslate"><span class="pre">ddp</span></code>, <code class="docutils literal notranslate"><span class="pre">fsdp</span></code>, or <code class="docutils literal notranslate"><span class="pre">noop</span></code>.</li>
-<li><strong>swa_params</strong> – params for stochastic weight averaging <a class="reference external" href="https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging" target="_blank">https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging</a>.</li>
 <li><strong>torch_compile_params</strong> – params for Torch compile <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.compile.html" target="_blank">https://pytorch.org/docs/stable/generated/torch.compile.html</a>.</li>
 <li><strong>activation_checkpoint_params</strong> – params for enabling activation checkpointing.</li>
 </ul>
@@ -589,7 +600,7 @@
           </li>
             
           <li>
-            <a href="https://pytorch.org/mobile">Mobile</a>
+            <a href="">Mobile</a>
           </li>
 
           <li>
