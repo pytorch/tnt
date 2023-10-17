@@ -798,6 +798,8 @@ class AutoUnit(
                     ):
                         lr_scheduler.step()
 
+        self._is_last_train_batch = False
+
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def eval_step(
         self, state: State, data: Iterator[TData]

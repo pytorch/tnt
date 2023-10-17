@@ -656,6 +656,10 @@ class TestAutoUnit(unittest.TestCase):
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         train(my_unit, dataloader, max_epochs=max_epochs)
 
+        my_unit = DummyAutoUnit(module=my_module)
+        train(my_unit, dataloader, max_epochs=1, max_steps_per_epoch=4)
+        self.assertFalse(my_unit._is_last_train_batch)
+
     def test_auto_unit_timing_train(self) -> None:
         """
         Test auto timing in AutoUnit for training
