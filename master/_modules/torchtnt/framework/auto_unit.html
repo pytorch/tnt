@@ -1161,7 +1161,9 @@
                     <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
                         <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
                     <span class="p">):</span>
-                        <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
+                        <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_train_batch</span> <span class="o">=</span> <span class="kc">False</span></div>
 
     <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
 <div class="viewcode-block" id="AutoUnit.eval_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.eval_step">[docs]</a>    <span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span>
