@@ -31,6 +31,25 @@ def get_dummy_train_state(dataloader: Optional[Iterable[object]] = None) -> Stat
     )
 
 
+def get_dummy_fit_state() -> State:
+    return State(
+        entry_point=EntryPoint.FIT,
+        train_state=PhaseState(
+            dataloader=[1, 2, 3, 4],
+            max_epochs=1,
+            max_steps=1,
+            max_steps_per_epoch=1,
+        ),
+        eval_state=PhaseState(
+            dataloader=[1, 2, 3, 4],
+            max_epochs=1,
+            max_steps=1,
+            max_steps_per_epoch=1,
+        ),
+        timer=None,
+    )
+
+
 class DummyEvalUnit(EvalUnit[Batch]):
     def __init__(self, input_dim: int) -> None:
         super().__init__()
