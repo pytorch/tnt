@@ -372,7 +372,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
 
@@ -502,6 +502,10 @@
 
         <span class="n">app_state</span> <span class="o">=</span> <span class="n">_get_app_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span><span class="p">,</span> <span class="n">intra_epoch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">epoch</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">entry_point</span> <span class="o">==</span> <span class="n">EntryPoint</span><span class="o">.</span><span class="n">FIT</span><span class="p">:</span>
+            <span class="n">num_steps_completed</span> <span class="o">+=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">unit</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="n">snapshot_path</span> <span class="o">=</span> <span class="n">_get_snapshot_save_path</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dirpath</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">num_steps_completed</span>
         <span class="p">)</span>
@@ -518,6 +522,10 @@
 
         <span class="n">app_state</span> <span class="o">=</span> <span class="n">_get_app_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span><span class="p">,</span> <span class="n">intra_epoch</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">num_steps_completed</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">entry_point</span> <span class="o">==</span> <span class="n">EntryPoint</span><span class="o">.</span><span class="n">FIT</span><span class="p">:</span>
+            <span class="n">num_steps_completed</span> <span class="o">+=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">unit</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="n">snapshot_path</span> <span class="o">=</span> <span class="n">_get_snapshot_save_path</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dirpath</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">num_steps_completed</span>
         <span class="p">)</span>
@@ -529,6 +537,10 @@
 <div class="viewcode-block" id="TorchSnapshotSaver.on_train_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_train_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">app_state</span> <span class="o">=</span> <span class="n">_get_app_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span><span class="p">,</span> <span class="n">intra_epoch</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">num_steps_completed</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
+        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">entry_point</span> <span class="o">==</span> <span class="n">EntryPoint</span><span class="o">.</span><span class="n">FIT</span><span class="p">:</span>
+            <span class="n">num_steps_completed</span> <span class="o">+=</span> <span class="n">cast</span><span class="p">(</span>
+                <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">unit</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="n">epoch</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span>
         <span class="n">snapshot_path</span> <span class="o">=</span> <span class="n">_get_snapshot_save_path</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dirpath</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">num_steps_completed</span>
@@ -997,9 +1009,9 @@
         <div class="copyright">
         <p>© Copyright The Linux Foundation. The PyTorch Foundation is a project of The Linux Foundation.
           For web site terms of use, trademark policy and other policies applicable to The PyTorch Foundation please see
-          <a href="www.linuxfoundation.org/policies/">www.linuxfoundation.org/policies/</a>. The PyTorch Foundation supports the PyTorch open source
+          <a href="https://www.linuxfoundation.org/policies/">www.linuxfoundation.org/policies/</a>. The PyTorch Foundation supports the PyTorch open source
           project, which has been established as PyTorch Project a Series of LF Projects, LLC. For policies applicable to the PyTorch Project a Series of LF Projects, LLC,
-          please see <a href="www.lfprojects.org/policies/">www.lfprojects.org/policies/</a>.</p>
+          please see <a href="https://www.lfprojects.org/policies/">www.lfprojects.org/policies/</a>.</p>
       </div>
      </div>
 
