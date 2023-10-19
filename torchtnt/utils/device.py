@@ -5,6 +5,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import logging
 import os
 import shutil
 import subprocess
@@ -15,6 +16,8 @@ from typing import Any, Dict, Mapping, TypeVar
 import torch
 from torchtnt.utils.version import is_torch_version_geq_1_12
 from typing_extensions import Protocol, runtime_checkable, TypedDict
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def get_device_from_env() -> torch.device:
@@ -314,11 +317,14 @@ def collect_system_stats(device: torch.device) -> Dict[str, Any]:
     system_stats.update(cpu_stats)
 
     if torch.cuda.is_available():
-        gpu_stats = get_nvidia_smi_gpu_stats(device)
+        try:
+            gpu_stats = get_nvidia_smi_gpu_stats(device)
 
-        # pyre-ignore
-        system_stats.update(gpu_stats)
-        system_stats.update(torch.cuda.memory_stats())
+            # pyre-ignore
+            system_stats.update(gpu_stats)
+            system_stats.update(torch.cuda.memory_stats())
+        except FileNotFoundError:
+            logger.warning("Unable to find nvidia-smi. Skipping GPU stats collection.")
 
     return system_stats
 
