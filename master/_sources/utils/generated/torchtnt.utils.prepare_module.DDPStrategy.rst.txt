@@ -1,0 +1,39 @@
+﻿torchtnt.utils.prepare\_module.DDPStrategy
+==========================================
+
+.. currentmodule:: torchtnt.utils.prepare_module
+
+.. autoclass:: DDPStrategy
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DDPStrategy.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DDPStrategy.broadcast_buffers
+      ~DDPStrategy.bucket_cap_mb
+      ~DDPStrategy.check_reduction
+      ~DDPStrategy.comm_hook
+      ~DDPStrategy.comm_state
+      ~DDPStrategy.dim
+      ~DDPStrategy.find_unused_parameters
+      ~DDPStrategy.gradient_as_bucket_view
+      ~DDPStrategy.output_device
+      ~DDPStrategy.process_group
+      ~DDPStrategy.static_graph
+      ~DDPStrategy.sync_batchnorm
+   
+   

@@ -416,7 +416,7 @@
     <span class="k">pass</span>
 
 
-<span class="nd">@dataclass</span>
+<div class="viewcode-block" id="DDPStrategy"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.DDPStrategy.html#torchtnt.utils.prepare_module.DDPStrategy">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">DDPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dataclass representing the `DistributedDataParallel &lt;https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html&gt;`_ strategy.</span>
@@ -442,10 +442,10 @@
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1"># SyncBatchNorm params</span>
-    <span class="n">sync_batchnorm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">sync_batchnorm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 
-<span class="nd">@dataclass</span>
+<div class="viewcode-block" id="FSDPStrategy"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.FSDPStrategy.html#torchtnt.utils.prepare_module.FSDPStrategy">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">FSDPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dataclass representing the `FullyShardedDataParallel &lt;https://pytorch.org/docs/stable/fsdp.html&gt;`_ strategy&quot;&quot;&quot;</span>
 
@@ -465,7 +465,7 @@
     <span class="c1"># for setting type of state dict for checkpointing</span>
     <span class="n">state_dict_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StateDictType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">optim_state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimStateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">optim_state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimStateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <span class="nd">@dataclass</span>
@@ -508,7 +508,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        module: module to be wrapped in DDP</span>
 <span class="sd">        device: device to which module will be moved</span>
-<span class="sd">        strategy: an instance of DDPStrategy which defines the settings of DDP APIs</span>
+<span class="sd">        strategy: an instance of :class:`~torchtnt.utils.prepare_module.DDPStrategy` which defines the settings of DDP APIs</span>
 
 <span class="sd">    Examples::</span>
 <span class="sd">        strategy = DDPStrategy(find_unused_parameters=True, gradient_as_bucket_view=True)</span>
@@ -554,7 +554,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        module: module to be wrapped in FSDP</span>
 <span class="sd">        device: device to which module will be moved</span>
-<span class="sd">        strategy: an instance of FSDPStrategy which defines the settings of FSDP APIs</span>
+<span class="sd">        strategy: an instance of :class:`~torchtnt.utils.prepare_module.FSDPStrategy` which defines the settings of FSDP APIs</span>
 
 <span class="sd">    Examples::</span>
 <span class="sd">        strategy = FSDPStrategy(limit_all_gathers=True)</span>

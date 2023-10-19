@@ -382,7 +382,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">parallel</span><span class="o">.</span><span class="n">DistributedDataParallel</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="n">device_ids</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We also offer <code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_ddp()</span></code> which can assist in wrapping the model for you.</p>
+<p>We also offer <a class="reference internal" href="utils/generated/torchtnt.utils.prepare_module.prepare_ddp.html#torchtnt.utils.prepare_module.prepare_ddp" title="torchtnt.utils.prepare_module.prepare_ddp"><code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_ddp()</span></code></a> which can assist in wrapping the model for you.</p>
 <p>The <a class="reference internal" href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit" title="torchtnt.framework.auto_unit.AutoUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoUnit</span></code></a> automatically wraps the module in DDP when either</p>
 <ol class="arabic">
 <li><p class="first">The string <code class="docutils literal notranslate"><span class="pre">ddp</span></code> is passed in the strategy argument</p>
@@ -393,7 +393,7 @@
 </div>
 </div></blockquote>
 </li>
-<li><p class="first">The dataclass <code class="xref py py-class docutils literal notranslate"><span class="pre">DDPStrategy</span></code> is passed in to the strategy argument. This is helpful when wanting to customize the settings in DDP</p>
+<li><p class="first">The dataclass <a class="reference internal" href="utils/generated/torchtnt.utils.prepare_module.DDPStrategy.html#torchtnt.utils.prepare_module.DDPStrategy" title="torchtnt.utils.prepare_module.DDPStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DDPStrategy</span></code></a> is passed in to the strategy argument. This is helpful when wanting to customize the settings in DDP</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">ddp_strategy</span> <span class="o">=</span> <span class="n">DDPStrategy</span><span class="p">(</span><span class="n">broadcast_buffers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">check_reduction</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -415,7 +415,7 @@
 <span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">fsdp</span><span class="o">.</span><span class="n">FullyShardedDataParallel</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device_id</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We also offer <code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_fsdp()</span></code> which can assist in wrapping the model for you.</p>
+<p>We also offer <a class="reference internal" href="utils/generated/torchtnt.utils.prepare_module.prepare_fsdp.html#torchtnt.utils.prepare_module.prepare_fsdp" title="torchtnt.utils.prepare_module.prepare_fsdp"><code class="xref py py-func docutils literal notranslate"><span class="pre">prepare_fsdp()</span></code></a> which can assist in wrapping the model for you.</p>
 <p>The <a class="reference internal" href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit" title="torchtnt.framework.auto_unit.AutoUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">AutoUnit</span></code></a> automatically wraps the module in FSDP when either</p>
 <ol class="arabic">
 <li><p class="first">The string <code class="docutils literal notranslate"><span class="pre">fsdp</span></code> is passed in the strategy argument</p>
@@ -426,7 +426,7 @@
 </div>
 </div></blockquote>
 </li>
-<li><p class="first">The dataclass <code class="xref py py-class docutils literal notranslate"><span class="pre">FSDPStrategy</span></code> is passed in to the strategy argument. This is helpful when wanting to customize the settings in FSDP</p>
+<li><p class="first">The dataclass <a class="reference internal" href="utils/generated/torchtnt.utils.prepare_module.FSDPStrategy.html#torchtnt.utils.prepare_module.FSDPStrategy" title="torchtnt.utils.prepare_module.FSDPStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSDPStrategy</span></code></a> is passed in to the strategy argument. This is helpful when wanting to customize the settings in FSDP</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">fsdp_strategy</span> <span class="o">=</span> <span class="n">FSDPStrategy</span><span class="p">(</span><span class="n">forward_prefetch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">limit_all_gathers</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

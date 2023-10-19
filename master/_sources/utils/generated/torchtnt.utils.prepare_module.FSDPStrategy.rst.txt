@@ -1,0 +1,41 @@
+﻿torchtnt.utils.prepare\_module.FSDPStrategy
+===========================================
+
+.. currentmodule:: torchtnt.utils.prepare_module
+
+.. autoclass:: FSDPStrategy
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FSDPStrategy.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FSDPStrategy.auto_wrap_policy
+      ~FSDPStrategy.backward_prefetch
+      ~FSDPStrategy.cpu_offload
+      ~FSDPStrategy.forward_prefetch
+      ~FSDPStrategy.ignored_modules
+      ~FSDPStrategy.limit_all_gathers
+      ~FSDPStrategy.mixed_precision
+      ~FSDPStrategy.optim_state_dict_config
+      ~FSDPStrategy.process_group
+      ~FSDPStrategy.sharding_strategy
+      ~FSDPStrategy.state_dict_config
+      ~FSDPStrategy.state_dict_type
+      ~FSDPStrategy.sync_module_states
+      ~FSDPStrategy.use_orig_params
+   
+   
