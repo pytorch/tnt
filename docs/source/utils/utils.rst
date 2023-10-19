@@ -203,6 +203,8 @@ Prepare Module Utils
    prepare_ddp
    prepare_fsdp
    convert_str_to_strategy
+   DDPStrategy
+   FSDPStrategy
 
 
 Progress Utils

@@ -143,7 +143,7 @@ def prepare_ddp(
     Args:
         module: module to be wrapped in DDP
         device: device to which module will be moved
-        strategy: an instance of DDPStrategy which defines the settings of DDP APIs
+        strategy: an instance of :class:`~torchtnt.utils.prepare_module.DDPStrategy` which defines the settings of DDP APIs
 
     Examples::
         strategy = DDPStrategy(find_unused_parameters=True, gradient_as_bucket_view=True)
@@ -189,7 +189,7 @@ def prepare_fsdp(
     Args:
         module: module to be wrapped in FSDP
         device: device to which module will be moved
-        strategy: an instance of FSDPStrategy which defines the settings of FSDP APIs
+        strategy: an instance of :class:`~torchtnt.utils.prepare_module.FSDPStrategy` which defines the settings of FSDP APIs
 
     Examples::
         strategy = FSDPStrategy(limit_all_gathers=True)
