@@ -61,16 +61,15 @@ def prepare_dataloader(
 
 
 class MyUnit(AutoUnit[Batch]):
-    # pyre-fixme[3]: Return type must be annotated.
     def __init__(
         self,
         *,
-        tb_logger: TensorBoardLogger,
         train_accuracy: BinaryAccuracy,
         eval_accuracy: BinaryAccuracy,
         log_every_n_steps: int,
+        tb_logger: Optional[TensorBoardLogger] = None,
         **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
-    ):
+    ) -> None:
         # pyre-fixme[6]: For 1st argument expected `Optional[bool]` but got
         #  `Dict[str, typing.Any]`.
         # pyre-fixme[6]: For 1st argument expected `Optional[float]` but got
@@ -132,10 +131,12 @@ class MyUnit(AutoUnit[Batch]):
     ) -> None:
         _, targets = data
         self.train_accuracy.update(outputs, targets)
-        if step % self.log_every_n_steps == 0:
+        tb_logger = self.tb_logger
+
+        if step % self.log_every_n_steps == 0 and tb_logger is not None:
             accuracy = self.train_accuracy.compute()
-            self.tb_logger.log("train_accuracy", accuracy, step)
-            self.tb_logger.log("train_loss", loss, step)
+            tb_logger.log("train_accuracy", accuracy, step)
+            tb_logger.log("train_loss", loss, step)
 
     def on_eval_step_end(
         self,
@@ -155,7 +156,11 @@ class MyUnit(AutoUnit[Batch]):
         else:
             step = self.eval_progress.num_steps_completed
         accuracy = self.eval_accuracy.compute()
-        self.tb_logger.log("eval_accuracy", accuracy, step)
+
+        tb_logger = self.tb_logger
+        if tb_logger is not None:
+            tb_logger.log("eval_accuracy", accuracy, step)
+
         self.eval_accuracy.reset()
 
     def on_train_epoch_end(self, state: State) -> None:
