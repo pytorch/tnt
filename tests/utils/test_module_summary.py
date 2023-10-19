@@ -214,8 +214,8 @@ Name | Type   | # Parameters | # Trainable Parameters | Size (bytes) | Contains 
 
     def test_alexnet_print(self) -> None:
         pretrained_model = models.alexnet(
-            weights=models.AlexNet_Weights.IMAGENET1K_V1
-        )  # pyre-ignore[16]
+            weights=models.AlexNet_Weights.IMAGENET1K_V1  # pyre-ignore[16]
+        )
         ms1 = get_summary_and_prune(pretrained_model, max_depth=1)
         ms2 = get_summary_and_prune(pretrained_model, max_depth=2)
         ms3 = get_summary_and_prune(pretrained_model, max_depth=3)
@@ -241,8 +241,8 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
 
     def test_alexnet_with_input_tensor(self) -> None:
         pretrained_model = models.alexnet(
-            weights=models.AlexNet_Weights.IMAGENET1K_V1
-        )  # pyre-ignore[16]
+            weights=models.AlexNet_Weights.IMAGENET1K_V1  # pyre-ignore[16]
+        )
         inp = torch.randn(1, 3, 224, 224)
         ms1 = get_summary_and_prune(pretrained_model, max_depth=1, module_args=(inp,))
         ms2 = get_summary_and_prune(pretrained_model, max_depth=2, module_args=(inp,))
@@ -351,8 +351,8 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
 
     def test_forward_elapsed_time(self) -> None:
         pretrained_model = models.alexnet(
-            weights=models.AlexNet_Weights.IMAGENET1K_V1
-        )  # pyre-ignore[16]
+            weights=models.AlexNet_Weights.IMAGENET1K_V1  # pyre-ignore[16]
+        )
         inp = torch.randn(1, 3, 224, 224)
         ms1 = get_summary_and_prune(pretrained_model, module_args=(inp,), max_depth=4)
         stack = [ms1] + [
