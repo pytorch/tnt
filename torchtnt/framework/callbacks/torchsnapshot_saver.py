@@ -7,7 +7,7 @@
 import logging
 import os
 import re
-from typing import Any, cast, Dict, List, Optional, Pattern, Set, Union
+from typing import Any, cast, Dict, Iterable, List, Optional, Pattern, Set, Union
 
 import torch.distributed as dist
 
@@ -16,7 +16,13 @@ from torchsnapshot.snapshot import PendingSnapshot, Snapshot, SNAPSHOT_METADATA_
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
-from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTrainUnit
+from torchtnt.framework.unit import (
+    AppStateMixin,
+    TEvalUnit,
+    TPredictUnit,
+    TTrainData,
+    TTrainUnit,
+)
 from torchtnt.framework.utils import _construct_tracked_optimizers, get_timing_context
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.fsspec import get_filesystem
@@ -232,7 +238,7 @@ class TorchSnapshotSaver(Callback):
         path: str,
         unit: AppStateMixin,
         *,
-        train_dataloader: Optional[_TStateful] = None,
+        train_dataloader: Optional[Iterable[TTrainData]] = None,
         restore_train_progress: bool = True,
         restore_eval_progress: bool = True,
         process_group: Optional[dist.ProcessGroup] = None,
@@ -276,16 +282,21 @@ class TorchSnapshotSaver(Callback):
             app_state.pop(_EVAL_PROGRESS_STATE_KEY, None)
 
         if train_dataloader is not None:
-            # request to restore the dataloader state only if
-            # the persisted snapshot state includes the dataloader entry
-            manifest = snapshot.get_manifest()
-            for key in manifest:
-                if _TRAIN_DL_STATE_KEY in key:
-                    app_state[_TRAIN_DL_STATE_KEY] = train_dataloader
-                    break
-            rank_zero_warn(
-                "train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
-            )
+            if not isinstance(train_dataloader, _TStateful):
+                rank_zero_warn(
+                    "train_dataloader was passed to `restore` but the dataloader does not implement the Stateful protocol to load states"
+                )
+            else:
+                # request to restore the dataloader state only if
+                # the persisted snapshot state includes the dataloader entry
+                manifest = snapshot.get_manifest()
+                for key in manifest:
+                    if _TRAIN_DL_STATE_KEY in key:
+                        app_state[_TRAIN_DL_STATE_KEY] = train_dataloader
+                        break
+                rank_zero_warn(
+                    "train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
+                )
 
         snapshot.restore(app_state)
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
@@ -295,7 +306,7 @@ class TorchSnapshotSaver(Callback):
         dirpath: str,
         unit: AppStateMixin,
         *,
-        train_dataloader: Optional[_TStateful] = None,
+        train_dataloader: Optional[Iterable[TTrainData]] = None,
         restore_train_progress: bool = True,
         restore_eval_progress: bool = True,
         process_group: Optional[dist.ProcessGroup] = None,
