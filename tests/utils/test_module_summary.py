@@ -156,7 +156,7 @@ class ModuleSummaryTest(unittest.TestCase):
     def test_resnet_max_depth(self) -> None:
         """Test the behavior of max_depth on a layered model like ResNet"""
         pretrained_model = models.resnet.resnet18(
-            weights=models.ResNet18_Weights.IMAGENET1K_V1
+            weights=models.ResNet18_Weights.IMAGENET1K_V1 # pyre-ignore[16]
         )
 
         # max_depth = None
@@ -213,7 +213,7 @@ Name | Type   | # Parameters | # Trainable Parameters | Size (bytes) | Contains 
         self._test_module_summary_text(summary_table, str(ms1))
 
     def test_alexnet_print(self) -> None:
-        pretrained_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
+        pretrained_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1) # pyre-ignore[16]
         ms1 = get_summary_and_prune(pretrained_model, max_depth=1)
         ms2 = get_summary_and_prune(pretrained_model, max_depth=2)
         ms3 = get_summary_and_prune(pretrained_model, max_depth=3)
@@ -238,7 +238,7 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
         self.assertEqual(str(ms3), str(ms4))
 
     def test_alexnet_with_input_tensor(self) -> None:
-        pretrained_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
+        pretrained_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1) # pyre-ignore[16]
         inp = torch.randn(1, 3, 224, 224)
         ms1 = get_summary_and_prune(pretrained_model, max_depth=1, module_args=(inp,))
         ms2 = get_summary_and_prune(pretrained_model, max_depth=2, module_args=(inp,))
@@ -346,7 +346,7 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
         self.assertEqual(ms_classifier.out_size, [1, 1, 224, 224])
 
     def test_forward_elapsed_time(self) -> None:
-        pretrained_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
+        pretrained_model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1) # pyre-ignore[16]
         inp = torch.randn(1, 3, 224, 224)
         ms1 = get_summary_and_prune(pretrained_model, module_args=(inp,), max_depth=4)
         stack = [ms1] + [
