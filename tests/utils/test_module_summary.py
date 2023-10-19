@@ -9,13 +9,13 @@ import unittest
 from typing import Any, Dict, Optional, Tuple
 
 import torch
-from torchvision import models
 from torchtnt.utils.module_summary import (
     _get_human_readable_count,
     get_module_summary,
     ModuleSummary,
     prune_module_summary,
 )
+from torchvision import models
 
 
 def get_summary_and_prune(
@@ -155,7 +155,9 @@ class ModuleSummaryTest(unittest.TestCase):
 
     def test_resnet_max_depth(self) -> None:
         """Test the behavior of max_depth on a layered model like ResNet"""
-        pretrained_model = models.resnet.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+        pretrained_model = models.resnet.resnet18(
+            weights=models.ResNet18_Weights.IMAGENET1K_V1
+        )
 
         # max_depth = None
         ms1 = get_module_summary(pretrained_model)
