@@ -364,7 +364,7 @@ class AutoUnit(
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
 
     Note:
-        If FSDPStrategy and SWAParams are passed in, the swa model will be sharded with the same FSDP parameters.
+        If :class:`~torchtnt.utils.prepare_module.FSDPStrategy` and SWAParams are passed in, the swa model will be sharded with the same FSDP parameters.
 
     Note:
         Torch compile support is only available in PyTorch 2.0 or higher.

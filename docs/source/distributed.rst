@@ -21,7 +21,7 @@ If you are using the the :class:`~torchtnt.framework.unit.TrainUnit`/ :class:`~t
     device_ids = [device.index]
     model = torch.nn.parallel.DistributedDataParallel(module, device_ids=device_ids)
 
-We also offer :py:func:`~torchtnt.utils.prepare_ddp` which can assist in wrapping the model for you.
+We also offer :py:func:`~torchtnt.utils.prepare_module.prepare_ddp` which can assist in wrapping the model for you.
 
 The :class:`~torchtnt.framework.auto_unit.AutoUnit` automatically wraps the module in DDP when either
 
@@ -32,7 +32,7 @@ The :class:`~torchtnt.framework.auto_unit.AutoUnit` automatically wraps the modu
         module = nn.Linear(input_dim, 1)
         my_auto_unit = MyAutoUnit(module=module, strategy="ddp")
 
-2. The dataclass :class:`~torchtnt.utils.DDPStrategy` is passed in to the strategy argument. This is helpful when wanting to customize the settings in DDP
+2. The dataclass :class:`~torchtnt.utils.prepare_module.DDPStrategy` is passed in to the strategy argument. This is helpful when wanting to customize the settings in DDP
 
     .. code-block:: python
 
@@ -55,7 +55,7 @@ If using one or more of or :class:`~torchtnt.framework.unit.TrainUnit`, :class:`
     # wrap module in FSDP
     model = torch.distributed.fsdp.FullyShardedDataParallel(module, device_id=device)
 
-We also offer :py:func:`~torchtnt.utils.prepare_fsdp` which can assist in wrapping the model for you.
+We also offer :py:func:`~torchtnt.utils.prepare_module.prepare_fsdp` which can assist in wrapping the model for you.
 
 The :class:`~torchtnt.framework.auto_unit.AutoUnit` automatically wraps the module in FSDP when either
 
@@ -66,7 +66,7 @@ The :class:`~torchtnt.framework.auto_unit.AutoUnit` automatically wraps the modu
         module = nn.Linear(input_dim, 1)
         my_auto_unit = MyAutoUnit(module=module, strategy="fsdp")
 
-2. The dataclass :class:`~torchtnt.utils.FSDPStrategy` is passed in to the strategy argument. This is helpful when wanting to customize the settings in FSDP
+2. The dataclass :class:`~torchtnt.utils.prepare_module.FSDPStrategy` is passed in to the strategy argument. This is helpful when wanting to customize the settings in FSDP
 
     .. code-block:: python
 
