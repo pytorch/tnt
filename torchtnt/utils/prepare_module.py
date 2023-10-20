@@ -91,6 +91,7 @@ class FSDPStrategy(Strategy):
     backward_prefetch: Optional[BackwardPrefetch] = BackwardPrefetch.BACKWARD_PRE
     mixed_precision: Optional[MixedPrecision] = None
     ignored_modules: Optional[Iterable[torch.nn.Module]] = None
+    param_init_fn: Optional[Callable[[torch.nn.Module], None]] = None
     sync_module_states: bool = False
     forward_prefetch: bool = False
     limit_all_gathers: bool = True
