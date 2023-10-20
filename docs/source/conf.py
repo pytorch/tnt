@@ -93,6 +93,9 @@ html_css_files = [
 html_js_files = [
     "js/torchtnt.js",
 ]
+if FBCODE:
+    # OSS uses sphinx v5 which bundles with jquery, internal is v6 which does not
+    html_js_files.append("js/jquery.js")
 
 
 class PatchedHTMLTranslator(HTMLTranslator):
