@@ -10,18 +10,19 @@ import logging
 import tempfile
 import uuid
 from argparse import Namespace
-from typing import Any, Dict, Optional, Tuple
+from typing import Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.framework.auto_unit import AutoUnit
+from torchtnt.framework.auto_unit import AutoUnit, Strategy, SWAParams
 from torchtnt.framework.fit import fit
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
 from torchtnt.utils.loggers import TensorBoardLogger
+from torchtnt.utils.prepare_module import ActivationCheckpointParams, TorchCompileParams
 
 _logger: logging.Logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -68,34 +69,35 @@ class MyUnit(AutoUnit[Batch]):
         eval_accuracy: BinaryAccuracy,
         log_every_n_steps: int,
         tb_logger: Optional[TensorBoardLogger] = None,
-        **kwargs: Dict[str, Any],  # kwargs to be passed to AutoUnit
+        module: torch.nn.Module,
+        device: Optional[torch.device] = None,
+        strategy: Optional[Union[Strategy, str]] = None,
+        step_lr_interval: Literal["step", "epoch"] = "epoch",
+        precision: Optional[Union[str, torch.dtype]] = None,
+        gradient_accumulation_steps: int = 1,
+        detect_anomaly: Optional[bool] = None,
+        clip_grad_norm: Optional[float] = None,
+        clip_grad_value: Optional[float] = None,
+        swa_params: Optional[SWAParams] = None,
+        torch_compile_params: Optional[TorchCompileParams] = None,
+        activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
+        training: bool = True,
     ) -> None:
-        # pyre-fixme[6]: For 1st argument expected `Optional[bool]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[float]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[device]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected
-        #  `Optional[ActivationCheckpointParams]` but got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[SWAParams]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Optional[TorchCompileParams]`
-        #  but got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected
-        #  `Union[typing_extensions.Literal['epoch'],
-        #  typing_extensions.Literal['step']]` but got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Union[None, str, dtype]` but got
-        #  `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Union[None, str, Strategy]` but
-        #  got `Dict[str, typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `bool` but got `Dict[str,
-        #  typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `int` but got `Dict[str,
-        #  typing.Any]`.
-        # pyre-fixme[6]: For 1st argument expected `Module` but got `Dict[str,
-        #  typing.Any]`.
-        super().__init__(**kwargs)
+        super().__init__(
+            module=module,
+            device=device,
+            strategy=strategy,
+            step_lr_interval=step_lr_interval,
+            precision=precision,
+            gradient_accumulation_steps=gradient_accumulation_steps,
+            detect_anomaly=detect_anomaly,
+            clip_grad_norm=clip_grad_norm,
+            clip_grad_value=clip_grad_value,
+            swa_params=swa_params,
+            torch_compile_params=torch_compile_params,
+            activation_checkpoint_params=activation_checkpoint_params,
+            training=training,
+        )
         self.tb_logger = tb_logger
         # create accuracy metrics to compute the accuracy of training and evaluation
         self.train_accuracy = train_accuracy
@@ -109,8 +111,9 @@ class MyUnit(AutoUnit[Batch]):
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
         return optimizer, lr_scheduler
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, Any]:
+    def compute_loss(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         inputs, targets = data
         # convert targets to float Tensor for binary_cross_entropy_with_logits
         targets = targets.float()
@@ -126,8 +129,7 @@ class MyUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: torch.Tensor,
     ) -> None:
         _, targets = data
         self.train_accuracy.update(outputs, targets)
@@ -144,8 +146,7 @@ class MyUnit(AutoUnit[Batch]):
         data: Batch,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        outputs: torch.Tensor,
     ) -> None:
         _, targets = data
         self.eval_accuracy.update(outputs, targets)
@@ -239,8 +240,7 @@ def get_args() -> Namespace:
 
 
 if __name__ == "__main__":
-    # pyre-fixme[5]: Global expression must be annotated.
-    args = get_args()
+    args: Namespace = get_args()
     lc = pet.LaunchConfig(
         min_nodes=1,
         max_nodes=1,
