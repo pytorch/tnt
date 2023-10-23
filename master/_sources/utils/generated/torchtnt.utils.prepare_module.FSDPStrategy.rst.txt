@@ -31,6 +31,7 @@
       ~FSDPStrategy.limit_all_gathers
       ~FSDPStrategy.mixed_precision
       ~FSDPStrategy.optim_state_dict_config
+      ~FSDPStrategy.param_init_fn
       ~FSDPStrategy.process_group
       ~FSDPStrategy.sharding_strategy
       ~FSDPStrategy.state_dict_config
