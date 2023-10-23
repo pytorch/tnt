@@ -62,7 +62,7 @@ def init_dataloader(
     num_batches: int,
     num_embeddings: int,
     backend: str,
-    num_embeddings_per_feature: Optional[int] = None,
+    num_embeddings_per_feature: Optional[List[int]] = None,
     seed: Optional[int] = None,
     pin_memory: Optional[bool] = None,
 ) -> DataLoader:
@@ -73,8 +73,6 @@ def init_dataloader(
             keys=DEFAULT_CAT_NAMES,
             batch_size=batch_size,
             hash_size=num_embeddings,
-            # pyre-fixme[6]: For 4th argument expected `Optional[List[int]]` but got
-            #  `Optional[int]`.
             hash_sizes=num_embeddings_per_feature,
             manual_seed=seed,
             ids_per_feature=1,
@@ -183,7 +181,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
-class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
+class MyUnit(TrainUnit[Iterator[Batch]], EvalUnit[Iterator[Batch]]):
     def __init__(
         self,
         module: torch.nn.Module,
@@ -195,8 +193,7 @@ class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
     ) -> None:
         super().__init__()
         self.module = module
-        # pyre-fixme[4]: Attribute must be annotated.
-        self.pipeline = TrainPipelineSparseDist(
+        self.pipeline: TrainPipelineSparseDist = TrainPipelineSparseDist(
             module, optimizer, device, execute_all_batches=True
         )
         self.optimizer = optimizer
@@ -205,8 +202,6 @@ class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
         self.tb_logger = tb_logger
         self.log_every_n_steps = log_every_n_steps
 
-    # pyre-fixme[14]: `train_step` overrides method defined in `TrainUnit`
-    #  inconsistently.
     def train_step(self, state: State, data: Iterator[Batch]) -> None:
         step = self.train_progress.num_steps_completed
         loss, logits, labels = self.pipeline.progress(data)
@@ -222,7 +217,6 @@ class MyUnit(TrainUnit[Batch], EvalUnit[Batch]):
         # reset the metric every epoch
         self.train_auroc.reset()
 
-    # pyre-fixme[14]: `eval_step` overrides method defined in `EvalUnit` inconsistently.
     def eval_step(self, state: State, data: Iterator[Batch]) -> None:
         step = self.eval_progress.num_steps_completed
         loss, _, _ = self.pipeline.progress(data)
@@ -264,12 +258,8 @@ def init_model(
             tables=eb_configs, device=torch.device("meta")
         ),
         dense_in_features=len(DEFAULT_INT_NAMES),
-        # pyre-fixme[6]: For 3rd argument expected `List[int]` but got
-        #  `Optional[List[int]]`.
-        dense_arch_layer_sizes=dense_arch_layer_sizes,
-        # pyre-fixme[6]: For 4th argument expected `List[int]` but got
-        #  `Optional[List[int]]`.
-        over_arch_layer_sizes=over_arch_layer_sizes,
+        dense_arch_layer_sizes=dense_arch_layer_sizes or [],
+        over_arch_layer_sizes=over_arch_layer_sizes or [],
         dense_device=device,
     )
 
