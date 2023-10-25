@@ -31,7 +31,9 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
+    _override_knobs,
     get_latest_checkpoint_path,
+    KnobOptions,
     TorchSnapshotSaver,
 )
 from torchtnt.framework.train import train
@@ -631,6 +633,16 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         finally:
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
+
+    def test_knob_override(self) -> None:
+        env_var = "TORCHSNAPSHOT_MAX_PER_RANK_IO_CONCURRENCY_OVERRIDE"
+        knob_options = KnobOptions(max_per_rank_io_concurrency=1)
+        with _override_knobs(knob_options):
+            self.assertEqual(os.environ[env_var], str(1))
+        self.assertNotIn(env_var, os.environ)
+
+        with _override_knobs(KnobOptions(max_per_rank_io_concurrency=None)):
+            self.assertNotIn(env_var, os.environ)
 
 
 class DummyStatefulDataLoader:

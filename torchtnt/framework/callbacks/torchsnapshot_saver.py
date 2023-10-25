@@ -7,11 +7,25 @@
 import logging
 import os
 import re
-from typing import Any, cast, Dict, Iterable, List, Optional, Pattern, Set, Union
+from contextlib import contextmanager, ExitStack
+from dataclasses import dataclass
+from typing import (
+    Any,
+    cast,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Pattern,
+    Set,
+    Union,
+)
 
 import torch.distributed as dist
 
 from pyre_extensions import none_throws
+from torchsnapshot.knobs import override_max_per_rank_io_concurrency
 from torchsnapshot.snapshot import PendingSnapshot, Snapshot, SNAPSHOT_METADATA_FNAME
 
 from torchtnt.framework.callback import Callback
@@ -47,6 +61,19 @@ _TRAIN_DL_STATE_KEY = "train_dataloader"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+# TODO: eventually support overriding all knobs
+@dataclass
+class KnobOptions:
+    """
+    Controls the knobs in TorchSnapshot.
+
+    Args:
+        max_per_rank_io_concurrency: Maximum number of concurrent IO operations per rank. Defaults to 16.
+    """
+
+    max_per_rank_io_concurrency: Optional[int] = None
+
+
 class TorchSnapshotSaver(Callback):
     """
     A callback which periodically saves the application state during training using `TorchSnapshot <https://pytorch.org/torchsnapshot/>`_.
@@ -72,6 +99,7 @@ class TorchSnapshotSaver(Callback):
 
         storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_.
             See each storage plugin's documentation for customizations.
+        knob_options: Additional keyword options for the snapshot knobs
 
     Note:
         If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks
@@ -89,6 +117,7 @@ class TorchSnapshotSaver(Callback):
         process_group: Optional[dist.ProcessGroup] = None,
         replicated: Optional[List[str]] = None,
         storage_options: Optional[Dict[str, Any]] = None,
+        knob_options: Optional[KnobOptions] = None,
     ) -> None:
         _validate_snapshot_available()
         if save_every_n_train_steps is not None and save_every_n_train_steps <= 0:
@@ -107,6 +136,7 @@ class TorchSnapshotSaver(Callback):
 
         self._prev_snapshot: Optional[PendingSnapshot] = None
         self._storage_options = storage_options
+        self._knob_options: KnobOptions = knob_options or KnobOptions()
 
     def _sync_dirpath_to_all_ranks(self, dirpath: str) -> None:
         if not (dist.is_available() and dist.is_initialized()):
@@ -223,13 +253,14 @@ class TorchSnapshotSaver(Callback):
                 )
                 return False
 
-        self._prev_snapshot = Snapshot.async_take(
-            str(snapshot_path),
-            app_state=app_state,
-            pg=self._process_group,
-            replicated=list(self._replicated),
-            storage_options=self._storage_options,
-        )
+        with _override_knobs(self._knob_options):
+            self._prev_snapshot = Snapshot.async_take(
+                str(snapshot_path),
+                app_state=app_state,
+                pg=self._process_group,
+                replicated=list(self._replicated),
+                storage_options=self._storage_options,
+            )
         rank_zero_info(f"Saving snapshot to path: {snapshot_path}", logger=logger)
         return True
 
@@ -243,6 +274,7 @@ class TorchSnapshotSaver(Callback):
         restore_eval_progress: bool = True,
         process_group: Optional[dist.ProcessGroup] = None,
         storage_options: Optional[Dict[str, Any]] = None,
+        knob_options: Optional[KnobOptions] = None,
     ) -> None:
         """Utility method to restore snapshot state from a path.
 
@@ -257,6 +289,7 @@ class TorchSnapshotSaver(Callback):
             restore_eval_progress: Whether to restore the evaluation progress state.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
+            knob_options: Additional keyword options for the snapshot knobs
         """
 
         _validate_snapshot_available()
@@ -298,7 +331,9 @@ class TorchSnapshotSaver(Callback):
                     "train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
                 )
 
-        snapshot.restore(app_state)
+        knob_options = knob_options or KnobOptions()
+        with _override_knobs(knob_options):
+            snapshot.restore(app_state)
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
 
     @staticmethod
@@ -311,6 +346,7 @@ class TorchSnapshotSaver(Callback):
         restore_eval_progress: bool = True,
         process_group: Optional[dist.ProcessGroup] = None,
         storage_options: Optional[Dict[str, Any]] = None,
+        knob_options: Optional[KnobOptions] = None,
     ) -> bool:
         """
         Given a parent directory where checkpoints are saved, restore the snapshot state from the latest checkpoint in the directory.
@@ -326,6 +362,7 @@ class TorchSnapshotSaver(Callback):
             restore_eval_progress: Whether to restore the evaluation progress state.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
+            knob_options: Additional keyword options for the snapshot knobs
 
         Returns:
             True if the latest snapshot directory was found and successfully restored, otherwise False.
@@ -342,6 +379,7 @@ class TorchSnapshotSaver(Callback):
             restore_eval_progress=restore_eval_progress,
             process_group=process_group,
             storage_options=storage_options,
+            knob_options=knob_options,
         )
         return True
 
@@ -500,3 +538,21 @@ def _check_app_state_collision(app_state: Dict[str, _TStateful]) -> None:
             raise RuntimeError(
                 f"Detected collision for key in app state: {key}. TorchSnapshotSaver expects to save and load this key."
             )
+
+
+@contextmanager
+def _override_knobs(
+    knob_options: KnobOptions,
+) -> Generator[None, None, None]:
+    knobs = []
+    if knob_options.max_per_rank_io_concurrency:
+        knobs.append(
+            override_max_per_rank_io_concurrency(
+                knob_options.max_per_rank_io_concurrency
+            ),
+        )
+
+    with ExitStack() as stack:
+        for mgr in knobs:
+            stack.enter_context(mgr)
+        yield
