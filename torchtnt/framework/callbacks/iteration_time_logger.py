@@ -11,7 +11,7 @@ from pyre_extensions import none_throws
 from torch.utils.tensorboard import SummaryWriter
 
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.state import PhaseState, State
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.loggers.tensorboard import TensorBoardLogger
