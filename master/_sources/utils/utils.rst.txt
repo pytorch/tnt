@@ -14,6 +14,7 @@ Data Utils
    :toctree: generated
    :nosignatures:
 
+   AbstractRandomDataset
    AllDatasetBatchesIterator
    CudaDataPrefetcher
    InOrderIterator
