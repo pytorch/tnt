@@ -9,7 +9,17 @@ import contextlib
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Callable, Iterator, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import torch
 from pyre_extensions import none_throws
@@ -115,7 +125,137 @@ class _ConfigureOptimizersCaller(ABCMeta):
         return x
 
 
-class AutoPredictUnit(PredictUnit[TPredictData]):
+class _AutoUnitMixin(Generic[TData]):
+    """
+    A mixin to share initialization of shared attributes and introduce prefetching.
+    """
+
+    def __init__(
+        self,
+        *,
+        module: torch.nn.Module,
+        device: Optional[torch.device] = None,
+        precision: Optional[Union[str, torch.dtype]] = None,
+        detect_anomaly: Optional[bool] = None,
+        torch_compile_params: Optional[TorchCompileParams] = None,
+    ) -> None:
+        super().__init__()
+        if torch_compile_params:
+            _validate_torch_compile_available()
+
+        self.device: torch.device = device or init_from_env()
+        self.precision: Optional[torch.dtype] = (
+            convert_precision_str_to_dtype(precision)
+            if isinstance(precision, str)
+            else precision
+        )
+
+        self.detect_anomaly = detect_anomaly
+
+        # create autocast context based on precision and device type
+        self.maybe_autocast_precision = torch.autocast(
+            device_type=self.device.type,
+            dtype=self.precision,
+            enabled=self.precision is not None,
+        )
+
+        # cuda stream to use for moving data to device
+        self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
+            torch.cuda.Stream() if self.device.type == "cuda" else None
+        )
+        # dict mapping phase to whether the next batch which has been prefetched for that phase and is ready to be used
+        self._phase_to_next_batch: dict[ActivePhase, Optional[TData]] = {
+            ActivePhase.TRAIN: None,
+            ActivePhase.EVALUATE: None,
+            ActivePhase.PREDICT: None,
+        }
+
+        # dict mapping phase to whether the next batch for that phase has been prefetched and is ready to be used
+        self._phase_to_prefetched: dict[ActivePhase, bool] = {
+            ActivePhase.TRAIN: False,
+            ActivePhase.EVALUATE: False,
+            ActivePhase.PREDICT: False,
+        }
+        # whether the current batch is the last train batch
+        self._is_last_batch: bool = False
+
+    def move_data_to_device(
+        self, state: State, data: TData, non_blocking: bool
+    ) -> TData:
+        """
+        The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``/``eval_step``/``predict_step``.
+        By default this uses the utility function :py:func:`~torchtnt.utils.copy_data_to_device`.
+
+        If on GPU, this method will be called on a separate CUDA stream.
+
+        Args:
+            state: a State object which is passed from the ``train_step``/``eval_step``/``predict_step``
+            data: a batch of data which is passed from the ``train_step``/``eval_step``/``predict_step``
+            non_blocking: parameter to pass to ``torch.tensor.to``
+
+        Returns:
+            A batch of data which is on the device
+        """
+        return copy_data_to_device(data, self.device, non_blocking=non_blocking)
+
+    def _prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
+        """Prefetch the next batch on a separate CUDA stream."""
+        active_phase = state.active_phase
+        phase = state.active_phase.name.lower()
+        try:
+            with get_timing_context(
+                state, f"{self.__class__.__name__}.{phase}.next(data_iter)"
+            ):
+                next_batch = next(data_iter)
+        except StopIteration:
+            self._phase_to_next_batch[active_phase] = None
+            self._is_last_batch = True
+            return
+
+        non_blocking = bool(
+            self.device.type == "cuda" and self._phase_to_prefetched[active_phase]
+        )
+
+        # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
+        with torch.cuda.stream(self._prefetch_stream), get_timing_context(
+            state, f"{self.__class__.__name__}.{phase}.move_data_to_device"
+        ):
+            self._phase_to_next_batch[active_phase] = self.move_data_to_device(
+                state, next_batch, non_blocking=non_blocking
+            )
+
+    def _get_next_batch(self, state: State, data: Iterator[TData]) -> TData:
+        active_phase = state.active_phase
+        if not self._phase_to_prefetched[active_phase]:
+            self._prefetch_next_batch(state, data)
+            self._phase_to_prefetched[active_phase] = True
+
+        if self._prefetch_stream:
+            with get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
+                # wait on the CUDA stream to complete the host to device copy
+                torch.cuda.current_stream().wait_stream(self._prefetch_stream)
+
+        # get the next batch which was stored by _prefetch_next_batch
+        batch = self._phase_to_next_batch[active_phase]
+        if batch is None:
+            self._phase_to_prefetched[active_phase] = False
+            self._is_last_batch = False
+            raise StopIteration
+
+        if self._prefetch_stream:
+            with get_timing_context(
+                state, f"{self.__class__.__name__}.record_data_in_stream"
+            ):
+                # record the batch in the current stream
+                record_data_in_stream(batch, torch.cuda.current_stream())
+
+        # prefetch the next batch
+        self._prefetch_next_batch(state, data)
+
+        return batch
+
+
+class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
     def __init__(
         self,
         *,
@@ -151,23 +291,12 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         Note:
             Torch compile support is only available in PyTorch 2.0 or higher.
         """
-        if torch_compile_params:
-            _validate_torch_compile_available()
-
-        super().__init__()
-
-        self.device: torch.device = device or init_from_env()
-        self.precision: Optional[torch.dtype] = (
-            convert_precision_str_to_dtype(precision)
-            if isinstance(precision, str)
-            else precision
-        )
-
-        # create autocast context based on precision and device type
-        self.maybe_autocast_precision = torch.autocast(
-            device_type=self.device.type,
-            dtype=self.precision,
-            enabled=self.precision is not None,
+        super().__init__(
+            module=module,
+            device=device,
+            precision=precision,
+            torch_compile_params=torch_compile_params,
+            detect_anomaly=detect_anomaly,
         )
         self.module: torch.nn.Module = prepare_module(
             module,
@@ -175,26 +304,6 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
             strategy=strategy,
             torch_compile_params=torch_compile_params,
         )
-
-        # cuda stream to use for moving data to device
-        self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
-            torch.cuda.Stream() if self.device.type == "cuda" else None
-        )
-        # dict mapping phase to whether the next batch which has been prefetched for that phase and is ready to be used
-        self._phase_to_next_batch: dict[ActivePhase, Optional[TPredictData]] = {
-            ActivePhase.TRAIN: None,
-            ActivePhase.EVALUATE: None,
-            ActivePhase.PREDICT: None,
-        }
-
-        # dict mapping phase to whether the next batch for that phase has been prefetched and is ready to be used
-        self._phase_to_prefetched: dict[ActivePhase, bool] = {
-            ActivePhase.TRAIN: False,
-            ActivePhase.EVALUATE: False,
-            ActivePhase.PREDICT: False,
-        }
-
-        self.detect_anomaly = detect_anomaly
 
     # pyre-fixme[3]: Return annotation cannot be `Any`.
     def predict_step(self, state: State, data: Iterator[TPredictData]) -> Any:
@@ -237,83 +346,9 @@ class AutoPredictUnit(PredictUnit[TPredictData]):
         """
         pass
 
-    def move_data_to_device(
-        self, state: State, data: TPredictData, non_blocking: bool
-    ) -> TPredictData:
-        """
-        The user can override this method with custom code to copy data to device. This will be called at the start of every ``predict_step``.
-        By default this uses the utility function :py:func:`~torchtnt.utils.copy_data_to_device`.
-
-        If on GPU, this method will be called on a separate CUDA stream.
-
-        Args:
-            state: a State object which is passed from the ``predict_step``
-            data: a batch of data which is passed from the ``predict_step``
-            non_blocking: parameter to pass to ``torch.tensor.to``
-
-        Returns:
-            A batch of data which is on the device
-        """
-        return copy_data_to_device(data, self.device, non_blocking=non_blocking)
-
-    def _get_next_batch(
-        self, state: State, data: Iterator[TPredictData]
-    ) -> TPredictData:
-        active_phase = state.active_phase
-        if not self._phase_to_prefetched[active_phase]:
-            self._prefetch_next_batch(state, data)
-            self._phase_to_prefetched[active_phase] = True
-
-        if self._prefetch_stream:
-            with get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
-                # wait on the CUDA stream to complete the host to device copy
-                torch.cuda.current_stream().wait_stream(self._prefetch_stream)
-
-        # get the next batch which was stored by _prefetch_next_batch
-        batch = self._phase_to_next_batch[active_phase]
-        if batch is None:
-            self._phase_to_prefetched[active_phase] = False
-            raise StopIteration
-
-        if self._prefetch_stream:
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.record_data_in_stream"
-            ):
-                # record the batch in the current stream
-                record_data_in_stream(batch, torch.cuda.current_stream())
-
-        # kick off prefetching the next batch
-        self._prefetch_next_batch(state, data)
-        return batch
-
-    def _prefetch_next_batch(
-        self, state: State, data_iter: Iterator[TPredictData]
-    ) -> None:
-        """Prefetch the next batch on a separate CUDA stream."""
-        active_phase = state.active_phase
-        try:
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.next(data_iter)"
-            ):
-                next_batch = next(data_iter)
-        except StopIteration:
-            self._phase_to_next_batch[active_phase] = None
-            return
-
-        non_blocking = bool(
-            self.device.type == "cuda" and self._phase_to_prefetched[active_phase]
-        )
-
-        # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
-        with torch.cuda.stream(self._prefetch_stream), get_timing_context(
-            state, f"{self.__class__.__name__}.move_data_to_device"
-        ):
-            self._phase_to_next_batch[active_phase] = self.move_data_to_device(
-                state, next_batch, non_blocking=non_blocking
-            )
-
 
 class AutoUnit(
+    _AutoUnitMixin[TData],
     TrainUnit[TData],
     EvalUnit[TData],
     PredictUnit[TData],
@@ -388,21 +423,18 @@ class AutoUnit(
         activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
         training: bool = True,
     ) -> None:
-        super().__init__()
+        super().__init__(
+            module=module,
+            device=device,
+            precision=precision,
+            detect_anomaly=detect_anomaly,
+            torch_compile_params=torch_compile_params,
+        )
 
         if not gradient_accumulation_steps > 0:
             raise ValueError(
                 f"gradient_accumulation_steps must be > 0. Got {gradient_accumulation_steps}"
             )
-        if torch_compile_params:
-            _validate_torch_compile_available()
-
-        self.device: torch.device = device or init_from_env()
-        self.precision: Optional[torch.dtype] = (
-            convert_precision_str_to_dtype(precision)
-            if isinstance(precision, str)
-            else precision
-        )
 
         self.swa_params: Optional[SWAParams] = swa_params
         self.swa_model: Optional[AveragedModel] = None
@@ -444,38 +476,12 @@ class AutoUnit(
 
         self.gradient_accumulation_steps = gradient_accumulation_steps
 
-        self.detect_anomaly = detect_anomaly
         self.clip_grad_norm = clip_grad_norm
         self.clip_grad_value = clip_grad_value
 
         # create autocast context based on precision and device type
-        self.maybe_autocast_precision = torch.autocast(
-            device_type=self.device.type,
-            dtype=self.precision,
-            enabled=self.precision is not None,
-        )
 
         self.training = training
-
-        # cuda stream to use for moving data to device
-        self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
-            torch.cuda.Stream() if self.device.type == "cuda" else None
-        )
-        # dict mapping phase to whether the next batch which has been prefetched for that phase and is ready to be used
-        self._phase_to_next_batch: dict[ActivePhase, Optional[TData]] = {
-            ActivePhase.TRAIN: None,
-            ActivePhase.EVALUATE: None,
-            ActivePhase.PREDICT: None,
-        }
-
-        # dict mapping phase to whether the next batch for that phase has been prefetched and is ready to be used
-        self._phase_to_prefetched: dict[ActivePhase, bool] = {
-            ActivePhase.TRAIN: False,
-            ActivePhase.EVALUATE: False,
-            ActivePhase.PREDICT: False,
-        }
-        # whether the current batch is the last train batch
-        self._is_last_train_batch: bool = False
 
         self.optimizer: Optional[torch.optim.Optimizer] = None
         self.lr_scheduler: Optional[TLRScheduler] = None
@@ -515,81 +521,6 @@ class AutoUnit(
         """
         ...
 
-    def move_data_to_device(
-        self, state: State, data: TData, non_blocking: bool
-    ) -> TData:
-        """
-        The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``/``eval_step``.
-        By default this uses the utility function :py:func:`~torchtnt.utils.copy_data_to_device`.
-
-        If on GPU, this method will be called on a separate CUDA stream.
-
-        Args:
-            state: a State object which is passed from the ``train_step``/``eval_step``
-            data: a batch of data which is passed from the ``train_step``/``eval_step``
-            non_blocking: parameter to pass to ``torch.tensor.to``
-
-        Returns:
-            A batch of data which is on the device
-        """
-        return copy_data_to_device(data, self.device, non_blocking=non_blocking)
-
-    def _prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
-        """Prefetch the next batch on a separate CUDA stream."""
-        active_phase = state.active_phase
-        phase = state.active_phase.name.lower()
-        try:
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.{phase}.next(data_iter)"
-            ):
-                next_batch = next(data_iter)
-        except StopIteration:
-            self._phase_to_next_batch[active_phase] = None
-            self._is_last_train_batch = True
-            return
-
-        non_blocking = bool(
-            self.device.type == "cuda" and self._phase_to_prefetched[active_phase]
-        )
-
-        # if on cpu, self._prefetch_stream is None so the torch.cuda.stream call is a no-op
-        with torch.cuda.stream(self._prefetch_stream), get_timing_context(
-            state, f"{self.__class__.__name__}.{phase}.move_data_to_device"
-        ):
-            self._phase_to_next_batch[active_phase] = self.move_data_to_device(
-                state, next_batch, non_blocking=non_blocking
-            )
-
-    def _get_next_batch(self, state: State, data: Iterator[TData]) -> TData:
-        active_phase = state.active_phase
-        if not self._phase_to_prefetched[active_phase]:
-            self._prefetch_next_batch(state, data)
-            self._phase_to_prefetched[active_phase] = True
-
-        if self._prefetch_stream:
-            with get_timing_context(state, f"{self.__class__.__name__}.wait_stream"):
-                # wait on the CUDA stream to complete the host to device copy
-                torch.cuda.current_stream().wait_stream(self._prefetch_stream)
-
-        # get the next batch which was stored by _prefetch_next_batch
-        batch = self._phase_to_next_batch[active_phase]
-        if batch is None:
-            self._phase_to_prefetched[active_phase] = False
-            self._is_last_train_batch = False
-            raise StopIteration
-
-        if self._prefetch_stream:
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.record_data_in_stream"
-            ):
-                # record the batch in the current stream
-                record_data_in_stream(batch, torch.cuda.current_stream())
-
-        # prefetch the next batch
-        self._prefetch_next_batch(state, data)
-
-        return batch
-
     def _should_update_swa(self) -> bool:
         if not self.swa_params:
             return False
@@ -624,7 +555,7 @@ class AutoUnit(
 
         should_update_weights = (
             self.train_progress.num_steps_completed_in_epoch + 1
-        ) % self.gradient_accumulation_steps == 0 or self._is_last_train_batch
+        ) % self.gradient_accumulation_steps == 0 or self._is_last_batch
 
         # for pyre, assign to local variable
         module = self.module
@@ -798,7 +729,7 @@ class AutoUnit(
                     ):
                         lr_scheduler.step()
 
-        self._is_last_train_batch = False
+        self._is_last_batch = False
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def eval_step(

@@ -658,7 +658,7 @@ class TestAutoUnit(unittest.TestCase):
 
         my_unit = DummyAutoUnit(module=my_module)
         train(my_unit, dataloader, max_epochs=1, max_steps_per_epoch=4)
-        self.assertFalse(my_unit._is_last_train_batch)
+        self.assertFalse(my_unit._is_last_batch)
 
     def test_auto_unit_timing_train(self) -> None:
         """
@@ -844,12 +844,12 @@ class TestAutoUnit(unittest.TestCase):
             batch = auto_unit._get_next_batch(state, second_data_iter)
         self.assertEqual(batch, 3)
         self._assert_next_batch_dicts(auto_unit, train_prefetched=True)
-        self.assertTrue(auto_unit._is_last_train_batch)
+        self.assertTrue(auto_unit._is_last_batch)
 
         with move_data_to_device_mock, self.assertRaises(StopIteration):
             auto_unit._get_next_batch(state, second_data_iter)
         self._assert_next_batch_dicts(auto_unit)
-        self.assertFalse(auto_unit._is_last_train_batch)
+        self.assertFalse(auto_unit._is_last_batch)
 
     def test_get_next_batch_with_multiple_phases(self) -> None:
         auto_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2))
@@ -990,7 +990,7 @@ class LastBatchAutoUnit(AutoUnit[Batch]):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         tc = unittest.TestCase()
         tc.assertEqual(
-            self._is_last_train_batch,
+            self._is_last_batch,
             self.train_progress.num_steps_completed_in_epoch + 1
             == self.expected_steps_per_epoch,
         )
