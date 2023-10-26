@@ -417,6 +417,11 @@ def get_latest_checkpoint_path(
 
 
 def _latest_checkpoint_path(dirpath: str) -> Optional[str]:
+    if dirpath[-1] == "/":
+        # removes trailing forward slash if present
+        # required for regex search to work
+        dirpath = dirpath[:-1]
+
     fs = get_filesystem(dirpath)
 
     if not fs.exists(dirpath):
