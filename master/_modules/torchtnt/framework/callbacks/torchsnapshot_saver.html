@@ -390,8 +390,6 @@
 <span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
 
 <span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
-<span class="kn">from</span> <span class="nn">torchsnapshot.knobs</span> <span class="kn">import</span> <span class="n">override_max_per_rank_io_concurrency</span>
-<span class="kn">from</span> <span class="nn">torchsnapshot.snapshot</span> <span class="kn">import</span> <span class="n">PendingSnapshot</span><span class="p">,</span> <span class="n">Snapshot</span><span class="p">,</span> <span class="n">SNAPSHOT_METADATA_FNAME</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">State</span>
@@ -411,6 +409,12 @@
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">torchsnapshot</span>
+    <span class="kn">from</span> <span class="nn">torchsnapshot.knobs</span> <span class="kn">import</span> <span class="n">override_max_per_rank_io_concurrency</span>
+    <span class="kn">from</span> <span class="nn">torchsnapshot.snapshot</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">PendingSnapshot</span><span class="p">,</span>
+        <span class="n">Snapshot</span><span class="p">,</span>
+        <span class="n">SNAPSHOT_METADATA_FNAME</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="n">_TStateful</span> <span class="o">=</span> <span class="n">torchsnapshot</span><span class="o">.</span><span class="n">Stateful</span>
     <span class="n">_TORCHSNAPSHOT_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
