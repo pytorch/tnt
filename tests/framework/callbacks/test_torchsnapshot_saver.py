@@ -13,10 +13,11 @@ import time
 import unittest
 from typing import Any, Dict, Iterable, List
 from unittest import mock
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import torch
 import torch.distributed as dist
+from torch import nn
 from torch.distributed import launcher
 from torchsnapshot.snapshot import SNAPSHOT_METADATA_FNAME
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
@@ -34,6 +35,7 @@ from torchtnt.framework.callbacks.torchsnapshot_saver import (
     _override_knobs,
     get_latest_checkpoint_path,
     KnobOptions,
+    RestoreOptions,
     TorchSnapshotSaver,
 )
 from torchtnt.framework.train import train
@@ -313,11 +315,43 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             end_num_steps_completed = my_unit.train_progress.num_steps_completed
             self.assertGreater(len(expected_paths), 0)
             snapshot_cb.restore(
-                expected_paths[0], my_unit, restore_train_progress=False
+                expected_paths[0],
+                my_unit,
+                restore_options=RestoreOptions(restore_train_progress=False),
             )
             restored_num_steps_completed = my_unit.train_progress.num_steps_completed
             # no train progress was restored so the progress after restoration should be the same as the progress before restoration
             self.assertEqual(restored_num_steps_completed, end_num_steps_completed)
+
+    @patch("torchtnt.framework.callbacks.torchsnapshot_saver.torchsnapshot")
+    def test_save_restore_no_optimizer_restore(
+        self, mock_torchsnapshot: MagicMock
+    ) -> None:
+        my_unit = DummyTrainUnit(input_dim=2)
+        restore_options = RestoreOptions(restore_optimizers=False)
+        TorchSnapshotSaver.restore(
+            path="path/to/snapshot", unit=my_unit, restore_options=restore_options
+        )
+        app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
+        self.assertNotIn("optimizer", app_state)
+        TorchSnapshotSaver.restore(path="path/to/snapshot", unit=my_unit)
+        app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
+        self.assertIn("optimizer", app_state)
+
+    @patch("torchtnt.framework.callbacks.torchsnapshot_saver.torchsnapshot")
+    def test_save_restore_no_lr_scheduler_restore(
+        self, mock_torchsnapshot: MagicMock
+    ) -> None:
+        my_unit = DummyAutoUnit(module=nn.Linear(2, 3))
+        restore_options = RestoreOptions(restore_lr_schedulers=False)
+        TorchSnapshotSaver.restore(
+            path="path/to/snapshot", unit=my_unit, restore_options=restore_options
+        )
+        app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
+        self.assertNotIn("lr_scheduler", app_state)
+        TorchSnapshotSaver.restore(path="path/to/snapshot", unit=my_unit)
+        app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
+        self.assertIn("lr_scheduler", app_state)
 
     def test_save_on_train_end(self) -> None:
         input_dim = 2
