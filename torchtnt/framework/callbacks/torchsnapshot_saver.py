@@ -78,6 +78,24 @@ class KnobOptions:
     max_per_rank_io_concurrency: Optional[int] = None
 
 
+@dataclass
+class RestoreOptions:
+    """
+    Options when restoring a snapshot.
+
+    Args:
+        restore_train_progress: Whether to restore the training progress state.
+        restore_eval_progress: Whether to restore the evaluation progress state.
+        restore_optimizers: Whether to restore the optimizer states.
+        restore_lr_schedulers: Whether to restore the lr scheduler states.
+    """
+
+    restore_train_progress: bool = True
+    restore_eval_progress: bool = True
+    restore_optimizers: bool = True
+    restore_lr_schedulers: bool = True
+
+
 class TorchSnapshotSaver(Callback):
     """
     A callback which periodically saves the application state during training using `TorchSnapshot <https://pytorch.org/torchsnapshot/>`_.
@@ -274,9 +292,8 @@ class TorchSnapshotSaver(Callback):
         unit: AppStateMixin,
         *,
         train_dataloader: Optional[Iterable[TTrainData]] = None,
-        restore_train_progress: bool = True,
-        restore_eval_progress: bool = True,
         process_group: Optional[dist.ProcessGroup] = None,
+        restore_options: Optional[RestoreOptions] = None,
         storage_options: Optional[Dict[str, Any]] = None,
         knob_options: Optional[KnobOptions] = None,
     ) -> None:
@@ -289,9 +306,8 @@ class TorchSnapshotSaver(Callback):
             path: Path of the snapshot to restore.
             unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
             train_dataloader: An optional train dataloader to restore.
-            restore_train_progress: Whether to restore the training progress state.
-            restore_eval_progress: Whether to restore the evaluation progress state.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+            restore_options: Controls what to  filter when restoring the state.
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
             knob_options: Additional keyword options for the snapshot knobs
         """
@@ -312,11 +328,22 @@ class TorchSnapshotSaver(Callback):
         rng_state = torchsnapshot.RNGState()
         app_state[_RNG_STATE_KEY] = rng_state
 
-        if not restore_train_progress:
+        restore_options = restore_options or RestoreOptions()
+        if not restore_options.restore_train_progress:
             app_state.pop(_TRAIN_PROGRESS_STATE_KEY, None)
 
-        if not restore_eval_progress:
+        if not restore_options.restore_eval_progress:
             app_state.pop(_EVAL_PROGRESS_STATE_KEY, None)
+
+        if not restore_options.restore_optimizers:
+            # remove all optimizer keys from app_state
+            for optim_keys in unit.tracked_optimizers().keys():
+                app_state.pop(optim_keys, None)
+
+        if not restore_options.restore_lr_schedulers:
+            # remove all lr scheduler keys from app_state
+            for lr_scheduler_keys in unit.tracked_lr_schedulers().keys():
+                app_state.pop(lr_scheduler_keys, None)
 
         if train_dataloader is not None:
             if not isinstance(train_dataloader, _TStateful):
@@ -346,9 +373,8 @@ class TorchSnapshotSaver(Callback):
         unit: AppStateMixin,
         *,
         train_dataloader: Optional[Iterable[TTrainData]] = None,
-        restore_train_progress: bool = True,
-        restore_eval_progress: bool = True,
         process_group: Optional[dist.ProcessGroup] = None,
+        restore_options: Optional[RestoreOptions] = None,
         storage_options: Optional[Dict[str, Any]] = None,
         knob_options: Optional[KnobOptions] = None,
     ) -> bool:
@@ -362,9 +388,8 @@ class TorchSnapshotSaver(Callback):
             dirpath: Parent directory from which to get the latest snapshot.
             unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
             train_dataloader: An optional train dataloader to restore.
-            restore_train_progress: Whether to restore the training progress state.
-            restore_eval_progress: Whether to restore the evaluation progress state.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+            restore_options: Controls what to  filter when restoring the state.
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
             knob_options: Additional keyword options for the snapshot knobs
 
@@ -379,9 +404,8 @@ class TorchSnapshotSaver(Callback):
             path,
             unit,
             train_dataloader=train_dataloader,
-            restore_train_progress=restore_train_progress,
-            restore_eval_progress=restore_eval_progress,
             process_group=process_group,
+            restore_options=restore_options,
             storage_options=storage_options,
             knob_options=knob_options,
         )
