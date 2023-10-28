@@ -443,6 +443,24 @@
     <span class="n">max_per_rank_io_concurrency</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RestoreOptions</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Options when restoring a snapshot.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        restore_train_progress: Whether to restore the training progress state.</span>
+<span class="sd">        restore_eval_progress: Whether to restore the evaluation progress state.</span>
+<span class="sd">        restore_optimizers: Whether to restore the optimizer states.</span>
+<span class="sd">        restore_lr_schedulers: Whether to restore the lr scheduler states.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">restore_train_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">restore_eval_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">restore_optimizers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">restore_lr_schedulers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+
 <div class="viewcode-block" id="TorchSnapshotSaver"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver">[docs]</a><span class="k">class</span> <span class="nc">TorchSnapshotSaver</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A callback which periodically saves the application state during training using `TorchSnapshot &lt;https://pytorch.org/torchsnapshot/&gt;`_.</span>
@@ -639,9 +657,8 @@
         <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">train_dataloader</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">restore_train_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">restore_eval_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">restore_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RestoreOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">storage_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">knob_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">KnobOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -654,9 +671,8 @@
 <span class="sd">            path: Path of the snapshot to restore.</span>
 <span class="sd">            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.</span>
 <span class="sd">            train_dataloader: An optional train dataloader to restore.</span>
-<span class="sd">            restore_train_progress: Whether to restore the training progress state.</span>
-<span class="sd">            restore_eval_progress: Whether to restore the evaluation progress state.</span>
 <span class="sd">            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
+<span class="sd">            restore_options: Controls what to  filter when restoring the state.</span>
 <span class="sd">            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot &lt;https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot&gt;`_. See each storage plugin&#39;s documentation for customizations.</span>
 <span class="sd">            knob_options: Additional keyword options for the snapshot knobs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -677,11 +693,22 @@
         <span class="n">rng_state</span> <span class="o">=</span> <span class="n">torchsnapshot</span><span class="o">.</span><span class="n">RNGState</span><span class="p">()</span>
         <span class="n">app_state</span><span class="p">[</span><span class="n">_RNG_STATE_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng_state</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_train_progress</span><span class="p">:</span>
+        <span class="n">restore_options</span> <span class="o">=</span> <span class="n">restore_options</span> <span class="ow">or</span> <span class="n">RestoreOptions</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_options</span><span class="o">.</span><span class="n">restore_train_progress</span><span class="p">:</span>
             <span class="n">app_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_TRAIN_PROGRESS_STATE_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_eval_progress</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_options</span><span class="o">.</span><span class="n">restore_eval_progress</span><span class="p">:</span>
             <span class="n">app_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">_EVAL_PROGRESS_STATE_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_options</span><span class="o">.</span><span class="n">restore_optimizers</span><span class="p">:</span>
+            <span class="c1"># remove all optimizer keys from app_state</span>
+            <span class="k">for</span> <span class="n">optim_keys</span> <span class="ow">in</span> <span class="n">unit</span><span class="o">.</span><span class="n">tracked_optimizers</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">app_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">optim_keys</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">restore_options</span><span class="o">.</span><span class="n">restore_lr_schedulers</span><span class="p">:</span>
+            <span class="c1"># remove all lr scheduler keys from app_state</span>
+            <span class="k">for</span> <span class="n">lr_scheduler_keys</span> <span class="ow">in</span> <span class="n">unit</span><span class="o">.</span><span class="n">tracked_lr_schedulers</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">app_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">lr_scheduler_keys</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">train_dataloader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">train_dataloader</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">):</span>
@@ -711,9 +738,8 @@
         <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">train_dataloader</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">restore_train_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">restore_eval_progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">restore_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RestoreOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">storage_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">knob_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">KnobOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -727,9 +753,8 @@
 <span class="sd">            dirpath: Parent directory from which to get the latest snapshot.</span>
 <span class="sd">            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.</span>
 <span class="sd">            train_dataloader: An optional train dataloader to restore.</span>
-<span class="sd">            restore_train_progress: Whether to restore the training progress state.</span>
-<span class="sd">            restore_eval_progress: Whether to restore the evaluation progress state.</span>
 <span class="sd">            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
+<span class="sd">            restore_options: Controls what to  filter when restoring the state.</span>
 <span class="sd">            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot &lt;https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot&gt;`_. See each storage plugin&#39;s documentation for customizations.</span>
 <span class="sd">            knob_options: Additional keyword options for the snapshot knobs</span>
 
@@ -744,9 +769,8 @@
             <span class="n">path</span><span class="p">,</span>
             <span class="n">unit</span><span class="p">,</span>
             <span class="n">train_dataloader</span><span class="o">=</span><span class="n">train_dataloader</span><span class="p">,</span>
-            <span class="n">restore_train_progress</span><span class="o">=</span><span class="n">restore_train_progress</span><span class="p">,</span>
-            <span class="n">restore_eval_progress</span><span class="o">=</span><span class="n">restore_eval_progress</span><span class="p">,</span>
             <span class="n">process_group</span><span class="o">=</span><span class="n">process_group</span><span class="p">,</span>
+            <span class="n">restore_options</span><span class="o">=</span><span class="n">restore_options</span><span class="p">,</span>
             <span class="n">storage_options</span><span class="o">=</span><span class="n">storage_options</span><span class="p">,</span>
             <span class="n">knob_options</span><span class="o">=</span><span class="n">knob_options</span><span class="p">,</span>
         <span class="p">)</span>
