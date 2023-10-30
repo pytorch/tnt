@@ -119,7 +119,7 @@ class TorchSnapshotSaver(Callback):
                          Things like metrics, grad_scalers, etc should not be marked as replicated as they
                          may contain different values across processes. If unsure, leave this field unset.
 
-        storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_.
+        storage_options: Additional  keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_.
             See each storage plugin's documentation for customizations.
         knob_options: Additional keyword options for the snapshot knobs
 

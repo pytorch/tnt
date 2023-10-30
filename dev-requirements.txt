@@ -4,3 +4,4 @@ pytest-cov
 torchsnapshot-nightly
 pyre-check
 torchvision
+importlib-metadata==4.13.0
