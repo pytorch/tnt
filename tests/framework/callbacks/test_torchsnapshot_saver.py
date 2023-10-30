@@ -41,12 +41,11 @@ from torchtnt.framework.callbacks.torchsnapshot_saver import (
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.env import init_from_env, seed
-from torchtnt.utils.test_utils import get_pet_launch_config, spawn_multi_process
+from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
-    # pyre-fixme[4]: Attribute must be annotated.
-    cuda_available = torch.cuda.is_available()
+    distributed_available: bool = torch.distributed.is_available()
 
     def test_save_every_n_train_steps(self) -> None:
         input_dim = 2
@@ -377,17 +376,15 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             )
             self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_directory_sync_collective(self) -> None:
-        spawn_multi_process(
-            2,
-            "gloo",
-            self._directory_sync_collective,
-        )
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(
+            config,
+            entrypoint=self._directory_sync_collective,
+        )()
 
     @staticmethod
     def _directory_sync_collective() -> None:
@@ -403,62 +400,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             tc = unittest.TestCase()
             tc.assertTrue("tmp" in dirpath)
             tc.assertFalse("foo" in dirpath)
-        finally:
-            if get_global_rank() == 0:
-                shutil.rmtree(temp_dir)  # delete temp directory
-
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
-    @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    def test_save_restore_fsdp(self) -> None:
-        spawn_multi_process(
-            2,
-            "nccl",
-            self._save_restore_fsdp,
-        )
-
-    @staticmethod
-    def _save_restore_fsdp() -> None:
-        input_dim = 2
-        dataset_len = 10
-        batch_size = 2
-        max_epochs = 2
-        save_every_n_epochs = 1
-
-        my_unit = DummyAutoUnit(module=torch.nn.Linear(input_dim, 2), strategy="fsdp")
-        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        if get_global_rank() == 0:
-            temp_dir = tempfile.mkdtemp()
-        else:
-            temp_dir = ""
-
-        snapshot_cb = TorchSnapshotSaver(
-            temp_dir,
-            save_every_n_epochs=save_every_n_epochs,
-            replicated=["**"],
-        )
-        temp_dir = snapshot_cb.dirpath
-        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
-
-        tc = unittest.TestCase()
-        try:
-            my_new_unit = DummyAutoUnit(
-                module=torch.nn.Linear(input_dim, 2), strategy="fsdp"
-            )
-            tc.assertNotEqual(
-                my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
-            )
-            # get latest checkpoint
-            ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_step_10")
-            snapshot_cb.restore(ckpt_path, my_new_unit)
-            tc.assertEqual(
-                my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
-            )
         finally:
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
@@ -515,10 +456,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         with open(path, "w"):
             pass
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_latest_checkpoint_path_distributed(self) -> None:
         config = get_pet_launch_config(2)
@@ -568,17 +507,12 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_save_restore_ddp(self) -> None:
-        spawn_multi_process(
-            2,
-            "gloo",
-            self._save_restore_ddp,
-        )
+        config = get_pet_launch_config(2)
+        launcher.elastic_launch(config, entrypoint=self._save_restore_ddp)()
 
     @staticmethod
     def _save_restore_ddp() -> None:
