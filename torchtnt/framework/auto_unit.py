@@ -521,29 +521,6 @@ class AutoUnit(
         """
         ...
 
-    def _should_update_swa(self) -> bool:
-        if not self.swa_params:
-            return False
-
-        swa_params = none_throws(self.swa_params)
-        if self.step_lr_interval == "step":
-            current_progress = self.train_progress.num_steps_completed
-        else:
-            # since num_epochs_completed is incremented prior to updating swa
-            current_progress = self.train_progress.num_epochs_completed - 1
-
-        if current_progress >= swa_params.warmup_steps_or_epochs:
-            progress_since = current_progress - swa_params.warmup_steps_or_epochs
-            update_freq = swa_params.step_or_epoch_update_freq
-            return progress_since % update_freq == 0
-        return False
-
-    def _update_swa(self, state: State) -> None:
-        with get_timing_context(
-            state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
-        ):
-            none_throws(self.swa_model).update_parameters(self.module)
-
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def train_step(
         self, state: State, data: Iterator[TData]
@@ -657,26 +634,7 @@ class AutoUnit(
                 optimizer.zero_grad(set_to_none=True)
 
             if self.step_lr_interval == "step":
-                if self._should_update_swa():
-                    self._update_swa(state)
-
-                # uses swa_scheduler if applicable, otherwise the regular lr_scheduler
-                if self.swa_scheduler and (
-                    self.train_progress.num_steps_completed
-                    >= none_throws(self.swa_params).warmup_steps_or_epochs
-                ):
-                    with get_timing_context(
-                        state, f"{self.__class__.__name__}.swa_lr_scheduler_step"
-                    ):
-                        none_throws(self.swa_scheduler).step()
-                else:
-                    # optionally step lr scheduler if SWA not in use
-                    lr_scheduler = self.lr_scheduler
-                    if lr_scheduler:
-                        with get_timing_context(
-                            state, f"{self.__class__.__name__}.lr_scheduler_step"
-                        ):
-                            lr_scheduler.step()
+                self._update_lr_and_swa(state, self.train_progress.num_steps_completed)
 
         step = self.train_progress.num_steps_completed
         self.on_train_step_end(state, batch, step, loss, outputs)
@@ -709,25 +667,8 @@ class AutoUnit(
         Note: if overriding ``on_train_epoch_end``, remember to call ``super().on_train_epoch_end()``
         """
         if self.step_lr_interval == "epoch":
-            if self._should_update_swa():
-                self._update_swa(state)
-
-            if self.swa_scheduler and (
-                self.train_progress.num_epochs_completed
-                > none_throws(self.swa_params).warmup_steps_or_epochs
-            ):
-                with get_timing_context(
-                    state, f"{self.__class__.__name__}.swa_lr_scheduler_step"
-                ):
-                    none_throws(self.swa_scheduler).step()
-            else:
-                # optionally step lr scheduler if SWA not in use
-                lr_scheduler = self.lr_scheduler
-                if lr_scheduler:
-                    with get_timing_context(
-                        state, f"{self.__class__.__name__}.lr_scheduler_step"
-                    ):
-                        lr_scheduler.step()
+            # number of epochs is incremented before calling this, so we're offsetting by 1
+            self._update_lr_and_swa(state, self.train_progress.num_epochs_completed - 1)
 
         self._is_last_batch = False
 
@@ -809,6 +750,50 @@ class AutoUnit(
             outputs: the outputs of the model forward pass
         """
         pass
+
+    def _should_update_swa(self) -> bool:
+        if not self.swa_params:
+            return False
+
+        swa_params = none_throws(self.swa_params)
+        if self.step_lr_interval == "step":
+            current_progress = self.train_progress.num_steps_completed
+        else:
+            # since num_epochs_completed is incremented prior to updating swa
+            current_progress = self.train_progress.num_epochs_completed - 1
+
+        if current_progress >= swa_params.warmup_steps_or_epochs:
+            progress_since = current_progress - swa_params.warmup_steps_or_epochs
+            update_freq = swa_params.step_or_epoch_update_freq
+            return progress_since % update_freq == 0
+        return False
+
+    def _update_swa(self, state: State) -> None:
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.stochastic_weight_avg_update"
+        ):
+            none_throws(self.swa_model).update_parameters(self.module)
+
+    def _update_lr_and_swa(self, state: State, number_of_steps_or_epochs: int) -> None:
+        if self._should_update_swa():
+            self._update_swa(state)
+
+        if self.swa_scheduler and (
+            number_of_steps_or_epochs
+            >= none_throws(self.swa_params).warmup_steps_or_epochs
+        ):
+            with get_timing_context(
+                state, f"{self.__class__.__name__}.swa_lr_scheduler_step"
+            ):
+                none_throws(self.swa_scheduler).step()
+        else:
+            # optionally step lr scheduler if SWA not in use
+            lr_scheduler = self.lr_scheduler
+            if lr_scheduler:
+                with get_timing_context(
+                    state, f"{self.__class__.__name__}.lr_scheduler_step"
+                ):
+                    lr_scheduler.step()
 
 
 def _validate_torch_compile_available() -> None:
