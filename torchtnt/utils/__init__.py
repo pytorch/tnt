@@ -30,6 +30,7 @@ from .flops import FlopTensorDispatchMode
 from .fsspec import get_filesystem
 from .lr_scheduler import TLRScheduler
 from .memory import get_tensor_size_bytes_map, measure_rss_deltas, RSSProfiler
+from .memory_snapshot_profiler import MemorySnapshotParams, MemorySnapshotProfiler
 from .misc import days_to_secs, transfer_batch_norm_stats, transfer_weights
 from .module_summary import (
     get_module_summary,
@@ -107,6 +108,8 @@ __all__ = [
     "get_tensor_size_bytes_map",
     "measure_rss_deltas",
     "RSSProfiler",
+    "MemorySnapshotParams",
+    "MemorySnapshotProfiler",
     "days_to_secs",
     "attach_oom_observer",
     "is_out_of_cpu_memory",
