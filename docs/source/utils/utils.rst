@@ -141,6 +141,17 @@ Memory Utils
    measure_rss_deltas
 
 
+MemorySnapshotProfiler Utils
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: torchtnt.utils.memory_snapshot_profiler
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   MemorySnapshotProfiler
+
+
 Module Summary Utils
 ~~~~~~~~~~~~~~~~~~~~~
 
