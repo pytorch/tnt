@@ -577,64 +577,7 @@ class AutoUnit(
                     loss.backward()
 
         if should_update_weights:
-            optimizer = none_throws(self.optimizer)
-            # Run gradient clipping, optimizer step, and zero_grad
-            clip_grad_norm = self.clip_grad_norm
-            clip_grad_value = self.clip_grad_value
-            if grad_scaler and (clip_grad_norm or clip_grad_value):
-                # unscale the gradients of optimizer's assigned params in-place in preparation for gradient clipping
-                with get_timing_context(
-                    state, f"{self.__class__.__name__}.grad_unscale"
-                ):
-                    grad_scaler.unscale_(optimizer)
-
-            # gradient norm clipping
-            if clip_grad_norm:
-                if _is_fsdp_module(module):
-                    if isinstance(module, FSDP):
-                        with get_timing_context(
-                            state, f"{self.__class__.__name__}.clip_grad_norm"
-                        ):
-                            module.clip_grad_norm_(max_norm=clip_grad_norm)
-                    else:
-                        raise RuntimeError(
-                            "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
-                        )
-                else:
-                    with get_timing_context(
-                        state, f"{self.__class__.__name__}.clip_grad_norm"
-                    ):
-                        torch.nn.utils.clip_grad_norm_(
-                            parameters=module.parameters(),
-                            max_norm=clip_grad_norm,
-                        )
-
-            # gradient value clipping
-            if clip_grad_value:
-                with get_timing_context(
-                    state, f"{self.__class__.__name__}.clip_grad_value"
-                ):
-                    torch.nn.utils.clip_grad_value_(
-                        parameters=module.parameters(),
-                        clip_value=clip_grad_value,
-                    )
-
-            with get_timing_context(state, f"{self.__class__.__name__}.optimizer_step"):
-                if grad_scaler:
-                    grad_scaler.step(optimizer)
-                    # update the scale for next iteration
-                    grad_scaler.update()
-                else:
-                    optimizer.step()
-
-            # sets gradients to zero
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.optimizer_zero_grad"
-            ):
-                optimizer.zero_grad(set_to_none=True)
-
-            if self.step_lr_interval == "step":
-                self._update_lr_and_swa(state, self.train_progress.num_steps_completed)
+            self._update_weights(state)
 
         step = self.train_progress.num_steps_completed
         self.on_train_step_end(state, batch, step, loss, outputs)
@@ -750,6 +693,66 @@ class AutoUnit(
             outputs: the outputs of the model forward pass
         """
         pass
+
+    def _update_weights(self, state: State) -> None:
+        module = self.module
+        optimizer = none_throws(self.optimizer)
+        grad_scaler = self.grad_scaler
+        # Run gradient clipping, optimizer step, and zero_grad
+        clip_grad_norm = self.clip_grad_norm
+        clip_grad_value = self.clip_grad_value
+        if grad_scaler and (clip_grad_norm or clip_grad_value):
+            # unscale the gradients of optimizer's assigned params in-place in preparation for gradient clipping
+            with get_timing_context(state, f"{self.__class__.__name__}.grad_unscale"):
+                grad_scaler.unscale_(optimizer)
+
+        # gradient norm clipping
+        if clip_grad_norm:
+            if _is_fsdp_module(module):
+                if isinstance(module, FSDP):
+                    with get_timing_context(
+                        state, f"{self.__class__.__name__}.clip_grad_norm"
+                    ):
+                        module.clip_grad_norm_(max_norm=clip_grad_norm)
+                else:
+                    raise RuntimeError(
+                        "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
+                    )
+            else:
+                with get_timing_context(
+                    state, f"{self.__class__.__name__}.clip_grad_norm"
+                ):
+                    torch.nn.utils.clip_grad_norm_(
+                        parameters=module.parameters(),
+                        max_norm=clip_grad_norm,
+                    )
+
+        # gradient value clipping
+        if clip_grad_value:
+            with get_timing_context(
+                state, f"{self.__class__.__name__}.clip_grad_value"
+            ):
+                torch.nn.utils.clip_grad_value_(
+                    parameters=module.parameters(),
+                    clip_value=clip_grad_value,
+                )
+
+        with get_timing_context(state, f"{self.__class__.__name__}.optimizer_step"):
+            if grad_scaler:
+                grad_scaler.step(optimizer)
+                # update the scale for next iteration
+                grad_scaler.update()
+            else:
+                optimizer.step()
+
+        # sets gradients to zero
+        with get_timing_context(
+            state, f"{self.__class__.__name__}.optimizer_zero_grad"
+        ):
+            optimizer.zero_grad(set_to_none=True)
+
+        if self.step_lr_interval == "step":
+            self._update_lr_and_swa(state, self.train_progress.num_steps_completed)
 
     def _should_update_swa(self) -> bool:
         if not self.swa_params:
