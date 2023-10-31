@@ -886,29 +886,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
-    <span class="k">def</span> <span class="nf">_should_update_swa</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">swa_params</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
-            <span class="n">current_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># since num_epochs_completed is incremented prior to updating swa</span>
-            <span class="n">current_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span> <span class="o">-</span> <span class="mi">1</span>
-
-        <span class="k">if</span> <span class="n">current_progress</span> <span class="o">&gt;=</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span><span class="p">:</span>
-            <span class="n">progress_since</span> <span class="o">=</span> <span class="n">current_progress</span> <span class="o">-</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
-            <span class="n">update_freq</span> <span class="o">=</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">step_or_epoch_update_freq</span>
-            <span class="k">return</span> <span class="n">progress_since</span> <span class="o">%</span> <span class="n">update_freq</span> <span class="o">==</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="k">def</span> <span class="nf">_update_swa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.stochastic_weight_avg_update&quot;</span>
-        <span class="p">):</span>
-            <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span><span class="p">)</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
-
     <span class="c1"># pyre-fixme[3]: Return annotation cannot contain `Any`.</span>
 <div class="viewcode-block" id="AutoUnit.train_step"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.train_step">[docs]</a>    <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">]</span>
@@ -965,83 +942,7 @@
                     <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">should_update_weights</span><span class="p">:</span>
-            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">)</span>
-            <span class="c1"># Run gradient clipping, optimizer step, and zero_grad</span>
-            <span class="n">clip_grad_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip_grad_norm</span>
-            <span class="n">clip_grad_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip_grad_value</span>
-            <span class="k">if</span> <span class="n">grad_scaler</span> <span class="ow">and</span> <span class="p">(</span><span class="n">clip_grad_norm</span> <span class="ow">or</span> <span class="n">clip_grad_value</span><span class="p">):</span>
-                <span class="c1"># unscale the gradients of optimizer&#39;s assigned params in-place in preparation for gradient clipping</span>
-                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                    <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.grad_unscale&quot;</span>
-                <span class="p">):</span>
-                    <span class="n">grad_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
-
-            <span class="c1"># gradient norm clipping</span>
-            <span class="k">if</span> <span class="n">clip_grad_norm</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">FSDP</span><span class="p">):</span>
-                        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_norm&quot;</span>
-                        <span class="p">):</span>
-                            <span class="n">module</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="n">max_norm</span><span class="o">=</span><span class="n">clip_grad_norm</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                            <span class="s2">&quot;Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271&quot;</span>
-                        <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_norm&quot;</span>
-                    <span class="p">):</span>
-                        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-                            <span class="n">parameters</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
-                            <span class="n">max_norm</span><span class="o">=</span><span class="n">clip_grad_norm</span><span class="p">,</span>
-                        <span class="p">)</span>
-
-            <span class="c1"># gradient value clipping</span>
-            <span class="k">if</span> <span class="n">clip_grad_value</span><span class="p">:</span>
-                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                    <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_value&quot;</span>
-                <span class="p">):</span>
-                    <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_value_</span><span class="p">(</span>
-                        <span class="n">parameters</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
-                        <span class="n">clip_value</span><span class="o">=</span><span class="n">clip_grad_value</span><span class="p">,</span>
-                    <span class="p">)</span>
-
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.optimizer_step&quot;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">grad_scaler</span><span class="p">:</span>
-                    <span class="n">grad_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
-                    <span class="c1"># update the scale for next iteration</span>
-                    <span class="n">grad_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-
-            <span class="c1"># sets gradients to zero</span>
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.optimizer_zero_grad&quot;</span>
-            <span class="p">):</span>
-                <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_update_swa</span><span class="p">():</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_update_swa</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
-
-                <span class="c1"># uses swa_scheduler if applicable, otherwise the regular lr_scheduler</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span> <span class="ow">and</span> <span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
-                    <span class="o">&gt;=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
-                <span class="p">):</span>
-                    <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.swa_lr_scheduler_step&quot;</span>
-                    <span class="p">):</span>
-                        <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># optionally step lr scheduler if SWA not in use</span>
-                    <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span>
-                    <span class="k">if</span> <span class="n">lr_scheduler</span><span class="p">:</span>
-                        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
-                        <span class="p">):</span>
-                            <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_weights</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">on_train_step_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
@@ -1074,25 +975,8 @@
 <span class="sd">        Note: if overriding ``on_train_epoch_end``, remember to call ``super().on_train_epoch_end()``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;epoch&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_update_swa</span><span class="p">():</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_update_swa</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span> <span class="ow">and</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span>
-                <span class="o">&gt;</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
-            <span class="p">):</span>
-                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                    <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.swa_lr_scheduler_step&quot;</span>
-                <span class="p">):</span>
-                    <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># optionally step lr scheduler if SWA not in use</span>
-                <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span>
-                <span class="k">if</span> <span class="n">lr_scheduler</span><span class="p">:</span>
-                    <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
-                    <span class="p">):</span>
-                        <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="c1"># number of epochs is incremented before calling this, so we&#39;re offsetting by 1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_lr_and_swa</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_batch</span> <span class="o">=</span> <span class="kc">False</span></div>
 
@@ -1173,7 +1057,111 @@
 <span class="sd">            step: how many ``predict_step``s have been completed</span>
 <span class="sd">            outputs: the outputs of the model forward pass</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">pass</span></div></div>
+        <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">_update_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">)</span>
+        <span class="n">grad_scaler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_scaler</span>
+        <span class="c1"># Run gradient clipping, optimizer step, and zero_grad</span>
+        <span class="n">clip_grad_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip_grad_norm</span>
+        <span class="n">clip_grad_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip_grad_value</span>
+        <span class="k">if</span> <span class="n">grad_scaler</span> <span class="ow">and</span> <span class="p">(</span><span class="n">clip_grad_norm</span> <span class="ow">or</span> <span class="n">clip_grad_value</span><span class="p">):</span>
+            <span class="c1"># unscale the gradients of optimizer&#39;s assigned params in-place in preparation for gradient clipping</span>
+            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.grad_unscale&quot;</span><span class="p">):</span>
+                <span class="n">grad_scaler</span><span class="o">.</span><span class="n">unscale_</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+
+        <span class="c1"># gradient norm clipping</span>
+        <span class="k">if</span> <span class="n">clip_grad_norm</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">FSDP</span><span class="p">):</span>
+                    <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_norm&quot;</span>
+                    <span class="p">):</span>
+                        <span class="n">module</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="n">max_norm</span><span class="o">=</span><span class="n">clip_grad_norm</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                    <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_norm&quot;</span>
+                <span class="p">):</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
+                        <span class="n">parameters</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
+                        <span class="n">max_norm</span><span class="o">=</span><span class="n">clip_grad_norm</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># gradient value clipping</span>
+        <span class="k">if</span> <span class="n">clip_grad_value</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_value&quot;</span>
+            <span class="p">):</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_value_</span><span class="p">(</span>
+                    <span class="n">parameters</span><span class="o">=</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span>
+                    <span class="n">clip_value</span><span class="o">=</span><span class="n">clip_grad_value</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.optimizer_step&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">grad_scaler</span><span class="p">:</span>
+                <span class="n">grad_scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+                <span class="c1"># update the scale for next iteration</span>
+                <span class="n">grad_scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="c1"># sets gradients to zero</span>
+        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.optimizer_zero_grad&quot;</span>
+        <span class="p">):</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_lr_and_swa</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_should_update_swa</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">swa_params</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
+            <span class="n">current_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># since num_epochs_completed is incremented prior to updating swa</span>
+            <span class="n">current_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">current_progress</span> <span class="o">&gt;=</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span><span class="p">:</span>
+            <span class="n">progress_since</span> <span class="o">=</span> <span class="n">current_progress</span> <span class="o">-</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
+            <span class="n">update_freq</span> <span class="o">=</span> <span class="n">swa_params</span><span class="o">.</span><span class="n">step_or_epoch_update_freq</span>
+            <span class="k">return</span> <span class="n">progress_since</span> <span class="o">%</span> <span class="n">update_freq</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_update_swa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.stochastic_weight_avg_update&quot;</span>
+        <span class="p">):</span>
+            <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span><span class="p">)</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_lr_and_swa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">number_of_steps_or_epochs</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_should_update_swa</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_swa</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span> <span class="ow">and</span> <span class="p">(</span>
+            <span class="n">number_of_steps_or_epochs</span>
+            <span class="o">&gt;=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_params</span><span class="p">)</span><span class="o">.</span><span class="n">warmup_steps_or_epochs</span>
+        <span class="p">):</span>
+            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.swa_lr_scheduler_step&quot;</span>
+            <span class="p">):</span>
+                <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># optionally step lr scheduler if SWA not in use</span>
+            <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span>
+            <span class="k">if</span> <span class="n">lr_scheduler</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                    <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
+                <span class="p">):</span>
+                    <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
 
 
 <span class="k">def</span> <span class="nf">_validate_torch_compile_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
