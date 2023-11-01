@@ -10,6 +10,7 @@ from .garbage_collector import GarbageCollector
 from .iteration_time_logger import IterationTimeLogger
 from .lambda_callback import Lambda
 from .learning_rate_monitor import LearningRateMonitor
+from .memory_snapshot import MemorySnapshot
 from .module_summary import ModuleSummary
 from .pytorch_profiler import PyTorchProfiler
 from .system_resources_monitor import SystemResourcesMonitor
@@ -25,6 +26,7 @@ __all__ = [
     "IterationTimeLogger",
     "Lambda",
     "LearningRateMonitor",
+    "MemorySnapshot",
     "ModuleSummary",
     "PyTorchProfiler",
     "SystemResourcesMonitor",
