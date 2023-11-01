@@ -7,16 +7,18 @@
 
 import time
 import unittest
-from typing import Iterator
+from typing import cast, Dict, Iterator
 from unittest.mock import MagicMock, patch
 
 import torch
 from torch import nn
 
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchtnt.framework._test_utils import DummyAutoUnit, generate_random_dataset
+from torchtnt.framework.state import State
 from torchtnt.framework.utils import (
     _construct_tracked_optimizers_and_schedulers,
     _find_optimizers_for_module,
@@ -37,8 +39,8 @@ from torchtnt.utils.timer import Timer
 
 
 class UtilsTest(unittest.TestCase):
-    # pyre-fixme[4]: Attribute must be annotated.
-    cuda_available = torch.cuda.is_available()
+    cuda_available: bool = torch.cuda.is_available()
+    distributed_available: bool = torch.distributed.is_available()
 
     def test_maybe_set_distributed_sampler_epoch(self) -> None:
         mp_dict = spawn_multi_process(
@@ -54,10 +56,6 @@ class UtilsTest(unittest.TestCase):
         """
         Test _maybe_set_distributed_sampler_epoch util function
         """
-        # pyre-fixme[6]: For 1st argument expected `Iterable[typing.Any]` but got
-        #  `None`.
-        _maybe_set_distributed_sampler_epoch(None, 10)
-
         random_dataset = generate_random_dataset(10, 3)
         dummy_dataloader_with_distributed_sampler = DataLoader(
             random_dataset, sampler=DistributedSampler(random_dataset)
@@ -66,9 +64,12 @@ class UtilsTest(unittest.TestCase):
         _maybe_set_distributed_sampler_epoch(
             dummy_dataloader_with_distributed_sampler, 20
         )
-        # pyre-fixme[16]: Item `Sampler` of `Union[Sampler[typing.Any],
-        #  Iterable[typing.Any]]` has no attribute `epoch`.
-        return dummy_dataloader_with_distributed_sampler.sampler.epoch == 20
+
+        sampler = cast(
+            DistributedSampler[object],
+            dummy_dataloader_with_distributed_sampler.sampler,
+        )
+        return sampler.epoch == 20
 
     def test_set_module_training_mode(self) -> None:
         """
@@ -77,11 +78,12 @@ class UtilsTest(unittest.TestCase):
         module = nn.Linear(1, 1)
         loss_fn = nn.CrossEntropyLoss()
 
-        tracked_modules = {"module": module, "loss_fn": loss_fn}
+        tracked_modules: Dict[str, torch.nn.Module] = {
+            "module": module,
+            "loss_fn": loss_fn,
+        }
 
         # set module training mode to False
-        # pyre-fixme[6]: For 1st argument expected `Dict[str, Module]` but got
-        #  `Dict[str, Union[Linear, CrossEntropyLoss]]`.
         prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
         self.assertFalse(module.training)
@@ -91,8 +93,6 @@ class UtilsTest(unittest.TestCase):
         self.assertTrue(prior_module_train_states["loss_fn"])
 
         # set back to True
-        # pyre-fixme[6]: For 1st argument expected `Dict[str, Module]` but got
-        #  `Dict[str, Union[Linear, CrossEntropyLoss]]`.
         prior_module_train_states = _set_module_training_mode(tracked_modules, True)
 
         self.assertTrue(module.training)
@@ -108,19 +108,18 @@ class UtilsTest(unittest.TestCase):
         module = nn.Linear(1, 1)
         loss_fn = nn.CrossEntropyLoss()
 
-        tracked_modules = {"module": module, "loss_fn": loss_fn}
+        tracked_modules: Dict[str, torch.nn.Module] = {
+            "module": module,
+            "loss_fn": loss_fn,
+        }
 
         # set module training mode to False
-        # pyre-fixme[6]: For 1st argument expected `Dict[str, Module]` but got
-        #  `Dict[str, Union[Linear, CrossEntropyLoss]]`.
         prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
         self.assertFalse(module.training)
         self.assertFalse(loss_fn.training)
 
         # set back to True using reset
-        # pyre-fixme[6]: For 1st argument expected `Dict[str, Module]` but got
-        #  `Dict[str, Union[Linear, CrossEntropyLoss]]`.
         _reset_module_training_mode(tracked_modules, prior_module_train_states)
 
         self.assertTrue(module.training)
@@ -128,23 +127,18 @@ class UtilsTest(unittest.TestCase):
 
     def test_step_func_requires_iterator(self) -> None:
         class Foo:
-            def bar(self) -> None:
-                pass
+            def bar(self, state: State, data: object) -> object:
+                return data
 
-            def baz(self, data: Iterator[int], b: int, c: str) -> int:
-                return b
+            def baz(self, state: State, data: Iterator[torch.Tensor]) -> object:
+                pass
 
         def dummy(a: int, b: str, data: Iterator[str]) -> None:
             pass
 
         foo = Foo()
 
-        # pyre-fixme[6]: For 1st argument expected `(State, object) -> object` but
-        #  got `BoundMethod[typing.Callable(Foo.bar)[[Named(self, Foo)], None], Foo]`.
         self.assertFalse(_step_requires_iterator(foo.bar))
-        # pyre-fixme[6]: For 1st argument expected `(State, object) -> object` but
-        #  got `BoundMethod[typing.Callable(Foo.baz)[[Named(self, Foo), Named(data,
-        #  Iterator[int]), Named(b, int), Named(c, str)], int], Foo]`.
         self.assertTrue(_step_requires_iterator(foo.baz))
         self.assertTrue(_step_requires_iterator(dummy))
 
@@ -183,8 +177,7 @@ class UtilsTest(unittest.TestCase):
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=None))
 
     @patch("torchtnt.framework.utils.record_function")
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_get_timing_context(self, mock_record_function) -> None:
+    def test_get_timing_context(self, mock_record_function: MagicMock) -> None:
         state = MagicMock()
         state.timer = None
 
@@ -206,22 +199,16 @@ class UtilsTest(unittest.TestCase):
         optim1 = torch.optim.Adam(module1.parameters())
         optim2 = torch.optim.Adagrad(module2.parameters())
 
-        opts = {"optim1": optim1, "optim2": optim2}
-        # pyre-fixme[6]: For 2nd argument expected `Dict[str, Optimizer]` but got
-        #  `Dict[str, Union[Adagrad, Adam]]`.
+        opts: Dict[str, Optimizer] = {"optim1": optim1, "optim2": optim2}
         optimizers = _find_optimizers_for_module(module1, opts)
         optim_name, _ = optimizers[0]
         self.assertEqual(optim_name, "optim1")
-        # pyre-fixme[6]: For 2nd argument expected `Dict[str, Optimizer]` but got
-        #  `Dict[str, Union[Adagrad, Adam]]`.
         optimizers = _find_optimizers_for_module(module2, opts)
         optim_name, _ = optimizers[0]
         self.assertEqual(optim_name, "optim2")
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        condition=distributed_available, reason="Torch distributed is needed to run"
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
@@ -237,24 +224,18 @@ class UtilsTest(unittest.TestCase):
         optim1 = torch.optim.Adam(module1.parameters())
         optim2 = torch.optim.Adagrad(module2.parameters())
 
-        opts = {"optim1": optim1, "optim2": optim2}
-        # pyre-fixme[6]: For 2nd argument expected `Dict[str, Optimizer]` but got
-        #  `Dict[str, Union[Adagrad, Adam]]`.
+        opts: Dict[str, Optimizer] = {"optim1": optim1, "optim2": optim2}
         optim_list = _find_optimizers_for_module(module1, opts)
         optim_name, _ = optim_list[0]
 
         tc = unittest.TestCase()
         tc.assertEqual(optim_name, "optim1")
-        # pyre-fixme[6]: For 2nd argument expected `Dict[str, Optimizer]` but got
-        #  `Dict[str, Union[Adagrad, Adam]]`.
         optim_list = _find_optimizers_for_module(module2, opts)
         optim_name, _ = optim_list[0]
         tc.assertEqual(optim_name, "optim2")
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        condition=distributed_available, reason="Torch distributed is needed to run"
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
