@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModuleSummary &mdash; TorchTNT master documentation</title>
+  <title>MemorySnapshot &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="PyTorchProfiler" href="torchtnt.framework.callbacks.PyTorchProfiler.html" />
-    <link rel="prev" title="MemorySnapshot" href="torchtnt.framework.callbacks.MemorySnapshot.html" />
+    <link rel="next" title="ModuleSummary" href="torchtnt.framework.callbacks.ModuleSummary.html" />
+    <link rel="prev" title="LearningRateMonitor" href="torchtnt.framework.callbacks.LearningRateMonitor.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -332,13 +332,13 @@
         
           <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
         
-      <li>ModuleSummary</li>
+      <li>MemorySnapshot</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.ModuleSummary.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.MemorySnapshot.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -368,44 +368,62 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="modulesummary">
-<h1>ModuleSummary<a class="headerlink" href="#modulesummary" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="memorysnapshot">
+<h1>MemorySnapshot<a class="headerlink" href="#memorysnapshot" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.ModuleSummary">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">ModuleSummary</span></code><span class="sig-paren">(</span><em><span class="pre">max_depth:</span> <span class="pre">~typing.Optional[int]</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">process_fn:</span> <span class="pre">~typing.Callable[[~typing.List[~torchtnt.utils.module_summary.ModuleSummary]],</span> <span class="pre">None]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">_log_module_summary_tables&gt;,</span> <span class="pre">module_inputs:</span> <span class="pre">~typing.Optional[~typing.MutableMapping[str,</span> <span class="pre">~typing.Tuple[~typing.Tuple[~typing.Any,</span> <span class="pre">...],</span> <span class="pre">~typing.Dict[str,</span> <span class="pre">~typing.Any]]]]</span> <span class="pre">=</span> <span class="pre">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/module_summary.html#ModuleSummary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.ModuleSummary" title="Permalink to this definition">¶</a></dt>
-<dd><p>A callback which generates and logs a summary of the modules.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">MemorySnapshot</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">memory_snapshot_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">MemorySnapshotParams</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback for memory snapshot collection during training, saving pickle files to the user-specified directory.
+Uses <cite>Memory Snapshots &lt;https://zdevito.github.io/2022/08/16/memory-snapshots.html&gt;</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>max_depth</strong> – The maximum depth of module summaries to keep.</li>
-<li><strong>process_fn</strong> – Function to print the module summaries. Default is to log all module summary tables.</li>
-<li><strong>module_inputs</strong> – A mapping from module name to (args, kwargs) for that module. Useful when wanting FLOPS, activation sizes, etc.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>output_dir</strong> – Directory where to save the memory snapshots.</li>
+<li><strong>memory_snapshot_params</strong> – Instance of MemorySnapshotParams which will be passed to MemorySnapshotProfiler.</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>RuntimeError</strong> – If torcheval is not installed.</p>
 </td>
 </tr>
 </tbody>
 </table>
+<dl class="docutils">
+<dt>Note: It is recommended to instantiate this callback <strong>as early as possible</strong> in your training/eval/prediction script,</dt><dd>ideally before model initialization, to make sure all memory allocation is captured.</dd>
+</dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.ModuleSummary.on_eval_start">
-<code class="sig-name descname"><span class="pre">on_eval_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><span class="pre">EvalUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/module_summary.html#ModuleSummary.on_eval_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.ModuleSummary.on_eval_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called before evaluation starts.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot.on_eval_end">
+<code class="sig-name descname"><span class="pre">on_eval_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><span class="pre">EvalUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot.on_eval_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot.on_eval_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after evaluation ends.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.ModuleSummary.on_predict_start">
-<code class="sig-name descname"><span class="pre">on_predict_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><span class="pre">PredictUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/module_summary.html#ModuleSummary.on_predict_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.ModuleSummary.on_predict_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called before prediction starts.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot.on_eval_step_end">
+<code class="sig-name descname"><span class="pre">on_eval_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><span class="pre">EvalUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot.on_eval_step_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot.on_eval_step_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after an eval step ends.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.ModuleSummary.on_train_start">
-<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/module_summary.html#ModuleSummary.on_train_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.ModuleSummary.on_train_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called before training starts.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot.on_predict_end">
+<code class="sig-name descname"><span class="pre">on_predict_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><span class="pre">PredictUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot.on_predict_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot.on_predict_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after prediction ends.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot.on_predict_step_end">
+<code class="sig-name descname"><span class="pre">on_predict_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><span class="pre">PredictUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot.on_predict_step_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot.on_predict_step_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after a predict step ends.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot.on_train_end">
+<code class="sig-name descname"><span class="pre">on_train_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot.on_train_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot.on_train_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after training ends.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot.on_train_step_end">
+<code class="sig-name descname"><span class="pre">on_train_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot.on_train_step_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot.on_train_step_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after a train step ends.</p>
 </dd></dl>
 
 </dd></dl>
@@ -420,10 +438,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.framework.callbacks.PyTorchProfiler.html" class="btn btn-neutral float-right" title="PyTorchProfiler" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.framework.callbacks.ModuleSummary.html" class="btn btn-neutral float-right" title="ModuleSummary" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.framework.callbacks.MemorySnapshot.html" class="btn btn-neutral" title="MemorySnapshot" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.framework.callbacks.LearningRateMonitor.html" class="btn btn-neutral" title="LearningRateMonitor" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -455,7 +473,7 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">ModuleSummary</a></li>
+<li><a class="reference internal" href="#">MemorySnapshot</a></li>
 </ul>
 
             </div>
