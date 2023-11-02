@@ -9,7 +9,7 @@ from .callback import Callback
 from .evaluate import evaluate
 from .fit import fit
 from .predict import predict
-from .state import PhaseState, State
+from .state import ActivePhase, EntryPoint, PhaseState, State
 from .train import train
 from .unit import EvalUnit, PredictUnit, TEvalUnit, TPredictUnit, TrainUnit, TTrainUnit
 
@@ -20,6 +20,8 @@ __all__ = [
     "evaluate",
     "fit",
     "predict",
+    "ActivePhase",
+    "EntryPoint",
     "PhaseState",
     "State",
     "train",
