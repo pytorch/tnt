@@ -5,11 +5,21 @@
 # LICENSE file in the root directory of this source tree.
 
 import collections
-import contextlib
 import inspect
 import logging
-from contextlib import contextmanager
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from contextlib import contextmanager, nullcontext
+from typing import (
+    Callable,
+    ContextManager,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import torch
 import torch.nn as nn
@@ -23,6 +33,7 @@ from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
 
 _logger: logging.Logger = logging.getLogger(__name__)
+T = TypeVar("T")
 
 
 # Helper functions common across the loops
@@ -44,8 +55,7 @@ def _is_epoch_done(
 
 
 def _maybe_set_distributed_sampler_epoch(
-    # pyre-ignore: Missing parameter annotation [2]
-    dataloader: Iterable[Any],
+    dataloader: Iterable[object],
     current_epoch: int,
 ) -> None:
     """Set epoch of distributed sampler in dataloader, if applicable.
@@ -82,8 +92,9 @@ def _reset_module_training_mode(
 
 
 @contextmanager
-# pyre-fixme[3]: Return type must be annotated.
-def get_timing_context(state: State, event_name: str):
+def get_timing_context(
+    state: State, event_name: str
+) -> Generator[Tuple[ContextManager, ContextManager], None, None]:
     """
     Returns a context manager that records an event to a :class:`~torchtnt.utils.timer.Timer` and to PyTorch Profiler.
 
@@ -92,9 +103,7 @@ def get_timing_context(state: State, event_name: str):
         event_name: string identifier to use for timing
     """
     timer_context = (
-        state.timer.time(event_name)
-        if state.timer is not None
-        else contextlib.nullcontext()
+        state.timer.time(event_name) if state.timer is not None else nullcontext()
     )
     profiler_context = record_function(event_name)
     with timer_context, profiler_context:
@@ -105,7 +114,7 @@ def log_api_usage(entry_point: str) -> None:
     torch._C._log_api_usage_once(f"torchtnt.framework.{entry_point}")
 
 
-def _step_requires_iterator(step_func: Callable[[State, object], object]) -> bool:
+def _step_requires_iterator(step_func: Callable[[State, T], object]) -> bool:
     """
     Helper function to evaluate whether the loops should pass the data iterator to the `_step`
     functions, or whether the loop should call `next(data_iter)` and pass a single batch to process.
@@ -160,7 +169,10 @@ def _construct_tracked_optimizers_and_schedulers(
     Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
     """
     # construct custom tracked optimizers with FSDP optimizers
-    tracked_optimizers_and_schedulers = _construct_tracked_optimizers(unit)
+    tracked_optimizers_and_schedulers: Dict[
+        str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]
+    ] = {}
+    tracked_optimizers_and_schedulers.update(_construct_tracked_optimizers(unit))
 
     # add schedulers
     for lr_scheduler_attrib_name, lr_scheduler in unit.tracked_lr_schedulers().items():
@@ -168,10 +180,8 @@ def _construct_tracked_optimizers_and_schedulers(
             _logger.warning(
                 f'Key collision "{lr_scheduler_attrib_name}" detected between LR Scheduler and optimizer attribute names. Please ensure there are no identical attribute names, as they will override each other.'
             )
-        # pyre-ignore: Incompatible parameter type [6]: In call `dict.__setitem__`, for 2nd positional argument, expected `Optimizer` but got `str`.
         tracked_optimizers_and_schedulers[lr_scheduler_attrib_name] = lr_scheduler
 
-    # pyre-ignore: Incompatible return type [7]
     return tracked_optimizers_and_schedulers
 
 
