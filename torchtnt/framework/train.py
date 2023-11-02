@@ -104,7 +104,7 @@ def train(
             logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
-        logger.info(f"Exception during train\n: {e}")
+        logger.info(f"Exception during train:\n{e}")
         train_unit.on_exception(state, e)
         callback_handler.on_exception(state, train_unit, e)
         raise e

@@ -129,11 +129,12 @@ def fit(
 
     try:
         _train_impl(state, unit, callback_handler)
+        logger.info("Finished fit")
         if state.timer:
             logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
-        logger.info(e)
+        logger.info(f"Exception during fit:\n{e}")
         unit.on_exception(state, e)
         callback_handler.on_exception(state, unit, e)
         raise e
