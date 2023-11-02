@@ -25,11 +25,11 @@ jobs:
         run: |
           set -eux
           conda activate test
-          conda install pytorch cpuonly -c pytorch-nightly
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
           python setup.py sdist bdist_wheel
           pip install dist/*.whl
+          conda install pytorch cpuonly -c pytorch-nightly
       - name: Build docs
         shell: bash -l {0}
         run: |
