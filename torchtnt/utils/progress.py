@@ -74,7 +74,7 @@ def estimated_steps_in_epoch(
     if isinstance(dataloader, Sized):
         try:
             total = len(dataloader)
-        except NotImplementedError:
+        except (NotImplementedError, TypeError):
             pass
 
     if max_steps_per_epoch and max_steps:
