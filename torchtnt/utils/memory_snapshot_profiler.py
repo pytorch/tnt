@@ -6,8 +6,7 @@
 
 import logging
 from dataclasses import dataclass
-from types import TracebackType
-from typing import Optional, Type
+from typing import Optional
 
 import torch
 from torchtnt.utils.oom import attach_oom_observer, log_memory_snapshot
@@ -114,17 +113,6 @@ class MemorySnapshotProfiler:
         logger.info(
             f"Created MemorySnapshotProfiler with MemorySnapshotParams={self.params}."
         )
-
-    def __enter__(self) -> None:
-        self.start()
-
-    def __exit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        tb: Optional[TracebackType],
-    ) -> Optional[bool]:
-        self.stop()
 
     def start(self) -> None:
         if not torch.cuda.is_available():
