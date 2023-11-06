@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils.memory_snapshot_profiler import (
     MemorySnapshotParams,
@@ -42,24 +42,12 @@ class MemorySnapshot(Callback):
         self.memory_snapshot_profiler = MemorySnapshotProfiler(
             output_dir=output_dir, memory_snapshot_params=memory_snapshot_params
         )
-        self.memory_snapshot_profiler.start()
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         self.memory_snapshot_profiler.step()
 
-    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
-        self.memory_snapshot_profiler.stop()
-
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
         self.memory_snapshot_profiler.step()
 
-    def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
-        # if in fit do nothing since the profiler will be stopped in on_train_end
-        if state.entry_point == EntryPoint.EVALUATE:
-            self.memory_snapshot_profiler.stop()
-
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
         self.memory_snapshot_profiler.step()
-
-    def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
-        self.memory_snapshot_profiler.stop()
