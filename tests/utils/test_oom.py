@@ -78,10 +78,10 @@ class OomTest(unittest.TestCase):
             _ = (a + b) * (a - b)
 
             # save a snapshot
-            log_memory_snapshot(temp_dir)
+            log_memory_snapshot(temp_dir, "foo")
 
             # Check if the corresponding files exist
-            save_dir = os.path.join(temp_dir, "memory_snapshot", "oom_rank0")
+            save_dir = os.path.join(temp_dir, "foo_rank0")
 
             pickle_dump_path = os.path.join(save_dir, "snapshot.pickle")
             self.assertTrue(os.path.exists(pickle_dump_path))

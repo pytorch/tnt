@@ -8,7 +8,7 @@
 import logging
 import os
 import pickle
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import torch
 from torchtnt.utils.distributed import get_global_rank
@@ -60,19 +60,20 @@ def _oom_observer(
             f"Saving memory snapshot device: {device}, alloc: {alloc}, device_alloc: {device_alloc}, device_free: {device_free}"
         )
         try:
-            log_memory_snapshot(output_dir)
+            log_memory_snapshot(output_dir, "oom")
         except Exception as e:
             logger.error(f"Failed to log memory snapshot during OOM {e}")
 
     return oom_logger
 
 
-def log_memory_snapshot(output_dir: str) -> None:
+def log_memory_snapshot(output_dir: str, file_prefix: Optional[str] = None) -> None:
     """Writes the memory snapshots to the provided ``output_dir``.
     For more information, see this `blog post <https://zdevito.github.io/2022/08/16/memory-snapshots.html>`_ .
 
     Args:
-        output_dir (str): The directory to save the memory snapshot.
+        output_dir: The directory to save the memory snapshot.
+        file_prefix: Prefix to append to the filename. If not set, defaults to "memory_snapshot".
 
     Note:
         Outputs are only saved if running on a host with CUDA devices available.
@@ -87,7 +88,9 @@ def log_memory_snapshot(output_dir: str) -> None:
         return
 
     rank = get_global_rank()
-    save_dir = os.path.join(output_dir, "memory_snapshot", f"oom_rank{rank}")
+    if file_prefix is None:
+        file_prefix = "memory_snapshot"
+    save_dir = os.path.join(output_dir, f"{file_prefix}_rank{rank}")
     try:
         snapshot = torch.cuda.memory._snapshot()
         _dump_snapshot(save_dir, snapshot)
