@@ -275,7 +275,9 @@ class StopTrainUnit(TrainUnit[Batch]):
         self.steps_processed = 0
         self.steps_before_stopping = steps_before_stopping
 
-    def train_step(self, state: State, data: Batch) -> torch.Tensor:
+    def train_step(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         inputs, targets = data
 
         outputs = self.module(inputs)
@@ -293,7 +295,6 @@ class StopTrainUnit(TrainUnit[Batch]):
             state.stop()
 
         self.steps_processed += 1
-        # pyre-fixme[7]: Expected `Tensor` but got `Tuple[typing.Any, typing.Any]`.
         return loss, outputs
 
 

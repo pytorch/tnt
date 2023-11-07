@@ -9,7 +9,7 @@ import time
 import unittest
 from collections import deque, namedtuple
 from dataclasses import dataclass
-from typing import Deque, List
+from typing import cast, Deque, List
 
 import torch
 from torchtnt.utils.memory import (
@@ -130,15 +130,11 @@ class MemoryTest(unittest.TestCase):
         tensor_map = get_tensor_size_bytes_map(inputs)
         self.assertEqual(len(tensor_map), 3)
         self.assertTrue(inputs["x"] in tensor_map)
+        input_x = cast(torch.Tensor, inputs["x"])
+        tensor_map_x = cast(torch.Tensor, tensor_map[input_x])
         self.assertEqual(
-            # pyre-fixme[6]: For 1st argument expected `Tensor` but got
-            #  `Union[Dict[str, Tensor], Tensor]`.
-            tensor_map[inputs["x"]],
-            # pyre-fixme[16]: Item `Dict` of `Union[Dict[str, torch._tensor.Tensor],
-            #  Tensor]` has no attribute `size`.
-            # pyre-fixme[16]: Item `Dict` of `Union[Dict[str, torch._tensor.Tensor],
-            #  Tensor]` has no attribute `element_size`.
-            inputs["x"].size().numel() * inputs["x"].element_size(),
+            tensor_map_x,
+            input_x.size().numel() * input_x.element_size(),
         )
         # pyre-fixme[6]: For 1st argument expected `Union[None, List[typing.Any],
         #  int, slice, Tensor, typing.Tuple[typing.Any, ...]]` but got `str`.

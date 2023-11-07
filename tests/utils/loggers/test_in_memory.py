@@ -7,6 +7,8 @@
 
 import unittest
 from collections import OrderedDict
+from io import StringIO
+from typing import cast
 
 from torchtnt.utils.loggers.in_memory import InMemoryLogger
 from torchtnt.utils.test_utils import captured_output
@@ -19,9 +21,10 @@ class InMemoryLoggerTest(unittest.TestCase):
         logger.log(name="metric1", data=456.0, step=1)
         logger.log(name="metric1", data=789.0, step=2)
         # Test flushing.
-        # pyre-fixme[16]: `None` has no attribute `__enter__`.
         with captured_output() as (out, err):
             logger.flush()
+        out = cast(StringIO, out)
+        err = cast(StringIO, err)
         self.assertTrue(out.getvalue().startswith("OrderedDict(["))
         self.assertEqual(err.getvalue(), "")
         logger.log_dict(payload={"metric2": 1.0, "metric3": 2.0}, step=3)
@@ -40,6 +43,8 @@ class InMemoryLoggerTest(unittest.TestCase):
         # Test flushing.
         with captured_output() as (out, err):
             logger.flush()
+        out = cast(StringIO, out)
+        err = cast(StringIO, err)
         self.assertTrue(out.getvalue().startswith("OrderedDict(["))
         self.assertEqual(err.getvalue(), "")
         # Closing the log clears the buffer.

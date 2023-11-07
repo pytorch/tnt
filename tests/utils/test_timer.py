@@ -15,6 +15,7 @@ from unittest.mock import Mock, patch
 
 import torch
 import torch.distributed as dist
+from pyre_extensions import none_throws
 from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import (
     BoundedTimer,
@@ -99,10 +100,9 @@ class TimerTest(unittest.TestCase):
             timer.recorded_durations["action_4"][0], intervals[2]
         )
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.cuda.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        condition=torch.cuda.is_available(), reason="This test needs a GPU host to run."
+        condition=bool(torch.cuda.is_available()),
+        reason="This test needs a GPU host to run.",
     )
     @patch("torch.cuda.synchronize")
     def test_timer_synchronize(self, mock_synchornize: Mock) -> None:
@@ -230,10 +230,8 @@ class TimerTest(unittest.TestCase):
         tc = unittest.TestCase()
         tc.assertEqual(durations, expected_durations)
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        condition=dist.is_available(),
+        condition=bool(dist.is_available()),
         reason="This test should only run if torch.distributed is available.",
     )
     def test_get_synced_durations_histogram_multi_process(self) -> None:
@@ -269,18 +267,18 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
     ) -> bool:
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
-        # pyre-fixme[6]: For 2nd argument expected `ProcessGroup` but got
-        #  `Optional[ProcessGroup]`.
-        fsp_timer = FullSyncPeriodicTimer(interval_threshold, process_group)
+        fsp_timer = FullSyncPeriodicTimer(
+            interval_threshold, none_throws(process_group)
+        )
         return fsp_timer.check()
 
     @classmethod
     def _full_sync_worker_with_timeout(cls, timeout: int) -> bool:
         process_group = dist.group.WORLD
         interval_threshold = timedelta(seconds=5)
-        # pyre-fixme[6]: For 2nd argument expected `ProcessGroup` but got
-        #  `Optional[ProcessGroup]`.
-        fsp_timer = FullSyncPeriodicTimer(interval_threshold, process_group)
+        fsp_timer = FullSyncPeriodicTimer(
+            interval_threshold, none_throws(process_group)
+        )
         time.sleep(timeout)
         fsp_timer.check()  # self._prev_work is assigned, next time the check is called, it will be executed
         return fsp_timer.check()  # Since 8>5, we will see flag set to True

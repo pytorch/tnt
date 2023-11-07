@@ -8,7 +8,7 @@
 import random
 import unittest
 from collections import Counter
-from typing import Any, Dict, Iterator, List, Mapping
+from typing import Any, cast, Dict, Iterable, Iterator, List, Mapping, Union
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -76,17 +76,12 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         round_robin = RoundRobin(
             stopping_mechanism=StoppingMechanism.SMALLEST_DATASET_EXHAUSTED
         )
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 round_robin,
             )
         )
@@ -109,15 +104,10 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         round_robin = RoundRobin(iteration_order=["2", "1"])
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 round_robin,
             )
         )
@@ -139,16 +129,11 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         all_dataset_batches = AllDatasetBatches()
 
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 all_dataset_batches,
             )
         )
@@ -171,18 +156,13 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         all_dataset_batches = AllDatasetBatches(
             StoppingMechanism.RESTART_UNTIL_ALL_DATASETS_EXHAUSTED
         )
 
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 all_dataset_batches,
             )
         )
@@ -205,17 +185,12 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         all_dataset_batches = AllDatasetBatches(
             StoppingMechanism.SMALLEST_DATASET_EXHAUSTED
         )
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 all_dataset_batches,
             )
         )
@@ -233,14 +208,9 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 DataIterationStrategy(),
                 CustomRandomIterator,
             )
@@ -259,14 +229,9 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(size=32, length=8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(size=32, length=16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 RandomizedBatchSampler(
                     weights={"1": 1, "2": 100},
                     stopping_mechanism=StoppingMechanism.WRAP_AROUND_UNTIL_KILLED,
@@ -284,14 +249,9 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(size=32, length=0), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(size=32, length=64), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 RandomizedBatchSampler(
                     weights={"1": 1, "2": 100},
                     stopping_mechanism=StoppingMechanism.ALL_DATASETS_EXHAUSTED,
@@ -309,12 +269,8 @@ class TestMultiDataLoader(unittest.TestCase):
 
         # Now ensure that, without the `ignore_empty_data` flag, an exception is raised.
         with self.assertRaises(ValueError):
-            individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 RandomizedBatchSampler(weights={"1": 1, "2": 100}),
             )
 
@@ -322,13 +278,8 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(size=32, length=8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(size=32, length=16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         multi_dataloader = MultiDataLoader(
-            # pyre-fixme[6]: For 1st argument expected `Dict[str,
-            #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got `Dict[str,
-            #  DataLoader[Tensor]]`.
-            individual_dataloaders,
+            self._get_dataloaders_dict(dataloader_1, dataloader_2),
             RandomizedBatchSampler(
                 weights={"1": 1, "2": 100},
                 stopping_mechanism=StoppingMechanism.SMALLEST_DATASET_EXHAUSTED,
@@ -351,13 +302,8 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(size=32, length=8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(size=32, length=16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         multi_dataloader = MultiDataLoader(
-            # pyre-fixme[6]: For 1st argument expected `Dict[str,
-            #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got `Dict[str,
-            #  DataLoader[Tensor]]`.
-            individual_dataloaders,
+            self._get_dataloaders_dict(dataloader_1, dataloader_2),
             RandomizedBatchSampler(
                 weights={"1": 1, "2": 100},
             ),
@@ -379,14 +325,9 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(size=32, length=8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(size=32, length=256), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 RandomizedBatchSampler(
                     weights={"1": 100, "2": 1},
                     stopping_mechanism=StoppingMechanism.RESTART_UNTIL_ALL_DATASETS_EXHAUSTED,
@@ -406,16 +347,11 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         in_order = InOrder()
 
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 in_order,
             )
         )
@@ -437,16 +373,11 @@ class TestMultiDataLoader(unittest.TestCase):
         dataloader_1 = DataLoader(RandomDataset(32, 8), batch_size=8)
         dataloader_2 = DataLoader(RandomDataset(32, 16), batch_size=8)
 
-        individual_dataloaders = {"1": dataloader_1, "2": dataloader_2}
-
         in_order = InOrder(iteration_order=["2", "1", "2"])
 
         multi_dataloader = iter(
             MultiDataLoader(
-                # pyre-fixme[6]: For 1st argument expected `Dict[str,
-                #  Union[DataLoader[typing.Any], Iterable[typing.Any]]]` but got
-                #  `Dict[str, DataLoader[Tensor]]`.
-                individual_dataloaders,
+                self._get_dataloaders_dict(dataloader_1, dataloader_2),
                 in_order,
             )
         )
@@ -514,23 +445,21 @@ class TestMultiDataLoader(unittest.TestCase):
         for _ in multi_dataloader:
             pass
 
-        # pyre-fixme[16]: Item `DataLoader` of `Union[DataLoader[typing.Any],
-        #  Iterable[typing.Any]]` has no attribute `iter_count`.
-        self.assertEqual(multi_dataloader.individual_dataloaders["foo"].iter_count, 1)
-        # pyre-fixme[16]: Item `DataLoader` of `Union[DataLoader[typing.Any],
-        #  Iterable[typing.Any]]` has no attribute `iter_count`.
-        self.assertEqual(multi_dataloader.individual_dataloaders["bar"].iter_count, 1)
+        foo_iterable = cast(
+            DummyIterable, multi_dataloader.individual_dataloaders["foo"]
+        )
+        bar_iterable = cast(
+            DummyIterable, multi_dataloader.individual_dataloaders["bar"]
+        )
+        self.assertEqual(foo_iterable.iter_count, 1)
+        self.assertEqual(bar_iterable.iter_count, 1)
 
         new_state_dict = multi_dataloader.state_dict()
 
         # Load state dict to reset to initial state
         multi_dataloader.load_state_dict(original_state_dict)
-        # pyre-fixme[16]: Item `DataLoader` of `Union[DataLoader[typing.Any],
-        #  Iterable[typing.Any]]` has no attribute `iter_count`.
-        self.assertEqual(multi_dataloader.individual_dataloaders["foo"].iter_count, 0)
-        # pyre-fixme[16]: Item `DataLoader` of `Union[DataLoader[typing.Any],
-        #  Iterable[typing.Any]]` has no attribute `iter_count`.
-        self.assertEqual(multi_dataloader.individual_dataloaders["bar"].iter_count, 0)
+        self.assertEqual(foo_iterable.iter_count, 0)
+        self.assertEqual(bar_iterable.iter_count, 0)
 
         # instantiate a new multi-dataloader with a new different name
         new_multi_dataloader = MultiDataLoader(
@@ -544,15 +473,20 @@ class TestMultiDataLoader(unittest.TestCase):
         new_multi_dataloader.load_state_dict(new_state_dict)
         # foo's count should be loaded correctly
         self.assertEqual(
-            # pyre-fixme[16]: Item `DataLoader` of `Union[DataLoader[typing.Any],
-            #  Iterable[typing.Any]]` has no attribute `iter_count`.
-            new_multi_dataloader.individual_dataloaders["foo"].iter_count,
+            cast(
+                DummyIterable, new_multi_dataloader.individual_dataloaders["foo"]
+            ).iter_count,
             1,
         )
         # qux's iter_count should still be 0 because it was not in the original state dict
         self.assertEqual(
-            # pyre-fixme[16]: Item `DataLoader` of `Union[DataLoader[typing.Any],
-            #  Iterable[typing.Any]]` has no attribute `iter_count`.
-            new_multi_dataloader.individual_dataloaders["qux"].iter_count,
+            cast(
+                DummyIterable, new_multi_dataloader.individual_dataloaders["qux"]
+            ).iter_count,
             0,
         )
+
+    def _get_dataloaders_dict(
+        self, first_dataloader: DataLoader, second_dataloader: DataLoader
+    ) -> Dict[str, Union[DataLoader, Iterable[object]]]:
+        return {"1": first_dataloader, "2": second_dataloader}

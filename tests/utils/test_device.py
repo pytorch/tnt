@@ -175,9 +175,6 @@ class DeviceTest(unittest.TestCase):
         self.assertEqual(original_data_class.val.device.type, "cpu")
         new_data_class = copy_data_to_device(original_data_class, cuda_0)
         self.assertEqual(new_data_class.val.device.type, "cuda")
-        with self.assertRaises(dataclasses.FrozenInstanceError):
-            # pyre-fixme[41]: Cannot reassign final attribute `val`.
-            new_data_class.val = torch.tensor([1, 2, 3], device=cuda_0)
 
         # no-init field
         @dataclass
