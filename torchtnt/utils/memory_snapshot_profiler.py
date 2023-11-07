@@ -150,5 +150,7 @@ class MemorySnapshotProfiler:
         ):
             self.start()
         if self.params.stop_step is not None and self.step_num == self.params.stop_step:
-            log_memory_snapshot(output_dir=self.output_dir)
+            log_memory_snapshot(
+                output_dir=self.output_dir, file_prefix=f"step_{self.step_num}"
+            )
             self.stop()

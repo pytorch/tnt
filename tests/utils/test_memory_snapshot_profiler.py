@@ -47,7 +47,7 @@ class MemorySnapshotProfilerTest(unittest.TestCase):
             memory_snapshot_profiler.step()
 
             # Check if the corresponding files exist
-            save_dir = os.path.join(temp_dir, "memory_snapshot", "oom_rank0")
+            save_dir = os.path.join(temp_dir, "step_2_rank0")
 
             pickle_dump_path = os.path.join(save_dir, "snapshot.pickle")
             trace_path = os.path.join(save_dir, "trace_plot.html")
