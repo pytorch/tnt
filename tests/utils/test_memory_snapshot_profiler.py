@@ -35,9 +35,8 @@ class MemorySnapshotProfilerTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             memory_snapshot_profiler = MemorySnapshotProfiler(
                 output_dir=temp_dir,
-                memory_snapshot_params=MemorySnapshotParams(stop_step=2),
+                memory_snapshot_params=MemorySnapshotParams(start_step=0, stop_step=2),
             )
-            memory_snapshot_profiler.start()
 
             # initialize device & allocate memory for tensors
             device = get_device_from_env()
@@ -64,3 +63,59 @@ class MemorySnapshotProfilerTest(unittest.TestCase):
             self.assertTrue(os.path.exists(pickle_dump_path))
             self.assertTrue(os.path.exists(trace_path))
             self.assertTrue(os.path.exists(segment_plot_path))
+
+    @unittest.skipUnless(
+        condition=torch_version_geq_2_0,
+        reason="This test needs changes from PyTorch 2.0 to run.",
+    )
+    def test_validation(self) -> None:
+        """Test parameter validation."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with self.assertRaisesRegex(ValueError, "start_step must be nonnegative."):
+                _ = MemorySnapshotProfiler(
+                    output_dir=temp_dir,
+                    memory_snapshot_params=MemorySnapshotParams(
+                        start_step=-1, stop_step=0
+                    ),
+                )
+            with self.assertRaisesRegex(
+                ValueError, "stop_step must be specified when start_step is set."
+            ):
+                _ = MemorySnapshotProfiler(
+                    output_dir=temp_dir,
+                    memory_snapshot_params=MemorySnapshotParams(
+                        start_step=2, stop_step=None
+                    ),
+                )
+            with self.assertRaisesRegex(ValueError, "start_step must be < stop_step."):
+                _ = MemorySnapshotProfiler(
+                    output_dir=temp_dir,
+                    memory_snapshot_params=MemorySnapshotParams(
+                        start_step=2, stop_step=0
+                    ),
+                )
+            with self.assertRaisesRegex(ValueError, "stop_step must be positive."):
+                _ = MemorySnapshotProfiler(
+                    output_dir=temp_dir,
+                    memory_snapshot_params=MemorySnapshotParams(stop_step=0),
+                )
+            with self.assertRaisesRegex(
+                ValueError,
+                "stop_step must be enabled with either start_step or enable_oom_observer.",
+            ):
+                _ = MemorySnapshotProfiler(
+                    output_dir=temp_dir,
+                    memory_snapshot_params=MemorySnapshotParams(
+                        stop_step=2, enable_oom_observer=False
+                    ),
+                )
+            with self.assertRaisesRegex(
+                ValueError,
+                "At least one of start_step/stop_step or enable_oom_observer must be set.",
+            ):
+                _ = MemorySnapshotProfiler(
+                    output_dir=temp_dir,
+                    memory_snapshot_params=MemorySnapshotParams(
+                        start_step=None, stop_step=None, enable_oom_observer=False
+                    ),
+                )
