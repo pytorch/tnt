@@ -8,7 +8,7 @@
 import unittest
 from functools import partial
 from inspect import getmembers, isfunction
-from typing import Set, Tuple
+from typing import Any, Set, Tuple, Type
 
 import torch
 from torchtnt.framework._test_utils import (
@@ -36,7 +36,7 @@ class DummyTrainExceptUnit(TrainUnit[Batch]):
         raise RuntimeError("testing")
 
 
-def _get_members_in_different_name(cls: Callback, phase: str) -> Set[str]:
+def _get_members_in_different_name(cls: Type[Callback], phase: str) -> Set[str]:
     # retrieve Callback in different phases, including: train, predict, fit, eval
     return {
         h
@@ -55,14 +55,11 @@ class LambdaTest(unittest.TestCase):
         train_dataloader = generate_random_dataloader(
             train_dataset_len, input_dim, batch_size
         )
-        checker = set()
+        checker: Set[str] = set()
 
-        # pyre-fixme[53]: Captured variable `checker` is not annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def call(hook: str, *_, **__) -> None:
+        def call(hook: str, *_: Any, **__: Any) -> None:
             checker.add(hook)
 
-        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "train")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_train_unit = DummyTrainUnit(input_dim=input_dim)
@@ -84,14 +81,11 @@ class LambdaTest(unittest.TestCase):
         eval_dataloader = generate_random_dataloader(
             eval_dataset_len, input_dim, batch_size
         )
-        checker = set()
+        checker: Set[str] = set()
 
-        # pyre-fixme[53]: Captured variable `checker` is not annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def call(hook: str, *_, **__) -> None:
+        def call(hook: str, *_: Any, **__: Any) -> None:
             checker.add(hook)
 
-        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "eval")
         hooks_args = {h: partial(call, h) for h in hooks}
         my_eval_unit = DummyEvalUnit(input_dim=input_dim)
@@ -108,14 +102,11 @@ class LambdaTest(unittest.TestCase):
         predict_dataset_len = 6
         batch_size = 2
         max_steps_per_epoch = 6
-        checker = set()
+        checker: Set[str] = set()
 
-        # pyre-fixme[53]: Captured variable `checker` is not annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def call(hook: str, *_, **__) -> None:
+        def call(hook: str, *_: Any, **__: Any) -> None:
             checker.add(hook)
 
-        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "predict")
         hooks_args = {h: partial(call, h) for h in hooks}
         predict_dataloader = generate_random_dataloader(
@@ -139,15 +130,12 @@ class LambdaTest(unittest.TestCase):
         train_dataloader = generate_random_dataloader(
             train_dataset_len, input_dim, batch_size
         )
-        checker = set()
+        checker: Set[str] = set()
 
-        # pyre-fixme[53]: Captured variable `checker` is not annotated.
-        # pyre-fixme[2]: Parameter must be annotated.
-        def call(hook: str, *_, **__) -> None:
+        def call(hook: str, *_: Any, **__: Any) -> None:
             checker.add(hook)
 
         # with on_exception, training will not be ended
-        # pyre-fixme[6]: For 1st argument expected `Callback` but got `Type[Callback]`.
         hooks = _get_members_in_different_name(Callback, "train") - {
             "on_train_end",
             "on_train_epoch_end",

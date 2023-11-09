@@ -6,6 +6,8 @@
 
 
 import unittest
+from io import StringIO
+from typing import cast
 
 from torchtnt.utils.loggers.stdout import StdoutLogger
 from torchtnt.utils.test_utils import captured_output
@@ -14,9 +16,9 @@ from torchtnt.utils.test_utils import captured_output
 class StdoutLoggerTest(unittest.TestCase):
     def test_stdout_log(self) -> None:
         logger = StdoutLogger(precision=2)
-        # pyre-fixme[16]: `None` has no attribute `__enter__`.
         with captured_output() as (out, _):
             logger.log(step=0, name="metric_1", data=1.1)
+            out = cast(StringIO, out)
             self.assertTrue(
                 out.getvalue() == "\n[Step 0] metric_1=1.10",
                 msg=repr(f"Actual output: {out.getvalue()}"),
@@ -44,9 +46,9 @@ class StdoutLoggerTest(unittest.TestCase):
 
     def test_stdout_log_dict(self) -> None:
         logger = StdoutLogger(precision=0)
-        # pyre-fixme[16]: `None` has no attribute `__enter__`.
         with captured_output() as (out, _):
             logger.log_dict(step=0, payload={"metric_1": 1, "metric_2": 1})
+            out = cast(StringIO, out)
             self.assertTrue(
                 out.getvalue() == "\n[Step 0] metric_1=1 metric_2=1",
                 msg=repr(f"Actual output: {out.getvalue()}"),
@@ -76,9 +78,9 @@ class StdoutLoggerTest(unittest.TestCase):
 
     def test_out_of_order_steps(self) -> None:
         logger = StdoutLogger(precision=2)
-        # pyre-fixme[16]: `None` has no attribute `__enter__`.
         with captured_output() as (out, _):
             logger.log(step=-1, name="metric_1", data=1.1234)
+            out = cast(StringIO, out)
             self.assertTrue(
                 out.getvalue() == "\n[Step -1] metric_1=1.12",
                 msg=repr(f"Actual output: {out.getvalue()}"),

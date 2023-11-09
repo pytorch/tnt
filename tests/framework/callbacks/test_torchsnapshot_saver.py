@@ -11,7 +11,7 @@ import shutil
 import tempfile
 import time
 import unittest
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterator, List
 from unittest import mock
 from unittest.mock import MagicMock, Mock, patch
 
@@ -19,6 +19,7 @@ import torch
 import torch.distributed as dist
 from torch import nn
 from torch.distributed import launcher
+from torch.utils.data import DataLoader
 from torchsnapshot.snapshot import SNAPSHOT_METADATA_FNAME
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 
@@ -45,8 +46,8 @@ from torchtnt.utils.test_utils import get_pet_launch_config, spawn_multi_process
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
-    # pyre-fixme[4]: Attribute must be annotated.
-    cuda_available = torch.cuda.is_available()
+    cuda_available: bool = torch.cuda.is_available()
+    distributed_available: bool = torch.distributed.is_available()
 
     def test_save_every_n_train_steps(self) -> None:
         input_dim = 2
@@ -377,10 +378,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             )
             self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        condition=distributed_available, reason="Torch distributed is needed to run"
     )
     def test_directory_sync_collective(self) -> None:
         spawn_multi_process(
@@ -407,10 +406,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        condition=distributed_available, reason="Torch distributed is needed to run"
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
@@ -515,10 +512,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         with open(path, "w"):
             pass
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        condition=distributed_available, reason="Torch distributed is needed to run"
     )
     def test_latest_checkpoint_path_distributed(self) -> None:
         config = get_pet_launch_config(2)
@@ -568,10 +563,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        condition=distributed_available, reason="Torch distributed is needed to run"
     )
     def test_save_restore_ddp(self) -> None:
         spawn_multi_process(
@@ -630,10 +623,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        condition=distributed_available, reason="Torch distributed is needed to run"
     )
     @unittest.skipUnless(
         condition=cuda_available, reason="This test needs a GPU host to run."
@@ -680,9 +671,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
 
 class DummyStatefulDataLoader:
-    # pyre-fixme[3]: Return type must be annotated.
-    # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter.
-    def __init__(self, dataloader: Iterable):
+    def __init__(self, dataloader: DataLoader) -> None:
         self.dataloader = dataloader
         self.state_dict_call_count = 0
         self.load_state_dict_call_count = 0
@@ -695,6 +684,5 @@ class DummyStatefulDataLoader:
         self.load_state_dict_call_count += 1
         return None
 
-    # pyre-fixme[3]: Return type must be annotated.
-    def __iter__(self):
+    def __iter__(self) -> Iterator[object]:
         return iter(self.dataloader)

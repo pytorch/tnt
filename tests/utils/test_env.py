@@ -25,7 +25,7 @@ class EnvTest(unittest.TestCase):
         self.assertFalse(torch.distributed.is_initialized())
 
     @staticmethod
-    def _test_worker_fn(init_pg_explicit: bool) -> None:
+    def _test_worker_fn(init_pg_explicit: bool) -> torch.device:
         """
         Integration test to confirm distributed initialization and consistency with process group backend utilities.
         """
@@ -49,7 +49,6 @@ class EnvTest(unittest.TestCase):
             raise AssertionError(
                 f"Expected different process group backend: received {pg_backend}, expected {expected_pg_backend}"
             )
-        # pyre-fixme[7]: Expected `None` but got `device`.
         return device
 
     def _test_launch_worker(

@@ -7,8 +7,8 @@
 
 import os
 import unittest
-from typing import Optional
-from unittest.mock import patch
+from typing import Literal, Optional, Union
+from unittest.mock import MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
 import torch
@@ -34,6 +34,8 @@ from torchtnt.utils.test_utils import get_pet_launch_config
 
 
 class DistributedTest(unittest.TestCase):
+    distributed_available: bool = torch.distributed.is_available()
+
     def test_get_process_group_backend_cpu(self) -> None:
         device = torch.device("cpu")
         pg_backend = get_process_group_backend_from_device(device)
@@ -47,10 +49,8 @@ class DistributedTest(unittest.TestCase):
     def test_get_world_size_single(self) -> None:
         self.assertEqual(get_world_size(), 1)
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_get_world_size(self) -> None:
         world_size = 4
@@ -66,10 +66,8 @@ class DistributedTest(unittest.TestCase):
         dist.init_process_group("gloo")
         assert get_world_size() == dist.get_world_size()
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_get_global_rank(self) -> None:
         config = get_pet_launch_config(4)
@@ -87,10 +85,8 @@ class DistributedTest(unittest.TestCase):
         self.assertEqual(get_local_rank(), 0)
         self.assertEqual(get_local_world_size(), 1)
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_get_local_rank(self) -> None:
         config = get_pet_launch_config(2)
@@ -108,10 +104,8 @@ class DistributedTest(unittest.TestCase):
         destroy_process_group()
         assert not torch.distributed.is_initialized()
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_destroy_process_group(self) -> None:
         # should be a no-op if dist is not initialized
@@ -119,10 +113,8 @@ class DistributedTest(unittest.TestCase):
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._destroy_process_group)()
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_gather_uneven(self, world_size: Optional[int] = 4) -> None:
         config = get_pet_launch_config(2)
@@ -143,10 +135,8 @@ class DistributedTest(unittest.TestCase):
             assert len(result[idx]) == idx
             assert (result[idx] == torch.ones_like(result[idx])).all()
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_gather_uneven_multidim(self) -> None:
         config = get_pet_launch_config(2)
@@ -176,8 +166,7 @@ class DistributedTest(unittest.TestCase):
         assert x == 1
 
     @patch("torchtnt.utils.distributed.get_global_rank")
-    # pyre-fixme[2]: Parameter must be annotated.
-    def test_rank_zero_fn_rank_non_zero(self, get_global_rank) -> None:
+    def test_rank_zero_fn_rank_non_zero(self, get_global_rank: MagicMock) -> None:
         get_global_rank.return_value = 1
 
         @rank_zero_fn
@@ -189,9 +178,9 @@ class DistributedTest(unittest.TestCase):
 
     def test_revert_sync_batchnorm(self) -> None:
         original_batchnorm = torch.nn.modules.batchnorm.BatchNorm1d(4)
-        # pyre-fixme[16]: `Optional` has no attribute `random_`.
-        original_batchnorm.running_mean.random_(-1, 1)
-        original_batchnorm.running_var.random_(0, 1)
+
+        none_throws(original_batchnorm.running_mean).random_(-1, 1)
+        none_throws(original_batchnorm.running_var).random_(0, 1)
         model = torch.nn.Sequential(
             torch.nn.Linear(2, 4),
             original_batchnorm,
@@ -204,27 +193,26 @@ class DistributedTest(unittest.TestCase):
         self.assertIsInstance(batch_norm, torch.nn.modules.batchnorm._BatchNorm)
         self.assertNotIsInstance(batch_norm, torch.nn.SyncBatchNorm)
         self.assertTrue(
-            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got
-            #  `Optional[Tensor]`.
-            torch.equal(batch_norm.running_mean, original_batchnorm.running_mean)
+            torch.equal(
+                batch_norm.running_mean, none_throws(original_batchnorm.running_mean)
+            )
         )
         self.assertTrue(
-            # pyre-fixme[6]: For 2nd argument expected `Tensor` but got
-            #  `Optional[Tensor]`.
-            torch.equal(batch_norm.running_var, original_batchnorm.running_var)
+            torch.equal(
+                batch_norm.running_var, none_throws(original_batchnorm.running_var)
+            )
         )
 
     @classmethod
-    def _full_sync_worker(cls, coherence_mode: Optional[str]) -> bool:
+    def _full_sync_worker(
+        cls,
+        coherence_mode: Union[Literal["any", "all", "rank_zero"], int, float] = "any",
+    ) -> bool:
         dist.init_process_group("gloo")
         if dist.get_rank() == 0:
             val = True
         else:
             val = False
-        # pyre-fixme[6]: For 2nd argument expected
-        #  `Union[typing_extensions.Literal['all'], typing_extensions.Literal['any'],
-        #  typing_extensions.Literal['rank_zero'], float, int]` but got
-        #  `Optional[str]`.
         return sync_bool(val, coherence_mode=coherence_mode)
 
     def test_sync_bool_single_process(self) -> None:
@@ -233,10 +221,8 @@ class DistributedTest(unittest.TestCase):
         # these should be the same in a single process case
         self.assertEqual(val, new_val)
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_sync_bool_multi_process_coherence_mode_rank_zero(self) -> None:
         config = get_pet_launch_config(2)
@@ -247,10 +233,8 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_sync_bool_multi_process_coherence_mode_any(self) -> None:
         config = get_pet_launch_config(2)
@@ -261,10 +245,8 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_sync_bool_multi_process_coherence_mode_all(self) -> None:
         config = get_pet_launch_config(2)
@@ -275,10 +257,8 @@ class DistributedTest(unittest.TestCase):
         self.assertFalse(result[0])
         self.assertFalse(result[1])
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_sync_bool_multi_process_coherence_mode_int_false(self) -> None:
         config = get_pet_launch_config(2)
@@ -287,10 +267,8 @@ class DistributedTest(unittest.TestCase):
         self.assertFalse(result[0])
         self.assertFalse(result[1])
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_sync_bool_multi_process_coherence_mode_int_true(self) -> None:
         config = get_pet_launch_config(2)
@@ -299,10 +277,8 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_sync_bool_multi_process_coherence_mode_float_true(self) -> None:
         config = get_pet_launch_config(2)
@@ -311,10 +287,8 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.distributed.is_available()` to decorator factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        torch.distributed.is_available(), reason="Torch distributed is needed to run"
+        distributed_available, reason="Torch distributed is needed to run"
     )
     def test_sync_bool_multi_process_coherence_mode_float_false(self) -> None:
         config = get_pet_launch_config(2)

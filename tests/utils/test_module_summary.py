@@ -16,14 +16,15 @@ from torchtnt.utils.module_summary import (
     prune_module_summary,
 )
 from torchvision import models
+from torchvision.models.alexnet import AlexNet_Weights
+from torchvision.models.resnet import ResNet18_Weights
 
 
 def get_summary_and_prune(
     model: torch.nn.Module,
     *,
     max_depth: int,
-    # pyre-ignore
-    module_args: Optional[Tuple[Any, ...]] = None,
+    module_args: Optional[Tuple[object, ...]] = None,
     module_kwargs: Optional[Dict[str, Any]] = None,
 ) -> ModuleSummary:
     """Utility function to get module summary and then prune it"""
@@ -156,7 +157,7 @@ class ModuleSummaryTest(unittest.TestCase):
     def test_resnet_max_depth(self) -> None:
         """Test the behavior of max_depth on a layered model like ResNet"""
         pretrained_model = models.resnet.resnet18(
-            weights=models.ResNet18_Weights.IMAGENET1K_V1  # pyre-ignore[16]
+            weights=ResNet18_Weights.IMAGENET1K_V1
         )
 
         # max_depth = None
@@ -213,9 +214,7 @@ Name | Type   | # Parameters | # Trainable Parameters | Size (bytes) | Contains 
         self._test_module_summary_text(summary_table, str(ms1))
 
     def test_alexnet_print(self) -> None:
-        pretrained_model = models.alexnet(
-            weights=models.AlexNet_Weights.IMAGENET1K_V1  # pyre-ignore[16]
-        )
+        pretrained_model = models.alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
         ms1 = get_summary_and_prune(pretrained_model, max_depth=1)
         ms2 = get_summary_and_prune(pretrained_model, max_depth=2)
         ms3 = get_summary_and_prune(pretrained_model, max_depth=3)
@@ -240,9 +239,7 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
         self.assertEqual(str(ms3), str(ms4))
 
     def test_alexnet_with_input_tensor(self) -> None:
-        pretrained_model = models.alexnet(
-            weights=models.AlexNet_Weights.IMAGENET1K_V1  # pyre-ignore[16]
-        )
+        pretrained_model = models.alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
         inp = torch.randn(1, 3, 224, 224)
         ms1 = get_summary_and_prune(pretrained_model, max_depth=1, module_args=(inp,))
         ms2 = get_summary_and_prune(pretrained_model, max_depth=2, module_args=(inp,))
@@ -283,6 +280,7 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
         with self.assertRaisesRegex(ValueError, "received -1"):
             _get_human_readable_count(-1)
         with self.assertRaisesRegex(TypeError, "received <class 'float'>"):
+            # this is not really a pyre issue, we're just checking for runtime exception
             # pyre-fixme[6]: For 1st param expected `int` but got `float`.
             _get_human_readable_count(0.1)
         self.assertEqual(_get_human_readable_count(1), "1  ")
@@ -350,9 +348,7 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
         self.assertEqual(ms_classifier.out_size, [1, 1, 224, 224])
 
     def test_forward_elapsed_time(self) -> None:
-        pretrained_model = models.alexnet(
-            weights=models.AlexNet_Weights.IMAGENET1K_V1  # pyre-ignore[16]
-        )
+        pretrained_model = models.alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
         inp = torch.randn(1, 3, 224, 224)
         ms1 = get_summary_and_prune(pretrained_model, module_args=(inp,), max_depth=4)
         stack = [ms1] + [

@@ -153,11 +153,8 @@ class PrepareModelTest(unittest.TestCase):
     @unittest.skipUnless(
         distributed_available, reason="Torch distributed is needed to run"
     )
-    # pyre-fixme[56]: Pyre was not able to infer the type of argument
-    #  `torch.cuda.is_available() and torch.cuda.device_count() > 2` to decorator
-    #  factory `unittest.skipUnless`.
     @unittest.skipUnless(
-        condition=cuda_available and torch.cuda.device_count() >= 2,
+        condition=bool(cuda_available and torch.cuda.device_count() >= 2),
         reason="This test needs 2 GPUs to run.",
     )
     def test_is_fsdp_module(self) -> None:

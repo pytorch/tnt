@@ -14,7 +14,7 @@ import uuid
 from contextlib import contextmanager
 from functools import wraps
 from io import StringIO
-from typing import Any, Callable, Dict, Optional, TypeVar
+from typing import Any, Callable, Dict, Generator, Optional, TextIO, Tuple, TypeVar
 
 import torch.distributed.launcher as pet
 from pyre_extensions import ParameterSpecification
@@ -141,13 +141,11 @@ def init_pg_and_rank_and_launch_test(
 
 
 @contextmanager
-def captured_output() -> None:
+def captured_output() -> Generator[Tuple[TextIO, TextIO], None, None]:
     new_out, new_err = StringIO(), StringIO()
     old_out, old_err = sys.stdout, sys.stderr
     try:
         sys.stdout, sys.stderr = new_out, new_err
-        # pyre-fixme[7]: Expected `None` but got `Generator[Tuple[TextIO, TextIO],
-        #  typing.Any, typing.Any]`.
         yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = old_out, old_err
