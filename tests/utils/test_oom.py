@@ -12,6 +12,7 @@ import unittest
 import torch
 from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.oom import (
+    _bytes_to_mb_gb,
     is_out_of_cpu_memory,
     is_out_of_cuda_memory,
     is_out_of_memory_error,
@@ -91,3 +92,14 @@ class OomTest(unittest.TestCase):
 
             segment_plot_path = os.path.join(save_dir, "segment_plot.html")
             self.assertTrue(os.path.exists(segment_plot_path))
+
+    def test_bytes_to_mb_gb(self) -> None:
+        bytes_to_mb_test_cases = [
+            (0, "0.0 MB"),
+            (100000, "0.1 MB"),
+            (1000000, "0.95 MB"),
+            (1000000000, "0.93 GB"),
+            (1000000000000, "931.32 GB"),
+        ]
+        for inp, expected in bytes_to_mb_test_cases:
+            self.assertEqual(expected, _bytes_to_mb_gb(inp))
