@@ -44,6 +44,13 @@ def is_out_of_memory_error(exception: BaseException) -> bool:
     return is_out_of_cpu_memory(exception) or is_out_of_cuda_memory(exception)
 
 
+def _bytes_to_mb_gb(num_bytes: int) -> str:
+    if num_bytes < 1024 * 1024:
+        return f"{round(num_bytes / (1024 * 1024), 2)} MB"
+    else:
+        return f"{round(num_bytes / (1024 * 1024 * 1024), 2)} GB"
+
+
 def _oom_observer(
     output_dir: str,
 ) -> Callable[[Union[int, torch.device], int, int, int], None]:
@@ -57,7 +64,7 @@ def _oom_observer(
         Log memory snapshot in the event of CUDA OOM.
         """
         logger.info(
-            f"Saving memory snapshot device: {device}, alloc: {alloc}, device_alloc: {device_alloc}, device_free: {device_free}"
+            f"Saving memory snapshot device: {device}, alloc: {_bytes_to_mb_gb(alloc)}, device_alloc: {_bytes_to_mb_gb(device_alloc)}, device_free: {_bytes_to_mb_gb(device_free)}"
         )
         try:
             log_memory_snapshot(output_dir, "oom")
