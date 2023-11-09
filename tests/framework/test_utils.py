@@ -17,10 +17,9 @@ from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
-from torchtnt.framework._test_utils import DummyAutoUnit, generate_random_dataset
+from torchtnt.framework._test_utils import generate_random_dataset
 from torchtnt.framework.state import State
 from torchtnt.framework.utils import (
-    _construct_tracked_optimizers_and_schedulers,
     _find_optimizers_for_module,
     _is_done,
     _is_epoch_done,
@@ -31,8 +30,6 @@ from torchtnt.framework.utils import (
     get_timing_context,
 )
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
 from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import Timer
@@ -233,27 +230,3 @@ class UtilsTest(unittest.TestCase):
         optim_list = _find_optimizers_for_module(module2, opts)
         optim_name, _ = optim_list[0]
         tc.assertEqual(optim_name, "optim2")
-
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    def test_construct_tracked_optimizers_and_schedulers(self) -> None:
-        spawn_multi_process(2, "nccl", self._construct_optimizers)
-
-    @staticmethod
-    def _construct_optimizers() -> None:
-        device = init_from_env()
-        module = torch.nn.Linear(10, 10)
-
-        auto_unit = DummyAutoUnit(module=module, device=device, strategy="fsdp")
-        auto_unit.module2 = torch.nn.Linear(10, 10).to(device)
-        auto_unit.optim2 = torch.optim.Adam(auto_unit.module2.parameters())
-
-        result = _construct_tracked_optimizers_and_schedulers(auto_unit)
-        tc = unittest.TestCase()
-        tc.assertTrue(isinstance(result["optimizer"], FSDPOptimizerWrapper))
-        tc.assertTrue(isinstance(result["optim2"], torch.optim.Optimizer))
-        tc.assertTrue(isinstance(result["lr_scheduler"], TLRScheduler))

@@ -26,10 +26,7 @@ import torch.nn as nn
 import typing_extensions
 from torch.profiler import record_function
 from torchtnt.framework.state import State
-from torchtnt.framework.unit import AppStateMixin, TTrainUnit
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.optimizer import extract_lr_from_optimizer
-from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -132,59 +129,6 @@ def _step_requires_iterator(step_func: Callable[[State, T], object]) -> bool:
     return typing_extensions.get_origin(annotated_type) is collections.abc.Iterator
 
 
-def _construct_tracked_optimizers(
-    unit: AppStateMixin,
-) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]]:
-    """
-    Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
-    """
-    fsdp_tracked_optimizers: Dict[str, FSDPOptimizerWrapper] = {}
-    for module in unit.tracked_modules().values():
-        if _is_fsdp_module(module):
-            # find optimizers for module, if exists
-            optimizer_list = _find_optimizers_for_module(
-                module, unit.tracked_optimizers()
-            )
-            for optim_name, optimizer in optimizer_list:
-                fsdp_tracked_optimizers[optim_name] = FSDPOptimizerWrapper(
-                    module, optimizer
-                )
-
-    # construct custom tracked optimizers with FSDP optimizers
-    tracked_optimizers: Dict[
-        str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]
-    ] = {
-        key: value
-        for key, value in unit.tracked_optimizers().items()
-        if key not in fsdp_tracked_optimizers
-    }
-    tracked_optimizers.update(fsdp_tracked_optimizers)
-    return tracked_optimizers
-
-
-def _construct_tracked_optimizers_and_schedulers(
-    unit: AppStateMixin,
-) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]]:
-    """
-    Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
-    """
-    # construct custom tracked optimizers with FSDP optimizers
-    tracked_optimizers_and_schedulers: Dict[
-        str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]
-    ] = {}
-    tracked_optimizers_and_schedulers.update(_construct_tracked_optimizers(unit))
-
-    # add schedulers
-    for lr_scheduler_attrib_name, lr_scheduler in unit.tracked_lr_schedulers().items():
-        if lr_scheduler_attrib_name in tracked_optimizers_and_schedulers:
-            _logger.warning(
-                f'Key collision "{lr_scheduler_attrib_name}" detected between LR Scheduler and optimizer attribute names. Please ensure there are no identical attribute names, as they will override each other.'
-            )
-        tracked_optimizers_and_schedulers[lr_scheduler_attrib_name] = lr_scheduler
-
-    return tracked_optimizers_and_schedulers
-
-
 def _find_optimizers_for_module(
     module: torch.nn.Module, optimizers: Dict[str, torch.optim.Optimizer]
 ) -> List[Tuple[str, torch.optim.Optimizer]]:
@@ -200,24 +144,3 @@ def _find_optimizers_for_module(
         if all(module_param in optimizer_params for module_param in module_params):
             optimizer_list.append((optim_name, optimizer))
     return optimizer_list
-
-
-def extract_lr(unit: TTrainUnit) -> Dict[str, float]:
-    """
-    Extracts learning rates from optimizers and LR schedulers and returns them as a dictionary.
-    """
-    lr_stats: Dict[str, float] = {}
-
-    # go through tracked optimizers
-    optimizers = unit.tracked_optimizers()
-    for name, optim in optimizers.items():
-        lr_stats.update(extract_lr_from_optimizer(optim, f"optimizers/{name}"))
-
-    # go through tracked LR schedulers
-    lr_schedulers = unit.tracked_lr_schedulers()
-    for name, lr_scheduler in lr_schedulers.items():
-        lr_stats.update(
-            extract_lr_from_optimizer(lr_scheduler.optimizer, f"lr_schedulers/{name}")
-        )
-
-    return lr_stats

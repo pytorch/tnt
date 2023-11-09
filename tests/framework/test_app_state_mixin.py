@@ -6,12 +6,18 @@
 # LICENSE file in the root directory of this source tree.
 
 import unittest
+
 from typing import Any, Dict
+from unittest.mock import patch
 
 import torch
 from torch import nn
+from torchtnt.framework._test_utils import DummyAutoUnit
 from torchtnt.framework.unit import AppStateMixin
+
+from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.prepare_module import FSDPOptimizerWrapper
 
 
 class Dummy(AppStateMixin):
@@ -233,3 +239,20 @@ class AppStateMixinTest(unittest.TestCase):
         self.assertNotIn("lr_scheduler_d", app_state)
         self.assertIn("grad_scaler_e", app_state)
         self.assertIn("another_scaler", app_state)
+
+    def test_construct_tracked_optimizers_and_schedulers(self) -> None:
+        device = init_from_env()
+        module = torch.nn.Linear(10, 10)
+
+        auto_unit = DummyAutoUnit(module=module)
+        auto_unit.module2 = torch.nn.Linear(10, 10).to(device)
+        auto_unit.optim2 = torch.optim.Adam(auto_unit.module2.parameters())
+
+        with patch(
+            "torchtnt.framework.unit._is_fsdp_module", side_effect=lambda m: m == module
+        ):
+            result = auto_unit._construct_tracked_optimizers_and_schedulers()
+
+        self.assertTrue(isinstance(result["optimizer"], FSDPOptimizerWrapper))
+        self.assertTrue(isinstance(result["optim2"], torch.optim.Optimizer))
+        self.assertTrue(isinstance(result["lr_scheduler"], TLRScheduler))
