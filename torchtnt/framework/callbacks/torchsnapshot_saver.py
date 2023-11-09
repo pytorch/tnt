@@ -8,7 +8,6 @@ import logging
 import os
 import re
 from contextlib import contextmanager, ExitStack
-from dataclasses import dataclass
 from typing import (
     Any,
     cast,
@@ -27,6 +26,10 @@ import torch.distributed as dist
 from pyre_extensions import none_throws
 
 from torchtnt.framework.callback import Callback
+from torchtnt.framework.callbacks.torchsnapshot_saver_types import (
+    KnobOptions,
+    RestoreOptions,
+)
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import (
     AppStateMixin,
@@ -63,37 +66,6 @@ _TRAIN_PROGRESS_STATE_KEY = "train_progress"
 _TRAIN_DL_STATE_KEY = "train_dataloader"
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-# TODO: eventually support overriding all knobs
-@dataclass
-class KnobOptions:
-    """
-    Controls the knobs in TorchSnapshot.
-
-    Args:
-        max_per_rank_io_concurrency: Maximum number of concurrent IO operations per rank. Defaults to 16.
-    """
-
-    max_per_rank_io_concurrency: Optional[int] = None
-
-
-@dataclass
-class RestoreOptions:
-    """
-    Options when restoring a snapshot.
-
-    Args:
-        restore_train_progress: Whether to restore the training progress state.
-        restore_eval_progress: Whether to restore the evaluation progress state.
-        restore_optimizers: Whether to restore the optimizer states.
-        restore_lr_schedulers: Whether to restore the lr scheduler states.
-    """
-
-    restore_train_progress: bool = True
-    restore_eval_progress: bool = True
-    restore_optimizers: bool = True
-    restore_lr_schedulers: bool = True
 
 
 class TorchSnapshotSaver(Callback):
