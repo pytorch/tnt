@@ -29,12 +29,13 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import SWALR
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
-from torchtnt.framework.utils import _is_fsdp_module, get_timing_context
+from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.precision import convert_precision_str_to_dtype
 from torchtnt.utils.prepare_module import (
+    _is_fsdp_module,
     ActivationCheckpointParams,
     FSDPStrategy,
     prepare_fsdp,

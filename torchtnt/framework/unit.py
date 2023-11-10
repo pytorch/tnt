@@ -5,15 +5,22 @@
 # LICENSE file in the root directory of this source tree.
 
 
+import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, TypeVar
+from typing import Any, Dict, Generic, TypeVar, Union
 
 import torch
 
 from torchtnt.framework.state import State
+from torchtnt.framework.utils import _find_optimizers_for_module
 from torchtnt.utils.lr_scheduler import TLRScheduler
+from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
 from torchtnt.utils.stateful import Stateful
+
+
+_logger: logging.Logger = logging.getLogger(__name__)
+
 
 """
 This file defines mixins and interfaces for users to customize hooks in training, evaluation, and prediction loops.
@@ -167,6 +174,60 @@ class AppStateMixin:
             del self._misc_statefuls[name]
         else:
             super().__delattr__(name)
+
+    def _construct_tracked_optimizers_and_schedulers(
+        self,
+    ) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]]:
+        """
+        Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
+        """
+        # construct custom tracked optimizers with FSDP optimizers
+        tracked_optimizers_and_schedulers: Dict[
+            str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]
+        ] = {}
+        tracked_optimizers_and_schedulers.update(self._construct_tracked_optimizers())
+
+        # add schedulers
+        for (
+            lr_scheduler_attrib_name,
+            lr_scheduler,
+        ) in self.tracked_lr_schedulers().items():
+            if lr_scheduler_attrib_name in tracked_optimizers_and_schedulers:
+                _logger.warning(
+                    f'Key collision "{lr_scheduler_attrib_name}" detected between LR Scheduler and optimizer attribute names. Please ensure there are no identical attribute names, as they will override each other.'
+                )
+            tracked_optimizers_and_schedulers[lr_scheduler_attrib_name] = lr_scheduler
+
+        return tracked_optimizers_and_schedulers
+
+    def _construct_tracked_optimizers(
+        self,
+    ) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]]:
+        """
+        Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
+        """
+        fsdp_tracked_optimizers: Dict[str, FSDPOptimizerWrapper] = {}
+        for module in self.tracked_modules().values():
+            if _is_fsdp_module(module):
+                # find optimizers for module, if exists
+                optimizer_list = _find_optimizers_for_module(
+                    module, self.tracked_optimizers()
+                )
+                for optim_name, optimizer in optimizer_list:
+                    fsdp_tracked_optimizers[optim_name] = FSDPOptimizerWrapper(
+                        module, optimizer
+                    )
+
+        # construct custom tracked optimizers with FSDP optimizers
+        tracked_optimizers: Dict[
+            str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]
+        ] = {
+            key: value
+            for key, value in self.tracked_optimizers().items()
+            if key not in fsdp_tracked_optimizers
+        }
+        tracked_optimizers.update(fsdp_tracked_optimizers)
+        return tracked_optimizers
 
 
 class _OnExceptionMixin:

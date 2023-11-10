@@ -38,7 +38,7 @@ from torchtnt.framework.unit import (
     TTrainData,
     TTrainUnit,
 )
-from torchtnt.framework.utils import _construct_tracked_optimizers, get_timing_context
+from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.fsspec import get_filesystem
 from torchtnt.utils.optimizer import init_optim_state
@@ -505,7 +505,7 @@ def _get_snapshot_save_path(dirpath: str, epoch: int, step: int) -> str:
 def _app_state(unit: AppStateMixin) -> Dict[str, Any]:
     """Join together all of the tracked stateful entities to simplify registration of snapshottable states, deals with FSDP case"""
     app_state = unit.app_state()
-    tracked_optimizers = _construct_tracked_optimizers(unit)  # handles fsdp
+    tracked_optimizers = unit._construct_tracked_optimizers()  # handles fsdp
     app_state.update(tracked_optimizers)
     return app_state
 
