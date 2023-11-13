@@ -143,6 +143,11 @@ def _train_impl(
         )
     ):
         _train_epoch_impl(state, train_unit, callback_handler)
+        logger.info(
+            "After train epoch, train progress: "
+            f"num_epochs_completed = {train_unit.train_progress.num_epochs_completed}, "
+            f"num_steps_completed = {train_unit.train_progress.num_steps_completed}"
+        )
 
     train_unit.on_train_end(state)
     callback_handler.on_train_end(state, train_unit)
@@ -231,6 +236,7 @@ def _train_epoch_impl(
                 state._active_phase = ActivePhase.TRAIN
 
         except StopIteration:
+            logger.info("Reached end of train dataloader")
             break
 
     # Possibly warn about an empty dataloader
