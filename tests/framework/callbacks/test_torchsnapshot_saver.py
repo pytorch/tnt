@@ -20,6 +20,7 @@ import torch.distributed as dist
 from torch import nn
 from torch.distributed import launcher
 from torch.utils.data import DataLoader
+from torchsnapshot import Snapshot
 from torchsnapshot.snapshot import SNAPSHOT_METADATA_FNAME
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 
@@ -33,7 +34,9 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
+    _delete_snapshot,
     _override_knobs,
+    _retrieve_checkpoint_dirpaths,
     get_latest_checkpoint_path,
     KnobOptions,
     RestoreOptions,
@@ -668,6 +671,174 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         with _override_knobs(KnobOptions(max_per_rank_io_concurrency=None)):
             self.assertNotIn(env_var, os.environ)
+
+    @patch("torchtnt.framework.callbacks.torchsnapshot_saver.get_filesystem")
+    def test_retrieve_checkpoint_dirpaths(self, mock_get_filesystem: MagicMock) -> None:
+        """
+        Tests retrieving checkpoint directories from a given root directory
+        """
+        paths = [
+            {"name": "tmp/epoch_0_step_10", "type": "directory"},
+            {"name": "tmp/epoch_1_step_10", "type": "directory"},
+            {"name": "tmp/epoch_2_step_10", "type": "directory"},
+            {"name": "tmp/epoch_0_step_5", "type": "directory"},
+            {"name": "tmp/epoch_0_step_3", "type": "file"},
+        ]
+
+        mock_get_filesystem.return_value.ls.return_value = paths
+        returned_paths = _retrieve_checkpoint_dirpaths("foo")
+        self.assertEqual(
+            returned_paths,
+            [
+                "tmp/epoch_0_step_5",
+                "tmp/epoch_0_step_10",
+                "tmp/epoch_1_step_10",
+                "tmp/epoch_2_step_10",
+            ],
+        )
+
+    def test_delete_snapshot(self) -> None:
+        """
+        Tests removing checkpoint directories
+        """
+        app_state = {"module": nn.Linear(2, 2)}
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dirpath = os.path.join(temp_dir, "checkpoint")
+            Snapshot.take(dirpath, app_state=app_state)
+            self.assertTrue(os.path.exists(dirpath))
+            # check that error is thrown if .snapshot_metadata is not found in the directory when deleting
+            with self.assertRaisesRegex(
+                RuntimeError, f"{temp_dir} does not contain .snapshot_metadata"
+            ):
+                _delete_snapshot(temp_dir)
+            _delete_snapshot(dirpath)
+            self.assertFalse(os.path.exists(dirpath))
+
+    def test_should_remove_snapshot(self) -> None:
+        """
+        Tests the helper function that checks if snapshot should be removed or not
+        """
+        tss = TorchSnapshotSaver("temp")
+
+        # keep_last_n_checkpoints is toggled off
+        self.assertFalse(tss._should_remove_snapshot())
+
+        # not enough checkpoints are saved yet to be removed
+        tss._keep_last_n_checkpoints = 2
+        tss._ckpt_dirpaths = ["bar"]
+        self.assertFalse(tss._should_remove_snapshot())
+
+        # enough checkpoints are there to remove
+        tss._keep_last_n_checkpoints = 2
+        tss._ckpt_dirpaths = ["foo", "bar"]
+        self.assertTrue(tss._should_remove_snapshot())
+
+    @patch("torchtnt.framework.callbacks.torchsnapshot_saver._delete_snapshot")
+    def test_remove_snapshot(self, mock_delete_snapshot: MagicMock) -> None:
+        """
+        Tests the helper function that removes snapshots and updates the checkpoint paths
+        """
+        state = get_dummy_train_state()
+        tss = TorchSnapshotSaver("temp")
+        tss._ckpt_dirpaths = ["foo", "bar"]
+        tss._remove_snapshot(state)
+
+        mock_delete_snapshot.assert_called_once()
+        self.assertEqual(len(tss._ckpt_dirpaths), 1)
+        self.assertEqual(tss._ckpt_dirpaths[0], "bar")
+
+    @patch("torchtnt.framework.callbacks.torchsnapshot_saver._delete_snapshot")
+    def test_cleanup_surplus(self, mock_delete_snapshot: MagicMock) -> None:
+        """
+        Tests surplus of checkpoints being cleaned up
+        """
+        state = get_dummy_train_state()
+        unit = DummyTrainUnit(input_dim=2)
+        warning_messages = []
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tss = TorchSnapshotSaver(temp_dir, keep_last_n_checkpoints=1)
+            tss._ckpt_dirpaths = ["foo", "bar", "baz"]
+
+            expected_warning_msg = " ".join(
+                [
+                    f"3 checkpoints found in {temp_dir}.",
+                    f"Deleting {2} oldest",
+                    "checkpoints to enforce ``keep_last_n_checkpoints`` argument.",
+                ]
+            )
+
+            with patch(
+                "torchtnt.framework.callbacks.torchsnapshot_saver.logging.Logger.warning",
+                warning_messages.append,
+            ):
+                tss.on_train_start(state, unit)
+            self.assertEqual(tss._ckpt_dirpaths, ["baz"])
+            self.assertEqual(warning_messages[0], expected_warning_msg)
+
+            tss = TorchSnapshotSaver(temp_dir)
+            tss._ckpt_dirpaths = ["foo", "bar", "baz"]
+
+            tss.on_train_start(state, unit)
+            self.assertEqual(tss._ckpt_dirpaths, ["foo", "bar", "baz"])
+
+    def test_keep_last_n_checkpoints(self) -> None:
+        """
+        Tests removing checkpoint directories
+        """
+        unit = DummyTrainUnit(input_dim=2)
+        state = get_dummy_train_state()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tss = TorchSnapshotSaver(
+                temp_dir,
+                save_every_n_train_steps=1,
+                keep_last_n_checkpoints=2,
+            )
+
+            # take 10 steps
+            for _ in range(10):
+                unit.train_progress.increment_step()
+                tss.on_train_step_end(state, unit)
+                # TODO remove time.sleep to avoid potential flaky test
+                time.sleep(0.1)  # sleep to ensure enough time to checkpoint
+
+            dirs = os.listdir(temp_dir)
+            self.assertEqual(len(dirs), 2)
+            self.assertIn("epoch_0_step_9", dirs)
+            self.assertIn("epoch_0_step_10", dirs)
+
+    def test_keep_last_n_checkpoints_e2e(self) -> None:
+        """
+        Tests removing checkpoint directories e2e
+        """
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 2
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            snapshot_cb = TorchSnapshotSaver(
+                temp_dir,
+                save_every_n_train_steps=2,
+                keep_last_n_checkpoints=1,
+            )
+            # Artificially increase the step duration, otherwise torchsnapshot
+            # doesn't have the time to save all snapshots and will skip some.
+            slowdown = Lambda(on_train_step_end=lambda *_: time.sleep(0.1))
+
+            train(
+                my_unit,
+                dataloader,
+                max_epochs=max_epochs,
+                callbacks=[snapshot_cb, slowdown],
+            )
+            dirs = os.listdir(temp_dir)
+            self.assertEqual(len(dirs), 1)
+            self.assertIn(
+                f"epoch_{max_epochs}_step_{dataset_len // batch_size * max_epochs}",
+                os.listdir(temp_dir),
+            )
 
 
 class DummyStatefulDataLoader:
