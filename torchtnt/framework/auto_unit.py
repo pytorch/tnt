@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import (
     Any,
     Callable,
+    cast,
     Generic,
     Iterator,
     List,
@@ -29,7 +30,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import SWALR
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
-from torchtnt.framework.utils import get_timing_context
+from torchtnt.framework.utils import _step_requires_iterator, get_timing_context
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -307,10 +308,7 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
         )
 
     # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def predict_step(self, state: State, data: Iterator[TPredictData]) -> Any:
-        with none_throws(state.predict_state).iteration_timer.time("data_wait_time"):
-            batch = self._get_next_batch(state, data)
-
+    def predict_step(self, state: State, data: TPredictData) -> Any:
         # if detect_anomaly is true, run forward pass under detect_anomaly context
         detect_anomaly = self.detect_anomaly
         maybe_detect_anomaly = (
@@ -321,10 +319,10 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
 
         with self.maybe_autocast_precision, maybe_detect_anomaly:
             with get_timing_context(state, f"{self.__class__.__name__}.forward"):
-                outputs = self.module(batch)
+                outputs = self.module(data)
 
         step = self.predict_progress.num_steps_completed
-        self.on_predict_step_end(state, batch, step, outputs)
+        self.on_predict_step_end(state, data, step, outputs)
         return outputs
 
     def on_predict_step_end(
@@ -346,6 +344,15 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
             outputs: the outputs of the model forward pass
         """
         pass
+
+    def get_next_predict_batch(
+        self, state: State, data_iter: Iterator[TPredictData]
+    ) -> Union[Iterator[TPredictData], TPredictData]:
+        # Override the default behavior from PredictUnit in order to enable prefetching if possible.
+        pass_data_iter_to_step = _step_requires_iterator(self.predict_step)
+        if pass_data_iter_to_step:
+            return data_iter
+        return self._get_next_batch(state, data_iter)
 
 
 class AutoUnit(
@@ -523,14 +530,7 @@ class AutoUnit(
         ...
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def train_step(
-        self, state: State, data: Iterator[TData]
-    ) -> Tuple[torch.Tensor, Any]:
-        # In auto unit they will not be exclusive since data fetching is done as
-        # part of the training step
-        with none_throws(state.train_state).iteration_timer.time("data_wait_time"):
-            batch = self._get_next_batch(state, data)
-
+    def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         should_update_weights = (
             self.train_progress.num_steps_completed_in_epoch + 1
         ) % self.gradient_accumulation_steps == 0 or self._is_last_batch
@@ -564,7 +564,7 @@ class AutoUnit(
                     state, f"{self.__class__.__name__}.compute_loss"
                 ):
                     # Run the forward pass and compute the loss
-                    loss, outputs = self.compute_loss(state, batch)
+                    loss, outputs = self.compute_loss(state, data)
 
             # normalize loss to account for gradient accumulation
             loss = loss / self.gradient_accumulation_steps
@@ -581,7 +581,7 @@ class AutoUnit(
             self._update_weights(state)
 
         step = self.train_progress.num_steps_completed
-        self.on_train_step_end(state, batch, step, loss, outputs)
+        self.on_train_step_end(state, data, step, loss, outputs)
         return loss, outputs
 
     def on_train_step_end(
@@ -617,23 +617,18 @@ class AutoUnit(
         self._is_last_batch = False
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def eval_step(
-        self, state: State, data: Iterator[TData]
-    ) -> Tuple[torch.Tensor, Any]:
-        with none_throws(state.eval_state).iteration_timer.time("data_wait_time"):
-            batch = self._get_next_batch(state, data)
-
+    def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         with self.maybe_autocast_precision:
             # users must override this
             with get_timing_context(state, f"{self.__class__.__name__}.compute_loss"):
-                loss, outputs = self.compute_loss(state, batch)
+                loss, outputs = self.compute_loss(state, data)
 
         if state.entry_point == EntryPoint.FIT:
             step = self.train_progress.num_steps_completed
         else:
             step = self.eval_progress.num_steps_completed
 
-        self.on_eval_step_end(state, batch, step, loss, outputs)
+        self.on_eval_step_end(state, data, step, loss, outputs)
         return loss, outputs
 
     def on_eval_step_end(
@@ -659,20 +654,17 @@ class AutoUnit(
         pass
 
     # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def predict_step(self, state: State, data: Iterator[TData]) -> Any:
-        with none_throws(state.predict_state).iteration_timer.time("data_wait_time"):
-            batch = self._get_next_batch(state, data)
-
+    def predict_step(self, state: State, data: TData) -> Any:
         with self.maybe_autocast_precision:
             with get_timing_context(state, f"{self.__class__.__name__}.forward"):
-                outputs = self.module(batch)
+                outputs = self.module(data)
 
         step = self.predict_progress.num_steps_completed
         # users can override this, by default this is a no-op
         with get_timing_context(
             state, f"{self.__class__.__name__}.on_predict_step_end"
         ):
-            self.on_predict_step_end(state, batch, step, outputs)
+            self.on_predict_step_end(state, data, step, outputs)
         return outputs
 
     def on_predict_step_end(
@@ -754,6 +746,33 @@ class AutoUnit(
 
         if self.step_lr_interval == "step":
             self._update_lr_and_swa(state, self.train_progress.num_steps_completed)
+
+    def get_next_train_batch(
+        self, state: State, data_iter: Iterator[TData]
+    ) -> Union[Iterator[TData], TData]:
+        # Override the default behavior from PredictUnit in order to enable prefetching if possible.
+        pass_data_iter_to_step = _step_requires_iterator(self.train_step)
+        if pass_data_iter_to_step:
+            return data_iter
+        return self._get_next_batch(state, data_iter)
+
+    def get_next_eval_batch(
+        self, state: State, data_iter: Iterator[TData]
+    ) -> Union[Iterator[TData], TData]:
+        # Override the default behavior from PredictUnit in order to enable prefetching if possible.
+        pass_data_iter_to_step = _step_requires_iterator(self.eval_step)
+        if pass_data_iter_to_step:
+            return data_iter
+        return self._get_next_batch(state, data_iter)
+
+    def get_next_predict_batch(
+        self, state: State, data_iter: Iterator[TData]
+    ) -> Union[Iterator[TData], TData]:
+        # Override the default behavior from PredictUnit in order to enable prefetching if possible.
+        pass_data_iter_to_step = _step_requires_iterator(self.predict_step)
+        if pass_data_iter_to_step:
+            return data_iter
+        return self._get_next_batch(state, data_iter)
 
     def _should_update_swa(self) -> bool:
         if not self.swa_params:

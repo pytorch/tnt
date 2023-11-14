@@ -18,7 +18,6 @@ from torchtnt.framework.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
     _set_module_training_mode,
-    _step_requires_iterator,
     get_timing_context,
     log_api_usage,
 )
@@ -66,7 +65,7 @@ def predict(
         while not done:
             call on_predict_epoch_start on unit first and then callbacks
             try:
-                data = next(dataloader)
+                call get_next_predict_batch on unit
                 call on_predict_step_start on callbacks
                 call predict_step on unit
                 increment step counter
@@ -138,7 +137,6 @@ def _predict_impl(
         data_iter = iter(predict_state.dataloader)
     step_input = data_iter
 
-    pass_data_iter_to_step = _step_requires_iterator(predict_unit.predict_step)
     prev_steps_in_epoch = predict_unit.predict_progress.num_steps_completed_in_epoch
 
     while not (
@@ -150,12 +148,10 @@ def _predict_impl(
         )
     ):
         try:
-            if not pass_data_iter_to_step:
-                # get the next batch from the data iterator
-                with get_timing_context(
-                    state, "predict.next(data_iter)"
-                ), predict_state.iteration_timer.time("data_wait_time"):
-                    step_input = next(data_iter)
+            with get_timing_context(
+                state, "predict.next(data_iter)"
+            ), predict_state.iteration_timer.time("data_wait_time"):
+                step_input = predict_unit.get_next_predict_batch(state, data_iter)
             with predict_state.iteration_timer.time("predict_iteration_time"):
                 callback_handler.on_predict_step_start(state, predict_unit)
                 predict_state._step_output = predict_unit.predict_step(

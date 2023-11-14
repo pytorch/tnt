@@ -77,7 +77,7 @@ def fit(
             while epoch is not done:
                 call on_train_epoch_start on unit first and then callbacks
                 try:
-                    data = next(dataloader)
+                    call get_next_train_batch on unit
                     call on_train_step_start on callbacks
                     call train_step on unit
                     increment step counter

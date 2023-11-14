@@ -138,7 +138,10 @@ class TestAutoUnit(unittest.TestCase):
         )
         dummy_iterable = [(torch.ones(2, 2), torch.ones(2, 2))]
         state = get_dummy_train_state(dummy_iterable)
-        auto_unit.train_step(state=state, data=iter(dummy_iterable))
+        auto_unit.train_step(
+            state=state,
+            data=auto_unit.get_next_train_batch(state, iter(dummy_iterable)),
+        )
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.float16, enabled=True
         )
@@ -159,7 +162,10 @@ class TestAutoUnit(unittest.TestCase):
         )
         dummy_iterable = [(torch.ones(2, 2), torch.ones(2, 2))]
         state = get_dummy_train_state(dummy_iterable)
-        auto_unit.train_step(state=state, data=iter(dummy_iterable))
+        auto_unit.train_step(
+            state=state,
+            data=auto_unit.get_next_train_batch(state, iter(dummy_iterable)),
+        )
         mock_autocast.assert_called_with(
             device_type="cuda", dtype=torch.bfloat16, enabled=True
         )
@@ -431,13 +437,17 @@ class TestAutoUnit(unittest.TestCase):
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_iterator)
+            auto_unit.train_step(
+                state=state, data=auto_unit.get_next_train_batch(state, dummy_iterator)
+            )
             no_sync_mock.assert_called_once()
 
         auto_unit.train_progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_iterator)
+            auto_unit.train_step(
+                state=state, data=auto_unit.get_next_train_batch(state, dummy_iterator)
+            )
             no_sync_mock.assert_not_called()
 
     @staticmethod
@@ -462,13 +472,17 @@ class TestAutoUnit(unittest.TestCase):
 
         # for the first step no_sync should be called since we accumulate gradients
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_iterator)
+            auto_unit.train_step(
+                state=state, data=auto_unit.get_next_train_batch(state, dummy_iterator)
+            )
             no_sync_mock.assert_called_once()
 
         auto_unit.train_progress.increment_step()
         # for the second step no_sync should not be called since we run optimizer step
         with patch.object(auto_unit.module, "no_sync") as no_sync_mock:
-            auto_unit.train_step(state=state, data=dummy_iterator)
+            auto_unit.train_step(
+                state=state, data=auto_unit.get_next_train_batch(state, dummy_iterator)
+            )
             no_sync_mock.assert_not_called()
 
     def test_move_data_to_device(self) -> None:
@@ -493,7 +507,7 @@ class TestAutoUnit(unittest.TestCase):
         ) as move_data_to_device_mock:
             dummy_data = copy_data_to_device(dummy_data, device)
             move_data_to_device_mock.return_value = dummy_data
-            auto_unit.train_step(state=state, data=data_iter)
+            auto_unit._get_next_batch(state=state, data=data_iter)
             move_data_to_device_mock.assert_called_once()
 
     def test_configure_optimizers_and_lr_scheduler(self) -> None:

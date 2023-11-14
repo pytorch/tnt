@@ -20,7 +20,6 @@ from torchtnt.framework.utils import (
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _set_module_training_mode,
-    _step_requires_iterator,
     get_timing_context,
     log_api_usage,
 )
@@ -74,7 +73,7 @@ def train(
             while epoch is not done:
                 call on_train_epoch_start on unit first and then callbacks
                 try:
-                    data = next(dataloader)
+                    call get_next_train_batch on unit
                     call on_train_step_start on callbacks
                     call train_step on unit
                     increment step counter
@@ -189,9 +188,7 @@ def _train_epoch_impl(
 
     with get_timing_context(state, "train.iter(dataloader)"):
         data_iter = iter(train_state.dataloader)
-    step_input = data_iter
 
-    pass_data_iter_to_step = _step_requires_iterator(train_unit.train_step)
     prev_steps_in_epoch = train_unit.train_progress.num_steps_completed_in_epoch
 
     while not (
@@ -203,13 +200,10 @@ def _train_epoch_impl(
         )
     ):
         try:
-            if not pass_data_iter_to_step:
-                # get the next batch from the data iterator
-                # If the iterator is passed to step, step is responsible for recording data_wait_time
-                with get_timing_context(
-                    state, "train.next(data_iter)"
-                ), train_state.iteration_timer.time("data_wait_time"):
-                    step_input = next(data_iter)
+            with get_timing_context(
+                state, "train.next(data_iter)"
+            ), train_state.iteration_timer.time("data_wait_time"):
+                step_input = train_unit.get_next_train_batch(state, data_iter)
 
             with train_state.iteration_timer.time("train_iteration_time"):
                 callback_handler.on_train_step_start(state, train_unit)
