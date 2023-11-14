@@ -7,12 +7,15 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, TypeVar, Union
+from typing import Any, cast, Dict, Generic, Iterator, TypeVar, Union
 
 import torch
 
 from torchtnt.framework.state import State
-from torchtnt.framework.utils import _find_optimizers_for_module
+from torchtnt.framework.utils import (
+    _find_optimizers_for_module,
+    _step_requires_iterator,
+)
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
@@ -248,6 +251,8 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
     To use the TrainUnit, create a class which subclasses TrainUnit. Then implement the ``train_step`` method on your class, and optionally
     implement any of the hooks, which allow you to control the behavior of the loop at different points.
 
+    In addition, you can override ``get_next_train_batch`` to modify the default batch fetching behavior.
+
     Below is a simple example of a user's subclass of TrainUnit that implements a basic ``train_step``, and the ``on_train_epoch_end`` hook.
 
     .. code-block:: python
@@ -333,6 +338,28 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         """
         pass
 
+    def get_next_train_batch(
+        self,
+        state: State,
+        data_iter: Iterator[object],
+    ) -> Union[Iterator[TTrainData], TTrainData]:
+        """
+        Returns the next batch of data to be passed into the train step. If the train step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.
+        Override this method if you have custom logic for how to get the next batch of data.
+
+        Args:
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
+            data_iter: the iterator over the training dataset.
+
+        Returns:
+            Either the next batch of train data or the iterator over the training dataset.
+        """
+        pass_data_iter_to_step = _step_requires_iterator(self.train_step)
+        if pass_data_iter_to_step:
+            return cast(Iterator[TTrainData], data_iter)
+
+        return cast(TTrainData, next(data_iter))
+
 
 class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
     """
@@ -341,6 +368,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
 
     To use the EvalUnit, create a class which subclasses :class:`~torchtnt.framework.unit.EvalUnit`.
     Then implement the ``eval_step`` method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
+    In addition, you can override ``get_next_eval_batch`` to modify the default batch fetching behavior.
     Below is a simple example of a user's subclass of :class:`~torchtnt.framework.unit.EvalUnit` that implements a basic ``eval_step``.
 
     .. code-block:: python
@@ -416,6 +444,28 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         """
         pass
 
+    def get_next_eval_batch(
+        self,
+        state: State,
+        data_iter: Iterator[object],
+    ) -> Union[Iterator[TEvalData], TEvalData]:
+        """
+        Returns the next batch of data to be passed into the eval step. If the eval step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.
+        Override this method if you have custom logic for how to get the next batch of data.
+
+        Args:
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the eval run.
+            data_iter: the iterator over the eval dataset.
+
+        Returns:
+            Either the next batch of eval data or the iterator over the eval dataset.
+        """
+        pass_data_iter_to_step = _step_requires_iterator(self.eval_step)
+        if pass_data_iter_to_step:
+            return cast(Iterator[TEvalData], data_iter)
+
+        return cast(TEvalData, next(data_iter))
+
 
 class PredictUnit(
     AppStateMixin,
@@ -429,6 +479,7 @@ class PredictUnit(
 
     To use the PredictUnit, create a class which subclasses :class:`~torchtnt.framework.unit.PredictUnit`.
     Then implement the ``predict_step`` method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
+    In addition, you can override ``get_next_predict_batch`` to modify the default batch fetching behavior.
     Below is a simple example of a user's subclass of :class:`~torchtnt.framework.unit.PredictUnit` that implements a basic ``predict_step``.
 
     .. code-block:: python
@@ -503,6 +554,27 @@ class PredictUnit(
             state: a :class:`~torchtnt.framework.state.State` object containing metadata about the prediction run.
         """
         pass
+
+    def get_next_predict_batch(
+        self,
+        state: State,
+        data_iter: Iterator[object],
+    ) -> Union[Iterator[TPredictData], TPredictData]:
+        """
+        Returns the next batch of data to be passed into the predict step. If the predict step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.
+
+        Args:
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the predict run.
+            data_iter: the iterator over the predict dataset.
+
+        Returns:
+            Either the next batch of predict data or the iterator over the predict dataset.
+        """
+        pass_data_iter_to_step = _step_requires_iterator(self.predict_step)
+        if pass_data_iter_to_step:
+            return cast(Iterator[TPredictData], data_iter)
+
+        return cast(TPredictData, next(data_iter))
 
 
 TTrainUnit = TrainUnit[TTrainData]

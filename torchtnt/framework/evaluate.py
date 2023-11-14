@@ -18,7 +18,6 @@ from torchtnt.framework.utils import (
     _is_epoch_done,
     _reset_module_training_mode,
     _set_module_training_mode,
-    _step_requires_iterator,
     get_timing_context,
     log_api_usage,
 )
@@ -66,7 +65,7 @@ def evaluate(
         while not done:
             call on_eval_epoch_start on unit first and then callbacks
             try:
-                data = next(dataloader)
+                call get_next_eval_batch on unit
                 call on_eval_step_start on callbacks
                 call eval_step on unit
                 increment step counter
@@ -132,7 +131,6 @@ def _evaluate_impl(
         data_iter = iter(eval_state.dataloader)
     step_input = data_iter
 
-    pass_data_iter_to_step = _step_requires_iterator(eval_unit.eval_step)
     prev_steps_in_epoch = eval_unit.eval_progress.num_steps_completed_in_epoch
 
     while not (
@@ -144,12 +142,10 @@ def _evaluate_impl(
         )
     ):
         try:
-            if not pass_data_iter_to_step:
-                # get the next batch from the data iterator
-                with get_timing_context(
-                    state, "evaluate.next(data_iter)"
-                ), eval_state.iteration_timer.time("data_wait_time"):
-                    step_input = next(data_iter)
+            with get_timing_context(
+                state, "evaluate.next(data_iter)"
+            ), eval_state.iteration_timer.time("data_wait_time"):
+                step_input = eval_unit.get_next_eval_batch(state, data_iter)
             with eval_state.iteration_timer.time("eval_iteration_time"):
                 callback_handler.on_eval_step_start(state, eval_unit)
                 eval_state._step_output = eval_unit.eval_step(state, step_input)
