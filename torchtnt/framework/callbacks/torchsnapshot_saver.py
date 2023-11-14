@@ -83,6 +83,7 @@ class TorchSnapshotSaver(Callback):
         dirpath: Parent directory to save snapshots to.
         save_every_n_train_steps: Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.
         save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
+        keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference.
         process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
         replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
             For more information, see https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take.
@@ -108,6 +109,7 @@ class TorchSnapshotSaver(Callback):
         *,
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
+        keep_last_n_checkpoints: Optional[int] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         replicated: Optional[List[str]] = None,
         storage_options: Optional[Dict[str, Any]] = None,
@@ -122,9 +124,20 @@ class TorchSnapshotSaver(Callback):
             raise ValueError(
                 f"Invalid value passed for save_every_n_epochs. Expected to receive either None or positive number, but received {save_every_n_epochs}"
             )
+        if keep_last_n_checkpoints is not None and keep_last_n_checkpoints <= 0:
+            raise ValueError(
+                f"Invalid value passed for keep_last_n_checkpoints. Expected to receive either None or positive number, but received {keep_last_n_checkpoints}"
+            )
         self._save_every_n_epochs = save_every_n_epochs
         self._save_every_n_train_steps = save_every_n_train_steps
+
+        self._keep_last_n_checkpoints = keep_last_n_checkpoints
+        self._ckpt_dirpaths: List[str] = []
+        if self._keep_last_n_checkpoints:
+            self._ckpt_dirpaths = _retrieve_checkpoint_dirpaths(dirpath)
+
         self._process_group = process_group
+        self._pg_wrapper = PGWrapper(process_group)
         self._sync_dirpath_to_all_ranks(dirpath)
         self._replicated: Set[str] = set(replicated or [])
 
@@ -156,6 +169,24 @@ class TorchSnapshotSaver(Callback):
         app_state = _app_state(unit)
         _check_app_state_collision(app_state)
 
+        # clean up the difference if surplus of checkpoints exist
+        keep_last_n_checkpoints = self._keep_last_n_checkpoints
+        if (
+            keep_last_n_checkpoints
+            and len(self._ckpt_dirpaths) > keep_last_n_checkpoints
+        ):
+            logger.warning(
+                " ".join(
+                    [
+                        f"{len(self._ckpt_dirpaths)} checkpoints found in {self._dirpath}.",
+                        f"Deleting {len(self._ckpt_dirpaths) - keep_last_n_checkpoints} oldest",
+                        "checkpoints to enforce ``keep_last_n_checkpoints`` argument.",
+                    ]
+                )
+            )
+            for _ in range(len(self._ckpt_dirpaths) - keep_last_n_checkpoints):
+                self._remove_snapshot(state)
+
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         num_steps_completed = unit.train_progress.num_steps_completed
         save_every_n_train_steps = self._save_every_n_train_steps
@@ -177,7 +208,14 @@ class TorchSnapshotSaver(Callback):
         with get_timing_context(
             state, f"{self.__class__.__name__}.take_async_snapshot"
         ):
-            self._async_snapshot(snapshot_path, app_state, wait=False)
+            checkpoint_success = self._async_snapshot(
+                snapshot_path, app_state, wait=False
+            )
+
+        if checkpoint_success:
+            if self._should_remove_snapshot():
+                self._remove_snapshot(state)
+            self._ckpt_dirpaths.append(snapshot_path)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         epoch = unit.train_progress.num_epochs_completed
@@ -197,7 +235,14 @@ class TorchSnapshotSaver(Callback):
         with get_timing_context(
             state, f"{self.__class__.__name__}.take_async_snapshot"
         ):
-            self._async_snapshot(snapshot_path, app_state, wait=True)
+            checkpoint_success = self._async_snapshot(
+                snapshot_path, app_state, wait=True
+            )
+
+        if checkpoint_success:
+            if self._should_remove_snapshot():
+                self._remove_snapshot(state)
+            self._ckpt_dirpaths.append(snapshot_path)
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         app_state = _get_app_state(state, unit, self._replicated, intra_epoch=False)
@@ -213,8 +258,19 @@ class TorchSnapshotSaver(Callback):
         with get_timing_context(
             state, f"{self.__class__.__name__}.take_async_snapshot"
         ):
-            self._async_snapshot(snapshot_path, app_state, wait=True)
+            # TODO checkpoint is not truly successful
+            # since this is async checkpointed, so in
+            # future, add logic to set  successful flag
+            # only when checkpoint is fully written
+            checkpoint_success = self._async_snapshot(
+                snapshot_path, app_state, wait=True
+            )
             self._wait()
+
+        if checkpoint_success:
+            if self._should_remove_snapshot():
+                self._remove_snapshot(state)
+            self._ckpt_dirpaths.append(snapshot_path)
 
     def on_exception(
         self,
@@ -223,6 +279,22 @@ class TorchSnapshotSaver(Callback):
         exc: BaseException,
     ) -> None:
         self._wait()
+
+    def _should_remove_snapshot(self) -> bool:
+        keep_last_n_checkpoints = self._keep_last_n_checkpoints
+        return (
+            keep_last_n_checkpoints is not None
+            and len(self._ckpt_dirpaths) >= keep_last_n_checkpoints
+        )
+
+    def _remove_snapshot(self, state: State) -> None:
+        # remove oldest snapshot directory
+        oldest_ckpt_path = self._ckpt_dirpaths.pop(0)
+        with get_timing_context(state, f"{self.__class__.__name__}.delete_snapshot"):
+            if self._pg_wrapper.get_rank() == 0:
+                # only delete on rank 0
+                _delete_snapshot(oldest_ckpt_path)
+            self._pg_wrapper.barrier()
 
     def _wait(self) -> None:
         if self._prev_snapshot is not None:
@@ -236,7 +308,7 @@ class TorchSnapshotSaver(Callback):
             if prev_snapshot.path == snapshot_path:
                 # Snapshot for this step already has been saved.
                 # This can happen if we call _async_snapshot twice at the same step.
-                return True
+                return False
             still_pending = not prev_snapshot.done()
             if still_pending and wait:
                 prev_snapshot.wait()
@@ -563,3 +635,33 @@ def _override_knobs(
         for mgr in knobs:
             stack.enter_context(mgr)
         yield
+
+
+def _retrieve_checkpoint_dirpaths(dirpath: str) -> List[str]:
+    """
+    Given a parent directory where checkpoints are saved, return the sorted checkpoint subdirectories
+    from oldest to newest.
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+    """
+    fs = get_filesystem(dirpath)
+
+    contents = fs.ls(dirpath, detail=True)
+    contents = [item["name"] for item in contents if item["type"] == "directory"]
+    ckpt_dirpaths = []
+    for path in contents:
+        match = re.search(r"epoch_(\d+)_step_(\d+)", path)
+        if match:
+            ckpt_dirpaths.append(path)
+
+    # sorts by epoch, then step
+    ckpt_dirpaths.sort(key=lambda x: (int(x.split("_")[1]), int(x.split("_")[3])))
+    return ckpt_dirpaths
+
+
+def _delete_snapshot(dirpath: str) -> None:
+    fs = get_filesystem(dirpath)
+    if not fs.exists(os.path.join(dirpath, ".snapshot_metadata")):
+        raise RuntimeError(f"{dirpath} does not contain .snapshot_metadata")
+    fs.rm(dirpath, recursive=True)
