@@ -18,7 +18,6 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    Union,
 )
 
 import torch
@@ -26,7 +25,6 @@ import torch.nn as nn
 import typing_extensions
 from torch.profiler import record_function
 from torchtnt.framework.state import State
-from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.progress import Progress
 
 _logger: logging.Logger = logging.getLogger(__name__)
