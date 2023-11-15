@@ -20,18 +20,21 @@ class Lambda(Callback):
         on_exception: function to run when an exception occurs.
         on_train_start: function to run when train starts.
         on_train_epoch_start: function to run when each train epoch starts.
+        on_train_get_next_batch_end: function to run when the data batch for the next train step is retrieved.
         on_train_step_start: function to run when each train step starts.
         on_train_step_end: function to run when each train step ends.
         on_train_epoch_end: function to run when each train epoch ends.
         on_train_end: function to run when train ends.
         on_eval_start: function to run when eval starts.
         on_eval_epoch_start: function to run when each eval epoch starts.
+        on_eval_get_next_batch_end: function to run when the data batch for the next eval step is retrieved.
         on_eval_step_start: function to run when each eval step starts.
         on_eval_step_end: function to run when each eval step ends.
         on_eval_epoch_end: function to run when each eval epoch ends.
         on_eval_end: function to run when eval ends.
         on_predict_start: function to run when predict starts.
         on_predict_epoch_start: function to run when each predict epoch starts.
+        on_predict_get_next_batch_end: function to run when the data batch for the next predict step is retrieved.
         on_predict_step_start: function to run when each predict step starts.
         on_predict_step_end: function to run when each predict step ends.
         on_predict_epoch_end: function to run when each predict epoch ends.
@@ -77,18 +80,25 @@ class Lambda(Callback):
         ] = None,
         on_train_start: Optional[Callable[[State, TTrainUnit], None]] = None,
         on_train_epoch_start: Optional[Callable[[State, TTrainUnit], None]] = None,
+        on_train_get_next_batch_end: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
         on_train_step_start: Optional[Callable[[State, TTrainUnit], None]] = None,
         on_train_step_end: Optional[Callable[[State, TTrainUnit], None]] = None,
         on_train_epoch_end: Optional[Callable[[State, TTrainUnit], None]] = None,
         on_train_end: Optional[Callable[[State, TTrainUnit], None]] = None,
         on_eval_start: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_epoch_start: Optional[Callable[[State, TEvalUnit], None]] = None,
+        on_eval_get_next_batch_end: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_step_start: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_step_end: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_epoch_end: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_end: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_predict_start: Optional[Callable[[State, TPredictUnit], None]] = None,
         on_predict_epoch_start: Optional[Callable[[State, TPredictUnit], None]] = None,
+        on_predict_get_next_batch_end: Optional[
+            Callable[[State, TPredictUnit], None]
+        ] = None,
         on_predict_step_start: Optional[Callable[[State, TPredictUnit], None]] = None,
         on_predict_step_end: Optional[Callable[[State, TPredictUnit], None]] = None,
         on_predict_epoch_end: Optional[Callable[[State, TPredictUnit], None]] = None,

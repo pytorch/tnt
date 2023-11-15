@@ -146,6 +146,8 @@ def _evaluate_impl(
                 state, "evaluate.next(data_iter)"
             ), eval_state.iteration_timer.time("data_wait_time"):
                 step_input = eval_unit.get_next_eval_batch(state, data_iter)
+                callback_handler.on_eval_get_next_batch_end(state, eval_unit)
+
             with eval_state.iteration_timer.time("eval_iteration_time"):
                 callback_handler.on_eval_step_start(state, eval_unit)
                 eval_state._step_output = eval_unit.eval_step(state, step_input)

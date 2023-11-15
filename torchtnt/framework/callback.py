@@ -75,6 +75,10 @@ class Callback:
         """Hook called before a new train epoch starts."""
         pass
 
+    def on_train_get_next_batch_end(self, state: State, unit: TTrainUnit) -> None:
+        """Hook called after getting the data batch for the next train step."""
+        pass
+
     def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
         """Hook called before a new train step starts."""
         pass
@@ -99,6 +103,10 @@ class Callback:
         """Hook called before a new eval epoch starts."""
         pass
 
+    def on_eval_get_next_batch_end(self, state: State, unit: TEvalUnit) -> None:
+        """Hook called after getting the data batch for the next eval step."""
+        pass
+
     def on_eval_step_start(self, state: State, unit: TEvalUnit) -> None:
         """Hook called before a new eval step starts."""
         pass
@@ -121,6 +129,10 @@ class Callback:
 
     def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
         """Hook called before a new predict epoch starts."""
+        pass
+
+    def on_predict_get_next_batch_end(self, state: State, unit: TPredictUnit) -> None:
+        """Hook called after getting the data batch for the next predict step."""
         pass
 
     def on_predict_step_start(self, state: State, unit: TPredictUnit) -> None:

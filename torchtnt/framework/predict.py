@@ -152,6 +152,8 @@ def _predict_impl(
                 state, "predict.next(data_iter)"
             ), predict_state.iteration_timer.time("data_wait_time"):
                 step_input = predict_unit.get_next_predict_batch(state, data_iter)
+                callback_handler.on_predict_get_next_batch_end(state, predict_unit)
+
             with predict_state.iteration_timer.time("predict_iteration_time"):
                 callback_handler.on_predict_step_start(state, predict_unit)
                 predict_state._step_output = predict_unit.predict_step(

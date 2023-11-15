@@ -24,13 +24,12 @@ class DummyCallback(Callback):
     def __init__(self) -> None:
         self.called_hooks: Set[str] = set()
 
-    # pyre-fixme[3]: Return type must be annotated.
     def on_exception(
         self,
         state: State,
         unit: Union[TTrainUnit, TEvalUnit, TPredictUnit],
         exc: BaseException,
-    ):
+    ) -> None:
         self.called_hooks.add("on_exception")
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
@@ -38,6 +37,9 @@ class DummyCallback(Callback):
 
     def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
         self.called_hooks.add("on_train_epoch_start")
+
+    def on_train_get_next_batch_end(self, state: State, unit: TTrainUnit) -> None:
+        self.called_hooks.add("on_train_get_next_batch_end")
 
     def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
         self.called_hooks.add("on_train_step_start")
@@ -57,6 +59,9 @@ class DummyCallback(Callback):
     def on_eval_epoch_start(self, state: State, unit: TEvalUnit) -> None:
         self.called_hooks.add("on_eval_epoch_start")
 
+    def on_eval_get_next_batch_end(self, state: State, unit: TEvalUnit) -> None:
+        self.called_hooks.add("on_eval_get_next_batch_end")
+
     def on_eval_step_start(self, state: State, unit: TEvalUnit) -> None:
         self.called_hooks.add("on_eval_step_start")
 
@@ -74,6 +79,9 @@ class DummyCallback(Callback):
 
     def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
         self.called_hooks.add("on_predict_epoch_start")
+
+    def on_predict_get_next_batch_end(self, state: State, unit: TPredictUnit) -> None:
+        self.called_hooks.add("on_predict_get_next_batch_end")
 
     def on_predict_step_start(self, state: State, unit: TPredictUnit) -> None:
         self.called_hooks.add("on_predict_step_start")
@@ -113,6 +121,9 @@ class CallbackHandlerTest(unittest.TestCase):
         cb_handler.on_train_epoch_start(state, unit)
         self.assertIn("on_train_epoch_start", called_hooks)
 
+        cb_handler.on_train_get_next_batch_end(state, unit)
+        self.assertIn("on_train_get_next_batch_end", called_hooks)
+
         cb_handler.on_train_step_start(state, unit)
         self.assertIn("on_train_step_start", called_hooks)
 
@@ -134,6 +145,9 @@ class CallbackHandlerTest(unittest.TestCase):
 
         cb_handler.on_eval_epoch_start(state, unit)
         self.assertIn("on_eval_epoch_start", called_hooks)
+
+        cb_handler.on_eval_get_next_batch_end(state, unit)
+        self.assertIn("on_eval_get_next_batch_end", called_hooks)
 
         cb_handler.on_eval_step_start(state, unit)
         self.assertIn("on_eval_step_start", called_hooks)
@@ -157,6 +171,9 @@ class CallbackHandlerTest(unittest.TestCase):
         cb_handler.on_predict_epoch_start(state, unit)
         self.assertIn("on_predict_epoch_start", called_hooks)
 
+        cb_handler.on_predict_get_next_batch_end(state, unit)
+        self.assertIn("on_predict_get_next_batch_end", called_hooks)
+
         cb_handler.on_predict_step_start(state, unit)
         self.assertIn("on_predict_step_start", called_hooks)
 
@@ -177,18 +194,21 @@ class CallbackHandlerTest(unittest.TestCase):
         remaining_callback_hooks = (
             "on_train_start",
             "on_train_epoch_start",
+            "on_train_get_next_batch_end",
             "on_train_step_start",
             "on_train_step_end",
             "on_train_epoch_end",
             "on_train_end",
             "on_eval_start",
             "on_eval_epoch_start",
+            "on_eval_get_next_batch_end",
             "on_eval_step_start",
             "on_eval_step_end",
             "on_eval_epoch_end",
             "on_eval_end",
             "on_predict_start",
             "on_predict_epoch_start",
+            "on_predict_get_next_batch_end",
             "on_predict_step_start",
             "on_predict_step_end",
             "on_predict_epoch_end",
