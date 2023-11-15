@@ -204,6 +204,7 @@ def _train_epoch_impl(
                 state, "train.next(data_iter)"
             ), train_state.iteration_timer.time("data_wait_time"):
                 step_input = train_unit.get_next_train_batch(state, data_iter)
+                callback_handler.on_train_get_next_batch_end(state, train_unit)
 
             with train_state.iteration_timer.time("train_iteration_time"):
                 callback_handler.on_train_step_start(state, train_unit)

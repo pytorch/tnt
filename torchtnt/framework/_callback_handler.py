@@ -61,18 +61,21 @@ def _get_implemented_callback_mapping(
         "on_exception",
         "on_train_start",
         "on_train_epoch_start",
+        "on_train_get_next_batch_end",
         "on_train_step_start",
         "on_train_step_end",
         "on_train_epoch_end",
         "on_train_end",
         "on_eval_start",
         "on_eval_epoch_start",
+        "on_eval_get_next_batch_end",
         "on_eval_step_start",
         "on_eval_step_end",
         "on_eval_epoch_end",
         "on_eval_end",
         "on_predict_start",
         "on_predict_epoch_start",
+        "on_predict_get_next_batch_end",
         "on_predict_step_start",
         "on_predict_step_end",
         "on_predict_epoch_end",
@@ -122,6 +125,12 @@ class CallbackHandler:
         for cb in callbacks:
             cb.on_train_epoch_start(state, unit)
 
+    def on_train_get_next_batch_end(self, state: State, unit: TTrainUnit) -> None:
+        fn_name = "on_train_get_next_batch_end"
+        callbacks = self._callbacks.get(fn_name, [])
+        for cb in callbacks:
+            cb.on_train_get_next_batch_end(state, unit)
+
     def on_train_step_start(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_step_start"
         callbacks = self._callbacks.get(fn_name, [])
@@ -158,6 +167,12 @@ class CallbackHandler:
         for cb in callbacks:
             cb.on_eval_epoch_start(state, unit)
 
+    def on_eval_get_next_batch_end(self, state: State, unit: TEvalUnit) -> None:
+        fn_name = "on_eval_get_next_batch_end"
+        callbacks = self._callbacks.get(fn_name, [])
+        for cb in callbacks:
+            cb.on_eval_get_next_batch_end(state, unit)
+
     def on_eval_step_start(self, state: State, unit: TEvalUnit) -> None:
         fn_name = "on_eval_step_start"
         callbacks = self._callbacks.get(fn_name, [])
@@ -193,6 +208,12 @@ class CallbackHandler:
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
             cb.on_predict_epoch_start(state, unit)
+
+    def on_predict_get_next_batch_end(self, state: State, unit: TPredictUnit) -> None:
+        fn_name = "on_predict_get_next_batch_end"
+        callbacks = self._callbacks.get(fn_name, [])
+        for cb in callbacks:
+            cb.on_predict_get_next_batch_end(state, unit)
 
     def on_predict_step_start(self, state: State, unit: TPredictUnit) -> None:
         fn_name = "on_predict_step_start"
