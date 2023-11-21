@@ -282,7 +282,9 @@ class TorchSnapshotSaver(Callback):
             curr_snapshot_wait: Whether to wait for current snapshot to finish writing
         """
         app_state = _get_app_state(
-            state, unit, self._replicated, intra_epoch=intra_epoch
+            state,
+            unit,
+            intra_epoch=intra_epoch,
         )
         with get_timing_context(
             state, f"{self.__class__.__name__}.take_async_snapshot"
@@ -606,7 +608,10 @@ def _app_state(unit: AppStateMixin) -> Dict[str, Any]:
 
 
 def _get_app_state(
-    state: State, unit: AppStateMixin, replicated: Set[str], *, intra_epoch: bool
+    state: State,
+    unit: AppStateMixin,
+    *,
+    intra_epoch: bool,
 ) -> Dict[str, _TStateful]:
     train_state = none_throws(state.train_state)
     app_state = _app_state(unit)
@@ -618,14 +623,6 @@ def _get_app_state(
     train_dl = train_state.dataloader
     if intra_epoch and isinstance(train_dl, _TStateful):
         app_state[_TRAIN_DL_STATE_KEY] = train_dl
-
-    # add progress to replicated
-    train_prog_glob = f"{_TRAIN_PROGRESS_STATE_KEY}/*"
-    replicated.add(train_prog_glob)
-
-    if state.entry_point == EntryPoint.FIT:
-        eval_prog_glob = f"{_EVAL_PROGRESS_STATE_KEY}/*"
-        replicated.add(eval_prog_glob)
 
     return app_state
 

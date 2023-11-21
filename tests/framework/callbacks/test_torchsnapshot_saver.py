@@ -35,6 +35,7 @@ from torchtnt.framework._test_utils import (
 from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
     _delete_snapshot,
+    _get_app_state,
     _override_knobs,
     _retrieve_checkpoint_dirpaths,
     get_latest_checkpoint_path,
@@ -839,6 +840,16 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 f"epoch_{max_epochs}_step_{dataset_len // batch_size * max_epochs}",
                 os.listdir(temp_dir),
             )
+
+    def test_get_app_state(self) -> None:
+        my_unit = DummyTrainUnit(input_dim=2)
+        state = get_dummy_train_state()
+
+        app_state = _get_app_state(state, my_unit, intra_epoch=False)
+        self.assertCountEqual(
+            app_state.keys(),
+            ["module", "optimizer", "loss_fn", "rng_state", "train_progress"],
+        )
 
 
 class DummyStatefulDataLoader:
