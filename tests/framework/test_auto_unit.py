@@ -10,6 +10,7 @@ from typing import Any, Literal, Optional, Tuple, TypeVar
 from unittest.mock import MagicMock, patch
 
 import torch
+from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
 from torchtnt.utils.version import is_torch_version_geq_1_13
 
@@ -78,6 +79,35 @@ class TestAutoUnit(unittest.TestCase):
         )
         for key in ("module", "optimizer", "lr_scheduler", "grad_scaler"):
             self.assertIn(key, auto_unit.app_state())
+
+    @unittest.skipUnless(
+        condition=distributed_available, reason="Torch distributed is needed to run"
+    )
+    @unittest.skipUnless(
+        condition=cuda_available, reason="This test needs a GPU host to run."
+    )
+    def test_fsdp_fp16(self) -> None:
+        """
+        Test that FSDP + FP16 uses ShardedGradScaler
+        """
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fsdp_fp16,
+        )
+
+    @staticmethod
+    def _test_fsdp_fp16() -> None:
+        device = init_from_env()
+        my_module = torch.nn.Linear(2, 2)
+        auto_unit_fsdp = DummyAutoUnit(
+            module=my_module,
+            device=device,
+            strategy=FSDPStrategy(),
+            precision="fp16",
+        )
+        tc = unittest.TestCase()
+        tc.assertTrue(isinstance(auto_unit_fsdp.grad_scaler, ShardedGradScaler))
 
     def test_lr_scheduler_step(self) -> None:
         """
