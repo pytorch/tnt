@@ -382,6 +382,18 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             )
             self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
 
+            with self.assertLogs(level="WARNING") as log:
+                # train again without resetting progress
+                train(
+                    my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb]
+                )
+                self.assertEqual(
+                    log.output,
+                    [
+                        "WARNING:torchtnt.framework.callbacks.torchsnapshot_saver:Final checkpoint already exists, skipping."
+                    ],
+                )
+
     @unittest.skipUnless(
         condition=distributed_available, reason="Torch distributed is needed to run"
     )
