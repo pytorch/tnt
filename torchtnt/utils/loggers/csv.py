@@ -7,6 +7,8 @@
 
 import csv
 import logging
+from threading import Thread
+from typing import Dict, List, Optional
 
 from fsspec import open as fs_open
 from torchtnt.utils.loggers.file import FileLogger
@@ -23,6 +25,7 @@ class CSVLogger(FileLogger, MetricLogger):
         path (str): path to write logs to
         steps_before_flushing: (int, optional): Number of steps to buffer in logger before flushing
         log_all_ranks: (bool, optional): Log all ranks if true, else log only on rank 0.
+        async_write: (bool, optional): Whether to write asynchronously or not. Defaults to False.
     """
 
     def __init__(
@@ -30,21 +33,40 @@ class CSVLogger(FileLogger, MetricLogger):
         path: str,
         steps_before_flushing: int = 100,
         log_all_ranks: bool = False,
+        async_write: bool = False,
     ) -> None:
         super().__init__(path, steps_before_flushing, log_all_ranks)
 
-    def flush(self) -> None:
-        data = self._log_buffer
-        if not data:
-            logger.debug("No logs to write.")
-            return
+        self._async_write = async_write
+        self._thread: Optional[Thread] = None
 
+    def flush(self) -> None:
         if self._rank == 0 or self._log_all_ranks:
-            with fs_open(self.path, "w") as f:
-                data_list = list(data.values())
-                w = csv.DictWriter(f, data_list[0].keys())
-                w.writeheader()
-                w.writerows(data_list)
+            buffer = self._log_buffer
+            if not buffer:
+                logger.debug("No logs to write.")
+                return
+
+            if self._thread:
+                # ensure previous thread is completed before next write
+                self._thread.join()
+
+            data_list = list(buffer.values())
+            if not self._async_write:
+                _write_csv(self.path, data_list)
+                return
+
+            self._thread = Thread(target=_write_csv, args=(self.path, data_list))
+            self._thread.start()
 
     def close(self) -> None:
+        # toggle off async writing for final flush
+        self._async_write = False
         self.flush()
+
+
+def _write_csv(path: str, data_list: List[Dict[str, float]]) -> None:
+    with fs_open(path, "w") as f:
+        w = csv.DictWriter(f, data_list[0].keys())
+        w.writeheader()
+        w.writerows(data_list)
