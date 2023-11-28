@@ -245,12 +245,9 @@ class TorchSnapshotSaver(Callback):
         )
 
         fs = get_filesystem(snapshot_path)
-        if fs.exists(snapshot_path):
-            if fs.exists(os.path.join(snapshot_path, SNAPSHOT_METADATA_FNAME)):
-                rank_zero_warn(
-                    "Final checkpoint already exists, skipping.", logger=logger
-                )
-                return
+        if fs.exists(os.path.join(snapshot_path, SNAPSHOT_METADATA_FNAME)):
+            rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
+            return
 
         self._checkpoint_impl(
             state,
