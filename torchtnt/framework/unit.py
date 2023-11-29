@@ -11,9 +11,9 @@ from typing import Any, cast, Dict, Generic, Iterator, TypeVar, Union
 
 import torch
 from torchtnt.framework._loop_utils import _step_requires_iterator
+from torchtnt.framework._unit_utils import _find_optimizers_for_module
 
 from torchtnt.framework.state import State
-from torchtnt.framework.utils import _find_optimizers_for_module
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
