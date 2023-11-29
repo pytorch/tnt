@@ -7,30 +7,20 @@
 
 import time
 import unittest
-from typing import cast, Dict, Iterator
+from typing import Dict, Iterator
 from unittest.mock import MagicMock, patch
 
 import torch
-from torch import nn
 
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.optim import Optimizer
-from torch.utils.data import DataLoader
-from torch.utils.data.distributed import DistributedSampler
-from torchtnt.framework._test_utils import generate_random_dataset
 from torchtnt.framework.state import State
 from torchtnt.framework.utils import (
     _find_optimizers_for_module,
-    _is_done,
-    _is_epoch_done,
-    _maybe_set_distributed_sampler_epoch,
-    _reset_module_training_mode,
-    _set_module_training_mode,
     _step_requires_iterator,
     get_timing_context,
 )
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.progress import Progress
 from torchtnt.utils.test_utils import spawn_multi_process
 from torchtnt.utils.timer import Timer
 
@@ -38,89 +28,6 @@ from torchtnt.utils.timer import Timer
 class UtilsTest(unittest.TestCase):
     cuda_available: bool = torch.cuda.is_available()
     distributed_available: bool = torch.distributed.is_available()
-
-    def test_maybe_set_distributed_sampler_epoch(self) -> None:
-        mp_dict = spawn_multi_process(
-            2,
-            "gloo",
-            self._test_maybe_set_distributed_sampler_epoch,
-        )
-        self.assertTrue(mp_dict[0])
-        self.assertTrue(mp_dict[1])
-
-    @staticmethod
-    def _test_maybe_set_distributed_sampler_epoch() -> bool:
-        """
-        Test _maybe_set_distributed_sampler_epoch util function
-        """
-        random_dataset = generate_random_dataset(10, 3)
-        dummy_dataloader_with_distributed_sampler = DataLoader(
-            random_dataset, sampler=DistributedSampler(random_dataset)
-        )
-
-        _maybe_set_distributed_sampler_epoch(
-            dummy_dataloader_with_distributed_sampler, 20
-        )
-
-        sampler = cast(
-            DistributedSampler[object],
-            dummy_dataloader_with_distributed_sampler.sampler,
-        )
-        return sampler.epoch == 20
-
-    def test_set_module_training_mode(self) -> None:
-        """
-        Test _set_module_training_mode
-        """
-        module = nn.Linear(1, 1)
-        loss_fn = nn.CrossEntropyLoss()
-
-        tracked_modules: Dict[str, torch.nn.Module] = {
-            "module": module,
-            "loss_fn": loss_fn,
-        }
-
-        # set module training mode to False
-        prior_module_train_states = _set_module_training_mode(tracked_modules, False)
-
-        self.assertFalse(module.training)
-        self.assertFalse(loss_fn.training)
-
-        self.assertTrue(prior_module_train_states["module"])
-        self.assertTrue(prior_module_train_states["loss_fn"])
-
-        # set back to True
-        prior_module_train_states = _set_module_training_mode(tracked_modules, True)
-
-        self.assertTrue(module.training)
-        self.assertTrue(loss_fn.training)
-
-        self.assertFalse(prior_module_train_states["module"])
-        self.assertFalse(prior_module_train_states["loss_fn"])
-
-    def test_reset_module_training_mode(self) -> None:
-        """
-        Test _reset_module_training_mode
-        """
-        module = nn.Linear(1, 1)
-        loss_fn = nn.CrossEntropyLoss()
-
-        tracked_modules: Dict[str, torch.nn.Module] = {
-            "module": module,
-            "loss_fn": loss_fn,
-        }
-
-        # set module training mode to False
-        prior_module_train_states = _set_module_training_mode(tracked_modules, False)
-
-        self.assertFalse(module.training)
-        self.assertFalse(loss_fn.training)
-
-        # set back to True using reset
-        _reset_module_training_mode(tracked_modules, prior_module_train_states)
-
-        self.assertTrue(module.training)
-        self.assertTrue(loss_fn.training)
 
     def test_step_func_requires_iterator(self) -> None:
         class Foo:
@@ -138,40 +45,6 @@ class UtilsTest(unittest.TestCase):
         self.assertFalse(_step_requires_iterator(foo.bar))
         self.assertTrue(_step_requires_iterator(foo.baz))
         self.assertTrue(_step_requires_iterator(dummy))
-
-    def test_is_done(self) -> None:
-        p = Progress(
-            num_epochs_completed=2,
-            num_steps_completed=100,
-            num_steps_completed_in_epoch=5,
-        )
-
-        self.assertTrue(_is_done(p, max_epochs=2, max_steps=200))
-        self.assertTrue(_is_done(p, max_epochs=2, max_steps=None))
-        self.assertTrue(_is_done(p, max_epochs=3, max_steps=100))
-        self.assertTrue(_is_done(p, max_epochs=None, max_steps=100))
-
-        self.assertFalse(_is_done(p, max_epochs=3, max_steps=200))
-        self.assertFalse(_is_done(p, max_epochs=None, max_steps=200))
-        self.assertFalse(_is_done(p, max_epochs=3, max_steps=None))
-        self.assertFalse(_is_done(p, max_epochs=None, max_steps=None))
-
-    def test_is_epoch_done(self) -> None:
-        p = Progress(
-            num_epochs_completed=2,
-            num_steps_completed=100,
-            num_steps_completed_in_epoch=5,
-        )
-
-        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=5, max_steps=200))
-        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=5, max_steps=None))
-        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=100, max_steps=100))
-        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=100))
-
-        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=200))
-        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=200))
-        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=None))
-        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=None))
 
     @patch("torchtnt.framework.utils.record_function")
     def test_get_timing_context(self, mock_record_function: MagicMock) -> None:

@@ -8,6 +8,7 @@ import logging
 from typing import Iterable, List, Optional
 
 from torchtnt.framework._callback_handler import CallbackHandler
+from torchtnt.framework._loop_utils import _log_api_usage
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.framework.train import _train_impl
@@ -18,7 +19,6 @@ from torchtnt.framework.unit import (
     TTrainData,
     TTrainUnit,
 )
-from torchtnt.framework.utils import log_api_usage
 from torchtnt.utils.timer import get_timer_summary, TimerProtocol
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ def fit(
                 run eval loop
         call on_train_end on unit first and then callbacks
     """
-    log_api_usage("fit")
+    _log_api_usage("fit")
 
     # input validation
     if not isinstance(unit, TrainUnit):

@@ -8,82 +8,15 @@ import collections
 import inspect
 import logging
 from contextlib import contextmanager, nullcontext
-from typing import (
-    Callable,
-    ContextManager,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-)
+from typing import Callable, ContextManager, Dict, Generator, List, Tuple, TypeVar
 
 import torch
-import torch.nn as nn
 import typing_extensions
 from torch.profiler import record_function
 from torchtnt.framework.state import State
-from torchtnt.utils.progress import Progress
 
 _logger: logging.Logger = logging.getLogger(__name__)
 T = TypeVar("T")
-
-
-# Helper functions common across the loops
-def _is_done(
-    progress: Progress, max_epochs: Optional[int], max_steps: Optional[int]
-) -> bool:
-    return (max_steps is not None and progress.num_steps_completed >= max_steps) or (
-        max_epochs is not None and progress.num_epochs_completed >= max_epochs
-    )
-
-
-def _is_epoch_done(
-    progress: Progress, max_steps_per_epoch: Optional[int], max_steps: Optional[int]
-) -> bool:
-    return (max_steps is not None and progress.num_steps_completed >= max_steps) or (
-        max_steps_per_epoch is not None
-        and progress.num_steps_completed_in_epoch >= max_steps_per_epoch
-    )
-
-
-def _maybe_set_distributed_sampler_epoch(
-    dataloader: Iterable[object],
-    current_epoch: int,
-) -> None:
-    """Set epoch of distributed sampler in dataloader, if applicable.
-    See: https://pytorch.org/docs/stable/data.html#torch.utils.data.distributed.DistributedSampler
-    """
-    # Set current training epoch for any DistributedSampler in dataloader
-    if isinstance(dataloader, torch.utils.data.DataLoader) and isinstance(
-        dataloader.sampler,
-        torch.utils.data.distributed.DistributedSampler,
-    ):
-        dataloader.sampler.set_epoch(current_epoch)
-
-
-def _set_module_training_mode(
-    modules: Dict[str, nn.Module], mode: bool
-) -> Dict[str, bool]:
-    """Returns states to allow for a reset at the end of the loop."""
-    prior_module_train_states = {}
-    for name, module in modules.items():
-        prior_module_train_states[name] = module.training
-        module.train(mode)
-    return prior_module_train_states
-
-
-def _reset_module_training_mode(
-    modules: Dict[str, nn.Module], prior_modes: Dict[str, bool]
-) -> None:
-    # Reset training mode for modules at the end of the epoch
-    # This ensures that side-effects made by the loop are reset before
-    # returning back to the user
-    for name, module in modules.items():
-        if name in prior_modes:
-            module.train(prior_modes[name])
 
 
 @contextmanager
@@ -103,10 +36,6 @@ def get_timing_context(
     profiler_context = record_function(event_name)
     with timer_context, profiler_context:
         yield (timer_context, profiler_context)
-
-
-def log_api_usage(entry_point: str) -> None:
-    torch._C._log_api_usage_once(f"torchtnt.framework.{entry_point}")
 
 
 def _step_requires_iterator(step_func: Callable[[State, T], object]) -> bool:
