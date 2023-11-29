@@ -10,17 +10,17 @@ from typing import Iterable, List, Optional
 import torch
 from pyre_extensions import none_throws
 from torchtnt.framework._callback_handler import CallbackHandler
+from torchtnt.framework._loop_utils import (
+    _is_epoch_done,
+    _log_api_usage,
+    _reset_module_training_mode,
+    _set_module_training_mode,
+)
 from torchtnt.framework.callback import Callback
 
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TEvalData, TEvalUnit
-from torchtnt.framework.utils import (
-    _is_epoch_done,
-    _reset_module_training_mode,
-    _set_module_training_mode,
-    get_timing_context,
-    log_api_usage,
-)
+from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.timer import get_timer_summary, TimerProtocol
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ def evaluate(
         call on_eval_epoch_end on unit first and then callbacks
         call on_eval_end on unit first and then callbacks
     """
-    log_api_usage("evaluate")
+    _log_api_usage("evaluate")
     callback_handler = CallbackHandler(callbacks or [])
     state = State(
         entry_point=EntryPoint.EVALUATE,
