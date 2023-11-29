@@ -41,7 +41,9 @@ def _is_done(
 
 
 def _is_epoch_done(
-    progress: Progress, max_steps_per_epoch: Optional[int], max_steps: Optional[int]
+    progress: Progress,
+    max_steps_per_epoch: Optional[int],
+    max_steps: Optional[int] = None,
 ) -> bool:
     return (max_steps is not None and progress.num_steps_completed >= max_steps) or (
         max_steps_per_epoch is not None

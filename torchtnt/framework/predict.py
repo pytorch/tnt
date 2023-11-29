@@ -144,7 +144,6 @@ def _predict_impl(
         or _is_epoch_done(
             predict_unit.predict_progress,
             predict_state.max_steps_per_epoch,
-            predict_state.max_steps,
         )
     ):
         try:

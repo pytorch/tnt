@@ -164,14 +164,14 @@ class UtilsTest(unittest.TestCase):
         )
 
         self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=5, max_steps=200))
-        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=5, max_steps=None))
+        self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=5))
         self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=100, max_steps=100))
         self.assertTrue(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=100))
 
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=200))
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=200))
-        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=None))
-        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=None))
+        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6))
+        self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None))
 
     @patch("torchtnt.framework.utils.record_function")
     def test_get_timing_context(self, mock_record_function: MagicMock) -> None:
