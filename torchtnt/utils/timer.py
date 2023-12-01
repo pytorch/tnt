@@ -22,6 +22,7 @@ from typing import (
     Sequence,
     Tuple,
     TypeVar,
+    Union,
 )
 
 import numpy as np
@@ -364,7 +365,9 @@ def _sync_durations(
 
     pg_wrapper = PGWrapper(pg)
     world_size = pg_wrapper.get_world_size()
-    outputs = [None] * world_size
+    # the below is a workaround for pyre since it doesn't infer List[None] as List[Optional[T]]
+    none_list: List[Optional[Dict[str, List[float]]]] = [None]
+    outputs = none_list * world_size
     pg_wrapper.all_gather_object(outputs, recorded_durations)
     ret = defaultdict(list)
     for output in outputs:
