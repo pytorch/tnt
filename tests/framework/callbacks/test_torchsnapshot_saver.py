@@ -853,6 +853,23 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 os.listdir(temp_dir),
             )
 
+    @patch("torchtnt.framework.callbacks.torchsnapshot_saver.torchsnapshot")
+    def test_sync_checkpoint(self, _: MagicMock) -> None:
+        """
+        Tests the _sync_snapshot function is called if async is turned off.
+        """
+        my_unit = DummyTrainUnit(input_dim=2)
+        state = get_dummy_train_state()
+
+        snapshot_cb = TorchSnapshotSaver(
+            "tmp/foo",
+            save_every_n_train_steps=1,
+            async_checkpoint=False,
+        )
+        snapshot_cb._sync_snapshot = MagicMock()
+        snapshot_cb.on_train_step_end(state, my_unit)
+        snapshot_cb._sync_snapshot.assert_called_once()
+
     def test_get_app_state(self) -> None:
         my_unit = DummyTrainUnit(input_dim=2)
         state = get_dummy_train_state()

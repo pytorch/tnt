@@ -82,6 +82,7 @@ class TorchSnapshotSaver(Callback):
         save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
         keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference.
         process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+        async_checkpoint: Whether to perform asynchronous snapshotting. Default: ``True``.
         replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.
             For more information, see https://pytorch.org/torchsnapshot/main/api_reference.html#torchsnapshot.Snapshot.take.
 
@@ -108,6 +109,7 @@ class TorchSnapshotSaver(Callback):
         save_every_n_epochs: Optional[int] = None,
         keep_last_n_checkpoints: Optional[int] = None,
         process_group: Optional[dist.ProcessGroup] = None,
+        async_checkpoint: bool = True,
         replicated: Optional[List[str]] = None,
         storage_options: Optional[Dict[str, Any]] = None,
         knob_options: Optional[KnobOptions] = None,
@@ -136,6 +138,7 @@ class TorchSnapshotSaver(Callback):
         self._process_group = process_group
         self._pg_wrapper = PGWrapper(process_group)
         self._sync_dirpath_to_all_ranks(dirpath)
+        self._async_checkpoint = async_checkpoint
         self._replicated: Set[str] = set(replicated or [])
 
         self._prev_snapshot: Optional[PendingSnapshot] = None
@@ -292,18 +295,26 @@ class TorchSnapshotSaver(Callback):
             unit,
             intra_epoch=intra_epoch,
         )
-        with get_timing_context(
-            state, f"{self.__class__.__name__}.take_async_snapshot"
-        ):
-            # TODO checkpoint is not truly successful
-            # since this is async checkpointed, so in
-            # future, add logic to set  successful flag
-            # only when checkpoint is fully written
-            checkpoint_success = self._async_snapshot(
-                snapshot_path, app_state, wait=prev_snapshot_wait
-            )
-            if curr_snapshot_wait:
-                self._wait()
+        if self._async_checkpoint:
+            with get_timing_context(
+                state, f"{self.__class__.__name__}.take_async_snapshot"
+            ):
+                # TODO checkpoint is not truly successful
+                # since this is async checkpointed, so in
+                # future, add logic to set  successful flag
+                # only when checkpoint is fully written
+                checkpoint_success = self._async_snapshot(
+                    snapshot_path, app_state, wait=prev_snapshot_wait
+                )
+                if curr_snapshot_wait:
+                    self._wait()
+        else:
+            with get_timing_context(
+                state, f"{self.__class__.__name__}.take_sync_snapshot"
+            ):
+                checkpoint_success = self._sync_snapshot(
+                    snapshot_path, app_state, wait=prev_snapshot_wait
+                )
 
         # remove and book keep snapshots related to keep_last_n_checkpoints
         if checkpoint_success:
@@ -359,6 +370,25 @@ class TorchSnapshotSaver(Callback):
                 storage_options=self._storage_options,
             )
         rank_zero_info(f"Saving snapshot to path: {snapshot_path}", logger=logger)
+        return True
+
+    def _sync_snapshot(
+        self, snapshot_path: str, app_state: Dict[str, _TStateful], *, wait: bool
+    ) -> bool:
+        with _override_knobs(self._knob_options):
+            rank_zero_info(
+                f"Started saving snapshot to path: {snapshot_path}", logger=logger
+            )
+            Snapshot.take(
+                str(snapshot_path),
+                app_state=app_state,
+                pg=self._process_group,
+                replicated=list(self._replicated),
+                storage_options=self._storage_options,
+            )
+        rank_zero_info(
+            f"Finished saving snapshot to path: {snapshot_path}", logger=logger
+        )
         return True
 
     @staticmethod
