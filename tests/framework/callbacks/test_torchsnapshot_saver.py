@@ -9,136 +9,37 @@ import math
 import os
 import shutil
 import tempfile
-import time
 import unittest
 from typing import Any, Dict, Iterator, List
 from unittest import mock
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import torch
-import torch.distributed as dist
 from torch import nn
 from torch.utils.data import DataLoader
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
-    DummyFitUnit,
     DummyTrainUnit,
     generate_random_dataloader,
-    get_dummy_fit_state,
     get_dummy_train_state,
 )
-from torchtnt.framework.callbacks.lambda_callback import Lambda
+from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
     _get_app_state,
     _override_knobs,
-    KnobOptions,
-    RestoreOptions,
     TorchSnapshotSaver,
 )
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank
-from torchtnt.utils.env import init_from_env, seed
+from torchtnt.utils.env import seed
 from torchtnt.utils.test_utils import spawn_multi_process
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
     cuda_available: bool = torch.cuda.is_available()
     distributed_available: bool = torch.distributed.is_available()
-
-    def test_save_every_n_train_steps(self) -> None:
-        input_dim = 2
-        dataset_len = 10
-        batch_size = 2
-        max_epochs = 2
-        expected_steps_per_epoch = math.ceil(dataset_len / batch_size)
-        save_every_n_train_steps = 2
-
-        my_unit = DummyTrainUnit(input_dim=input_dim)
-        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        expected_paths: List[str] = []
-        with tempfile.TemporaryDirectory() as temp_dir:
-            cumulative_steps = 0
-            for epoch in range(max_epochs):
-                for _ in range(
-                    save_every_n_train_steps,
-                    expected_steps_per_epoch + 1,
-                    save_every_n_train_steps,
-                ):
-                    cumulative_steps += save_every_n_train_steps
-                    expected_paths.append(
-                        os.path.join(temp_dir, f"epoch_{epoch}_step_{cumulative_steps}")
-                    )
-            snapshot = TorchSnapshotSaver(
-                temp_dir,
-                save_every_n_train_steps=save_every_n_train_steps,
-            )
-            # Artificially increase the step duration, otherwise torchsnapshot
-            # doesn't have the time to save all snapshots and will skip some.
-            slowdown = Lambda(on_train_step_end=lambda *_: time.sleep(0.1))
-            train(
-                my_unit,
-                dataloader,
-                max_epochs=max_epochs,
-                callbacks=[snapshot, slowdown],
-            )
-            for path in expected_paths:
-                self.assertTrue(os.path.exists(path) and os.path.isdir(path))
-
-    def test_save_every_n_train_epochs(self) -> None:
-        input_dim = 2
-        dataset_len = 10
-        batch_size = 2
-        max_epochs = 3
-        expected_steps_per_epoch = math.ceil(dataset_len / batch_size)
-        save_every_n_train_epochs = 2
-
-        my_unit = DummyTrainUnit(input_dim=input_dim)
-        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            expected_path = os.path.join(
-                temp_dir,
-                f"epoch_{save_every_n_train_epochs}_step_{expected_steps_per_epoch * (save_every_n_train_epochs)}",
-            )
-            snapshot = TorchSnapshotSaver(
-                temp_dir,
-                save_every_n_epochs=save_every_n_train_epochs,
-            )
-            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot])
-            self.assertTrue(
-                os.path.exists(expected_path) and os.path.isdir(expected_path)
-            )
-
-    @patch.object(TorchSnapshotSaver, "_async_snapshot", autospec=True)
-    def test_save_fit_entrypoint(self, mock_async_snapshot: Mock) -> None:
-        input_dim = 2
-
-        my_unit = DummyFitUnit(input_dim=input_dim)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            snapshot = TorchSnapshotSaver(
-                temp_dir, save_every_n_train_steps=1, save_every_n_epochs=1
-            )
-            train_state = get_dummy_train_state()
-            fit_state = get_dummy_fit_state()
-            my_unit.train_progress._num_steps_completed = 15
-            my_unit.eval_progress._num_steps_completed = 10
-
-            snapshot.on_train_step_end(train_state, my_unit)
-            snapshot_path = mock_async_snapshot.call_args.args[1]
-            self.assertIn(f"epoch_0_step_{15}", snapshot_path)
-
-            snapshot.on_train_step_end(fit_state, my_unit)
-            snapshot_path = mock_async_snapshot.call_args.args[1]
-            self.assertIn(f"epoch_0_step_{15 + 10}", snapshot_path)
-
-            snapshot.on_train_epoch_end(train_state, my_unit)
-            snapshot_path = mock_async_snapshot.call_args.args[1]
-            self.assertIn(f"epoch_0_step_{15}", snapshot_path)
-
-            snapshot.on_train_epoch_end(fit_state, my_unit)
-            snapshot_path = mock_async_snapshot.call_args.args[1]
-            self.assertIn(f"epoch_0_step_{15 + 10}", snapshot_path)
 
     def test_save_restore(self) -> None:
         input_dim = 2
@@ -247,10 +148,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
 
-            # Include a directory that does not have snapshot metadata saved
-            # The restore function should skip this
-            os.mkdir(os.path.join(temp_dir, "epoch_100_step_200"))
-
             with mock.patch(
                 "torchtnt.framework.callbacks.torchsnapshot_saver.TorchSnapshotSaver.restore"
             ) as mock_restore:
@@ -260,27 +157,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                     mock_restore.call_args.args,
                 )
                 self.assertTrue(restored)
-
-    def test_restore_from_latest_empty_dir(self) -> None:
-        input_dim = 2
-        save_every_n_train_steps = 2
-
-        my_unit = DummyTrainUnit(input_dim=input_dim)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            snapshot_cb = TorchSnapshotSaver(
-                temp_dir,
-                save_every_n_train_steps=save_every_n_train_steps,
-            )
-
-            with self.assertLogs(level="WARNING") as log:
-                restored = snapshot_cb.restore_from_latest(temp_dir, my_unit)
-                self.assertEqual(
-                    log.output,
-                    [
-                        f"WARNING:torchtnt.framework.callbacks._checkpoint_utils:Input dirpath doesn't contain any subdirectories: {temp_dir}"
-                    ],
-                )
-                self.assertFalse(restored)
 
     def test_save_restore_no_train_progress(self) -> None:
         input_dim = 2
@@ -352,70 +228,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
         self.assertIn("lr_scheduler", app_state)
 
-    def test_save_on_train_end(self) -> None:
-        input_dim = 2
-        dataset_len = 10
-        batch_size = 2
-        max_epochs = 2
-
-        expected_path = (
-            f"epoch_{max_epochs}_step_{max_epochs * (dataset_len // batch_size)}"
-        )
-
-        my_unit = DummyTrainUnit(input_dim=input_dim)
-        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            self.assertFalse(os.path.exists(os.path.join(temp_dir, expected_path)))
-            snapshot_cb = TorchSnapshotSaver(
-                temp_dir,
-            )
-            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
-
-            expected_path = (
-                f"epoch_{max_epochs}_step_{max_epochs * (dataset_len // batch_size)}"
-            )
-            self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
-
-            with self.assertLogs(level="WARNING") as log:
-                # train again without resetting progress
-                train(
-                    my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb]
-                )
-                self.assertEqual(
-                    log.output,
-                    [
-                        "WARNING:torchtnt.framework.callbacks.torchsnapshot_saver:Final checkpoint already exists, skipping."
-                    ],
-                )
-
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    def test_directory_sync_collective(self) -> None:
-        spawn_multi_process(
-            2,
-            "gloo",
-            self._directory_sync_collective,
-        )
-
-    @staticmethod
-    def _directory_sync_collective() -> None:
-        init_from_env()
-        try:
-            if get_global_rank() == 0:
-                temp_dir = tempfile.mkdtemp()
-            else:
-                temp_dir = "foo"
-
-            snapshot_cb = TorchSnapshotSaver(temp_dir)
-            dirpath = snapshot_cb.dirpath
-            tc = unittest.TestCase()
-            tc.assertTrue("tmp" in dirpath)
-            tc.assertFalse("foo" in dirpath)
-        finally:
-            if get_global_rank() == 0:
-                shutil.rmtree(temp_dir)  # delete temp directory
-
     @unittest.skipUnless(
         condition=distributed_available, reason="Torch distributed is needed to run"
     )
@@ -469,25 +281,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         finally:
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
-
-    def test_saver_invalid_args(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with self.assertRaisesRegex(
-                ValueError, "Invalid value passed for save_every_n_train_steps.*"
-            ):
-                TorchSnapshotSaver(temp_dir, save_every_n_train_steps=-2)
-            with self.assertRaisesRegex(
-                ValueError, "Invalid value passed for save_every_n_train_steps.*"
-            ):
-                TorchSnapshotSaver(temp_dir, save_every_n_train_steps=0)
-            with self.assertRaisesRegex(
-                ValueError, "Invalid value passed for save_every_n_epochs.*"
-            ):
-                TorchSnapshotSaver(temp_dir, save_every_n_epochs=-2)
-            with self.assertRaisesRegex(
-                ValueError, "Invalid value passed for save_every_n_epochs.*"
-            ):
-                TorchSnapshotSaver(temp_dir, save_every_n_epochs=0)
 
     @unittest.skipUnless(
         condition=distributed_available, reason="Torch distributed is needed to run"
@@ -549,42 +342,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
-    def test_process_group_plumbing(self) -> None:
-        """
-        Creates a new process group and verifies that it's passed through correctly
-        """
-        spawn_multi_process(
-            2,
-            "nccl",
-            self._test_process_group_plumbing,
-        )
-
-    @staticmethod
-    def _test_process_group_plumbing() -> None:
-        new_pg = dist.new_group(backend="gloo")
-
-        if get_global_rank() == 0:
-            temp_dir = tempfile.mkdtemp()
-        else:
-            temp_dir = ""
-
-        snapshot_cb = TorchSnapshotSaver(
-            temp_dir,
-            process_group=new_pg,
-        )
-        tc = unittest.TestCase()
-        try:
-            tc.assertEqual(snapshot_cb._process_group, new_pg)
-        finally:
-            if get_global_rank() == 0:
-                shutil.rmtree(temp_dir)  # delete temp directory
-
     def test_knob_override(self) -> None:
         env_var = "TORCHSNAPSHOT_MAX_PER_RANK_IO_CONCURRENCY_OVERRIDE"
         knob_options = KnobOptions(max_per_rank_io_concurrency=1)
@@ -594,132 +351,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
         with _override_knobs(KnobOptions(max_per_rank_io_concurrency=None)):
             self.assertNotIn(env_var, os.environ)
-
-    def test_should_remove_snapshot(self) -> None:
-        """
-        Tests the helper function that checks if snapshot should be removed or not
-        """
-        tss = TorchSnapshotSaver("temp")
-
-        # keep_last_n_checkpoints is toggled off
-        self.assertFalse(tss._should_remove_snapshot())
-
-        # not enough checkpoints are saved yet to be removed
-        tss._keep_last_n_checkpoints = 2
-        tss._ckpt_dirpaths = ["bar"]
-        self.assertFalse(tss._should_remove_snapshot())
-
-        # enough checkpoints are there to remove
-        tss._keep_last_n_checkpoints = 2
-        tss._ckpt_dirpaths = ["foo", "bar"]
-        self.assertTrue(tss._should_remove_snapshot())
-
-    @patch("torchtnt.framework.callbacks.torchsnapshot_saver._delete_checkpoint")
-    def test_remove_snapshot(self, mock_delete_checkpoint: MagicMock) -> None:
-        """
-        Tests the helper function that removes snapshots and updates the checkpoint paths
-        """
-        state = get_dummy_train_state()
-        tss = TorchSnapshotSaver("temp")
-        tss._ckpt_dirpaths = ["foo", "bar"]
-        tss._remove_snapshot(state)
-
-        mock_delete_checkpoint.assert_called_once()
-        self.assertEqual(len(tss._ckpt_dirpaths), 1)
-        self.assertEqual(tss._ckpt_dirpaths[0], "bar")
-
-    @patch("torchtnt.framework.callbacks.torchsnapshot_saver._delete_checkpoint")
-    def test_cleanup_surplus(self, mock_delete_checkpoint: MagicMock) -> None:
-        """
-        Tests surplus of checkpoints being cleaned up
-        """
-        state = get_dummy_train_state()
-        unit = DummyTrainUnit(input_dim=2)
-        warning_messages = []
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tss = TorchSnapshotSaver(temp_dir, keep_last_n_checkpoints=1)
-            tss._ckpt_dirpaths = ["foo", "bar", "baz"]
-
-            expected_warning_msg = " ".join(
-                [
-                    f"3 checkpoints found in {temp_dir}.",
-                    f"Deleting {2} oldest",
-                    "checkpoints to enforce ``keep_last_n_checkpoints`` argument.",
-                ]
-            )
-
-            with patch(
-                "torchtnt.framework.callbacks.torchsnapshot_saver.logging.Logger.warning",
-                warning_messages.append,
-            ):
-                tss.on_train_start(state, unit)
-            self.assertEqual(tss._ckpt_dirpaths, ["baz"])
-            self.assertEqual(warning_messages[0], expected_warning_msg)
-
-            tss = TorchSnapshotSaver(temp_dir)
-            tss._ckpt_dirpaths = ["foo", "bar", "baz"]
-
-            tss.on_train_start(state, unit)
-            self.assertEqual(tss._ckpt_dirpaths, ["foo", "bar", "baz"])
-
-    def test_keep_last_n_checkpoints(self) -> None:
-        """
-        Tests removing checkpoint directories
-        """
-        unit = DummyTrainUnit(input_dim=2)
-        state = get_dummy_train_state()
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tss = TorchSnapshotSaver(
-                temp_dir,
-                save_every_n_train_steps=1,
-                keep_last_n_checkpoints=2,
-            )
-
-            # take 10 steps
-            for _ in range(10):
-                unit.train_progress.increment_step()
-                tss.on_train_step_end(state, unit)
-                # TODO remove time.sleep to avoid potential flaky test
-                time.sleep(0.1)  # sleep to ensure enough time to checkpoint
-
-            dirs = os.listdir(temp_dir)
-            self.assertEqual(len(dirs), 2)
-            self.assertIn("epoch_0_step_9", dirs)
-            self.assertIn("epoch_0_step_10", dirs)
-
-    def test_keep_last_n_checkpoints_e2e(self) -> None:
-        """
-        Tests removing checkpoint directories e2e
-        """
-        input_dim = 2
-        dataset_len = 10
-        batch_size = 2
-        max_epochs = 2
-
-        my_unit = DummyTrainUnit(input_dim=input_dim)
-        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            snapshot_cb = TorchSnapshotSaver(
-                temp_dir,
-                save_every_n_train_steps=2,
-                keep_last_n_checkpoints=1,
-            )
-            # Artificially increase the step duration, otherwise torchsnapshot
-            # doesn't have the time to save all snapshots and will skip some.
-            slowdown = Lambda(on_train_step_end=lambda *_: time.sleep(0.1))
-
-            train(
-                my_unit,
-                dataloader,
-                max_epochs=max_epochs,
-                callbacks=[snapshot_cb, slowdown],
-            )
-            dirs = os.listdir(temp_dir)
-            self.assertEqual(len(dirs), 1)
-            self.assertIn(
-                f"epoch_{max_epochs}_step_{dataset_len // batch_size * max_epochs}",
-                os.listdir(temp_dir),
-            )
 
     @patch("torchtnt.framework.callbacks.torchsnapshot_saver.torchsnapshot")
     def test_sync_checkpoint(self, _: MagicMock) -> None:
