@@ -12,7 +12,12 @@ from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Union
 
 import torch.distributed as dist
 
-from pyre_extensions import none_throws
+from torchtnt.framework.callbacks._checkpoint_utils import (
+    _prepare_app_state,
+    _prepare_app_state_for_checkpoint,
+    _prepare_app_state_for_restore,
+    _TRAIN_DL_STATE_KEY,
+)
 
 from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
 from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
@@ -40,10 +45,8 @@ except Exception:
     _TStateful = Stateful
     _TORCHSNAPSHOT_AVAILABLE = False
 
-_EVAL_PROGRESS_STATE_KEY = "eval_progress"
 _RNG_STATE_KEY = "rng_state"
-_TRAIN_PROGRESS_STATE_KEY = "train_progress"
-_TRAIN_DL_STATE_KEY = "train_dataloader"
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -117,7 +120,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         """Validate there's no key collision for the app state."""
-        app_state = _app_state(unit)
+        app_state = _prepare_app_state(unit)
         _check_app_state_collision(app_state)
 
         super().on_train_start(state, unit)
@@ -154,11 +157,10 @@ class TorchSnapshotSaver(BaseCheckpointer):
         else:
             raise RuntimeError(f"Unexpected hook encountered '{hook}'")
 
-        app_state = _get_app_state(
-            state,
-            unit,
-            intra_epoch=intra_epoch,
-        )
+        app_state = _prepare_app_state_for_checkpoint(state, unit, intra_epoch)
+        rng_state = torchsnapshot.RNGState()
+        app_state[_RNG_STATE_KEY] = rng_state
+
         if self._async_checkpoint:
             with get_timing_context(
                 state, f"{self.__class__.__name__}.take_async_snapshot"
@@ -264,7 +266,8 @@ class TorchSnapshotSaver(BaseCheckpointer):
         for optimizer in unit.tracked_optimizers().values():
             init_optim_state(optimizer)
 
-        app_state = _app_state(unit)
+        restore_options = restore_options or RestoreOptions()
+        app_state = _prepare_app_state_for_restore(unit, restore_options)
         _check_app_state_collision(app_state)
 
         snapshot = torchsnapshot.Snapshot(
@@ -273,23 +276,6 @@ class TorchSnapshotSaver(BaseCheckpointer):
 
         rng_state = torchsnapshot.RNGState()
         app_state[_RNG_STATE_KEY] = rng_state
-
-        restore_options = restore_options or RestoreOptions()
-        if not restore_options.restore_train_progress:
-            app_state.pop(_TRAIN_PROGRESS_STATE_KEY, None)
-
-        if not restore_options.restore_eval_progress:
-            app_state.pop(_EVAL_PROGRESS_STATE_KEY, None)
-
-        if not restore_options.restore_optimizers:
-            # remove all optimizer keys from app_state
-            for optim_keys in unit.tracked_optimizers().keys():
-                app_state.pop(optim_keys, None)
-
-        if not restore_options.restore_lr_schedulers:
-            # remove all lr scheduler keys from app_state
-            for lr_scheduler_keys in unit.tracked_lr_schedulers().keys():
-                app_state.pop(lr_scheduler_keys, None)
 
         if train_dataloader is not None:
             if not isinstance(train_dataloader, _TStateful):
@@ -323,34 +309,6 @@ def _validate_snapshot_available() -> None:
             "Please make sure ``torchsnapshot`` is installed. "
             "Installation: https://github.com/pytorch/torchsnapshot#install"
         )
-
-
-def _app_state(unit: AppStateMixin) -> Dict[str, Any]:
-    """Join together all of the tracked stateful entities to simplify registration of snapshottable states, deals with FSDP case"""
-    app_state = unit.app_state()
-    tracked_optimizers = unit._construct_tracked_optimizers()  # handles fsdp
-    app_state.update(tracked_optimizers)
-    return app_state
-
-
-def _get_app_state(
-    state: State,
-    unit: AppStateMixin,
-    *,
-    intra_epoch: bool,
-) -> Dict[str, _TStateful]:
-    train_state = none_throws(state.train_state)
-    app_state = _app_state(unit)
-
-    rng_state = torchsnapshot.RNGState()
-    app_state[_RNG_STATE_KEY] = rng_state
-
-    # for intra-epoch checkpointing, include dataloader states
-    train_dl = train_state.dataloader
-    if intra_epoch and isinstance(train_dl, _TStateful):
-        app_state[_TRAIN_DL_STATE_KEY] = train_dl
-
-    return app_state
 
 
 def _check_app_state_collision(app_state: Dict[str, _TStateful]) -> None:

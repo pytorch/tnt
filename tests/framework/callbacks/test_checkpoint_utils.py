@@ -16,9 +16,11 @@ from torch import nn
 from torch.distributed import launcher
 from torchsnapshot import Snapshot
 from torchsnapshot.snapshot import SNAPSHOT_METADATA_FNAME
+from torchtnt.framework._test_utils import DummyTrainUnit, get_dummy_train_state
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
+    _prepare_app_state_for_checkpoint,
     _retrieve_checkpoint_dirpaths,
     get_latest_checkpoint_path,
 )
@@ -172,3 +174,13 @@ class CheckpointUtilsTest(unittest.TestCase):
                 _delete_checkpoint(temp_dir, SNAPSHOT_METADATA_FNAME)
             _delete_checkpoint(dirpath)
             self.assertFalse(os.path.exists(dirpath))
+
+    def test_get_app_state(self) -> None:
+        my_unit = DummyTrainUnit(input_dim=2)
+        state = get_dummy_train_state()
+
+        app_state = _prepare_app_state_for_checkpoint(state, my_unit, intra_epoch=False)
+        self.assertCountEqual(
+            app_state.keys(),
+            ["module", "optimizer", "loss_fn", "train_progress"],
+        )
