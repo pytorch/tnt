@@ -239,7 +239,7 @@ def get_args() -> Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def invoke_main() -> None:
     args: Namespace = get_args()
     lc = pet.LaunchConfig(
         min_nodes=1,
@@ -253,3 +253,7 @@ if __name__ == "__main__":
     )
 
     pet.elastic_launch(lc, entrypoint=main)(args)
+
+
+if __name__ == "__main__":
+    invoke_main()  # pragma: no cover

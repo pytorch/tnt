@@ -378,7 +378,7 @@ def main(argv: List[str]) -> None:
     )
 
 
-if __name__ == "__main__":
+def invoke_main() -> None:
     lc = launcher.LaunchConfig(
         min_nodes=MIN_NODES,
         max_nodes=MAX_NODES,
@@ -391,3 +391,7 @@ if __name__ == "__main__":
     )
 
     launcher.elastic_launch(config=lc, entrypoint=main)(sys.argv[1:])
+
+
+if __name__ == "__main__":
+    invoke_main()  # pragma: no cover
