@@ -258,6 +258,7 @@ Stateful
    :nosignatures:
 
    Stateful
+   MultiStateful
 
 
 SWA
