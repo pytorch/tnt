@@ -4,23 +4,19 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+from __future__ import annotations
+
 import logging
-import os
 from contextlib import contextmanager, ExitStack
-from typing import Any, cast, Dict, Generator, Iterable, List, Optional, Set, Union
+from typing import Any, Dict, Generator, Iterable, List, Optional, Set, Union
 
 import torch.distributed as dist
 
 from pyre_extensions import none_throws
 
-from torchtnt.framework.callback import Callback
-from torchtnt.framework.callbacks._checkpoint_utils import (
-    _delete_checkpoint,
-    _retrieve_checkpoint_dirpaths,
-    get_latest_checkpoint_path,
-)
+from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
 from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import (
     AppStateMixin,
     TEvalUnit,
@@ -29,8 +25,6 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import get_timing_context
-from torchtnt.utils.distributed import get_global_rank, PGWrapper
-from torchtnt.utils.fsspec import get_filesystem
 from torchtnt.utils.optimizer import init_optim_state
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import Stateful
@@ -38,11 +32,7 @@ from torchtnt.utils.stateful import Stateful
 try:
     import torchsnapshot
     from torchsnapshot.knobs import override_max_per_rank_io_concurrency
-    from torchsnapshot.snapshot import (
-        PendingSnapshot,
-        Snapshot,
-        SNAPSHOT_METADATA_FNAME,
-    )
+    from torchsnapshot.snapshot import PendingSnapshot, Snapshot
 
     _TStateful = torchsnapshot.Stateful
     _TORCHSNAPSHOT_AVAILABLE = True
@@ -58,7 +48,7 @@ _TRAIN_DL_STATE_KEY = "train_dataloader"
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class TorchSnapshotSaver(Callback):
+class TorchSnapshotSaver(BaseCheckpointer):
     """
     A callback which periodically saves the application state during training using `TorchSnapshot <https://pytorch.org/torchsnapshot/>`_.
 
@@ -94,6 +84,8 @@ class TorchSnapshotSaver(Callback):
         If checkpointing FSDP model, you can set state_dict type calling `set_state_dict_type <https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type>`_ prior to starting training.
     """
 
+    metadata_fname: Optional[str] = ".snapshot_metadata"
+
     def __init__(
         self,
         dirpath: str,
@@ -108,151 +100,27 @@ class TorchSnapshotSaver(Callback):
         knob_options: Optional[KnobOptions] = None,
     ) -> None:
         _validate_snapshot_available()
-        if save_every_n_train_steps is not None and save_every_n_train_steps <= 0:
-            raise ValueError(
-                f"Invalid value passed for save_every_n_train_steps. Expected to receive either None or positive number, but received {save_every_n_train_steps}"
-            )
-        if save_every_n_epochs is not None and save_every_n_epochs <= 0:
-            raise ValueError(
-                f"Invalid value passed for save_every_n_epochs. Expected to receive either None or positive number, but received {save_every_n_epochs}"
-            )
-        if keep_last_n_checkpoints is not None and keep_last_n_checkpoints <= 0:
-            raise ValueError(
-                f"Invalid value passed for keep_last_n_checkpoints. Expected to receive either None or positive number, but received {keep_last_n_checkpoints}"
-            )
-        self._save_every_n_epochs = save_every_n_epochs
-        self._save_every_n_train_steps = save_every_n_train_steps
-
-        self._keep_last_n_checkpoints = keep_last_n_checkpoints
-        self._ckpt_dirpaths: List[str] = []
-        if self._keep_last_n_checkpoints:
-            self._ckpt_dirpaths = _retrieve_checkpoint_dirpaths(dirpath)
-
-        self._process_group = process_group
-        self._pg_wrapper = PGWrapper(process_group)
-        self._sync_dirpath_to_all_ranks(dirpath)
+        super().__init__(
+            dirpath=dirpath,
+            save_every_n_train_steps=save_every_n_train_steps,
+            save_every_n_epochs=save_every_n_epochs,
+            keep_last_n_checkpoints=keep_last_n_checkpoints,
+            process_group=process_group,
+        )
         self._async_checkpoint = async_checkpoint
+
         self._replicated: Set[str] = set(replicated or [])
 
         self._prev_snapshot: Optional[PendingSnapshot] = None
         self._storage_options = storage_options
         self._knob_options: KnobOptions = knob_options or KnobOptions()
 
-    def _sync_dirpath_to_all_ranks(self, dirpath: str) -> None:
-        if not (dist.is_available() and dist.is_initialized()):
-            self._dirpath: str = dirpath
-            return
-
-        dirpath_container = [dirpath] if get_global_rank() == 0 else [""]
-        # broadcast directory from global rank 0
-        dist.broadcast_object_list(dirpath_container, src=0, group=self._process_group)
-        updated_dirpath = dirpath_container[0]
-        if updated_dirpath != dirpath:
-            logger.warning(f"Updating dirpath to match rank 0: {updated_dirpath}")
-
-        self._dirpath: str = updated_dirpath
-
-    @property
-    def dirpath(self) -> str:
-        """Returns parent directory to save to."""
-        return self._dirpath
-
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         """Validate there's no key collision for the app state."""
         app_state = _app_state(unit)
         _check_app_state_collision(app_state)
 
-        # clean up the difference if surplus of checkpoints exist
-        keep_last_n_checkpoints = self._keep_last_n_checkpoints
-        if (
-            keep_last_n_checkpoints
-            and len(self._ckpt_dirpaths) > keep_last_n_checkpoints
-        ):
-            logger.warning(
-                " ".join(
-                    [
-                        f"{len(self._ckpt_dirpaths)} checkpoints found in {self._dirpath}.",
-                        f"Deleting {len(self._ckpt_dirpaths) - keep_last_n_checkpoints} oldest",
-                        "checkpoints to enforce ``keep_last_n_checkpoints`` argument.",
-                    ]
-                )
-            )
-            for _ in range(len(self._ckpt_dirpaths) - keep_last_n_checkpoints):
-                self._remove_snapshot(state)
-
-    def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
-        num_steps_completed = unit.train_progress.num_steps_completed
-        save_every_n_train_steps = self._save_every_n_train_steps
-        if (
-            save_every_n_train_steps is None
-            or num_steps_completed % save_every_n_train_steps != 0
-        ):
-            return
-
-        epoch = unit.train_progress.num_epochs_completed
-        if state.entry_point == EntryPoint.FIT:
-            num_steps_completed += cast(
-                TEvalUnit, unit
-            ).eval_progress.num_steps_completed
-        snapshot_path = _get_snapshot_save_path(
-            self._dirpath, epoch, num_steps_completed
-        )
-        self._checkpoint_impl(
-            state,
-            unit,
-            snapshot_path=snapshot_path,
-            intra_epoch=True,
-            prev_snapshot_wait=False,
-            curr_snapshot_wait=False,
-        )
-
-    def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
-        epoch = unit.train_progress.num_epochs_completed
-        save_every_n_epochs = self._save_every_n_epochs
-        if save_every_n_epochs is None or epoch % save_every_n_epochs != 0:
-            return
-
-        num_steps_completed = unit.train_progress.num_steps_completed
-        if state.entry_point == EntryPoint.FIT:
-            num_steps_completed += cast(
-                TEvalUnit, unit
-            ).eval_progress.num_steps_completed
-        snapshot_path = _get_snapshot_save_path(
-            self._dirpath, epoch, num_steps_completed
-        )
-        self._checkpoint_impl(
-            state,
-            unit,
-            snapshot_path=snapshot_path,
-            intra_epoch=False,
-            prev_snapshot_wait=True,
-            curr_snapshot_wait=False,
-        )
-
-    def on_train_end(self, state: State, unit: TTrainUnit) -> None:
-        num_steps_completed = unit.train_progress.num_steps_completed
-        if state.entry_point == EntryPoint.FIT:
-            num_steps_completed += cast(
-                TEvalUnit, unit
-            ).eval_progress.num_steps_completed
-        epoch = unit.train_progress.num_epochs_completed
-        snapshot_path = _get_snapshot_save_path(
-            self._dirpath, epoch, num_steps_completed
-        )
-
-        fs = get_filesystem(snapshot_path)
-        if fs.exists(os.path.join(snapshot_path, SNAPSHOT_METADATA_FNAME)):
-            rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
-            return
-
-        self._checkpoint_impl(
-            state,
-            unit,
-            snapshot_path=snapshot_path,
-            intra_epoch=False,
-            prev_snapshot_wait=True,
-            curr_snapshot_wait=True,
-        )
+        super().on_train_start(state, unit)
 
     def on_exception(
         self,
@@ -267,22 +135,25 @@ class TorchSnapshotSaver(Callback):
         state: State,
         unit: AppStateMixin,
         *,
-        snapshot_path: str,
-        intra_epoch: bool,
-        prev_snapshot_wait: bool,
-        curr_snapshot_wait: bool,
-    ) -> None:
+        checkpoint_path: str,
+        hook: str,
+    ) -> bool:
         """
         Checkpoint the current state of the application.
-
-        Args:
-            state: State of the application
-            unit: The training/evaluation/prediction unit
-            snapshot_path: Path to save the snapshot
-            intra_epoch: Whether in middle of epoch or not
-            prev_snapshot_wait: Whether to wait for previous snapshot to finish writing
-            curr_snapshot_wait: Whether to wait for current snapshot to finish writing
         """
+        intra_epoch = False
+        prev_snapshot_wait = False
+        curr_snapshot_wait = False
+        if hook == "on_train_step_end":
+            intra_epoch = True
+        elif hook == "on_train_epoch_end":
+            prev_snapshot_wait = True
+        elif hook == "on_train_end":
+            prev_snapshot_wait = True
+            curr_snapshot_wait = True
+        else:
+            raise RuntimeError(f"Unexpected hook encountered '{hook}'")
+
         app_state = _get_app_state(
             state,
             unit,
@@ -297,39 +168,14 @@ class TorchSnapshotSaver(Callback):
                 # future, add logic to set  successful flag
                 # only when checkpoint is fully written
                 checkpoint_success = self._async_snapshot(
-                    snapshot_path, app_state, wait=prev_snapshot_wait
+                    checkpoint_path, app_state, wait=prev_snapshot_wait
                 )
                 if curr_snapshot_wait:
                     self._wait()
         else:
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.take_sync_snapshot"
-            ):
-                checkpoint_success = self._sync_snapshot(
-                    snapshot_path, app_state, wait=prev_snapshot_wait
-                )
-
-        # remove and book keep snapshots related to keep_last_n_checkpoints
-        if checkpoint_success:
-            if self._should_remove_snapshot():
-                self._remove_snapshot(state)
-            self._ckpt_dirpaths.append(snapshot_path)
-
-    def _should_remove_snapshot(self) -> bool:
-        keep_last_n_checkpoints = self._keep_last_n_checkpoints
-        return (
-            keep_last_n_checkpoints is not None
-            and len(self._ckpt_dirpaths) >= keep_last_n_checkpoints
-        )
-
-    def _remove_snapshot(self, state: State) -> None:
-        # remove oldest snapshot directory
-        oldest_ckpt_path = self._ckpt_dirpaths.pop(0)
-        with get_timing_context(state, f"{self.__class__.__name__}.delete_snapshot"):
-            if self._pg_wrapper.get_rank() == 0:
-                # only delete on rank 0
-                _delete_checkpoint(oldest_ckpt_path, SNAPSHOT_METADATA_FNAME)
-            self._pg_wrapper.barrier()
+            with get_timing_context(state, f"{self.__class__.__name__}.take_snapshot"):
+                checkpoint_success = self._sync_snapshot(checkpoint_path, app_state)
+        return checkpoint_success
 
     def _wait(self) -> None:
         if self._prev_snapshot is not None:
@@ -366,7 +212,9 @@ class TorchSnapshotSaver(Callback):
         return True
 
     def _sync_snapshot(
-        self, snapshot_path: str, app_state: Dict[str, _TStateful], *, wait: bool
+        self,
+        snapshot_path: str,
+        app_state: Dict[str, _TStateful],
     ) -> bool:
         with _override_knobs(self._knob_options):
             rank_zero_info(
@@ -467,52 +315,6 @@ class TorchSnapshotSaver(Callback):
             snapshot.restore(app_state)
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
 
-    @staticmethod
-    def restore_from_latest(
-        dirpath: str,
-        unit: AppStateMixin,
-        *,
-        train_dataloader: Optional[Iterable[TTrainData]] = None,
-        process_group: Optional[dist.ProcessGroup] = None,
-        restore_options: Optional[RestoreOptions] = None,
-        storage_options: Optional[Dict[str, Any]] = None,
-        knob_options: Optional[KnobOptions] = None,
-    ) -> bool:
-        """
-        Given a parent directory where checkpoints are saved, restore the snapshot state from the latest checkpoint in the directory.
-
-        There are additional flags offered should the user want to skip loading the train and eval progress.
-        By default, the train and eval progress are restored, if applicable.
-
-        Args:
-            dirpath: Parent directory from which to get the latest snapshot.
-            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
-            train_dataloader: An optional train dataloader to restore.
-            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
-            restore_options: Controls what to  filter when restoring the state.
-            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
-            knob_options: Additional keyword options for the snapshot knobs
-
-        Returns:
-            True if the latest snapshot directory was found and successfully restored, otherwise False.
-        """
-        path = get_latest_checkpoint_path(
-            dirpath, SNAPSHOT_METADATA_FNAME, process_group=process_group
-        )
-        if path is None:
-            return False
-        logger.info(f"Restoring from path: {path}")
-        TorchSnapshotSaver.restore(
-            path,
-            unit,
-            train_dataloader=train_dataloader,
-            process_group=process_group,
-            restore_options=restore_options,
-            storage_options=storage_options,
-            knob_options=knob_options,
-        )
-        return True
-
 
 def _validate_snapshot_available() -> None:
     if not _TORCHSNAPSHOT_AVAILABLE:
@@ -521,11 +323,6 @@ def _validate_snapshot_available() -> None:
             "Please make sure ``torchsnapshot`` is installed. "
             "Installation: https://github.com/pytorch/torchsnapshot#install"
         )
-
-
-def _get_snapshot_save_path(dirpath: str, epoch: int, step: int) -> str:
-    # TODO: discuss whether this path should be customized
-    return os.path.join(dirpath, f"epoch_{epoch}_step_{step}")
 
 
 def _app_state(unit: AppStateMixin) -> Dict[str, Any]:
