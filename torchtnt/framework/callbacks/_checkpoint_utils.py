@@ -7,13 +7,18 @@
 import logging
 import os
 import re
-from typing import List, Optional, Pattern
+
+from typing import Any, Dict, List, Optional, Pattern
 
 from pyre_extensions import none_throws
 from torch import distributed as dist
+from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
+from torchtnt.framework.state import State
+from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 
 from torchtnt.utils.fsspec import get_filesystem
+from torchtnt.utils.stateful import Stateful
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -155,3 +160,62 @@ def _delete_checkpoint(dirpath: str, metadata_fname: Optional[str] = None) -> No
     if metadata_fname and not fs.exists(os.path.join(dirpath, metadata_fname)):
         raise RuntimeError(f"{dirpath} does not contain {metadata_fname}")
     fs.rm(dirpath, recursive=True)
+
+
+# keys for use when checkpointing
+_TRAIN_PROGRESS_STATE_KEY = "train_progress"
+_TRAIN_DL_STATE_KEY = "train_dataloader"
+_EVAL_PROGRESS_STATE_KEY = "eval_progress"
+
+
+def _prepare_app_state(unit: AppStateMixin) -> Dict[str, Any]:
+    """Join together all of the tracked stateful entities to simplify registration of snapshottable states, deals with FSDP case"""
+    app_state = unit.app_state()
+    tracked_optimizers = unit._construct_tracked_optimizers()  # handles fsdp
+    app_state.update(tracked_optimizers)
+    return app_state
+
+
+def _prepare_app_state_for_checkpoint(
+    state: State, unit: AppStateMixin, intra_epoch: bool
+) -> Dict[str, Stateful]:
+    """
+    Prepares the application state for checkpointing.
+    """
+    app_state = _prepare_app_state(unit)
+
+    # for intra-epoch checkpointing, include dataloader states
+    train_state = none_throws(state.train_state)
+    train_dl = train_state.dataloader
+    if intra_epoch and isinstance(train_dl, Stateful):
+        app_state[_TRAIN_DL_STATE_KEY] = train_dl
+
+    return app_state
+
+
+def _prepare_app_state_for_restore(
+    unit: AppStateMixin, restore_options: RestoreOptions
+) -> Dict[str, Any]:
+    """
+    Prepares the application state for restoring from a checkpoint given a RestoreOptions.
+    """
+    app_state = _prepare_app_state(unit)
+
+    restore_options = restore_options or RestoreOptions()
+    if not restore_options.restore_train_progress:
+        app_state.pop(_TRAIN_PROGRESS_STATE_KEY, None)
+
+    if not restore_options.restore_eval_progress:
+        app_state.pop(_EVAL_PROGRESS_STATE_KEY, None)
+
+    if not restore_options.restore_optimizers:
+        # remove all optimizer keys from app_state
+        for optim_keys in unit.tracked_optimizers().keys():
+            app_state.pop(optim_keys, None)
+
+    if not restore_options.restore_lr_schedulers:
+        # remove all lr scheduler keys from app_state
+        for lr_scheduler_keys in unit.tracked_lr_schedulers().keys():
+            app_state.pop(lr_scheduler_keys, None)
+
+    return app_state

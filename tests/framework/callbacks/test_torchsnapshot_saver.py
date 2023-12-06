@@ -27,7 +27,6 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
-    _get_app_state,
     _override_knobs,
     TorchSnapshotSaver,
 )
@@ -368,16 +367,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         snapshot_cb._sync_snapshot = MagicMock()
         snapshot_cb.on_train_step_end(state, my_unit)
         snapshot_cb._sync_snapshot.assert_called_once()
-
-    def test_get_app_state(self) -> None:
-        my_unit = DummyTrainUnit(input_dim=2)
-        state = get_dummy_train_state()
-
-        app_state = _get_app_state(state, my_unit, intra_epoch=False)
-        self.assertCountEqual(
-            app_state.keys(),
-            ["module", "optimizer", "loss_fn", "rng_state", "train_progress"],
-        )
 
 
 class DummyStatefulDataLoader:
