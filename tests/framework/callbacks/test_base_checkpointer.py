@@ -337,6 +337,21 @@ class BaseCheckpointerTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
+    @patch(
+        "torchtnt.framework.callbacks.base_checkpointer._retrieve_checkpoint_dirpaths",
+        return_value=["epoch_1_step_10", "epoch_2_step_20"],
+    )
+    def test_ckpt_dirpaths(self, _: MagicMock) -> None:
+        """
+        Tests that ckpt_dirpaths is populated correctly
+        based on if ``keep_last_n_checkpoints`` is set.
+        """
+        bc = BaseCheckpointSaver("foo")
+        self.assertEqual(bc._ckpt_dirpaths, [])
+
+        bc = BaseCheckpointSaver("foo", keep_last_n_checkpoints=10)
+        self.assertEqual(bc._ckpt_dirpaths, ["epoch_1_step_10", "epoch_2_step_20"])
+
     def test_should_remove_checkpoint(self) -> None:
         """
         Tests the helper function that checks if checkpoint should be removed or not
