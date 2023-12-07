@@ -10,7 +10,8 @@ import unittest
 import torch
 import torch.distributed as dist
 from torchtnt.utils.device import get_device_from_env
-from torchtnt.utils.distributed import all_gather_tensors
+from torchtnt.utils.distributed import all_gather_tensors, get_local_rank, PGWrapper
+from torchtnt.utils.env import init_from_env
 from torchtnt.utils.test_utils import spawn_multi_process
 
 
@@ -41,3 +42,25 @@ class DistributedGPUTest(unittest.TestCase):
             val = result[idx]
             assert val.shape == (idx + 1, 4 - idx)
             assert (val == 1).all()
+
+    def test_pg_wrapper_scatter_object_list_nccl(self) -> None:
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_pg_wrapper_scatter_object_list,
+        )
+
+    @classmethod
+    def _test_pg_wrapper_scatter_object_list(
+        cls,
+    ) -> None:
+        init_from_env()
+        pg_wrapper = PGWrapper(dist.group.WORLD)
+        output_list = [None] * 2
+        pg_wrapper.scatter_object_list(
+            output_list=output_list,
+            input_list=[1, 2] if get_local_rank() == 0 else [None] * 2,
+            src=0,
+        )
+        tc = unittest.TestCase()
+        tc.assertEqual(output_list[0], get_local_rank() + 1)

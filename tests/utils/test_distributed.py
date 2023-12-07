@@ -26,6 +26,7 @@ from torchtnt.utils.distributed import (
     get_process_group_backend_from_device,
     get_tcp_init_method,
     get_world_size,
+    PGWrapper,
     rank_zero_fn,
     revert_sync_batchnorm,
     sync_bool,
@@ -437,3 +438,24 @@ class DistributedTest(unittest.TestCase):
         self.assertEqual(url_qs["world_size"], [str(world_size)])
         self.assertIn("rank", url_qs)
         self.assertEqual(url_qs["rank"], [str(rank)])
+
+    def test_pg_wrapper_scatter_object_list_gloo(self) -> None:
+        config = get_pet_launch_config(4)
+        launcher.elastic_launch(
+            config, entrypoint=self._test_pg_wrapper_scatter_object_list
+        )
+
+    @classmethod
+    def _test_pg_wrapper_scatter_object_list(
+        cls,
+    ) -> None:
+        dist.init_process_group("gloo")
+        pg_wrapper = PGWrapper(dist.group.WORLD)
+        output_list = [None] * 4
+        pg_wrapper.scatter_object_list(
+            output_list=output_list,
+            input_list=[1, 2, 3, 4] if get_local_rank() == 0 else [None] * 4,
+            src=0,
+        )
+        tc = unittest.TestCase()
+        tc.assertEqual(output_list[0], get_local_rank() + 1)
