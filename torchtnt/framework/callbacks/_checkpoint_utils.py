@@ -8,7 +8,7 @@ import logging
 import os
 import re
 
-from typing import Any, Dict, List, Optional, Pattern
+from typing import Any, Dict, List, Optional, Pattern, Tuple
 
 from pyre_extensions import none_throws
 from torch import distributed as dist
@@ -140,6 +140,11 @@ def _retrieve_checkpoint_dirpaths(dirpath: str) -> List[str]:
     Args:
         dirpath: parent directory where checkpoints are saved.
     """
+
+    def sort_fn(path: str) -> Tuple[int, int]:
+        x = os.path.basename(path)
+        return (int(x.split("_")[1]), int(x.split("_")[3]))
+
     fs = get_filesystem(dirpath)
 
     contents = fs.ls(dirpath, detail=True)
@@ -151,7 +156,7 @@ def _retrieve_checkpoint_dirpaths(dirpath: str) -> List[str]:
             ckpt_dirpaths.append(path)
 
     # sorts by epoch, then step
-    ckpt_dirpaths.sort(key=lambda x: (int(x.split("_")[1]), int(x.split("_")[3])))
+    ckpt_dirpaths.sort(key=sort_fn)
     return ckpt_dirpaths
 
 

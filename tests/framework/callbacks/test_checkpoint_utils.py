@@ -142,6 +142,7 @@ class CheckpointUtilsTest(unittest.TestCase):
             {"name": "tmp/epoch_1_step_10", "type": "directory"},
             {"name": "tmp/epoch_2_step_10", "type": "directory"},
             {"name": "tmp/epoch_0_step_5", "type": "directory"},
+            {"name": "tmp_12ed/epoch_0_step_6", "type": "directory"},
             {"name": "tmp/epoch_0_step_3", "type": "file"},
         ]
 
@@ -151,6 +152,7 @@ class CheckpointUtilsTest(unittest.TestCase):
             returned_paths,
             [
                 "tmp/epoch_0_step_5",
+                "tmp_12ed/epoch_0_step_6",
                 "tmp/epoch_0_step_10",
                 "tmp/epoch_1_step_10",
                 "tmp/epoch_2_step_10",
