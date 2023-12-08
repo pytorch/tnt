@@ -43,6 +43,11 @@ class DistributedGPUTest(unittest.TestCase):
             assert val.shape == (idx + 1, 4 - idx)
             assert (val == 1).all()
 
+    @unittest.skipUnless(
+        condition=cuda_available,
+        reason="This test should only run on a GPU host.",
+    )
+    @unittest.skipUnless(dist_available, reason="Torch distributed is needed to run")
     def test_pg_wrapper_scatter_object_list_nccl(self) -> None:
         spawn_multi_process(
             2,
