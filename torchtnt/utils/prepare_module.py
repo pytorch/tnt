@@ -127,10 +127,12 @@ class ActivationCheckpointParams:
     Args:
         checkpoint_impl: type of checkpointing implementation to use
         check_fn: A lambda function which will be passed to each child submodule and return ``True`` or ``False`` depending on whether the submodule should be wrapped.
+        auto_wrap_policy A policy to wrap model's submodules with AC. Note that if this is specified, it takes precedence over ``check_fn``.
     """
 
-    checkpoint_impl: "CheckpointImpl"
-    check_fn: Optional[Callable[[torch.nn.Module], bool]]
+    checkpoint_impl: CheckpointImpl
+    check_fn: Callable[[torch.nn.Module], bool] = lambda _: True
+    auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
 
 
 def prepare_ddp(
@@ -305,6 +307,7 @@ def prepare_module(
             raise RuntimeError("Activation checkpointing requires torch>=2.0")
         checkpoint_impl = activation_checkpoint_params.checkpoint_impl
         check_fn = activation_checkpoint_params.check_fn
+        auto_wrap_policy = activation_checkpoint_params.auto_wrap_policy
         custom_checkpoint_wrapper = partial(
             checkpoint_wrapper,
             checkpoint_impl=checkpoint_impl,
@@ -313,6 +316,7 @@ def prepare_module(
             module,
             checkpoint_wrapper_fn=custom_checkpoint_wrapper,
             check_fn=check_fn,
+            auto_wrap_policy=auto_wrap_policy,
         )
 
     if torch_compile_params:
