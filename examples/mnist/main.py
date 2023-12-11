@@ -18,7 +18,7 @@ from torch.optim import Adadelta
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torcheval.metrics import MulticlassAccuracy
-from torchtnt.framework.auto_unit import AutoUnit
+from torchtnt.framework.auto_unit import AutoUnit, TrainStepResults
 from torchtnt.framework.fit import fit
 from torchtnt.framework.state import State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
@@ -111,9 +111,9 @@ class MyUnit(AutoUnit[Batch]):
         state: State,
         data: Batch,
         step: int,
-        loss: torch.Tensor,
-        outputs: torch.Tensor,
+        results: TrainStepResults,
     ) -> None:
+        loss, outputs = results.loss, results.outputs
         _, targets = data
         self.train_accuracy.update(outputs, targets)
         if step % self.log_every_n_steps == 0:

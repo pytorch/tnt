@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import torch
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+from torchtnt.framework.auto_unit import TrainStepResults
 
 from torchtnt.utils.version import is_torch_version_geq_1_13
 
@@ -1078,8 +1079,7 @@ class TimingAutoUnit(AutoUnit[Batch]):
         state: State,
         data: Batch,
         step: int,
-        loss: torch.Tensor,
-        outputs: torch.Tensor,
+        results: TrainStepResults,
     ) -> None:
         assert state.train_state
         if self.train_progress.num_steps_completed_in_epoch == 1:

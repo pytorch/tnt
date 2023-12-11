@@ -22,7 +22,7 @@ from torchtnt.examples.mingpt.model import (
     GPTConfig,
     OptimizerConfig,
 )
-from torchtnt.framework.auto_unit import AutoUnit
+from torchtnt.framework.auto_unit import AutoUnit, TrainStepResults
 from torchtnt.framework.fit import fit
 from torchtnt.framework.state import State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
@@ -103,9 +103,9 @@ class MinGPTUnit(AutoUnit[Batch]):
         state: State,
         data: Batch,
         step: int,
-        loss: torch.Tensor,
-        outputs: object,
+        results: TrainStepResults,
     ) -> None:
+        loss = results.loss
         if step % self.log_every_n_steps == 0:
             self.tb_logger.log("loss", loss, step)
 
