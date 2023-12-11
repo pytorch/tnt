@@ -17,7 +17,7 @@ import torch.nn as nn
 from torch.distributed import launcher as pet
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torcheval.metrics import BinaryAccuracy
-from torchtnt.framework.auto_unit import AutoUnit, Strategy, SWAParams
+from torchtnt.framework.auto_unit import AutoUnit, Strategy, SWAParams, TrainStepResults
 from torchtnt.framework.fit import fit
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.utils import init_from_env, seed, TLRScheduler
@@ -128,9 +128,9 @@ class MyUnit(AutoUnit[Batch]):
         state: State,
         data: Batch,
         step: int,
-        loss: torch.Tensor,
-        outputs: torch.Tensor,
+        results: TrainStepResults,
     ) -> None:
+        loss, outputs = results.loss, results.outputs
         _, targets = data
         self.train_accuracy.update(outputs, targets)
         tb_logger = self.tb_logger

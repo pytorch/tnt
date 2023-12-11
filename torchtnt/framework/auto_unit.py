@@ -101,6 +101,23 @@ class SWAParams:
     swalr_params: Optional[SWALRParams] = None
 
 
+@dataclass
+class TrainStepResults:
+    """
+    Dataclass to store training step results.
+
+    Args:
+        loss: the loss computed in the ``compute_loss`` function
+        total_grad_norm: total norm of the parameter gradients, if gradient norm clipping is enabled
+        outputs: the outputs of the model forward pass
+    """
+
+    loss: torch.Tensor
+    total_grad_norm: Optional[torch.Tensor]
+    # pyre-fixme[4]: Attribute `outputs` of class `TrainStepResults` must have a type other than `Any`.
+    outputs: Any
+
+
 class _ConfigureOptimizersCaller(ABCMeta):
     # pyre-fixme[3]: Return type must be annotated.
     # pyre-fixme[2]: Parameter must be annotated.
@@ -577,11 +594,13 @@ class AutoUnit(
                 with get_timing_context(state, f"{self.__class__.__name__}.backward"):
                     loss.backward()
 
+        total_grad_norm = None
         if should_update_weights:
-            self._update_weights(state)
+            total_grad_norm = self._update_weights(state)
 
         step = self.train_progress.num_steps_completed
-        self.on_train_step_end(state, data, step, loss, outputs)
+        results = TrainStepResults(loss, total_grad_norm, outputs)
+        self.on_train_step_end(state, data, step, results)
         return loss, outputs
 
     def on_train_step_end(
@@ -589,9 +608,7 @@ class AutoUnit(
         state: State,
         data: TData,
         step: int,
-        loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
-        outputs: Any,
+        results: TrainStepResults,
     ) -> None:
         """
         This will be called at the end of every ``train_step`` before returning. The user can implement this method with code to update and log their metrics,
@@ -601,8 +618,7 @@ class AutoUnit(
             state: a State object which is passed from the ``train_step``
             data: a batch of data which is passed from the ``train_step``
             step: how many ``train_step`` s have been completed
-            loss: the loss computed in the ``compute_loss`` function
-            outputs: the outputs of the model forward pass
+            results: dataclass containing loss, total gradient norm, and outputs
         """
         pass
 
@@ -687,7 +703,12 @@ class AutoUnit(
         """
         pass
 
-    def _update_weights(self, state: State) -> None:
+    def _update_weights(self, state: State) -> Optional[torch.Tensor]:
+        """
+        Updates weights of the module, handles clip gradient norm, etc.
+
+        Returns total norm of the parameter gradients, if gradient norm clipping is enabled.
+        """
         module = self.module
         optimizer = none_throws(self.optimizer)
         grad_scaler = self.grad_scaler
@@ -699,6 +720,7 @@ class AutoUnit(
             with get_timing_context(state, f"{self.__class__.__name__}.grad_unscale"):
                 grad_scaler.unscale_(optimizer)
 
+        total_grad_norm = None
         # gradient norm clipping
         if clip_grad_norm:
             if _is_fsdp_module(module):
@@ -706,7 +728,9 @@ class AutoUnit(
                     with get_timing_context(
                         state, f"{self.__class__.__name__}.clip_grad_norm"
                     ):
-                        module.clip_grad_norm_(max_norm=clip_grad_norm)
+                        total_grad_norm = module.clip_grad_norm_(
+                            max_norm=clip_grad_norm
+                        )
                 else:
                     raise RuntimeError(
                         "Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271"
@@ -715,7 +739,7 @@ class AutoUnit(
                 with get_timing_context(
                     state, f"{self.__class__.__name__}.clip_grad_norm"
                 ):
-                    torch.nn.utils.clip_grad_norm_(
+                    total_grad_norm = torch.nn.utils.clip_grad_norm_(
                         parameters=module.parameters(),
                         max_norm=clip_grad_norm,
                     )
@@ -746,6 +770,8 @@ class AutoUnit(
 
         if self.step_lr_interval == "step":
             self._update_lr_and_swa(state, self.train_progress.num_steps_completed)
+
+        return total_grad_norm
 
     def get_next_train_batch(
         self, state: State, data_iter: Iterator[TData]
