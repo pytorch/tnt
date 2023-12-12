@@ -22,10 +22,13 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
     _prepare_app_state_for_checkpoint,
     _retrieve_checkpoint_dirpaths,
+    get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
+    rank_zero_read_and_broadcast,
 )
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.test_utils import get_pet_launch_config, spawn_multi_process
 
 METADATA_FNAME: str = ".metadata"
 
@@ -158,6 +161,41 @@ class CheckpointUtilsTest(unittest.TestCase):
                 "tmp/epoch_2_step_10",
             ],
         )
+
+    @unittest.skipUnless(
+        condition=distributed_available, reason="Torch distributed is needed to run"
+    )
+    def test_distributed_get_checkpoint_dirpaths(self) -> None:
+        spawn_multi_process(2, "gloo", self._distributed_get_checkpoint_dirpaths)
+
+    @staticmethod
+    def _distributed_get_checkpoint_dirpaths() -> None:
+        """
+        Tests that existing checkpoint directories are read and
+        properly registered on all ranks
+        """
+
+        @rank_zero_read_and_broadcast
+        def create_tmp_dir() -> str:
+            return tempfile.mkdtemp()
+
+        init_from_env()
+
+        temp_dir = create_tmp_dir()
+        try:
+            path1 = os.path.join(temp_dir, "epoch_0_step_10")
+            path2 = os.path.join(temp_dir, "epoch_1_step_20")
+            if get_global_rank() == 0:
+                os.mkdir(path1)
+                os.mkdir(path2)
+            torch.distributed.barrier()
+
+            ckpt_dirpaths = get_checkpoint_dirpaths(temp_dir)
+            tc = unittest.TestCase()
+            tc.assertEqual(ckpt_dirpaths, [path1, path2])
+        finally:
+            if get_global_rank() == 0:
+                shutil.rmtree(temp_dir)  # delete temp directory
 
     def test_delete_checkpoint(self) -> None:
         """

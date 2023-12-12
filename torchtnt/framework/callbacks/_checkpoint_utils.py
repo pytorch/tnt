@@ -8,7 +8,7 @@ import logging
 import os
 import re
 
-from typing import Any, Dict, List, Optional, Pattern, Tuple
+from typing import Any, Callable, cast, Dict, List, Optional, Pattern, Tuple, TypeVar
 
 from pyre_extensions import none_throws
 from torch import distributed as dist
@@ -22,7 +22,41 @@ from torchtnt.utils.stateful import Stateful
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+T = TypeVar("T")
 
+
+def rank_zero_read_and_broadcast(
+    func: Callable[..., T],
+) -> Callable[..., T]:
+    def wrapper(*args: Any, **kwargs: Any) -> T:
+        ret = None
+        rank = get_global_rank()
+        process_group = kwargs.pop("process_group", None)
+
+        # Do all filesystem reads from rank 0 only
+        if rank == 0:
+            ret = func(*args, **kwargs)
+
+        # If not running in a distributed setting, return as is
+        if not (dist.is_available() and dist.is_initialized()):
+            # we cast here to avoid type errors, since it is
+            # guaranteed the return value is of type T
+            return cast(T, ret)
+
+        # Otherwise, broadcast result from rank 0 to all ranks
+        pg = PGWrapper(process_group)
+        path_container = [ret]
+        pg.broadcast_object_list(path_container, 0)
+        val = path_container[0]
+
+        # we cast here to avoid type errors, since it is
+        # guaranteed the return value is of type T
+        return cast(T, val)
+
+    return wrapper
+
+
+@rank_zero_read_and_broadcast
 def get_latest_checkpoint_path(
     dirpath: str,
     metadata_fname: Optional[str] = None,
@@ -40,22 +74,7 @@ def get_latest_checkpoint_path(
         AssertionError if the checkpoint subdirectories are not named in the format epoch_{epoch}_step_{step}.
     """
 
-    ret = None
-    rank = get_global_rank()
-    # Do all filesystem reads from rank 0 only
-    if rank == 0:
-        ret = _latest_checkpoint_path(dirpath, metadata_fname)
-
-    # If not running in a distributed setting, return as is
-    if not (dist.is_available() and dist.is_initialized()):
-        return ret
-
-    # Otherwise, broadcast result from rank 0 to all ranks
-    pg = PGWrapper(process_group)
-    path_container = [ret] if rank == 0 else [None]
-    pg.broadcast_object_list(path_container, 0)
-    val = path_container[0]
-    return val
+    return _latest_checkpoint_path(dirpath, metadata_fname)
 
 
 def _latest_checkpoint_path(
@@ -130,6 +149,22 @@ def _latest_checkpoint_path(
 
     # Rejoin with the parent directory path and return the largest subdirectory
     return os.path.join(dirpath, none_throws(largest_subdirectory))
+
+
+@rank_zero_read_and_broadcast
+def get_checkpoint_dirpaths(
+    dirpath: str,
+    process_group: Optional[dist.ProcessGroup] = None,
+) -> List[str]:
+    """
+    Given a parent directory where checkpoints are saved, return the sorted checkpoint subdirectories
+    from oldest to newest.
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+        process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
+    """
+    return _retrieve_checkpoint_dirpaths(dirpath)
 
 
 def _retrieve_checkpoint_dirpaths(dirpath: str) -> List[str]:

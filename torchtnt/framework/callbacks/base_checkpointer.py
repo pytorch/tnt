@@ -14,7 +14,7 @@ import torch.distributed as dist
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
-    _retrieve_checkpoint_dirpaths,
+    get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
 )
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
@@ -84,7 +84,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         self._keep_last_n_checkpoints = keep_last_n_checkpoints
         self._ckpt_dirpaths: List[str] = []
         if self._keep_last_n_checkpoints:
-            self._ckpt_dirpaths = _retrieve_checkpoint_dirpaths(dirpath)
+            self._ckpt_dirpaths = get_checkpoint_dirpaths(dirpath)
         self._process_group = process_group
         self._pg_wrapper = PGWrapper(process_group)
 
