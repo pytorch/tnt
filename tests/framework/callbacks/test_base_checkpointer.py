@@ -338,7 +338,7 @@ class BaseCheckpointerTest(unittest.TestCase):
                 shutil.rmtree(temp_dir)  # delete temp directory
 
     @patch(
-        "torchtnt.framework.callbacks.base_checkpointer._retrieve_checkpoint_dirpaths",
+        "torchtnt.framework.callbacks.base_checkpointer.get_checkpoint_dirpaths",
         return_value=["epoch_1_step_10", "epoch_2_step_20"],
     )
     def test_ckpt_dirpaths(self, _: MagicMock) -> None:
