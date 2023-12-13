@@ -29,6 +29,7 @@ class AveragedModel(PyTorchAveragedModel):
         averaging_method: Literal["ema", "swa"] = "ema",
         ema_decay: float = 0.999,
         skip_deepcopy: bool = False,
+        use_lit: bool = False,
     ) -> None:
         """
         This class is a custom version of AveragedModel that allows us to skip the
@@ -44,6 +45,9 @@ class AveragedModel(PyTorchAveragedModel):
                 is only needed for EMA, and is ignored otherwise (for SWA).
             skip_deepcopy: If True, will skip the deepcopy step. The user must ensure
                 that the module passed in is already copied in someway
+            use_lit: If True, will use Lit EMA style by adjusting weight decay based on the
+                number of updates. The EMA decay will start small and will approach the
+                specified ema_decay as more updates occur.
         """
         # setup averaging method
         if averaging_method == "ema":
@@ -57,10 +61,17 @@ class AveragedModel(PyTorchAveragedModel):
             # TODO: torch/optim/swa_utils.pyi needs to be updated
             # pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_swa_multi_avg_fn`.
             multi_avg_fn = get_swa_multi_avg_fn()
+
+            if use_lit:
+                raise ValueError("LitEMA is only supported for EMA.")
         else:
             raise ValueError(
                 f"Unknown averaging method: {averaging_method}. Only ema and swa are supported."
             )
+
+        self._ema_decay = ema_decay
+        self._use_lit = use_lit
+        self._num_updates = 0
 
         if skip_deepcopy:
             # calls parent init manually, but skips deepcopy step
@@ -84,3 +95,15 @@ class AveragedModel(PyTorchAveragedModel):
                 multi_avg_fn=multi_avg_fn,
                 use_buffers=use_buffers,
             )
+
+    def update_parameters(self, model: torch.nn.Module) -> None:
+        self._num_updates += 1
+        if self._use_lit:
+            decay = min(
+                self._ema_decay, (1 + self._num_updates) / (10 + self._num_updates)
+            )
+
+            # TODO: torch/optim/swa_utils.pyi needs to be updated
+            # pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_ema_multi_avg_fn`.
+            self.multi_avg_fn = get_ema_multi_avg_fn(decay)
+        super().update_parameters(model)

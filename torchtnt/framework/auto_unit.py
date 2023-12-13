@@ -85,8 +85,12 @@ class SWAParams:
         warmup_steps_or_epochs: number of steps or epochs before starting SWA
         step_or_epoch_update_freq: number of steps or epochs between each SWA update
         averaging_method: whether to use SWA or EMA to average model weights
-        ema_decay:  The exponential decay applied to the averaged parameters. This param
+        ema_decay:  the exponential decay applied to the averaged parameters. This param
             is only needed for EMA, and is ignored otherwise (for SWA).
+        use_lit: if True, will use Lit EMA style by adjusting weight decay based on the
+            number of updates. The EMA decay will start small and will approach the
+            specified ema_decay as more updates occur. The ``averaging_method`` must be
+            set to ema.
         swalr_params: params for SWA learning rate scheduler
 
         Note: Whether steps or epochs is used based on what `step_lr_interval` is set on the AutoUnit.
@@ -99,6 +103,7 @@ class SWAParams:
     step_or_epoch_update_freq: int
     averaging_method: Literal["ema", "swa"] = "ema"
     ema_decay: float = 0.999
+    use_lit: bool = False
     swalr_params: Optional[SWALRParams] = None
 
 
@@ -481,6 +486,7 @@ class AutoUnit(
                 averaging_method=swa_params.averaging_method,
                 ema_decay=swa_params.ema_decay,
                 skip_deepcopy=skip_deepcopy,
+                use_lit=swa_params.use_lit,
             )
 
         self.module: torch.nn.Module = prepare_module(
