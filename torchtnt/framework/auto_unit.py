@@ -84,8 +84,9 @@ class SWAParams:
     Args:
         warmup_steps_or_epochs: number of steps or epochs before starting SWA
         step_or_epoch_update_freq: number of steps or epochs between each SWA update
-        avg_fn: function to compute custom average of parameters
-        multi_avg_fn: function used to update parameters inplace
+        averaging_method: whether to use SWA or EMA to average model weights
+        ema_decay:  The exponential decay applied to the averaged parameters. This param
+            is only needed for EMA, and is ignored otherwise (for SWA).
         swalr_params: params for SWA learning rate scheduler
 
         Note: Whether steps or epochs is used based on what `step_lr_interval` is set on the AutoUnit.
@@ -96,8 +97,8 @@ class SWAParams:
 
     warmup_steps_or_epochs: int
     step_or_epoch_update_freq: int
-    avg_fn: Optional[TSWA_avg_fn] = None
-    multi_avg_fn: Optional[TSWA_multi_avg_fn] = None
+    averaging_method: Literal["ema", "swa"] = "ema"
+    ema_decay: float = 0.999
     swalr_params: Optional[SWALRParams] = None
 
 
@@ -476,9 +477,9 @@ class AutoUnit(
             self.swa_model = AveragedModel(
                 module_for_swa,
                 device=device,
-                avg_fn=swa_params.avg_fn,
-                multi_avg_fn=swa_params.multi_avg_fn,
                 use_buffers=True,
+                averaging_method=swa_params.averaging_method,
+                ema_decay=swa_params.ema_decay,
                 skip_deepcopy=skip_deepcopy,
             )
 

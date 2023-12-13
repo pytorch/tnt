@@ -11,10 +11,6 @@ from typing import List, Tuple
 
 import torch
 
-# TODO: torch/optim/swa_utils.pyi needs to be updated
-# pyre-ignore: Undefined import [21]
-from torch.optim.swa_utils import get_ema_multi_avg_fn, get_swa_multi_avg_fn
-
 from torchtnt.utils.swa import AveragedModel
 
 
@@ -47,18 +43,15 @@ class TestSWA(unittest.TestCase):
         self, dnn: torch.nn.Module, swa_device: torch.device, ema: bool
     ) -> Tuple[List[torch.Tensor], torch.nn.Module]:
         ema_decay = 0.999
-        multi_avg_fn = (
-            # pyre-ignore: Undefined attribute [16]
-            get_ema_multi_avg_fn(ema_decay)
-            if ema
-            # pyre-ignore: Undefined attribute [16]
-            else get_swa_multi_avg_fn()
-        )
-        averaged_dnn = AveragedModel(
-            dnn,
-            device=swa_device,
-            multi_avg_fn=multi_avg_fn,
-        )
+        if ema:
+            averaged_dnn = AveragedModel(
+                dnn,
+                device=swa_device,
+                averaging_method="ema",
+                ema_decay=ema_decay,
+            )
+        else:
+            averaged_dnn = AveragedModel(dnn, device=swa_device, averaging_method="swa")
 
         averaged_params = [torch.zeros_like(param) for param in dnn.parameters()]
 
@@ -105,14 +98,12 @@ class TestSWA(unittest.TestCase):
         self.assertTrue(averaged_dnn.n_averaged == averaged_dnn2.n_averaged)
 
     def test_averaged_model_exponential(self) -> None:
-        combos = itertools.product([True, False], [True, False], [True, False])
-        for use_multi_avg_fn, use_buffers, skip_deepcopy in combos:
-            self._test_averaged_model_exponential(
-                use_multi_avg_fn, use_buffers, skip_deepcopy
-            )
+        combos = itertools.product([True, False], [True, False])
+        for use_buffers, skip_deepcopy in combos:
+            self._test_averaged_model_exponential(use_buffers, skip_deepcopy)
 
     def _test_averaged_model_exponential(
-        self, use_multi_avg_fn: bool, use_buffers: bool, skip_deepcopy: bool
+        self, use_buffers: bool, skip_deepcopy: bool
     ) -> None:
         # Test AveragedModel with EMA as avg_fn and use_buffers as True.
         dnn = torch.nn.Sequential(
@@ -122,22 +113,13 @@ class TestSWA(unittest.TestCase):
         )
         decay: float = 0.9
 
-        if use_multi_avg_fn:
-            averaged_dnn = AveragedModel(
-                deepcopy(dnn) if skip_deepcopy else dnn,
-                # pyre-ignore Undefined attribute [16]
-                multi_avg_fn=get_ema_multi_avg_fn(decay),
-                use_buffers=use_buffers,
-                skip_deepcopy=skip_deepcopy,
-            )
-        else:
-
-            def avg_fn(
-                p_avg: torch.Tensor, p: torch.Tensor, n_avg: float
-            ) -> torch.Tensor:
-                return decay * p_avg + (1 - decay) * p
-
-            averaged_dnn = AveragedModel(dnn, avg_fn=avg_fn, use_buffers=use_buffers)
+        averaged_dnn = AveragedModel(
+            deepcopy(dnn) if skip_deepcopy else dnn,
+            averaging_method="ema",
+            ema_decay=decay,
+            use_buffers=use_buffers,
+            skip_deepcopy=skip_deepcopy,
+        )
 
         if use_buffers:
             dnn_params = list(itertools.chain(dnn.parameters(), dnn.buffers()))
@@ -199,3 +181,15 @@ class TestSWA(unittest.TestCase):
 
         averaged_dnn2 = AveragedModel(dnn, device)
         self.assertNotEqual(id(dnn), id(averaged_dnn2.module))
+
+    def test_input_checks(self) -> None:
+        model = torch.nn.Linear(2, 2)
+
+        with self.assertRaisesRegex(ValueError, "Decay must be between 0 and 1"):
+            AveragedModel(model, averaging_method="ema", ema_decay=1.3)
+
+        with self.assertRaisesRegex(
+            ValueError, "Unknown averaging method: foo. Only ema and swa are supported."
+        ):
+            # pyre-ignore On purpose to test run time exception
+            AveragedModel(model, averaging_method="foo")

@@ -281,8 +281,7 @@ class TestAutoUnit(unittest.TestCase):
             swalr_params=SWALRParams(
                 anneal_steps_or_epochs=5,
             ),
-            # pyre-ignore: Undefined attribute [16]: Module
-            multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(),
+            averaging_method="ema",
         )
         auto_unit = DummyAutoUnit(
             module=my_module,
@@ -365,8 +364,7 @@ class TestAutoUnit(unittest.TestCase):
                 swalr_params=SWALRParams(
                     anneal_steps_or_epochs=3,
                 ),
-                # pyre-ignore: Undefined attribute [16]
-                multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(),
+                averaging_method="ema",
             ),
         )
 
@@ -381,8 +379,7 @@ class TestAutoUnit(unittest.TestCase):
                 swalr_params=SWALRParams(
                     anneal_steps_or_epochs=3,
                 ),
-                # pyre-ignore: Undefined attribute [16]
-                multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(),
+                averaging_method="ema",
             ),
         )
 
@@ -619,7 +616,6 @@ class TestAutoUnit(unittest.TestCase):
             swalr_params=SWALRParams(
                 anneal_steps_or_epochs=3,
             ),
-            avg_fn=lambda x, y, z: x,
         )
 
         auto_unit = DummyAutoUnit(
