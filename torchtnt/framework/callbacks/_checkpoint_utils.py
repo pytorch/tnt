@@ -80,33 +80,7 @@ def get_latest_checkpoint_path(
 def _latest_checkpoint_path(
     dirpath: str, metadata_fname: Optional[str]
 ) -> Optional[str]:
-    if dirpath[-1] == "/":
-        # removes trailing forward slash if present
-        # required for regex search to work
-        dirpath = dirpath[:-1]
-
-    fs = get_filesystem(dirpath)
-
-    if not fs.exists(dirpath):
-        logger.warning(f"Input dirpath doesn't exist: {dirpath}")
-        return None
-
-    contents = fs.ls(dirpath, detail=True)
-    contents = [item["name"] for item in contents if item["type"] == "directory"]
-    if len(contents) == 0:
-        logger.warning(f"Input dirpath doesn't contain any subdirectories: {dirpath}")
-        return None
-
-    # Define the regex pattern to match the directory names
-    pattern = rf"^{dirpath}/epoch_\d+_step_\d+"
-    snapshot_dirpath_pattern: Pattern[str] = re.compile(pattern)
-    candidate_dirpaths = list(filter(snapshot_dirpath_pattern.match, contents))
-
-    if len(candidate_dirpaths) == 0:
-        logger.warning(
-            f"No valid checkpoint directories were found in input dirpath: {dirpath}"
-        )
-        return None
+    candidate_dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname)
 
     # Initialize variables to store the largest epoch and step numbers
     largest_subdirectory = None
@@ -115,14 +89,6 @@ def _latest_checkpoint_path(
 
     # Iterate through all files and directories in the specified directory
     for candidate in candidate_dirpaths:
-        if metadata_fname:
-            dir_contents = fs.ls(candidate, False)
-            if not any(metadata_fname == os.path.basename(f) for f in dir_contents):
-                logger.warning(
-                    f"Snapshot metadata is missing from {candidate}! Skipping this path"
-                )
-                continue
-
         # Extract the epoch and step numbers from the directory name
         dirname = os.path.basename(candidate)
 
@@ -154,6 +120,7 @@ def _latest_checkpoint_path(
 @rank_zero_read_and_broadcast
 def get_checkpoint_dirpaths(
     dirpath: str,
+    metadata_fname: Optional[str] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> List[str]:
     """
@@ -162,37 +129,70 @@ def get_checkpoint_dirpaths(
 
     Args:
         dirpath: parent directory where checkpoints are saved.
+        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
-    """
-    return _retrieve_checkpoint_dirpaths(dirpath)
-
-
-def _retrieve_checkpoint_dirpaths(dirpath: str) -> List[str]:
-    """
-    Given a parent directory where checkpoints are saved, return the sorted checkpoint subdirectories
-    from oldest to newest.
-
-    Args:
-        dirpath: parent directory where checkpoints are saved.
     """
 
     def sort_fn(path: str) -> Tuple[int, int]:
         x = os.path.basename(path)
         return (int(x.split("_")[1]), int(x.split("_")[3]))
 
+    dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname)
+    return sorted(dirpaths, key=sort_fn)
+
+
+def _retrieve_checkpoint_dirpaths(
+    dirpath: str,
+    metadata_fname: Optional[str],
+) -> List[str]:
+    """
+    Given a parent directory where checkpoints are saved, return the unsorted checkpoint subdirectories
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+    """
+
+    if dirpath[-1] == "/":
+        # removes trailing forward slash if present
+        # required for regex search to work
+        dirpath = dirpath[:-1]
+
     fs = get_filesystem(dirpath)
+
+    if not fs.exists(dirpath):
+        logger.warning(f"Input dirpath doesn't exist: {dirpath}")
+        return []
 
     contents = fs.ls(dirpath, detail=True)
     contents = [item["name"] for item in contents if item["type"] == "directory"]
-    ckpt_dirpaths = []
-    for path in contents:
-        match = re.search(r"epoch_(\d+)_step_(\d+)", path)
-        if match:
-            ckpt_dirpaths.append(path)
+    if len(contents) == 0:
+        logger.warning(f"Input dirpath doesn't contain any subdirectories: {dirpath}")
+        return []
 
-    # sorts by epoch, then step
-    ckpt_dirpaths.sort(key=sort_fn)
-    return ckpt_dirpaths
+    # Define the regex pattern to match the directory names
+    pattern = rf"^{dirpath}/epoch_\d+_step_\d+"
+    snapshot_dirpath_pattern: Pattern[str] = re.compile(pattern)
+    candidate_dirpaths = list(filter(snapshot_dirpath_pattern.match, contents))
+
+    if not metadata_fname:
+        # return early as we don't need to filter out any paths
+        return candidate_dirpaths
+
+    # Iterate through all files and directories in the specified directory
+    # and check if metedata is present or not
+    valid_ckpt_dirpaths = []
+    for candidate in candidate_dirpaths:
+        dir_contents = fs.ls(candidate, False)
+        if not any(metadata_fname == os.path.basename(f) for f in dir_contents):
+            logger.warning(
+                f"Snapshot metadata is missing from {candidate}! Skipping this path"
+            )
+            continue
+
+        valid_ckpt_dirpaths.append(candidate)
+
+    return valid_ckpt_dirpaths
 
 
 def _delete_checkpoint(dirpath: str, metadata_fname: Optional[str] = None) -> None:
