@@ -463,3 +463,26 @@ class BaseCheckpointerTest(unittest.TestCase):
                 f"epoch_{max_epochs}_step_{dataset_len // batch_size * max_epochs}",
                 os.listdir(temp_dir),
             )
+
+    def test_does_checkpoint_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with open(os.path.join(temp_dir, ".metadata"), "w"):
+                pass
+            bc = BaseCheckpointSaver(
+                temp_dir,
+                save_every_n_train_steps=2,
+                keep_last_n_checkpoints=1,
+            )
+            # checkpointer doesn't have a metadata_fname
+            does_checkpoint_exist = bc._does_checkpoint_exist(temp_dir)
+            self.assertFalse(does_checkpoint_exist)
+
+            # checkpointer has metadata_fname and the file exists
+            bc.metadata_fname = ".metadata"
+            does_checkpoint_exist = bc._does_checkpoint_exist(temp_dir)
+            self.assertTrue(does_checkpoint_exist)
+
+            # checkpointer has metadata_fname but the file doesn't exist
+            os.remove(os.path.join(temp_dir, ".metadata"))
+            does_checkpoint_exist = bc._does_checkpoint_exist(temp_dir)
+            self.assertFalse(does_checkpoint_exist)

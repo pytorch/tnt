@@ -16,6 +16,7 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
+    rank_zero_read_and_broadcast,
 )
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.state import EntryPoint, State
@@ -134,15 +135,12 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         epoch = unit.train_progress.num_epochs_completed
         checkpoint_path = _get_save_path(self._dirpath, epoch, num_steps_completed)
 
-        # 1.5) If metadata_fname is set, ensure metadata file doesn't exist on final checkpoint
-        if hook == "on_train_end" and self.metadata_fname:
-            metadata_filepath = os.path.join(checkpoint_path, self.metadata_fname)
-            fs = get_filesystem(metadata_filepath)
-            if fs.exists(metadata_filepath):
-                rank_zero_warn(
-                    "Final checkpoint already exists, skipping.", logger=logger
-                )
-                return False
+        # 1.5) Ensure the need to checkpoint again at the end of training
+        if hook == "on_train_end" and self._does_checkpoint_exist(
+            checkpoint_path, self._process_group
+        ):
+            rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
+            return False
 
         # 2) save checkpoint
         success = self._checkpoint_impl(
@@ -306,6 +304,22 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             **kwargs,
         )
         return True
+
+    @rank_zero_read_and_broadcast
+    def _does_checkpoint_exist(
+        self, checkpoint_path: str, process_group: Optional[dist.ProcessGroup] = None
+    ) -> bool:
+        """
+        Checking whether a checkpoint already exists by verifying whether the optional metadata file is present in the directory.
+        If the checkpointer doesn't have a metadata file, this function will always return False.
+        """
+        metadata_fname = self.metadata_fname
+        if not metadata_fname:
+            return False
+
+        metadata_filepath = os.path.join(checkpoint_path, metadata_fname)
+        fs = get_filesystem(metadata_filepath)
+        return fs.exists(metadata_filepath)
 
 
 def _get_save_path(dirpath: str, epoch: int, step: int) -> str:
