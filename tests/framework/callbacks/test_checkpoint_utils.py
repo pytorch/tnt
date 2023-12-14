@@ -224,3 +224,25 @@ class CheckpointUtilsTest(unittest.TestCase):
             app_state.keys(),
             ["module", "optimizer", "loss_fn", "train_progress"],
         )
+
+    @unittest.skipUnless(
+        condition=distributed_available, reason="Torch distributed is needed to run"
+    )
+    def test_rank_zero_read_and_broadcast(self) -> None:
+        spawn_multi_process(2, "gloo", self._test_rank_zero_read_and_broadcast)
+
+    @staticmethod
+    def _test_rank_zero_read_and_broadcast() -> None:
+        """
+        Tests that rank_zero_read_and_broadcast decorator works as expected
+        """
+
+        @rank_zero_read_and_broadcast
+        def _test_method_for_rank_zero() -> str:
+            assert get_global_rank() == 0
+            return "foo"
+
+        init_from_env()
+        val_from_test_method = _test_method_for_rank_zero()
+        tc = unittest.TestCase()
+        tc.assertEqual(val_from_test_method, "foo")
