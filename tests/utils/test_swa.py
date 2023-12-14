@@ -193,3 +193,34 @@ class TestSWA(unittest.TestCase):
         ):
             # pyre-ignore On purpose to test run time exception
             AveragedModel(model, averaging_method="foo")
+
+    def test_lit_ema(self) -> None:
+        model = torch.nn.Linear(10, 10)
+        ema_decay = 0.999
+        averaged_model = AveragedModel(
+            model,
+            averaging_method="ema",
+            ema_decay=ema_decay,
+            use_lit=True,
+        )
+
+        averaged_params = [torch.zeros_like(param) for param in model.parameters()]
+
+        n_updates = 10
+        for i in range(n_updates):
+            decay = min(ema_decay, (1 + i + 1) / (10 + i + 1))
+
+            updated_averaged_params = []
+            for p, p_avg in zip(model.parameters(), averaged_params):
+                p.detach().add_(torch.randn_like(p))
+                if i == 0:
+                    updated_averaged_params.append(p.clone())
+                else:
+                    updated_averaged_params.append(
+                        (p_avg * decay + p * (1 - decay)).clone()
+                    )
+            averaged_model.update_parameters(model)
+            averaged_params = updated_averaged_params
+
+        for p_avg, p_swa in zip(averaged_params, averaged_model.parameters()):
+            torch.testing.assert_close(p_avg, p_swa, check_device=False)
