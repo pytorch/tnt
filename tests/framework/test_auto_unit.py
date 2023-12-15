@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 import torch
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torchtnt.framework.auto_unit import TrainStepResults
+from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 
 from torchtnt.utils.version import is_torch_version_geq_1_13
 
@@ -57,9 +58,6 @@ T = TypeVar("T")
 
 
 class TestAutoUnit(unittest.TestCase):
-    cuda_available: bool = torch.cuda.is_available()
-    distributed_available: bool = torch.distributed.is_available()
-
     def test_app_state_mixin(self) -> None:
         """
         Test that app_state, tracked_optimizers, tracked_lr_schedulers are set as expected with AutoUnit
@@ -81,12 +79,8 @@ class TestAutoUnit(unittest.TestCase):
         for key in ("module", "optimizer", "lr_scheduler", "grad_scaler"):
             self.assertIn(key, auto_unit.app_state())
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
+    @skip_if_not_distributed
     def test_fsdp_fp16(self) -> None:
         """
         Test that FSDP + FP16 uses ShardedGradScaler
@@ -154,9 +148,7 @@ class TestAutoUnit(unittest.TestCase):
         train(auto_unit, train_dataloader=train_dl, max_epochs=max_epochs)
         self.assertEqual(auto_unit.lr_scheduler.step.call_count, max_epochs)
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     @patch("torch.autocast")
     def test_mixed_precision_fp16(self, mock_autocast: MagicMock) -> None:
         """
@@ -177,9 +169,7 @@ class TestAutoUnit(unittest.TestCase):
             device_type="cuda", dtype=torch.float16, enabled=True
         )
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     @patch("torch.autocast")
     def test_mixed_precision_bf16(self, mock_autocast: MagicMock) -> None:
         """
@@ -318,12 +308,8 @@ class TestAutoUnit(unittest.TestCase):
             # 1 warmup + epoch 2 + epoch 3 = 2
             self.assertEqual(update_swa_mock.call_count, 2)
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_distributed
+    @skip_if_not_gpu
     def test_stochastic_weight_averaging_fsdp(self) -> None:
         """
         Test that swa params with FSDP is identical to non-FSDP swa
@@ -399,9 +385,7 @@ class TestAutoUnit(unittest.TestCase):
             for p1, p2 in zip(swa_params, swa_fsdp_params, strict=True):
                 torch.testing.assert_close(p2, p1, check_device=False)
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     @patch("torch.autocast")
     def test_eval_mixed_precision_bf16(self, mock_autocast: MagicMock) -> None:
         """
@@ -423,12 +407,8 @@ class TestAutoUnit(unittest.TestCase):
             device_type="cuda", dtype=torch.bfloat16, enabled=True
         )
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
+    @skip_if_not_distributed
     def test_no_sync(self) -> None:
         """
         Test that the no_sync autocast context is correctly applied when using gradient accumulation
@@ -571,9 +551,7 @@ class TestAutoUnit(unittest.TestCase):
             )
             self.assertEqual(configure_optimizers_and_lr_scheduler_mock.call_count, 1)
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_auto_unit_ddp(self) -> None:
         """
         Launch tests of AutoUnit with DDP strategy
@@ -766,9 +744,7 @@ class TestAutoUnit(unittest.TestCase):
             timer=Timer(),
         )
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     @patch("torch.autocast")
     def test_predict_mixed_precision_fp16(self, mock_autocast: MagicMock) -> None:
         """
@@ -793,9 +769,7 @@ class TestAutoUnit(unittest.TestCase):
         condition=COMPILE_AVAIL,
         reason="This test needs PyTorch 1.13 or greater to run.",
     )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     @patch("torch.compile")
     def test_compile_predict(self, mock_dynamo: MagicMock) -> None:
         """
