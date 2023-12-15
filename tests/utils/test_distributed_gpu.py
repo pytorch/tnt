@@ -12,18 +12,16 @@ import torch.distributed as dist
 from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.distributed import all_gather_tensors, get_local_rank, PGWrapper
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.test_utils import spawn_multi_process
+from torchtnt.utils.test_utils import (
+    skip_if_not_distributed,
+    skip_if_not_gpu,
+    spawn_multi_process,
+)
 
 
 class DistributedGPUTest(unittest.TestCase):
-    dist_available: bool = torch.distributed.is_available()
-    cuda_available: bool = torch.cuda.is_available()
-
-    @unittest.skipUnless(
-        condition=cuda_available,
-        reason="This test should only run on a GPU host.",
-    )
-    @unittest.skipUnless(dist_available, reason="Torch distributed is needed to run")
+    @skip_if_not_gpu
+    @skip_if_not_distributed
     def test_gather_uneven_multidim_nccl(self) -> None:
         spawn_multi_process(
             2,
@@ -43,11 +41,8 @@ class DistributedGPUTest(unittest.TestCase):
             assert val.shape == (idx + 1, 4 - idx)
             assert (val == 1).all()
 
-    @unittest.skipUnless(
-        condition=cuda_available,
-        reason="This test should only run on a GPU host.",
-    )
-    @unittest.skipUnless(dist_available, reason="Torch distributed is needed to run")
+    @skip_if_not_gpu
+    @skip_if_not_distributed
     def test_pg_wrapper_scatter_object_list_nccl(self) -> None:
         spawn_multi_process(
             2,

@@ -16,7 +16,11 @@ from unittest.mock import Mock, patch
 import torch
 import torch.distributed as dist
 from pyre_extensions import none_throws
-from torchtnt.utils.test_utils import spawn_multi_process
+from torchtnt.utils.test_utils import (
+    skip_if_not_distributed,
+    skip_if_not_gpu,
+    spawn_multi_process,
+)
 from torchtnt.utils.timer import (
     BoundedTimer,
     FullSyncPeriodicTimer,
@@ -100,10 +104,7 @@ class TimerTest(unittest.TestCase):
             timer.recorded_durations["action_4"][0], intervals[2]
         )
 
-    @unittest.skipUnless(
-        condition=bool(torch.cuda.is_available()),
-        reason="This test needs a GPU host to run.",
-    )
+    @skip_if_not_gpu
     @patch("torch.cuda.synchronize")
     def test_timer_synchronize(self, mock_synchornize: Mock) -> None:
         """Make sure that torch.cuda.synchronize() is called when GPU is present."""
@@ -230,10 +231,7 @@ class TimerTest(unittest.TestCase):
         tc = unittest.TestCase()
         tc.assertEqual(durations, expected_durations)
 
-    @unittest.skipUnless(
-        condition=bool(dist.is_available()),
-        reason="This test should only run if torch.distributed is available.",
-    )
+    @skip_if_not_distributed
     def test_get_synced_durations_histogram_multi_process(self) -> None:
         spawn_multi_process(
             2, "gloo", self._get_synced_durations_histogram_multi_process

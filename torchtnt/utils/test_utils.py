@@ -16,6 +16,8 @@ from functools import wraps
 from io import StringIO
 from typing import Any, Callable, Dict, Generator, Optional, TextIO, Tuple, TypeVar
 
+import torch
+
 import torch.distributed.launcher as pet
 from pyre_extensions import ParameterSpecification
 from torch import distributed as dist, multiprocessing
@@ -149,3 +151,14 @@ def captured_output() -> Generator[Tuple[TextIO, TextIO], None, None]:
         yield sys.stdout, sys.stderr
     finally:
         sys.stdout, sys.stderr = old_out, old_err
+
+
+"""Decorator for tests to ensure running on a GPU."""
+skip_if_not_gpu: Callable[..., Callable[..., object]] = unittest.skipUnless(
+    torch.cuda.is_available(), "Skipping test since GPU is not available"
+)
+
+"""Decorator for tests to ensure running when distributed is available."""
+skip_if_not_distributed: Callable[..., Callable[..., object]] = unittest.skipUnless(
+    torch.distributed.is_available(), "Skipping test since distributed is not available"
+)
