@@ -16,8 +16,10 @@ from .iterators import (
 )
 from .multi_dataloader import MultiDataLoader
 from .profile_dataloader import profile_dataloader
+from .synthetic_data import AbstractRandomDataset
 
 __all__ = [
+    "AbstractRandomDataset",
     "AllDatasetBatchesIterator",
     "CudaDataPrefetcher",
     "DataIterationStrategy",
