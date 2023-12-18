@@ -60,7 +60,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
 
     If used with :func:`torchtnt.framework.fit`, this class will also save the evaluation progress state.
 
-    Checkpoints will be saved under ``dirpath/epoch_{epoch}_step_{step}`` where step is the *total* number of training steps completed across all epochs.
+    Checkpoints will be saved under ``dirpath/epoch_{epoch}_step_{step}`` where step is the *total* number of training and evaluation steps completed across all epochs.
 
     Args:
         dirpath: Parent directory to save snapshots to.
