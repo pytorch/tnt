@@ -9,7 +9,7 @@
 import os
 import tempfile
 from functools import wraps
-from typing import Any, Callable, List, Optional, TypeVar, Union
+from typing import Any, Callable, cast, List, Optional, TypeVar, Union
 
 import torch
 import torch.distributed as dist
@@ -17,6 +17,9 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.distributed.elastic.utils.distributed import get_free_port
 from typing_extensions import Literal
+
+T = TypeVar("T")
+DistObjList = Union[List[T], List[None]]
 
 
 class PGWrapper:
@@ -54,25 +57,22 @@ class PGWrapper:
         else:
             dist.barrier(group=self.pg)
 
-    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-    def broadcast_object_list(self, obj_list: List[Any], src: int = 0) -> None:
+    def broadcast_object_list(self, obj_list: DistObjList, src: int = 0) -> None:
         if self.pg is None:
             return
         dist.broadcast_object_list(obj_list, src=src, group=self.pg)
 
-    # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-    def all_gather_object(self, obj_list: List[Any], obj: Any) -> None:
+    def all_gather_object(self, obj_list: DistObjList, obj: T) -> None:
         if self.pg is None:
+            obj_list = cast(List[T], obj_list)  # to make pyre happy
             obj_list[0] = obj
             return
         dist.all_gather_object(obj_list, obj, group=self.pg)
 
     def scatter_object_list(
         self,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        output_list: List[Any],
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        input_list: Optional[List[Any]],
+        output_list: List[None],
+        input_list: Optional[DistObjList],
         src: int = 0,
     ) -> None:
         rank = self.get_rank()
