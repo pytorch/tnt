@@ -8,6 +8,8 @@
 from typing import Mapping, Optional
 
 import torch
+from torch.cuda.amp.grad_scaler import GradScaler
+from torchtnt.utils.prepare_module import _is_fsdp_module
 
 _DTYPE_STRING_TO_DTYPE_MAPPING: Mapping[str, Optional[torch.dtype]] = {
     "fp16": torch.float16,
@@ -32,3 +34,28 @@ def convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:
             f"Precision {precision} not supported. Please use one of {list(_DTYPE_STRING_TO_DTYPE_MAPPING.keys())}"
         )
     return _DTYPE_STRING_TO_DTYPE_MAPPING[precision]
+
+
+def get_grad_scaler_from_precision(
+    precision: torch.dtype, module: torch.nn.Module
+) -> Optional[GradScaler]:
+    """
+    Returns the correct grad scaler to use based on the precision and whether
+    or not the model is FSDP.
+
+    Args:
+        precision: the precision being used
+        module: the module being trained
+
+    Returns:
+        The appropriate grad scaler to use, ``None`` if no grad scaler should be used.
+    """
+
+    if precision == torch.float16:
+        if _is_fsdp_module(module):
+            from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
+
+            return ShardedGradScaler()
+        else:
+            return GradScaler()
+    return None
