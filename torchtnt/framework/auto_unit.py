@@ -34,7 +34,10 @@ from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.precision import convert_precision_str_to_dtype
+from torchtnt.utils.precision import (
+    convert_precision_str_to_dtype,
+    get_grad_scaler_from_precision,
+)
 from torchtnt.utils.prepare_module import (
     _is_fsdp_module,
     ActivationCheckpointParams,
@@ -499,7 +502,7 @@ class AutoUnit(
 
         self.grad_scaler: Optional[GradScaler] = None
         if self.precision:
-            self.grad_scaler = _get_grad_scaler_from_precision(
+            self.grad_scaler = get_grad_scaler_from_precision(
                 self.precision,
                 self.module,
             )
@@ -858,16 +861,3 @@ def _validate_torch_compile_available() -> None:
             "Torch compile support is available only in PyTorch 2.0 or higher. "
             "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
         )
-
-
-def _get_grad_scaler_from_precision(
-    precision: torch.dtype, module: torch.nn.Module
-) -> Optional[GradScaler]:
-    if precision == torch.float16:
-        if _is_fsdp_module(module):
-            from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
-
-            return ShardedGradScaler()
-        else:
-            return GradScaler()
-    return None
