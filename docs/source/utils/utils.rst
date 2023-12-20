@@ -39,7 +39,7 @@ Device Utils
    record_data_in_stream
    get_nvidia_smi_gpu_stats
    get_psutil_cpu_stats
-   maybe_enable_tf32
+   set_float32_precision
 
 
 Distributed Utils

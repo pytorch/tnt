@@ -11,8 +11,8 @@ from .device import (
     get_nvidia_smi_gpu_stats,
     get_psutil_cpu_stats,
     GPUStats,
-    maybe_enable_tf32,
     record_data_in_stream,
+    set_float32_precision,
 )
 from .distributed import (
     all_gather_tensors,
@@ -90,7 +90,7 @@ __all__ = [
     "get_nvidia_smi_gpu_stats",
     "get_psutil_cpu_stats",
     "GPUStats",
-    "maybe_enable_tf32",
+    "set_float32_precision",
     "record_data_in_stream",
     "all_gather_tensors",
     "barrier",
