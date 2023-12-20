@@ -7,13 +7,13 @@
 
 import logging
 import os
+import random
 from datetime import timedelta
 from typing import Optional, Union
 
 import numpy as np
 
 import torch
-from numpy import random
 from torch.distributed.constants import default_pg_timeout
 from torchtnt.utils.device import get_device_from_env, maybe_enable_tf32
 from torchtnt.utils.distributed import (
