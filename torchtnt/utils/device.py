@@ -23,7 +23,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 def get_device_from_env() -> torch.device:
     """Function that gets the torch.device based on the current environment.
 
-    This currently supports only CPU and GPU devices. If CUDA is available, this function also sets the CUDA device.
+    This currently supports only CPU, GPU, and MPS devices. If CUDA is available, this function also sets the CUDA device.
 
     Within a distributed context, this function relies on the ``LOCAL_RANK`` environment variable
     to be made available by the program launcher for setting the appropriate device index.
@@ -330,19 +330,23 @@ def collect_system_stats(device: torch.device) -> Dict[str, Any]:
 
 
 def maybe_enable_tf32(precision: str = "high") -> None:
-    """Conditionally sets the precision of float32 matrix multiplications and conv operations.
+    """Conditionally sets the precision of float32 matrix multiplications and convolution operations.
 
-    For more information, see the `PyTorch docs <https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html>`_
+    For more information, see the PyTorch docs:
+    - https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html
+    - https://pytorch.org/docs/stable/backends.html#torch.backends.cudnn.allow_tf32
 
     Args:
-        precision: The setting to determine which datatypes to use for matrix multiplication.
+        precision: The setting to determine which datatypes to use for matrix multiplication and convolution operations.
     """
     if not (
         torch.cuda.is_available()  # Not relevant for non-CUDA devices
         and is_torch_version_geq_1_12()  # API exposed from PyTorch 1.12 onward
     ):
         return
+    # set precision for matrix multiplications
     torch.set_float32_matmul_precision(precision)
+    # set precision for convolution operations
     if precision == "highest":
         torch.backends.cudnn.allow_tf32 = False
     else:
