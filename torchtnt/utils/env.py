@@ -7,7 +7,6 @@
 
 import logging
 import os
-import typing as T
 from datetime import timedelta
 from typing import Optional, Union
 
@@ -22,6 +21,7 @@ from torchtnt.utils.distributed import (
     get_process_group_backend_from_device,
     get_tcp_init_method,
 )
+from typing_extensions import Literal
 
 _log: logging.Logger = logging.getLogger(__name__)
 
@@ -42,9 +42,9 @@ def _check_dist_env() -> bool:
 
 def init_from_env(
     *,
-    device_type: T.Optional[str] = None,
-    dist_init_method_type: T.Literal["env", "tcp", "file"] = "env",
-    pg_backend: T.Optional[str] = None,
+    device_type: Optional[str] = None,
+    dist_init_method_type: Literal["env", "tcp", "file"] = "env",
+    pg_backend: Optional[str] = None,
     pg_timeout: timedelta = default_pg_timeout,
     float32_matmul_precision: str = "high",
 ) -> torch.device:
