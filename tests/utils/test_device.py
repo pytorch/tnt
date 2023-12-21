@@ -20,8 +20,8 @@ from torchtnt.utils.device import (
     get_device_from_env,
     get_nvidia_smi_gpu_stats,
     get_psutil_cpu_stats,
-    maybe_enable_tf32,
     record_data_in_stream,
+    set_float32_precision,
 )
 
 
@@ -353,13 +353,13 @@ class DeviceTest(unittest.TestCase):
     @unittest.skipUnless(
         condition=(cuda_available), reason="This test must run on a GPU host."
     )
-    def test_maybe_enable_tf32(self) -> None:
-        maybe_enable_tf32("highest")
+    def test_set_float32_precision(self) -> None:
+        set_float32_precision("highest")
         self.assertEqual(torch.get_float32_matmul_precision(), "highest")
         self.assertFalse(torch.backends.cudnn.allow_tf32)
         self.assertFalse(torch.backends.cuda.matmul.allow_tf32)
 
-        maybe_enable_tf32("high")
+        set_float32_precision("high")
         self.assertEqual(torch.get_float32_matmul_precision(), "high")
         self.assertTrue(torch.backends.cudnn.allow_tf32)
         self.assertTrue(torch.backends.cuda.matmul.allow_tf32)

@@ -15,7 +15,7 @@ import numpy as np
 
 import torch
 from torch.distributed.constants import default_pg_timeout
-from torchtnt.utils.device import get_device_from_env, maybe_enable_tf32
+from torchtnt.utils.device import get_device_from_env, set_float32_precision
 from torchtnt.utils.distributed import (
     get_file_init_method,
     get_process_group_backend_from_device,
@@ -103,7 +103,7 @@ def init_from_env(
         torch.distributed.init_process_group(
             init_method=init_method, backend=pg_backend, timeout=pg_timeout
         )
-    maybe_enable_tf32(float32_matmul_precision)
+    set_float32_precision(float32_matmul_precision)
     return device
 
 
