@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -492,10 +492,12 @@
 <span class="sd">    Args:</span>
 <span class="sd">        checkpoint_impl: type of checkpointing implementation to use</span>
 <span class="sd">        check_fn: A lambda function which will be passed to each child submodule and return ``True`` or ``False`` depending on whether the submodule should be wrapped.</span>
+<span class="sd">        auto_wrap_policy A policy to wrap model&#39;s submodules with AC. Note that if this is specified, it takes precedence over ``check_fn``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">checkpoint_impl</span><span class="p">:</span> <span class="s2">&quot;CheckpointImpl&quot;</span>
-    <span class="n">check_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span>
+    <span class="n">checkpoint_impl</span><span class="p">:</span> <span class="n">CheckpointImpl</span>
+    <span class="n">check_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="n">auto_wrap_policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
 <div class="viewcode-block" id="prepare_ddp"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.prepare_ddp.html#torchtnt.utils.prepare_module.prepare_ddp">[docs]</a><span class="k">def</span> <span class="nf">prepare_ddp</span><span class="p">(</span>
@@ -670,6 +672,7 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Activation checkpointing requires torch&gt;=2.0&quot;</span><span class="p">)</span>
         <span class="n">checkpoint_impl</span> <span class="o">=</span> <span class="n">activation_checkpoint_params</span><span class="o">.</span><span class="n">checkpoint_impl</span>
         <span class="n">check_fn</span> <span class="o">=</span> <span class="n">activation_checkpoint_params</span><span class="o">.</span><span class="n">check_fn</span>
+        <span class="n">auto_wrap_policy</span> <span class="o">=</span> <span class="n">activation_checkpoint_params</span><span class="o">.</span><span class="n">auto_wrap_policy</span>
         <span class="n">custom_checkpoint_wrapper</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
             <span class="n">checkpoint_wrapper</span><span class="p">,</span>
             <span class="n">checkpoint_impl</span><span class="o">=</span><span class="n">checkpoint_impl</span><span class="p">,</span>
@@ -678,6 +681,7 @@
             <span class="n">module</span><span class="p">,</span>
             <span class="n">checkpoint_wrapper_fn</span><span class="o">=</span><span class="n">custom_checkpoint_wrapper</span><span class="p">,</span>
             <span class="n">check_fn</span><span class="o">=</span><span class="n">check_fn</span><span class="p">,</span>
+            <span class="n">auto_wrap_policy</span><span class="o">=</span><span class="n">auto_wrap_policy</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">torch_compile_params</span><span class="p">:</span>

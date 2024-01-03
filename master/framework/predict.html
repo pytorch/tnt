@@ -87,7 +87,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -404,7 +404,7 @@ call on_predict_start on unit first and then callbacks
 while not done:
     call on_predict_epoch_start on unit first and then callbacks
     try:
-        data = next(dataloader)
+        call get_next_predict_batch on unit
         call on_predict_step_start on callbacks
         call predict_step on unit
         increment step counter

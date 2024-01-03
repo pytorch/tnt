@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -390,9 +390,11 @@
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator.__init__">__init__() (torchtnt.utils.data.AllDatasetBatchesIterator method)</a>
+      <li><a href="utils/generated/torchtnt.utils.data.AbstractRandomDataset.html#torchtnt.utils.data.AbstractRandomDataset.__init__">__init__() (torchtnt.utils.data.AbstractRandomDataset method)</a>
 
       <ul>
+        <li><a href="utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator.__init__">(torchtnt.utils.data.AllDatasetBatchesIterator method)</a>
+</li>
         <li><a href="utils/generated/torchtnt.utils.data.CudaDataPrefetcher.html#torchtnt.utils.data.CudaDataPrefetcher.__init__">(torchtnt.utils.data.CudaDataPrefetcher method)</a>
 </li>
         <li><a href="utils/generated/torchtnt.utils.data.InOrderIterator.html#torchtnt.utils.data.InOrderIterator.__init__">(torchtnt.utils.data.InOrderIterator method)</a>
@@ -437,6 +439,8 @@
 </li>
         <li><a href="utils/generated/torchtnt.utils.progress.Progress.html#torchtnt.utils.progress.Progress.__init__">(torchtnt.utils.progress.Progress method)</a>
 </li>
+        <li><a href="utils/generated/torchtnt.utils.stateful.MultiStateful.html#torchtnt.utils.stateful.MultiStateful.__init__">(torchtnt.utils.stateful.MultiStateful method)</a>
+</li>
         <li><a href="utils/generated/torchtnt.utils.stateful.Stateful.html#torchtnt.utils.stateful.Stateful.__init__">(torchtnt.utils.stateful.Stateful method)</a>
 </li>
         <li><a href="utils/generated/torchtnt.utils.swa.AveragedModel.html#torchtnt.utils.swa.AveragedModel.__init__">(torchtnt.utils.swa.AveragedModel method)</a>
@@ -456,6 +460,8 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils/generated/torchtnt.utils.data.AbstractRandomDataset.html#torchtnt.utils.data.AbstractRandomDataset">AbstractRandomDataset (class in torchtnt.utils.data)</a>
+</li>
       <li><a href="framework/state.html#torchtnt.framework.state.State.active_phase">active_phase (torchtnt.framework.state.State property)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.distributed.all_gather_tensors.html#torchtnt.utils.distributed.all_gather_tensors">all_gather_tensors() (in module torchtnt.utils.distributed)</a>
@@ -529,8 +535,6 @@
       <li><a href="utils/generated/torchtnt.utils.prepare_module.DDPStrategy.html#torchtnt.utils.prepare_module.DDPStrategy">DDPStrategy (class in torchtnt.utils.prepare_module)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.distributed.destroy_process_group.html#torchtnt.utils.distributed.destroy_process_group">destroy_process_group() (in module torchtnt.utils.distributed)</a>
-</li>
-      <li><a href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.dirpath">dirpath (torchtnt.framework.callbacks.TorchSnapshotSaver property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -606,12 +610,32 @@
 </li>
       <li><a href="utils/generated/torchtnt.utils.module_summary.get_module_summary.html#torchtnt.utils.module_summary.get_module_summary">get_module_summary() (in module torchtnt.utils.module_summary)</a>
 </li>
+      <li><a href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.get_next_eval_batch">get_next_eval_batch() (torchtnt.framework.auto_unit.AutoUnit method)</a>
+
+      <ul>
+        <li><a href="framework/unit.html#torchtnt.framework.unit.EvalUnit.get_next_eval_batch">(torchtnt.framework.unit.EvalUnit method)</a>
+</li>
+      </ul></li>
+      <li><a href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoPredictUnit.get_next_predict_batch">get_next_predict_batch() (torchtnt.framework.auto_unit.AutoPredictUnit method)</a>
+
+      <ul>
+        <li><a href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.get_next_predict_batch">(torchtnt.framework.auto_unit.AutoUnit method)</a>
+</li>
+        <li><a href="framework/unit.html#torchtnt.framework.unit.PredictUnit.get_next_predict_batch">(torchtnt.framework.unit.PredictUnit method)</a>
+</li>
+      </ul></li>
+      <li><a href="framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.get_next_train_batch">get_next_train_batch() (torchtnt.framework.auto_unit.AutoUnit method)</a>
+
+      <ul>
+        <li><a href="framework/unit.html#torchtnt.framework.unit.TrainUnit.get_next_train_batch">(torchtnt.framework.unit.TrainUnit method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils/generated/torchtnt.utils.device.get_nvidia_smi_gpu_stats.html#torchtnt.utils.device.get_nvidia_smi_gpu_stats">get_nvidia_smi_gpu_stats() (in module torchtnt.utils.device)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.test_utils.get_pet_launch_config.html#torchtnt.utils.test_utils.get_pet_launch_config">get_pet_launch_config() (in module torchtnt.utils.test_utils)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils/generated/torchtnt.utils.distributed.get_process_group_backend_from_device.html#torchtnt.utils.distributed.get_process_group_backend_from_device">get_process_group_backend_from_device() (in module torchtnt.utils.distributed)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.device.get_psutil_cpu_stats.html#torchtnt.utils.device.get_psutil_cpu_stats">get_psutil_cpu_stats() (in module torchtnt.utils.device)</a>
@@ -712,18 +736,16 @@
 </li>
       <li><a href="framework/state.html#torchtnt.framework.state.PhaseState.max_steps_per_epoch">max_steps_per_epoch (torchtnt.framework.state.PhaseState property)</a>
 </li>
-      <li><a href="utils/generated/torchtnt.utils.device.maybe_enable_tf32.html#torchtnt.utils.device.maybe_enable_tf32">maybe_enable_tf32() (in module torchtnt.utils.device)</a>
-</li>
       <li><a href="utils/generated/torchtnt.utils.memory.measure_rss_deltas.html#torchtnt.utils.memory.measure_rss_deltas">measure_rss_deltas() (in module torchtnt.utils.memory)</a>
 </li>
       <li><a href="framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot">MemorySnapshot (class in torchtnt.framework.callbacks)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.memory_snapshot_profiler.MemorySnapshotProfiler.html#torchtnt.utils.memory_snapshot_profiler.MemorySnapshotProfiler">MemorySnapshotProfiler (class in torchtnt.utils.memory_snapshot_profiler)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils/generated/torchtnt.utils.loggers.MetricLogger.html#torchtnt.utils.loggers.MetricLogger">MetricLogger (class in torchtnt.utils.loggers)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     module
 
@@ -740,6 +762,8 @@
       <li><a href="utils/generated/torchtnt.utils.data.MultiDataLoader.html#torchtnt.utils.data.MultiDataLoader">MultiDataLoader (class in torchtnt.utils.data)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator">MultiIterator (class in torchtnt.utils.data)</a>
+</li>
+      <li><a href="utils/generated/torchtnt.utils.stateful.MultiStateful.html#torchtnt.utils.stateful.MultiStateful">MultiStateful (class in torchtnt.utils.stateful)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -759,8 +783,6 @@
 
       <ul>
         <li><a href="framework/generated/torchtnt.framework.callbacks.GarbageCollector.html#torchtnt.framework.callbacks.GarbageCollector.on_eval_end">(torchtnt.framework.callbacks.GarbageCollector method)</a>
-</li>
-        <li><a href="framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_eval_end">(torchtnt.framework.callbacks.MemorySnapshot method)</a>
 </li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler.on_eval_end">(torchtnt.framework.callbacks.PyTorchProfiler method)</a>
 </li>
@@ -785,6 +807,8 @@
         <li><a href="framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_epoch_start">(torchtnt.framework.unit.EvalUnit method)</a>
 </li>
       </ul></li>
+      <li><a href="framework/callbacks.html#torchtnt.framework.callback.Callback.on_eval_get_next_batch_end">on_eval_get_next_batch_end() (torchtnt.framework.callback.Callback method)</a>
+</li>
       <li><a href="framework/callbacks.html#torchtnt.framework.callback.Callback.on_eval_start">on_eval_start() (torchtnt.framework.callback.Callback method)</a>
 
       <ul>
@@ -834,8 +858,6 @@
 </li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.GarbageCollector.html#torchtnt.framework.callbacks.GarbageCollector.on_predict_end">(torchtnt.framework.callbacks.GarbageCollector method)</a>
 </li>
-        <li><a href="framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_predict_end">(torchtnt.framework.callbacks.MemorySnapshot method)</a>
-</li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler.on_predict_end">(torchtnt.framework.callbacks.PyTorchProfiler method)</a>
 </li>
         <li><a href="framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_end">(torchtnt.framework.unit.PredictUnit method)</a>
@@ -859,6 +881,8 @@
         <li><a href="framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_epoch_start">(torchtnt.framework.unit.PredictUnit method)</a>
 </li>
       </ul></li>
+      <li><a href="framework/callbacks.html#torchtnt.framework.callback.Callback.on_predict_get_next_batch_end">on_predict_get_next_batch_end() (torchtnt.framework.callback.Callback method)</a>
+</li>
       <li><a href="framework/callbacks.html#torchtnt.framework.callback.Callback.on_predict_start">on_predict_start() (torchtnt.framework.callback.Callback method)</a>
 
       <ul>
@@ -906,11 +930,7 @@
       <ul>
         <li><a href="framework/generated/torchtnt.framework.callbacks.GarbageCollector.html#torchtnt.framework.callbacks.GarbageCollector.on_train_end">(torchtnt.framework.callbacks.GarbageCollector method)</a>
 </li>
-        <li><a href="framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_train_end">(torchtnt.framework.callbacks.MemorySnapshot method)</a>
-</li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler.on_train_end">(torchtnt.framework.callbacks.PyTorchProfiler method)</a>
-</li>
-        <li><a href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_train_end">(torchtnt.framework.callbacks.TorchSnapshotSaver method)</a>
 </li>
         <li><a href="framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_end">(torchtnt.framework.unit.TrainUnit method)</a>
 </li>
@@ -921,8 +941,6 @@
         <li><a href="framework/callbacks.html#torchtnt.framework.callback.Callback.on_train_epoch_end">(torchtnt.framework.callback.Callback method)</a>
 </li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.html#torchtnt.framework.callbacks.TensorBoardParameterMonitor.on_train_epoch_end">(torchtnt.framework.callbacks.TensorBoardParameterMonitor method)</a>
-</li>
-        <li><a href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_train_epoch_end">(torchtnt.framework.callbacks.TorchSnapshotSaver method)</a>
 </li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.TQDMProgressBar.html#torchtnt.framework.callbacks.TQDMProgressBar.on_train_epoch_end">(torchtnt.framework.callbacks.TQDMProgressBar method)</a>
 </li>
@@ -943,6 +961,8 @@
         <li><a href="framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_epoch_start">(torchtnt.framework.unit.TrainUnit method)</a>
 </li>
       </ul></li>
+      <li><a href="framework/callbacks.html#torchtnt.framework.callback.Callback.on_train_get_next_batch_end">on_train_get_next_batch_end() (torchtnt.framework.callback.Callback method)</a>
+</li>
       <li><a href="framework/callbacks.html#torchtnt.framework.callback.Callback.on_train_start">on_train_start() (torchtnt.framework.callback.Callback method)</a>
 
       <ul>
@@ -971,8 +991,6 @@
         <li><a href="framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_train_step_end">(torchtnt.framework.callbacks.MemorySnapshot method)</a>
 </li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler.on_train_step_end">(torchtnt.framework.callbacks.PyTorchProfiler method)</a>
-</li>
-        <li><a href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_train_step_end">(torchtnt.framework.callbacks.TorchSnapshotSaver method)</a>
 </li>
         <li><a href="framework/generated/torchtnt.framework.callbacks.TQDMProgressBar.html#torchtnt.framework.callbacks.TQDMProgressBar.on_train_step_end">(torchtnt.framework.callbacks.TQDMProgressBar method)</a>
 </li>
@@ -1051,8 +1069,6 @@
 </li>
       <li><a href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.restore">restore() (torchtnt.framework.callbacks.TorchSnapshotSaver static method)</a>
 </li>
-      <li><a href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.restore_from_latest">restore_from_latest() (torchtnt.framework.callbacks.TorchSnapshotSaver static method)</a>
-</li>
       <li><a href="utils/generated/torchtnt.utils.distributed.revert_sync_batchnorm.html#torchtnt.utils.distributed.revert_sync_batchnorm">revert_sync_batchnorm() (in module torchtnt.utils.distributed)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.data.RoundRobinIterator.html#torchtnt.utils.data.RoundRobinIterator">RoundRobinIterator (class in torchtnt.utils.data)</a>
@@ -1069,16 +1085,20 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils/generated/torchtnt.utils.env.seed.html#torchtnt.utils.env.seed">seed() (in module torchtnt.utils.env)</a>
 </li>
+      <li><a href="utils/generated/torchtnt.utils.device.set_float32_precision.html#torchtnt.utils.device.set_float32_precision">set_float32_precision() (in module torchtnt.utils.device)</a>
+</li>
       <li><a href="framework/state.html#torchtnt.framework.state.State.should_stop">should_stop (torchtnt.framework.state.State property)</a>
+</li>
+      <li><a href="utils/generated/torchtnt.utils.data.AbstractRandomDataset.html#torchtnt.utils.data.AbstractRandomDataset.size">size (torchtnt.utils.data.AbstractRandomDataset attribute)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.test_utils.skip_if_asan.html#torchtnt.utils.test_utils.skip_if_asan">skip_if_asan() (in module torchtnt.utils.test_utils)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.test_utils.spawn_multi_process.html#torchtnt.utils.test_utils.spawn_multi_process">spawn_multi_process() (in module torchtnt.utils.test_utils)</a>
 </li>
-      <li><a href="framework/state.html#torchtnt.framework.state.State">State (class in torchtnt.framework.state)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="framework/state.html#torchtnt.framework.state.State">State (class in torchtnt.framework.state)</a>
+</li>
       <li><a href="utils/generated/torchtnt.utils.stateful.Stateful.html#torchtnt.utils.stateful.Stateful">Stateful (class in torchtnt.utils.stateful)</a>
 </li>
       <li><a href="utils/generated/torchtnt.utils.loggers.StdoutLogger.html#torchtnt.utils.loggers.StdoutLogger">StdoutLogger (class in torchtnt.utils.loggers)</a>

@@ -87,7 +87,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -378,6 +378,7 @@
 is an abstract method where you can define the code you want to run each iteration of the dataloader.</p>
 <p>To use the TrainUnit, create a class which subclasses TrainUnit. Then implement the <code class="docutils literal notranslate"><span class="pre">train_step</span></code> method on your class, and optionally
 implement any of the hooks, which allow you to control the behavior of the loop at different points.</p>
+<p>In addition, you can override <code class="docutils literal notranslate"><span class="pre">get_next_train_batch</span></code> to modify the default batch fetching behavior.</p>
 <p>Below is a simple example of a user’s subclass of TrainUnit that implements a basic <code class="docutils literal notranslate"><span class="pre">train_step</span></code>, and the <code class="docutils literal notranslate"><span class="pre">on_train_epoch_end</span></code> hook.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TrainUnit</span>
 
@@ -412,6 +413,28 @@ implement any of the hooks, which allow you to control the behavior of the loop 
 <span class="n">train_unit</span> <span class="o">=</span> <span class="n">MyTrainUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=...</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=...</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit.get_next_train_batch">
+<code class="sig-name descname"><span class="pre">get_next_train_batch</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/unit.html#TrainUnit.get_next_train_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit.get_next_train_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next batch of data to be passed into the train step. If the train step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.
+Override this method if you have custom logic for how to get the next batch of data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</li>
+<li><strong>data_iter</strong> – the iterator over the training dataset.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Either the next batch of train data or the iterator over the training dataset.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.framework.unit.TrainUnit.on_train_end">
 <code class="sig-name descname"><span class="pre">on_train_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/unit.html#TrainUnit.on_train_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.unit.TrainUnit.on_train_end" title="Permalink to this definition">¶</a></dt>
@@ -499,6 +522,7 @@ train dataloader, and can return any data the user wishes.</p>
 is an abstract method where you can define the code you want to run each iteration of the dataloader.</p>
 <p>To use the EvalUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>.
 Then implement the <code class="docutils literal notranslate"><span class="pre">eval_step</span></code> method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
+In addition, you can override <code class="docutils literal notranslate"><span class="pre">get_next_eval_batch</span></code> to modify the default batch fetching behavior.
 Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">eval_step</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">EvalUnit</span>
 
@@ -535,6 +559,28 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 <li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the evaluation run.</li>
 <li><strong>data</strong> – one batch of evaluation data.</li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.unit.EvalUnit.get_next_eval_batch">
+<code class="sig-name descname"><span class="pre">get_next_eval_batch</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/unit.html#EvalUnit.get_next_eval_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.unit.EvalUnit.get_next_eval_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next batch of data to be passed into the eval step. If the eval step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.
+Override this method if you have custom logic for how to get the next batch of data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the eval run.</li>
+<li><strong>data_iter</strong> – the iterator over the eval dataset.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Either the next batch of eval data or the iterator over the eval dataset.</p>
 </td>
 </tr>
 </tbody>
@@ -609,6 +655,7 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 is an abstract method where you can define the code you want to run each iteration of the dataloader.</p>
 <p>To use the PredictUnit, create a class which subclasses <a class="reference internal" href="#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a>.
 Then implement the <code class="docutils literal notranslate"><span class="pre">predict_step</span></code> method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.
+In addition, you can override <code class="docutils literal notranslate"><span class="pre">get_next_predict_batch</span></code> to modify the default batch fetching behavior.
 Below is a simple example of a user’s subclass of <a class="reference internal" href="#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a> that implements a basic <code class="docutils literal notranslate"><span class="pre">predict_step</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">PredictUnit</span>
 
@@ -631,6 +678,27 @@ Below is a simple example of a user’s subclass of <a class="reference internal
 <span class="n">predict_unit</span> <span class="o">=</span> <span class="n">MyPredictUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">)</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.get_next_predict_batch">
+<code class="sig-name descname"><span class="pre">get_next_predict_batch</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">data_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/unit.html#PredictUnit.get_next_predict_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.get_next_predict_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the next batch of data to be passed into the predict step. If the predict step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the predict run.</li>
+<li><strong>data_iter</strong> – the iterator over the predict dataset.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Either the next batch of predict data or the iterator over the predict dataset.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.on_predict_end">
 <code class="sig-name descname"><span class="pre">on_predict_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/unit.html#PredictUnit.on_predict_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.on_predict_end" title="Permalink to this definition">¶</a></dt>

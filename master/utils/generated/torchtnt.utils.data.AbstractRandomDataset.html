@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>torchtnt.utils.device.maybe_enable_tf32 &mdash; TorchTNT master documentation</title>
+  <title>torchtnt.utils.data.AbstractRandomDataset &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="torchtnt.utils.distributed.PGWrapper" href="torchtnt.utils.distributed.PGWrapper.html" />
-    <link rel="prev" title="torchtnt.utils.device.get_psutil_cpu_stats" href="torchtnt.utils.device.get_psutil_cpu_stats.html" />
+    <link rel="next" title="torchtnt.utils.data.AllDatasetBatchesIterator" href="torchtnt.utils.data.AllDatasetBatchesIterator.html" />
+    <link rel="prev" title="Utils" href="../utils.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -87,7 +87,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -332,13 +332,13 @@
         
           <li><a href="../utils.html">Utils</a> &gt;</li>
         
-      <li>torchtnt.utils.device.maybe_enable_tf32</li>
+      <li>torchtnt.utils.data.AbstractRandomDataset</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/utils/generated/torchtnt.utils.device.maybe_enable_tf32.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/utils/generated/torchtnt.utils.data.AbstractRandomDataset.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -368,18 +368,47 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="torchtnt-utils-device-maybe-enable-tf32">
-<h1>torchtnt.utils.device.maybe_enable_tf32<a class="headerlink" href="#torchtnt-utils-device-maybe-enable-tf32" title="Permalink to this heading">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="torchtnt.utils.device.maybe_enable_tf32">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.device.</span></code><code class="sig-name descname"><span class="pre">maybe_enable_tf32</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'high'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/device.html#maybe_enable_tf32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.device.maybe_enable_tf32" title="Permalink to this definition">¶</a></dt>
-<dd><p>Conditionally sets the precision of float32 matrix multiplications and conv operations.</p>
-<p>For more information, see the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html" target="_blank">PyTorch docs</a></p>
+  <div class="section" id="torchtnt-utils-data-abstractrandomdataset">
+<h1>torchtnt.utils.data.AbstractRandomDataset<a class="headerlink" href="#torchtnt-utils-data-abstractrandomdataset" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="torchtnt.utils.data.AbstractRandomDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">AbstractRandomDataset</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/utils/data/synthetic_data.html#AbstractRandomDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.data.AbstractRandomDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract base class for random datasets.</p>
+<p>Intended for subclassing, this class provides the framework for implementing
+custom random datasets. Each subclass should provide
+a concrete implementation of the <cite>_generate_random_item</cite> method.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchtnt.utils.data.AbstractRandomDataset.size">
+<code class="sig-name descname"><span class="pre">size</span></code><a class="headerlink" href="#torchtnt.utils.data.AbstractRandomDataset.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total number of items the dataset will contain.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>precision</strong> – The setting to determine which datatypes to use for matrix multiplication.</td>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int, default=100</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.utils.data.AbstractRandomDataset.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#torchtnt.utils.data.AbstractRandomDataset.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.data.AbstractRandomDataset.__init__" title="torchtnt.utils.data.AbstractRandomDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([size])</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.data.AbstractRandomDataset.size" title="torchtnt.utils.data.AbstractRandomDataset.size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></a></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -395,10 +424,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.utils.distributed.PGWrapper.html" class="btn btn-neutral float-right" title="torchtnt.utils.distributed.PGWrapper" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.data.AllDatasetBatchesIterator.html" class="btn btn-neutral float-right" title="torchtnt.utils.data.AllDatasetBatchesIterator" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.utils.device.get_psutil_cpu_stats.html" class="btn btn-neutral" title="torchtnt.utils.device.get_psutil_cpu_stats" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="../utils.html" class="btn btn-neutral" title="Utils" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -430,7 +459,7 @@
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">torchtnt.utils.device.maybe_enable_tf32</a></li>
+<li><a class="reference internal" href="#">torchtnt.utils.data.AbstractRandomDataset</a></li>
 </ul>
 
             </div>

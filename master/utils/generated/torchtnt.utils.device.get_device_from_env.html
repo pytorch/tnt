@@ -87,7 +87,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -374,7 +374,7 @@
 <dt class="sig sig-object py" id="torchtnt.utils.device.get_device_from_env">
 <code class="sig-prename descclassname"><span class="pre">torchtnt.utils.device.</span></code><code class="sig-name descname"><span class="pre">get_device_from_env</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://pytorch.org/docs/stable/tensor_attributes.html#torch.device" target="_blank" title="(in PyTorch v2.1)"><span class="pre">device</span></a></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/device.html#get_device_from_env"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.device.get_device_from_env" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that gets the torch.device based on the current environment.</p>
-<p>This currently supports only CPU and GPU devices. If CUDA is available, this function also sets the CUDA device.</p>
+<p>This currently supports only CPU, GPU, and MPS devices. If CUDA is available, this function also sets the CUDA device.</p>
 <p>Within a distributed context, this function relies on the <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code> environment variable
 to be made available by the program launcher for setting the appropriate device index.</p>
 <table class="docutils field-list" frame="void" rules="none">

@@ -1,6 +1,0 @@
-﻿torchtnt.utils.device.maybe\_enable\_tf32
-=========================================
-
-.. currentmodule:: torchtnt.utils.device
-
-.. autofunction:: maybe_enable_tf32

@@ -87,7 +87,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -382,14 +382,32 @@ so that allocations that stay constant in training are accounted for.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>output_dir</strong> – Directory where to save the memory snapshots.</li>
 <li><strong>memory_snapshot_params</strong> – Instance of MemorySnapshotParams.</li>
 </ul>
 </td>
 </tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ValueError</strong> – If <cite>start_step</cite> is negative, or <cite>stop_step</cite> is less than or equal to zero.</li>
+<li><strong>ValueError</strong> – If <cite>start_step</cite> is greater than or equal to <cite>stop_step</cite>.</li>
+<li><strong>ValueError</strong> – If <cite>start_step</cite> is set and <cite>stop_step</cite> is not set.</li>
+<li><strong>ValueError</strong> – If <cite>stop_step</cite> is set and neither <cite>start_step</cite> nor <cite>enable_oom_observer</cite> are set.</li>
+<li><strong>ValueError</strong> – If <cite>enable_oom_observer</cite> is False and neither <cite>start_step</cite> nor <cite>stop_step</cite> is set</li>
+</ul>
+</td>
+</tr>
 </tbody>
 </table>
+<dl class="docutils">
+<dt>Examples::</dt><dd><p>memory_snapshot_params = MemorySnapshotParams(start_step=5, stop_step=10, enable_oom_observer=True)
+memory_snapshot_profiler = MemorySnapshotProfiler(output_dir=”/tmp”, memory_snapshot_params=memory_snapshot_params)
+for batch in dataloader:</p>
+<blockquote>
+<div>…
+memory_snapshot_profiler.step()</div></blockquote>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.memory_snapshot_profiler.MemorySnapshotProfiler.__init__">
 <code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">memory_snapshot_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">MemorySnapshotParams</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/memory_snapshot_profiler.html#MemorySnapshotProfiler.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.memory_snapshot_profiler.MemorySnapshotProfiler.__init__" title="Permalink to this definition">¶</a></dt>

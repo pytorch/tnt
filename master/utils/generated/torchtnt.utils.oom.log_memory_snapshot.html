@@ -87,7 +87,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -372,14 +372,18 @@
 <h1>torchtnt.utils.oom.log_memory_snapshot<a class="headerlink" href="#torchtnt-utils-oom-log-memory-snapshot" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="torchtnt.utils.oom.log_memory_snapshot">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.oom.</span></code><code class="sig-name descname"><span class="pre">log_memory_snapshot</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/oom.html#log_memory_snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.oom.log_memory_snapshot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.oom.</span></code><code class="sig-name descname"><span class="pre">log_memory_snapshot</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">file_prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/oom.html#log_memory_snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.oom.log_memory_snapshot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes the memory snapshots to the provided <code class="docutils literal notranslate"><span class="pre">output_dir</span></code>.
 For more information, see this <a class="reference external" href="https://zdevito.github.io/2022/08/16/memory-snapshots.html" target="_blank">blog post</a> .</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_dir</strong> (<em>str</em>) – The directory to save the memory snapshot.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>output_dir</strong> – The directory to save the memory snapshot.</li>
+<li><strong>file_prefix</strong> – Prefix to append to the filename. If not set, defaults to “memory_snapshot”.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>

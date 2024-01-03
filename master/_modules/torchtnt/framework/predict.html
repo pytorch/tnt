@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -376,17 +376,16 @@
 <span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework._callback_handler</span> <span class="kn">import</span> <span class="n">CallbackHandler</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework._loop_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_is_epoch_done</span><span class="p">,</span>
+    <span class="n">_log_api_usage</span><span class="p">,</span>
+    <span class="n">_reset_module_training_mode</span><span class="p">,</span>
+    <span class="n">_set_module_training_mode</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">ActivePhase</span><span class="p">,</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">PhaseState</span><span class="p">,</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TPredictData</span><span class="p">,</span> <span class="n">TPredictUnit</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_is_epoch_done</span><span class="p">,</span>
-    <span class="n">_reset_module_training_mode</span><span class="p">,</span>
-    <span class="n">_set_module_training_mode</span><span class="p">,</span>
-    <span class="n">_step_requires_iterator</span><span class="p">,</span>
-    <span class="n">get_timing_context</span><span class="p">,</span>
-    <span class="n">log_api_usage</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">get_timing_context</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">get_timer_summary</span><span class="p">,</span> <span class="n">TimerProtocol</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -431,7 +430,7 @@
 <span class="sd">        while not done:</span>
 <span class="sd">            call on_predict_epoch_start on unit first and then callbacks</span>
 <span class="sd">            try:</span>
-<span class="sd">                data = next(dataloader)</span>
+<span class="sd">                call get_next_predict_batch on unit</span>
 <span class="sd">                call on_predict_step_start on callbacks</span>
 <span class="sd">                call predict_step on unit</span>
 <span class="sd">                increment step counter</span>
@@ -442,7 +441,7 @@
 <span class="sd">        call on_predict_epoch_end on unit first and then callbacks</span>
 <span class="sd">        call on_predict_end on unit first and then callbacks</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log_api_usage</span><span class="p">(</span><span class="s2">&quot;predict&quot;</span><span class="p">)</span>
+    <span class="n">_log_api_usage</span><span class="p">(</span><span class="s2">&quot;predict&quot;</span><span class="p">)</span>
     <span class="n">callback_handler</span> <span class="o">=</span> <span class="n">CallbackHandler</span><span class="p">(</span><span class="n">callbacks</span> <span class="ow">or</span> <span class="p">[])</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">State</span><span class="p">(</span>
         <span class="n">entry_point</span><span class="o">=</span><span class="n">EntryPoint</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">,</span>
@@ -459,7 +458,7 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">get_timer_summary</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">timer</span><span class="p">))</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># TODO: log for diagnostics</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exception during predict:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">predict_unit</span><span class="o">.</span><span class="n">on_exception</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_exception</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">predict_unit</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">e</span></div>
@@ -503,7 +502,6 @@
         <span class="n">data_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">predict_state</span><span class="o">.</span><span class="n">dataloader</span><span class="p">)</span>
     <span class="n">step_input</span> <span class="o">=</span> <span class="n">data_iter</span>
 
-    <span class="n">pass_data_iter_to_step</span> <span class="o">=</span> <span class="n">_step_requires_iterator</span><span class="p">(</span><span class="n">predict_unit</span><span class="o">.</span><span class="n">predict_step</span><span class="p">)</span>
     <span class="n">prev_steps_in_epoch</span> <span class="o">=</span> <span class="n">predict_unit</span><span class="o">.</span><span class="n">predict_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span>
 
     <span class="k">while</span> <span class="ow">not</span> <span class="p">(</span>
@@ -515,12 +513,12 @@
         <span class="p">)</span>
     <span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">pass_data_iter_to_step</span><span class="p">:</span>
-                <span class="c1"># get the next batch from the data iterator</span>
-                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                    <span class="n">state</span><span class="p">,</span> <span class="s2">&quot;predict.next(data_iter)&quot;</span>
-                <span class="p">),</span> <span class="n">predict_state</span><span class="o">.</span><span class="n">iteration_timer</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="s2">&quot;data_wait_time&quot;</span><span class="p">):</span>
-                    <span class="n">step_input</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                <span class="n">state</span><span class="p">,</span> <span class="s2">&quot;predict.next(data_iter)&quot;</span>
+            <span class="p">),</span> <span class="n">predict_state</span><span class="o">.</span><span class="n">iteration_timer</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="s2">&quot;data_wait_time&quot;</span><span class="p">):</span>
+                <span class="n">step_input</span> <span class="o">=</span> <span class="n">predict_unit</span><span class="o">.</span><span class="n">get_next_predict_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">)</span>
+                <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_predict_get_next_batch_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">predict_unit</span><span class="p">)</span>
+
             <span class="k">with</span> <span class="n">predict_state</span><span class="o">.</span><span class="n">iteration_timer</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="s2">&quot;predict_iteration_time&quot;</span><span class="p">):</span>
                 <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_predict_step_start</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">predict_unit</span><span class="p">)</span>
                 <span class="n">predict_state</span><span class="o">.</span><span class="n">_step_output</span> <span class="o">=</span> <span class="n">predict_unit</span><span class="o">.</span><span class="n">predict_step</span><span class="p">(</span>

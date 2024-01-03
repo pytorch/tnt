@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -369,12 +369,17 @@
 <span class="c1"># This source code is licensed under the BSD-style license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">torch.optim.swa_utils</span> <span class="kn">import</span> <span class="n">AveragedModel</span> <span class="k">as</span> <span class="n">PyTorchAveragedModel</span>
-
+<span class="c1"># TODO: torch/optim/swa_utils.pyi needs to be updated</span>
+<span class="c1"># pyre-ignore Undefined import [21]: Could not find a name `get_ema_multi_avg_fn` defined in module `torch.optim.swa_utils`.</span>
+<span class="kn">from</span> <span class="nn">torch.optim.swa_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AveragedModel</span> <span class="k">as</span> <span class="n">PyTorchAveragedModel</span><span class="p">,</span>
+    <span class="n">get_ema_multi_avg_fn</span><span class="p">,</span>
+    <span class="n">get_swa_multi_avg_fn</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="n">TSWA_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
 <span class="n">TSWA_multi_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
@@ -385,34 +390,63 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">multi_avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_multi_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">use_buffers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">averaging_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ema&quot;</span><span class="p">,</span> <span class="s2">&quot;swa&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ema&quot;</span><span class="p">,</span>
+        <span class="n">ema_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.999</span><span class="p">,</span>
         <span class="n">skip_deepcopy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">use_lit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This class is a custom version of AveragedModel that allows us to skip the</span>
-<span class="sd">        automatic deepcopy step. This gives flexibility to use modules that are not</span>
+<span class="sd">        automatic deepcopy step and streamline the use of EMA / SWA. The deepcopy</span>
+<span class="sd">        optionality gives flexibility to use modules that are not</span>
 <span class="sd">        compatible with deepcopy, like FSDP wrapped modules. Check out</span>
 <span class="sd">        https://github.com/pytorch/pytorch/blob/main/torch/optim/swa_utils.py#L66</span>
-<span class="sd">        to see what the arguments entail.</span>
+<span class="sd">        to see what the model, device, and use_buffer arguments entail.</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            averaging_method: Whether to use EMA or SWA.</span>
+<span class="sd">            ema_decay: The exponential decay applied to the averaged parameters. This param</span>
+<span class="sd">                is only needed for EMA, and is ignored otherwise (for SWA).</span>
 <span class="sd">            skip_deepcopy: If True, will skip the deepcopy step. The user must ensure</span>
 <span class="sd">                that the module passed in is already copied in someway</span>
+<span class="sd">            use_lit: If True, will use Lit EMA style by adjusting weight decay based on the</span>
+<span class="sd">                number of updates. The EMA decay will start small and will approach the</span>
+<span class="sd">                specified ema_decay as more updates occur.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># setup averaging method</span>
+        <span class="k">if</span> <span class="n">averaging_method</span> <span class="o">==</span> <span class="s2">&quot;ema&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ema_decay</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">ema_decay</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Decay must be between 0 and 1, got </span><span class="si">{</span><span class="n">ema_decay</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="c1"># TODO: torch/optim/swa_utils.pyi needs to be updated</span>
+            <span class="c1"># pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_ema_multi_avg_fn`.</span>
+            <span class="n">multi_avg_fn</span> <span class="o">=</span> <span class="n">get_ema_multi_avg_fn</span><span class="p">(</span><span class="n">ema_decay</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">averaging_method</span> <span class="o">==</span> <span class="s2">&quot;swa&quot;</span><span class="p">:</span>
+            <span class="c1"># TODO: torch/optim/swa_utils.pyi needs to be updated</span>
+            <span class="c1"># pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_swa_multi_avg_fn`.</span>
+            <span class="n">multi_avg_fn</span> <span class="o">=</span> <span class="n">get_swa_multi_avg_fn</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">use_lit</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LitEMA is only supported for EMA.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unknown averaging method: </span><span class="si">{</span><span class="n">averaging_method</span><span class="si">}</span><span class="s2">. Only ema and swa are supported.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ema_decay</span> <span class="o">=</span> <span class="n">ema_decay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use_lit</span> <span class="o">=</span> <span class="n">use_lit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_updates</span> <span class="o">=</span> <span class="mi">0</span>
+
         <span class="k">if</span> <span class="n">skip_deepcopy</span><span class="p">:</span>
             <span class="c1"># calls parent init manually, but skips deepcopy step</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>  <span class="c1"># inits grandparent class</span>
 
-            <span class="k">assert</span> <span class="p">(</span>
-                <span class="n">avg_fn</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">multi_avg_fn</span> <span class="ow">is</span> <span class="kc">None</span>
-            <span class="p">),</span> <span class="s2">&quot;Only one of avg_fn and multi_avg_fn should be provided&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">model</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span>
                 <span class="s2">&quot;n_averaged&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="n">avg_fn</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">multi_avg_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TSWA_multi_avg_fn</span><span class="p">]</span> <span class="o">=</span> <span class="n">multi_avg_fn</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">use_buffers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">use_buffers</span>
         <span class="k">else</span><span class="p">:</span>
@@ -423,10 +457,21 @@
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
                 <span class="n">model</span><span class="p">,</span>
                 <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
-                <span class="n">avg_fn</span><span class="o">=</span><span class="n">avg_fn</span><span class="p">,</span>
                 <span class="n">multi_avg_fn</span><span class="o">=</span><span class="n">multi_avg_fn</span><span class="p">,</span>
                 <span class="n">use_buffers</span><span class="o">=</span><span class="n">use_buffers</span><span class="p">,</span>
-            <span class="p">)</span></div></div>
+            <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_updates</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_lit</span><span class="p">:</span>
+            <span class="n">decay</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ema_decay</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_updates</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">10</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_updates</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="c1"># TODO: torch/optim/swa_utils.pyi needs to be updated</span>
+            <span class="c1"># pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_ema_multi_avg_fn`.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">multi_avg_fn</span> <span class="o">=</span> <span class="n">get_ema_multi_avg_fn</span><span class="p">(</span><span class="n">decay</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">update_parameters</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></div>
 </pre></div>
 
              </article>

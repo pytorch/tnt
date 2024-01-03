@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -387,12 +387,18 @@
 <span class="sd">    Memory snapshot parameters.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        stop_step: Number of steps after which to dump memory snapshot, and stop recording memory history.</span>
+<span class="sd">        start_step: Step from which to start recording memory history.</span>
+<span class="sd">        stop_step: Step after which to dump memory snapshot, and stop recording memory history.</span>
 <span class="sd">        max_entries: Maximum number of events to keep in memory.</span>
 <span class="sd">        enable_oom_observer: Whether to attach an observer to record OOM events. If stop_step is set, the</span>
 <span class="sd">            OOM observer will only be active until stop_step is reached.</span>
+
+<span class="sd">    Note: If you set enable_oom_observer to True, you don&#39;t necessarily have to set a start_step as attach_oom_observer</span>
+<span class="sd">        will start recording memory history. Note that if you don&#39;t set a stop_step, it will continue recording memory</span>
+<span class="sd">        history until the program exits, which may incur a slight performance cost.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">start_step</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">stop_step</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">max_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100000</span>
     <span class="n">enable_oom_observer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
@@ -409,6 +415,20 @@
 <span class="sd">    Args:</span>
 <span class="sd">        output_dir: Directory where to save the memory snapshots.</span>
 <span class="sd">        memory_snapshot_params: Instance of MemorySnapshotParams.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If `start_step` is negative, or `stop_step` is less than or equal to zero.</span>
+<span class="sd">        ValueError: If `start_step` is greater than or equal to `stop_step`.</span>
+<span class="sd">        ValueError: If `start_step` is set and `stop_step` is not set.</span>
+<span class="sd">        ValueError: If `stop_step` is set and neither `start_step` nor `enable_oom_observer` are set.</span>
+<span class="sd">        ValueError: If `enable_oom_observer` is False and neither `start_step` nor `stop_step` is set</span>
+
+<span class="sd">    Examples::</span>
+<span class="sd">        memory_snapshot_params = MemorySnapshotParams(start_step=5, stop_step=10, enable_oom_observer=True)</span>
+<span class="sd">        memory_snapshot_profiler = MemorySnapshotProfiler(output_dir=&quot;/tmp&quot;, memory_snapshot_params=memory_snapshot_params)</span>
+<span class="sd">        for batch in dataloader:</span>
+<span class="sd">            ...</span>
+<span class="sd">            memory_snapshot_profiler.step()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MemorySnapshotProfiler.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.memory_snapshot_profiler.MemorySnapshotProfiler.html#torchtnt.utils.memory_snapshot_profiler.MemorySnapshotProfiler.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -420,6 +440,31 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span> <span class="n">MemorySnapshotParams</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">memory_snapshot_params</span> <span class="ow">or</span> <span class="n">MemorySnapshotParams</span><span class="p">()</span>
         <span class="p">)</span>
+        <span class="n">start_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">start_step</span>
+        <span class="n">stop_step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">stop_step</span>
+        <span class="k">if</span> <span class="n">start_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">start_step</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;start_step must be nonnegative.&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">stop_step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stop_step must be specified when start_step is set.&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">start_step</span> <span class="o">&gt;=</span> <span class="n">stop_step</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;start_step must be &lt; stop_step.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stop_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">stop_step</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;stop_step must be positive.&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">start_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">enable_oom_observer</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;stop_step must be enabled with either start_step or enable_oom_observer.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">start_step</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">stop_step</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">enable_oom_observer</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;At least one of start_step/stop_step or enable_oom_observer must be set.&quot;</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">step_num</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_torch_version_geq_2_0</span><span class="p">():</span>
@@ -428,6 +473,8 @@
             <span class="n">attach_oom_observer</span><span class="p">(</span>
                 <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">trace_max_entries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">max_entries</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="n">start_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">start_step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Created MemorySnapshotProfiler with MemorySnapshotParams=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -462,8 +509,15 @@
 
     <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step_num</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">start_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_num</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">start_step</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">stop_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_num</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">stop_step</span><span class="p">:</span>
-            <span class="n">log_memory_snapshot</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">)</span>
+            <span class="n">log_memory_snapshot</span><span class="p">(</span>
+                <span class="n">output_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">file_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;step_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">step_num</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
 </pre></div>
 

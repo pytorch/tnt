@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -373,6 +373,8 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.cuda.amp.grad_scaler</span> <span class="kn">import</span> <span class="n">GradScaler</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.prepare_module</span> <span class="kn">import</span> <span class="n">_is_fsdp_module</span>
 
 <span class="n">_DTYPE_STRING_TO_DTYPE_MAPPING</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
@@ -397,6 +399,31 @@
             <span class="sa">f</span><span class="s2">&quot;Precision </span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s2"> not supported. Please use one of </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">_DTYPE_STRING_TO_DTYPE_MAPPING</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">_DTYPE_STRING_TO_DTYPE_MAPPING</span><span class="p">[</span><span class="n">precision</span><span class="p">]</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_grad_scaler_from_precision</span><span class="p">(</span>
+    <span class="n">precision</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradScaler</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the correct grad scaler to use based on the precision and whether</span>
+<span class="sd">    or not the model is FSDP.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        precision: the precision being used</span>
+<span class="sd">        module: the module being trained</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The appropriate grad scaler to use, ``None`` if no grad scaler should be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">precision</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">torch.distributed.fsdp.sharded_grad_scaler</span> <span class="kn">import</span> <span class="n">ShardedGradScaler</span>
+
+            <span class="k">return</span> <span class="n">ShardedGradScaler</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GradScaler</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">None</span>
 </pre></div>
 
              </article>

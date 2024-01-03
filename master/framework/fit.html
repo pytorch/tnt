@@ -87,7 +87,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -413,7 +413,7 @@ while training is not done:
     while epoch is not done:
         call on_train_epoch_start on unit first and then callbacks
         try:
-            data = next(dataloader)
+            call get_next_train_batch on unit
             call on_train_step_start on callbacks
             call train_step on unit
             increment step counter

@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -370,15 +370,23 @@
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
 
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework._loop_utils</span> <span class="kn">import</span> <span class="n">_step_requires_iterator</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework._unit_utils</span> <span class="kn">import</span> <span class="n">_find_optimizers_for_module</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.lr_scheduler</span> <span class="kn">import</span> <span class="n">TLRScheduler</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.prepare_module</span> <span class="kn">import</span> <span class="n">_is_fsdp_module</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.progress</span> <span class="kn">import</span> <span class="n">Progress</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">Stateful</span>
+
+
+<span class="n">_logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This file defines mixins and interfaces for users to customize hooks in training, evaluation, and prediction loops.</span>
@@ -533,6 +541,60 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__delattr__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_construct_tracked_optimizers_and_schedulers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># construct custom tracked optimizers with FSDP optimizers</span>
+        <span class="n">tracked_optimizers_and_schedulers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">tracked_optimizers_and_schedulers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_construct_tracked_optimizers</span><span class="p">())</span>
+
+        <span class="c1"># add schedulers</span>
+        <span class="k">for</span> <span class="p">(</span>
+            <span class="n">lr_scheduler_attrib_name</span><span class="p">,</span>
+            <span class="n">lr_scheduler</span><span class="p">,</span>
+        <span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracked_lr_schedulers</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">lr_scheduler_attrib_name</span> <span class="ow">in</span> <span class="n">tracked_optimizers_and_schedulers</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Key collision &quot;</span><span class="si">{</span><span class="n">lr_scheduler_attrib_name</span><span class="si">}</span><span class="s1">&quot; detected between LR Scheduler and optimizer attribute names. Please ensure there are no identical attribute names, as they will override each other.&#39;</span>
+                <span class="p">)</span>
+            <span class="n">tracked_optimizers_and_schedulers</span><span class="p">[</span><span class="n">lr_scheduler_attrib_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">lr_scheduler</span>
+
+        <span class="k">return</span> <span class="n">tracked_optimizers_and_schedulers</span>
+
+    <span class="k">def</span> <span class="nf">_construct_tracked_optimizers</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fsdp_tracked_optimizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracked_modules</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+                <span class="c1"># find optimizers for module, if exists</span>
+                <span class="n">optimizer_list</span> <span class="o">=</span> <span class="n">_find_optimizers_for_module</span><span class="p">(</span>
+                    <span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracked_optimizers</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">optim_name</span><span class="p">,</span> <span class="n">optimizer</span> <span class="ow">in</span> <span class="n">optimizer_list</span><span class="p">:</span>
+                    <span class="n">fsdp_tracked_optimizers</span><span class="p">[</span><span class="n">optim_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">(</span>
+                        <span class="n">module</span><span class="p">,</span> <span class="n">optimizer</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># construct custom tracked optimizers with FSDP optimizers</span>
+        <span class="n">tracked_optimizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracked_optimizers</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fsdp_tracked_optimizers</span>
+        <span class="p">}</span>
+        <span class="n">tracked_optimizers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fsdp_tracked_optimizers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tracked_optimizers</span>
+
 
 <span class="k">class</span> <span class="nc">_OnExceptionMixin</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">on_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -551,6 +613,8 @@
 
 <span class="sd">    To use the TrainUnit, create a class which subclasses TrainUnit. Then implement the ``train_step`` method on your class, and optionally</span>
 <span class="sd">    implement any of the hooks, which allow you to control the behavior of the loop at different points.</span>
+
+<span class="sd">    In addition, you can override ``get_next_train_batch`` to modify the default batch fetching behavior.</span>
 
 <span class="sd">    Below is a simple example of a user&#39;s subclass of TrainUnit that implements a basic ``train_step``, and the ``on_train_epoch_end`` hook.</span>
 
@@ -635,7 +699,29 @@
 <span class="sd">        Args:</span>
 <span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">pass</span></div></div>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="TrainUnit.get_next_train_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.get_next_train_batch">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_train_batch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
+        <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">],</span> <span class="n">TTrainData</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the next batch of data to be passed into the train step. If the train step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.</span>
+<span class="sd">        Override this method if you have custom logic for how to get the next batch of data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.</span>
+<span class="sd">            data_iter: the iterator over the training dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Either the next batch of train data or the iterator over the training dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pass_data_iter_to_step</span> <span class="o">=</span> <span class="n">_step_requires_iterator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pass_data_iter_to_step</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">],</span> <span class="n">data_iter</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">TTrainData</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">))</span></div></div>
 
 
 <div class="viewcode-block" id="EvalUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit">[docs]</a><span class="k">class</span> <span class="nc">EvalUnit</span><span class="p">(</span><span class="n">AppStateMixin</span><span class="p">,</span> <span class="n">_OnExceptionMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
@@ -645,6 +731,7 @@
 
 <span class="sd">    To use the EvalUnit, create a class which subclasses :class:`~torchtnt.framework.unit.EvalUnit`.</span>
 <span class="sd">    Then implement the ``eval_step`` method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.</span>
+<span class="sd">    In addition, you can override ``get_next_eval_batch`` to modify the default batch fetching behavior.</span>
 <span class="sd">    Below is a simple example of a user&#39;s subclass of :class:`~torchtnt.framework.unit.EvalUnit` that implements a basic ``eval_step``.</span>
 
 <span class="sd">    .. code-block:: python</span>
@@ -718,7 +805,29 @@
 <span class="sd">        Args:</span>
 <span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">pass</span></div></div>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="EvalUnit.get_next_eval_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.get_next_eval_batch">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_eval_batch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
+        <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">],</span> <span class="n">TEvalData</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the next batch of data to be passed into the eval step. If the eval step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.</span>
+<span class="sd">        Override this method if you have custom logic for how to get the next batch of data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the eval run.</span>
+<span class="sd">            data_iter: the iterator over the eval dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Either the next batch of eval data or the iterator over the eval dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pass_data_iter_to_step</span> <span class="o">=</span> <span class="n">_step_requires_iterator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pass_data_iter_to_step</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">],</span> <span class="n">data_iter</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">TEvalData</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">))</span></div></div>
 
 
 <div class="viewcode-block" id="PredictUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit">[docs]</a><span class="k">class</span> <span class="nc">PredictUnit</span><span class="p">(</span>
@@ -733,6 +842,7 @@
 
 <span class="sd">    To use the PredictUnit, create a class which subclasses :class:`~torchtnt.framework.unit.PredictUnit`.</span>
 <span class="sd">    Then implement the ``predict_step`` method on your class, and then you can optionally implement any of the hooks which allow you to control the behavior of the loop at different points.</span>
+<span class="sd">    In addition, you can override ``get_next_predict_batch`` to modify the default batch fetching behavior.</span>
 <span class="sd">    Below is a simple example of a user&#39;s subclass of :class:`~torchtnt.framework.unit.PredictUnit` that implements a basic ``predict_step``.</span>
 
 <span class="sd">    .. code-block:: python</span>
@@ -806,7 +916,28 @@
 <span class="sd">        Args:</span>
 <span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the prediction run.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">pass</span></div></div>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="PredictUnit.get_next_predict_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.get_next_predict_batch">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_predict_batch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
+        <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">],</span> <span class="n">TPredictData</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the next batch of data to be passed into the predict step. If the predict step requires an iterator as input, this function should return the iterator. Otherwise, this function should return the next batch of data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the predict run.</span>
+<span class="sd">            data_iter: the iterator over the predict dataset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Either the next batch of predict data or the iterator over the predict dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pass_data_iter_to_step</span> <span class="o">=</span> <span class="n">_step_requires_iterator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predict_step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pass_data_iter_to_step</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">],</span> <span class="n">data_iter</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">TPredictData</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">))</span></div></div>
 
 
 <span class="n">TTrainUnit</span> <span class="o">=</span> <span class="n">TrainUnit</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">]</span>

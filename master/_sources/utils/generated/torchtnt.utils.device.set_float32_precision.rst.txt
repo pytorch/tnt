@@ -1,0 +1,6 @@
+﻿torchtnt.utils.device.set\_float32\_precision
+=============================================
+
+.. currentmodule:: torchtnt.utils.device
+
+.. autofunction:: set_float32_precision

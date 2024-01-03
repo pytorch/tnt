@@ -1,0 +1,28 @@
+﻿torchtnt.utils.data.AbstractRandomDataset
+=========================================
+
+.. currentmodule:: torchtnt.utils.data
+
+.. autoclass:: AbstractRandomDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AbstractRandomDataset.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AbstractRandomDataset.size
+   
+   

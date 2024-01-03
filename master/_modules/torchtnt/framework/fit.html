@@ -85,7 +85,7 @@
           <li>
           <div id="resourcesDropdownButton" data-toggle="resources-dropdown" class="resources-dropdown">
               <a class="resource-option with-down-arrow">
-                PyTorch Edge
+                Edge
               </a>
               <div class="resources-dropdown-menu">
                 <a class="nav-dropdown-item" href="https://pytorch.org/edge">
@@ -373,6 +373,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework._callback_handler</span> <span class="kn">import</span> <span class="n">CallbackHandler</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework._loop_utils</span> <span class="kn">import</span> <span class="n">_log_api_usage</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">PhaseState</span><span class="p">,</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.train</span> <span class="kn">import</span> <span class="n">_train_impl</span>
@@ -383,7 +384,6 @@
     <span class="n">TTrainData</span><span class="p">,</span>
     <span class="n">TTrainUnit</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">log_api_usage</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">get_timer_summary</span><span class="p">,</span> <span class="n">TimerProtocol</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -442,7 +442,7 @@
 <span class="sd">            while epoch is not done:</span>
 <span class="sd">                call on_train_epoch_start on unit first and then callbacks</span>
 <span class="sd">                try:</span>
-<span class="sd">                    data = next(dataloader)</span>
+<span class="sd">                    call get_next_train_batch on unit</span>
 <span class="sd">                    call on_train_step_start on callbacks</span>
 <span class="sd">                    call train_step on unit</span>
 <span class="sd">                    increment step counter</span>
@@ -457,7 +457,7 @@
 <span class="sd">                run eval loop</span>
 <span class="sd">        call on_train_end on unit first and then callbacks</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log_api_usage</span><span class="p">(</span><span class="s2">&quot;fit&quot;</span><span class="p">)</span>
+    <span class="n">_log_api_usage</span><span class="p">(</span><span class="s2">&quot;fit&quot;</span><span class="p">)</span>
 
     <span class="c1"># input validation</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">TrainUnit</span><span class="p">):</span>
@@ -494,11 +494,12 @@
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">_train_impl</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">callback_handler</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finished fit&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">timer</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">get_timer_summary</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">timer</span><span class="p">))</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># TODO: log for diagnostics</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exception during fit:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">unit</span><span class="o">.</span><span class="n">on_exception</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_exception</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">e</span></div>
