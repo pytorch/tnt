@@ -27,9 +27,9 @@ jobs:
           conda activate test
           pip install -r requirements.txt
           pip install -r dev-requirements.txt
+          conda install pytorch cpuonly -c pytorch-nightly
           python setup.py sdist bdist_wheel
           pip install dist/*.whl
-          conda install pytorch cpuonly -c pytorch-nightly
       - name: Build docs
         shell: bash -l {0}
         run: |
