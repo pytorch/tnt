@@ -3,6 +3,7 @@ name: Build and Update Docs
 on:
   push:
     branches: [ master ]
+  pull_request:
 
 # Allow one concurrent deployment
 concurrency:
@@ -40,6 +41,10 @@ jobs:
           make html
           touch build/html/.nojekyll
           cd ..
+  publish_docs:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    steps:
       - name: Deploy docs to Github pages
         uses: JamesIves/github-pages-deploy-action@v4.4.1
         with:
