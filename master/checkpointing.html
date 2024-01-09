@@ -423,6 +423,23 @@
 <span class="p">)</span>
 </pre></div>
 </div>
+<p>When finetuning your models, you can pass RestoreOptions to avoid loading optimizers and learning rate schedulers like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+    <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
+    <span class="n">save_every_n_train_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># loads latest checkpoint, if it exists</span>
+<span class="k">if</span> <span class="n">latest_checkpoint_dir</span><span class="p">:</span>
+    <span class="n">tss</span><span class="o">.</span><span class="n">restore_from_latest</span><span class="p">(</span>
+        <span class="n">your_dirpath_here</span><span class="p">,</span>
+        <span class="n">your_unit</span><span class="p">,</span>
+        <span class="n">train_dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>
+        <span class="n">restore_options</span><span class="o">=</span><span class="n">RestoreOptions</span><span class="p">(</span><span class="n">restore_optimizers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">restore_lr_schedulers</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
 </div>
 
 
