@@ -1,7 +1,8 @@
-name: Build Docs
+name: Build and Update Docs
 
 on:
-  pull_request:
+  push:
+    branches: [ master ]
 
 # Allow one concurrent deployment
 concurrency:
@@ -9,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_docs:
+  build_and_publish_docs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
@@ -39,3 +40,9 @@ jobs:
           make html
           touch build/html/.nojekyll
           cd ..
+      - name: Deploy docs to Github pages
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        with:
+            branch: gh-pages # The branch the action should deploy to.
+            folder: docs/build/html # The folder the action should deploy.
+            target-folder: master
