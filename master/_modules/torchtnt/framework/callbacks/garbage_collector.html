@@ -398,11 +398,11 @@
 <span class="sd">    Synchronizing the garbage collection can lead to a performance improvement.</span>
 <span class="sd">    The frequency of garbage collection must be tuned based on the application at hand.</span>
 
-<span class="sd">    By default, this callback does generation 1 collection every step. This can free up</span>
+<span class="sd">    By default, this callback does **generation 1** collection every step. This can free up</span>
 <span class="sd">    some objects to be reaped with minimal overhead compared to the full garbage collection.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        step_interval: number of steps to run before each collection</span>
+<span class="sd">        step_interval: number of steps to run before executing a full garbage cleanup</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_interval</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
