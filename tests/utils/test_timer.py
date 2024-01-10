@@ -282,27 +282,23 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
         return fsp_timer.check()  # Since 8>5, we will see flag set to True
 
     def test_full_sync_pt_multi_process_check_false(self) -> None:
-        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_without_timeout)
+        mp_list = spawn_multi_process(2, "gloo", self._full_sync_worker_without_timeout)
         # Both processes should return False
-        self.assertFalse(mp_dict[0])
-        self.assertFalse(mp_dict[1])
+        self.assertEqual(mp_list, [False, False])
 
     def test_full_sync_pt_multi_process_check_true(self) -> None:
-        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 8)
+        mp_list = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 8)
         # Both processes should return True
-        self.assertTrue(mp_dict[0])
-        self.assertTrue(mp_dict[1])
+        self.assertEqual(mp_list, [True, True])
 
     def test_full_sync_pt_multi_process_edgecase(self) -> None:
-        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 5)
+        mp_list = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 5)
 
         # Both processes should return True
-        self.assertTrue(mp_dict[0])
-        self.assertTrue(mp_dict[1])
+        self.assertEqual(mp_list, [True, True])
 
         # Launch 2 worker processes. Each will check time diff >= interval threshold
-        mp_dict = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 4)
+        mp_list = spawn_multi_process(2, "gloo", self._full_sync_worker_with_timeout, 4)
 
         # Both processes should return False
-        self.assertFalse(mp_dict[0])
-        self.assertFalse(mp_dict[1])
+        self.assertEqual(mp_list, [False, False])
