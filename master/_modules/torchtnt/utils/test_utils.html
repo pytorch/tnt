@@ -379,14 +379,26 @@
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Any</span><span class="p">,</span>
+    <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Generator</span><span class="p">,</span>
+    <span class="n">List</span><span class="p">,</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">TextIO</span><span class="p">,</span>
+    <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">TypeVar</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="kn">import</span> <span class="nn">torch.distributed.launcher</span> <span class="k">as</span> <span class="nn">pet</span>
 <span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">ParameterSpecification</span>
 <span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">dist</span><span class="p">,</span> <span class="n">multiprocessing</span>
+
 <span class="kn">from</span> <span class="nn">torch.distributed.elastic.utils.distributed</span> <span class="kn">import</span> <span class="n">get_free_port</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">destroy_process_group</span>
 
 
 <span class="n">TParams</span> <span class="o">=</span> <span class="n">ParameterSpecification</span><span class="p">(</span><span class="s2">&quot;TParams&quot;</span><span class="p">)</span>
@@ -454,7 +466,8 @@
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">test_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
     <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">]:</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Spawn single node, multi-rank function.</span>
 <span class="sd">    Uses localhost and free port to communicate.</span>
@@ -463,53 +476,55 @@
 <span class="sd">        world_size: number of processes</span>
 <span class="sd">        backend: backend to use. for example, &quot;nccl&quot;, &quot;gloo&quot;, etc</span>
 <span class="sd">        test_method: callable to spawn. first 3 arguments are rank, world_size and mp output dict</span>
-<span class="sd">        args: additional args for func</span>
+<span class="sd">        args: args for the test method</span>
+<span class="sd">        kwargs: kwargs for the test method</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A dictionary of rank -&gt; func return value</span>
+<span class="sd">        A list, l, where l[i] is the return value of test_method on rank i</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MASTER_PORT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_free_port</span><span class="p">())</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MASTER_ADDR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;127.0.0.1&quot;</span>
-
-    <span class="n">processes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">manager</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
     <span class="n">mp_output_dict</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
-    <span class="n">tc</span> <span class="o">=</span> <span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">()</span>
-    <span class="n">ctx</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">world_size</span><span class="p">):</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
-            <span class="n">target</span><span class="o">=</span><span class="n">init_pg_and_rank_and_launch_test</span><span class="p">,</span>
-            <span class="n">args</span><span class="o">=</span><span class="p">(</span>
-                <span class="n">test_method</span><span class="p">,</span>
-                <span class="n">rank</span><span class="p">,</span>
-                <span class="n">world_size</span><span class="p">,</span>
-                <span class="n">backend</span><span class="p">,</span>
-                <span class="n">mp_output_dict</span><span class="p">,</span>
-                <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-            <span class="p">),</span>
-        <span class="p">)</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-        <span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-        <span class="n">tc</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">exitcode</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">get_free_port</span><span class="p">())</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span>
+        <span class="c1"># torch.multiprocessing.spawn sends rank as the first param</span>
+        <span class="c1"># https://pytorch.org/docs/stable/multiprocessing.html#torch.multiprocessing.spawn</span>
+        <span class="n">_init_pg_and_rank_and_launch_test</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">test_method</span><span class="p">,</span> <span class="n">world_size</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">mp_output_dict</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">),</span>
+        <span class="n">nprocs</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+    <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">mp_output_dict</span></div>
+    <span class="n">output_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">world_size</span><span class="p">):</span>
+        <span class="n">output_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mp_output_dict</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">output_list</span></div>
 
 
-<span class="k">def</span> <span class="nf">init_pg_and_rank_and_launch_test</span><span class="p">(</span>
-    <span class="n">test_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
+<span class="k">def</span> <span class="nf">_init_pg_and_rank_and_launch_test</span><span class="p">(</span>
     <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">test_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="c1"># pyre-fixme[2]</span>
-    <span class="n">mp_output_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-    <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">port</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">mp_output_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="n">args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
+    <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">dist</span><span class="o">.</span><span class="n">init_process_group</span><span class="p">(</span><span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span> <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MASTER_ADDR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MASTER_PORT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">port</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;WORLD_SIZE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">world_size</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LOCAL_RANK&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
-    <span class="n">mp_output_dict</span><span class="p">[</span><span class="n">rank</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># pyre-fixme[29]</span>
+    <span class="n">dist</span><span class="o">.</span><span class="n">init_process_group</span><span class="p">(</span>
+        <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
+        <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+        <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mp_output_dict</span><span class="p">[</span><span class="n">rank</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># pyre-fixme</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">destroy_process_group</span><span class="p">()</span>
 
 
 <span class="nd">@contextmanager</span>
