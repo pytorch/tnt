@@ -31,7 +31,9 @@ import torch
 import torch.distributed.launcher as pet
 from pyre_extensions import ParameterSpecification
 from torch import distributed as dist, multiprocessing
+
 from torch.distributed.elastic.utils.distributed import get_free_port
+from torchtnt.utils.distributed import destroy_process_group
 
 
 TParams = ParameterSpecification("TParams")
@@ -99,6 +101,7 @@ def spawn_multi_process(
     backend: str,
     test_method: Callable[TParams, TReturn],
     *args: Any,
+    **kwargs: Any,
 ) -> List[TReturn]:
     """
     Spawn single node, multi-rank function.
@@ -108,37 +111,23 @@ def spawn_multi_process(
         world_size: number of processes
         backend: backend to use. for example, "nccl", "gloo", etc
         test_method: callable to spawn. first 3 arguments are rank, world_size and mp output dict
-        args: additional args for func
+        args: args for the test method
+        kwargs: kwargs for the test method
 
     Returns:
         A list, l, where l[i] is the return value of test_method on rank i
     """
-    os.environ["MASTER_PORT"] = str(get_free_port())
-    os.environ["MASTER_ADDR"] = "127.0.0.1"
-
-    processes = []
     manager = multiprocessing.Manager()
     mp_output_dict = manager.dict()
-    tc = unittest.TestCase()
-    ctx = multiprocessing.get_context("spawn")
-    for rank in range(world_size):
-        p = ctx.Process(
-            target=init_pg_and_rank_and_launch_test,
-            args=(
-                test_method,
-                rank,
-                world_size,
-                backend,
-                mp_output_dict,
-                *args,
-            ),
-        )
-        p.start()
-        processes.append(p)
 
-    for p in processes:
-        p.join()
-        tc.assertEqual(p.exitcode, 0)
+    port = str(get_free_port())
+    torch.multiprocessing.spawn(
+        # torch.multiprocessing.spawn sends rank as the first param
+        # https://pytorch.org/docs/stable/multiprocessing.html#torch.multiprocessing.spawn
+        _init_pg_and_rank_and_launch_test,
+        args=(test_method, world_size, backend, port, mp_output_dict, args, kwargs),
+        nprocs=world_size,
+    )
 
     output_list = []
     for i in range(world_size):
@@ -147,18 +136,30 @@ def spawn_multi_process(
     return output_list
 
 
-def init_pg_and_rank_and_launch_test(
-    test_method: Callable[TParams, TReturn],
+def _init_pg_and_rank_and_launch_test(
     rank: int,
+    test_method: Callable[TParams, TReturn],
     world_size: int,
     backend: str,
-    # pyre-fixme[2]
-    mp_output_dict: Dict[int, Any],
-    *args: Any,
+    port: str,
+    mp_output_dict: Dict[int, object],
+    args: List[object],
+    kwargs: Dict[str, object],
 ) -> None:
-    dist.init_process_group(rank=rank, world_size=world_size, backend=backend)
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = port
+    os.environ["WORLD_SIZE"] = str(world_size)
     os.environ["LOCAL_RANK"] = str(rank)
-    mp_output_dict[rank] = test_method(*args)  # pyre-fixme[29]
+    dist.init_process_group(
+        rank=rank,
+        world_size=world_size,
+        backend=backend,
+    )
+    try:
+        mp_output_dict[rank] = test_method(*args, **kwargs)  # pyre-fixme
+
+    finally:
+        destroy_process_group()
 
 
 @contextmanager
