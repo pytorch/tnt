@@ -33,11 +33,11 @@ class GarbageCollector(Callback):
     Synchronizing the garbage collection can lead to a performance improvement.
     The frequency of garbage collection must be tuned based on the application at hand.
 
-    By default, this callback does generation 1 collection every step. This can free up
+    By default, this callback does **generation 1** collection every step. This can free up
     some objects to be reaped with minimal overhead compared to the full garbage collection.
 
     Args:
-        step_interval: number of steps to run before each collection
+        step_interval: number of steps to run before executing a full garbage cleanup
     """
 
     def __init__(self, step_interval: int) -> None:
