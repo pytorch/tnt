@@ -14,7 +14,17 @@ import uuid
 from contextlib import contextmanager
 from functools import wraps
 from io import StringIO
-from typing import Any, Callable, Dict, Generator, Optional, TextIO, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    TextIO,
+    Tuple,
+    TypeVar,
+)
 
 import torch
 
@@ -89,7 +99,7 @@ def spawn_multi_process(
     backend: str,
     test_method: Callable[TParams, TReturn],
     *args: Any,
-) -> Dict[int, TReturn]:
+) -> List[TReturn]:
     """
     Spawn single node, multi-rank function.
     Uses localhost and free port to communicate.
@@ -101,7 +111,7 @@ def spawn_multi_process(
         args: additional args for func
 
     Returns:
-        A dictionary of rank -> func return value
+        A list, l, where l[i] is the return value of test_method on rank i
     """
     os.environ["MASTER_PORT"] = str(get_free_port())
     os.environ["MASTER_ADDR"] = "127.0.0.1"
@@ -130,7 +140,11 @@ def spawn_multi_process(
         p.join()
         tc.assertEqual(p.exitcode, 0)
 
-    return mp_output_dict
+    output_list = []
+    for i in range(world_size):
+        output_list.append(mp_output_dict[i])
+
+    return output_list
 
 
 def init_pg_and_rank_and_launch_test(
