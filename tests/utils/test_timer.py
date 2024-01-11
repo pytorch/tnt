@@ -268,7 +268,9 @@ class FullSyncPeriodicTimerTest(unittest.TestCase):
         fsp_timer = FullSyncPeriodicTimer(
             interval_threshold, none_throws(process_group)
         )
-        return fsp_timer.check()
+        fsp_timer_check_val = fsp_timer.check()
+        fsp_timer.wait_remaining_work()
+        return fsp_timer_check_val
 
     @classmethod
     def _full_sync_worker_with_timeout(cls, timeout: int) -> bool:
