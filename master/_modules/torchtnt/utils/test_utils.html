@@ -377,6 +377,8 @@
 <span class="kn">import</span> <span class="nn">unittest</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
@@ -403,6 +405,13 @@
 
 <span class="n">TParams</span> <span class="o">=</span> <span class="n">ParameterSpecification</span><span class="p">(</span><span class="s2">&quot;TParams&quot;</span><span class="p">)</span>
 <span class="n">TReturn</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TReturn&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ProcessGroupSetupParams</span><span class="p">:</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">port</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span>
 
 
 <div class="viewcode-block" id="get_pet_launch_config"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.get_pet_launch_config.html#torchtnt.utils.test_utils.get_pet_launch_config">[docs]</a><span class="k">def</span> <span class="nf">get_pet_launch_config</span><span class="p">(</span><span class="n">nproc</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pet</span><span class="o">.</span><span class="n">LaunchConfig</span><span class="p">:</span>
@@ -465,8 +474,8 @@
     <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">test_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
-    <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">test_method_args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">test_method_kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Spawn single node, multi-rank function.</span>
@@ -476,8 +485,8 @@
 <span class="sd">        world_size: number of processes</span>
 <span class="sd">        backend: backend to use. for example, &quot;nccl&quot;, &quot;gloo&quot;, etc</span>
 <span class="sd">        test_method: callable to spawn. first 3 arguments are rank, world_size and mp output dict</span>
-<span class="sd">        args: args for the test method</span>
-<span class="sd">        kwargs: kwargs for the test method</span>
+<span class="sd">        test_method_args: args for the test method</span>
+<span class="sd">        test_method_kwargs: kwargs for the test method</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A list, l, where l[i] is the return value of test_method on rank i</span>
@@ -490,7 +499,13 @@
         <span class="c1"># torch.multiprocessing.spawn sends rank as the first param</span>
         <span class="c1"># https://pytorch.org/docs/stable/multiprocessing.html#torch.multiprocessing.spawn</span>
         <span class="n">_init_pg_and_rank_and_launch_test</span><span class="p">,</span>
-        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">test_method</span><span class="p">,</span> <span class="n">world_size</span><span class="p">,</span> <span class="n">backend</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">mp_output_dict</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">),</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">ProcessGroupSetupParams</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">),</span>
+            <span class="n">mp_output_dict</span><span class="p">,</span>
+            <span class="n">test_method</span><span class="p">,</span>
+            <span class="n">test_method_args</span><span class="p">,</span>
+            <span class="n">test_method_kwargs</span><span class="p">,</span>
+        <span class="p">),</span>
         <span class="n">nprocs</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
     <span class="p">)</span>
 
@@ -503,22 +518,21 @@
 
 <span class="k">def</span> <span class="nf">_init_pg_and_rank_and_launch_test</span><span class="p">(</span>
     <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">test_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
-    <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">port</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">pg_setup_params</span><span class="p">:</span> <span class="n">ProcessGroupSetupParams</span><span class="p">,</span>
     <span class="n">mp_output_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
+    <span class="n">test_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
     <span class="n">args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
     <span class="n">kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MASTER_ADDR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MASTER_PORT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">port</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;WORLD_SIZE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">world_size</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;MASTER_PORT&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pg_setup_params</span><span class="o">.</span><span class="n">port</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;WORLD_SIZE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pg_setup_params</span><span class="o">.</span><span class="n">world_size</span><span class="p">)</span>
     <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;LOCAL_RANK&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
     <span class="n">dist</span><span class="o">.</span><span class="n">init_process_group</span><span class="p">(</span>
         <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
-        <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
-        <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+        <span class="n">world_size</span><span class="o">=</span><span class="n">pg_setup_params</span><span class="o">.</span><span class="n">world_size</span><span class="p">,</span>
+        <span class="n">backend</span><span class="o">=</span><span class="n">pg_setup_params</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>  <span class="c1"># setting up timeout for distributed collectives</span>
     <span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">mp_output_dict</span><span class="p">[</span><span class="n">rank</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># pyre-fixme</span>
