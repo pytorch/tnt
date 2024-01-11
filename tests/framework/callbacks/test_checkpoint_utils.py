@@ -8,7 +8,6 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
 
 import torch
 import torch.distributed as dist
@@ -20,6 +19,7 @@ from torchtnt.framework._test_utils import DummyTrainUnit, get_dummy_train_state
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
+    _metadata_exists,
     _prepare_app_state_for_checkpoint,
     _retrieve_checkpoint_dirpaths,
     get_checkpoint_dirpaths,
@@ -28,6 +28,7 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
 )
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.env import init_from_env
+from torchtnt.utils.fsspec import get_filesystem
 from torchtnt.utils.test_utils import get_pet_launch_config, spawn_multi_process
 
 METADATA_FNAME: str = ".metadata"
@@ -135,32 +136,47 @@ class CheckpointUtilsTest(unittest.TestCase):
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
 
-    @patch("torchtnt.framework.callbacks._checkpoint_utils.get_filesystem")
-    def test_retrieve_checkpoint_dirpaths(self, mock_get_filesystem: MagicMock) -> None:
+    def test_retrieve_checkpoint_dirpaths(self) -> None:
         """
         Tests retrieving checkpoint directories from a given root directory
         """
-        paths = [
-            {"name": "tmp/epoch_0_step_10", "type": "directory"},
-            {"name": "tmp/epoch_1_step_10", "type": "directory"},
-            {"name": "tmp/epoch_2_step_10", "type": "directory"},
-            {"name": "tmp/epoch_0_step_5", "type": "directory"},
-            {"name": "tmp_12ed/epoch_0_step_6", "type": "directory"},
-            {"name": "tmp/epoch_0_step_3", "type": "file"},
-        ]
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = [
+                "epoch_0_step_10",
+                "epoch_1_step_10",
+                "epoch_2_step_10",
+                "epoch_0_step_5",
+                "epoch_0_step_6",
+                "epoch_0_step_3",
+            ]
+            for path in paths[:-1]:
+                os.mkdir(os.path.join(temp_dir, path))
+            # make last path a file instead of a directory
+            with open(os.path.join(temp_dir, paths[-1]), "w"):
+                pass
 
-        mock_get_filesystem.return_value.ls.return_value = paths
-        returned_paths = _retrieve_checkpoint_dirpaths("foo")
-        self.assertEqual(
-            returned_paths,
-            [
-                "tmp/epoch_0_step_5",
-                "tmp_12ed/epoch_0_step_6",
-                "tmp/epoch_0_step_10",
-                "tmp/epoch_1_step_10",
-                "tmp/epoch_2_step_10",
-            ],
-        )
+            # compares set equality since order of returned dirpaths is not guaranteed
+            # in _retrieve_checkpoint_dirpaths
+            self.assertEqual(
+                set(_retrieve_checkpoint_dirpaths(temp_dir, metadata_fname=None)),
+                {os.path.join(temp_dir, path) for path in paths[:-1]},
+            )
+            self.assertEqual(
+                _retrieve_checkpoint_dirpaths(temp_dir, metadata_fname=".metadata"),
+                [],
+            )
+
+            # check metadata file is correct filtered for
+            # by creating metadata for 3rd path in list
+            with open(os.path.join(temp_dir, paths[2], ".metadata"), "w"):
+                pass
+
+            self.assertEqual(
+                set(
+                    _retrieve_checkpoint_dirpaths(temp_dir, metadata_fname=".metadata")
+                ),
+                {os.path.join(temp_dir, paths[2])},
+            )
 
     @unittest.skipUnless(
         condition=distributed_available, reason="Torch distributed is needed to run"
@@ -193,9 +209,37 @@ class CheckpointUtilsTest(unittest.TestCase):
             ckpt_dirpaths = get_checkpoint_dirpaths(temp_dir)
             tc = unittest.TestCase()
             tc.assertEqual(ckpt_dirpaths, [path1, path2])
+
+            tc.assertEqual(
+                get_checkpoint_dirpaths(temp_dir, metadata_fname=".metadata"), []
+            )
         finally:
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
+
+    def test_get_checkpoint_dirpaths(self) -> None:
+        """
+        Tests that `get_checkpoint_dirpaths` returns
+        the sorted checkpoint directories correctly
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path1 = os.path.join(temp_dir, "epoch_1_step_20")
+            path2 = os.path.join(temp_dir, "epoch_4_step_130")
+            path3 = os.path.join(temp_dir, "epoch_0_step_10")
+            os.mkdir(path1)
+            os.mkdir(path2)
+            os.mkdir(path3)
+
+            self.assertEqual(
+                get_checkpoint_dirpaths(temp_dir),
+                [path3, path1, path2],  # sorted by epoch and step
+            )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.assertEqual(
+                get_checkpoint_dirpaths(temp_dir),
+                [],
+            )
 
     def test_delete_checkpoint(self) -> None:
         """
@@ -214,6 +258,18 @@ class CheckpointUtilsTest(unittest.TestCase):
                 _delete_checkpoint(temp_dir, SNAPSHOT_METADATA_FNAME)
             _delete_checkpoint(dirpath)
             self.assertFalse(os.path.exists(dirpath))
+
+    def test_metadata_exists(self) -> None:
+        app_state = {"module": nn.Linear(2, 2)}
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dirpath = os.path.join(temp_dir, "checkpoint")
+            Snapshot.take(dirpath, app_state=app_state)
+
+            fs = get_filesystem(dirpath)
+            self.assertTrue(_metadata_exists(fs, dirpath, SNAPSHOT_METADATA_FNAME))
+
+            os.remove(os.path.join(dirpath, SNAPSHOT_METADATA_FNAME))
+            self.assertFalse(_metadata_exists(fs, dirpath, SNAPSHOT_METADATA_FNAME))
 
     def test_get_app_state(self) -> None:
         my_unit = DummyTrainUnit(input_dim=2)

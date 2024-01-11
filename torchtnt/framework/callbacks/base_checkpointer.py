@@ -14,6 +14,7 @@ import torch.distributed as dist
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
+    _metadata_exists,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
     rank_zero_read_and_broadcast,
@@ -317,9 +318,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         if not metadata_fname:
             return False
 
-        metadata_filepath = os.path.join(checkpoint_path, metadata_fname)
-        fs = get_filesystem(metadata_filepath)
-        return fs.exists(metadata_filepath)
+        fs = get_filesystem(checkpoint_path)
+        return _metadata_exists(fs, checkpoint_path, metadata_fname)
 
 
 def _get_save_path(dirpath: str, epoch: int, step: int) -> str:
