@@ -473,3 +473,7 @@ class FullSyncPeriodicTimer:
         )
 
         return ret
+
+    def wait_remaining_work(self) -> None:
+        if self._prev_work is not None:
+            self._prev_work.wait()
