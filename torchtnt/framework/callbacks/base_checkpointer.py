@@ -87,7 +87,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         self._keep_last_n_checkpoints = keep_last_n_checkpoints
         self._ckpt_dirpaths: List[str] = []
         if self._keep_last_n_checkpoints:
-            ckpt_dirpaths = get_checkpoint_dirpaths(dirpath)
+            ckpt_dirpaths = get_checkpoint_dirpaths(dirpath, self.metadata_fname)
             self._ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
         self._process_group = process_group
         self._pg_wrapper = PGWrapper(process_group)
