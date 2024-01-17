@@ -22,6 +22,9 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
     _metadata_exists,
     _prepare_app_state_for_checkpoint,
     _retrieve_checkpoint_dirpaths,
+    _sort_by_metric_value,
+    _sort_by_recency,
+    get_best_checkpoint_path,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
     rank_zero_read_and_broadcast,
@@ -68,7 +71,7 @@ class CheckpointUtilsTest(unittest.TestCase):
             path_1 = os.path.join(temp_dir, "epoch_0_step_0")
             os.mkdir(path_1)
             self._create_snapshot_metadata(path_1)
-            path_2 = os.path.join(temp_dir, "epoch_0_step_100")
+            path_2 = os.path.join(temp_dir, "epoch_0_step_100_val_loss=0.002")
             os.mkdir(path_2)
             self._create_snapshot_metadata(path_2)
 
@@ -136,6 +139,62 @@ class CheckpointUtilsTest(unittest.TestCase):
         if is_rank0:
             shutil.rmtree(temp_dir)  # delete temp directory
 
+    def test_best_checkpoint_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.assertIsNone(get_best_checkpoint_path(temp_dir, "val_loss", "min"))
+
+            # no checkpoint w/ metric value
+            path = os.path.join(temp_dir, "epoch_0_step_0")
+            os.mkdir(path)
+            self.assertIsNone(get_best_checkpoint_path(temp_dir, "val_loss", "min"))
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            best_path = os.path.join(temp_dir, "epoch_0_step_0_val_loss=0.01")
+            os.mkdir(best_path)
+            self.assertEqual(
+                get_best_checkpoint_path(temp_dir, "val_loss", "min"),
+                best_path,
+            )
+            self.assertIsNone(
+                get_best_checkpoint_path(temp_dir, "val_loss", "min", METADATA_FNAME),
+                None,
+            )
+            self._create_snapshot_metadata(best_path)
+            self.assertEqual(
+                get_best_checkpoint_path(temp_dir, "val_loss", "min", METADATA_FNAME),
+                best_path,
+            )
+
+            # handle negative values
+            best_path_2 = os.path.join(temp_dir, "epoch_0_step_0_val_loss=-0.01")
+            os.mkdir(best_path_2)
+            self.assertEqual(
+                get_best_checkpoint_path(temp_dir, "val_loss", "min"),
+                best_path_2,
+            )
+
+            # handle "max" mode correctly
+            best_path_3 = os.path.join(temp_dir, "epoch_0_step_100_val_loss=0.1")
+            os.mkdir(best_path_3)
+            self.assertEqual(
+                get_best_checkpoint_path(temp_dir, metric_name="val_loss", mode="max"),
+                best_path_3,
+            )
+
+            # handle different metric correctly
+            best_path_4 = os.path.join(temp_dir, "epoch_0_step_100_train_loss=0.2")
+            os.mkdir(best_path_4)
+            self.assertEqual(
+                get_best_checkpoint_path(temp_dir, metric_name="val_loss", mode="max"),
+                best_path_3,
+            )
+            self.assertEqual(
+                get_best_checkpoint_path(
+                    temp_dir, metric_name="train_loss", mode="max"
+                ),
+                best_path_4,
+            )
+
     def test_retrieve_checkpoint_dirpaths(self) -> None:
         """
         Tests retrieving checkpoint directories from a given root directory
@@ -178,6 +237,59 @@ class CheckpointUtilsTest(unittest.TestCase):
                 {os.path.join(temp_dir, paths[2])},
             )
 
+    def test_retrieve_checkpoint_dirpaths_with_metrics(self) -> None:
+        """
+        Tests retrieving checkpoint (w/ metrics) directories from a given root directory
+        """
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = [
+                "epoch_0_step_10_val_loss=10",
+                "epoch_1_step_10_val_loss=5",
+                "epoch_2_step_10",
+                "epoch_0_step_5",
+                "epoch_0_step_6_train_loss=13",
+            ]
+            for path in paths:
+                os.mkdir(os.path.join(temp_dir, path))
+            # make last path a file instead of a directory
+            with open(os.path.join(temp_dir, "epoch_0_step_3_val_loss=3"), "w"):
+                pass
+
+            # compares set equality since order of returned dirpaths is not guaranteed
+            # in _retrieve_checkpoint_dirpaths
+            self.assertEqual(
+                set(_retrieve_checkpoint_dirpaths(temp_dir, metadata_fname=None)),
+                {os.path.join(temp_dir, path) for path in paths},
+            )
+            self.assertEqual(
+                set(
+                    _retrieve_checkpoint_dirpaths(
+                        temp_dir, metadata_fname=None, metric_name="val_loss"
+                    )
+                ),
+                {
+                    os.path.join(temp_dir, path) for path in paths[:2]
+                },  # since last path is a file
+            )
+            self.assertEqual(
+                _retrieve_checkpoint_dirpaths(temp_dir, metadata_fname=".metadata"),
+                [],
+            )
+
+            # check metadata file is correct filtered for
+            # by creating metadata for 3rd path in list
+            with open(os.path.join(temp_dir, paths[1], ".metadata"), "w"):
+                pass
+
+            self.assertEqual(
+                set(
+                    _retrieve_checkpoint_dirpaths(
+                        temp_dir, metadata_fname=".metadata", metric_name="val_loss"
+                    )
+                ),
+                {os.path.join(temp_dir, paths[1])},
+            )
+
     @unittest.skipUnless(
         condition=distributed_available, reason="Torch distributed is needed to run"
     )
@@ -208,7 +320,7 @@ class CheckpointUtilsTest(unittest.TestCase):
 
             ckpt_dirpaths = get_checkpoint_dirpaths(temp_dir)
             tc = unittest.TestCase()
-            tc.assertEqual(ckpt_dirpaths, [path1, path2])
+            tc.assertEqual(set(ckpt_dirpaths), {path1, path2})
 
             tc.assertEqual(
                 get_checkpoint_dirpaths(temp_dir, metadata_fname=".metadata"), []
@@ -231,8 +343,21 @@ class CheckpointUtilsTest(unittest.TestCase):
             os.mkdir(path3)
 
             self.assertEqual(
-                get_checkpoint_dirpaths(temp_dir),
-                [path3, path1, path2],  # sorted by epoch and step
+                set(get_checkpoint_dirpaths(temp_dir)),
+                {path1, path2, path3},
+            )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path1 = os.path.join(temp_dir, "epoch_1_step_20_val_loss=0.01")
+            path2 = os.path.join(temp_dir, "epoch_4_step_130_val_loss=-0.2")
+            path3 = os.path.join(temp_dir, "epoch_0_step_10_val_loss=0.12")
+            os.mkdir(path1)
+            os.mkdir(path2)
+            os.mkdir(path3)
+
+            self.assertEqual(
+                set(get_checkpoint_dirpaths(temp_dir, metric_name="val_loss")),
+                {path1, path2, path3},
             )
 
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -240,6 +365,25 @@ class CheckpointUtilsTest(unittest.TestCase):
                 get_checkpoint_dirpaths(temp_dir),
                 [],
             )
+
+    def test_checkpoint_sorting_utils(self) -> None:
+        """
+        Tests the sort utilities
+        """
+        paths = ["epoch_1_step_20", "epoch_4_step_130", "epoch_0_step_10_val_loss=10"]
+        self.assertEqual(_sort_by_recency(paths), [paths[2], paths[0], paths[1]])
+
+        paths = [
+            "epoch_1_step_20_val_loss=0.09",
+            "epoch_4_step_130_val_loss=29",
+            "epoch_0_step_10_val_loss=10",
+        ]
+        self.assertEqual(
+            _sort_by_metric_value(paths, mode="min"), [paths[1], paths[2], paths[0]]
+        )
+        self.assertEqual(
+            _sort_by_metric_value(paths, mode="max"), [paths[0], paths[2], paths[1]]
+        )
 
     def test_delete_checkpoint(self) -> None:
         """

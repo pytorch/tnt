@@ -15,6 +15,7 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
     _metadata_exists,
+    _sort_by_recency,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
     rank_zero_read_and_broadcast,
@@ -86,7 +87,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         self._keep_last_n_checkpoints = keep_last_n_checkpoints
         self._ckpt_dirpaths: List[str] = []
         if self._keep_last_n_checkpoints:
-            self._ckpt_dirpaths = get_checkpoint_dirpaths(dirpath)
+            ckpt_dirpaths = get_checkpoint_dirpaths(dirpath)
+            self._ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
         self._process_group = process_group
         self._pg_wrapper = PGWrapper(process_group)
 
