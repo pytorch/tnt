@@ -21,7 +21,6 @@ from typing import (
     runtime_checkable,
     Sequence,
     Tuple,
-    TypeVar,
 )
 
 import numpy as np
@@ -29,11 +28,8 @@ import numpy as np
 import torch
 import torch.distributed as dist
 from tabulate import tabulate
+from torch.distributed.distributed_c10d import Work
 from torchtnt.utils.distributed import PGWrapper
-
-logger: logging.Logger = logging.getLogger(__name__)
-
-AsyncOperator = TypeVar("AsyncOperator")
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -451,15 +447,13 @@ class FullSyncPeriodicTimer:
         self._cpu_pg = cpu_pg
         self._prev_time: float = perf_counter()
         self._timeout_tensor: torch.Tensor = torch.zeros(1, dtype=torch.int)
-        # pyre-fixme[34]: `Variable[AsyncOperator]` isn't present in the function's parameters.
-        self._prev_work: Optional[AsyncOperator] = None
+        self._prev_work: Optional[Work] = None
 
     def check(self) -> bool:
         ret = False
         curr_time = perf_counter()
 
         if self._prev_work is not None:
-            # pyre-fixme[16]: `Variable[AsyncOperator]` has no attribute wait.
             self._prev_work.wait()
             ret = self._timeout_tensor[0].item() == 1
             if ret:
