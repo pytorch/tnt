@@ -210,6 +210,75 @@ class BaseCheckpointerTest(unittest.TestCase):
                 )
                 self.assertFalse(restored)
 
+    def test_restore_from_best(self) -> None:
+        input_dim = 2
+        state = get_dummy_train_state()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            bcs_cb = BaseCheckpointSaver(temp_dir)
+
+            my_unit = DummyTrainUnit(input_dim=input_dim)
+            bcs_cb._generate_checkpoint_and_upkeep(state, my_unit, hook="foo")
+            os.rename(
+                os.path.join(temp_dir, "epoch_0_step_0"),
+                os.path.join(temp_dir, "epoch_0_step_0_val_loss=0.01"),
+            )
+
+            my_unit.train_progress._num_steps_completed = 10
+            bcs_cb._generate_checkpoint_and_upkeep(state, my_unit, hook="foo")
+            os.rename(
+                os.path.join(temp_dir, "epoch_0_step_10"),
+                os.path.join(temp_dir, "epoch_0_step_10_val_loss=-0.1"),
+            )
+
+            my_unit.train_progress._num_steps_completed = 20
+            bcs_cb._generate_checkpoint_and_upkeep(state, my_unit, hook="foo")
+            os.rename(
+                os.path.join(temp_dir, "epoch_0_step_20"),
+                os.path.join(temp_dir, "epoch_0_step_20_val_loss=0.1"),
+            )
+
+            my_unit = DummyTrainUnit(input_dim=input_dim)
+            with self.assertLogs(level="INFO") as log:
+                restored = bcs_cb.restore_from_best(
+                    temp_dir, my_unit, "val_loss", "min"
+                )
+                self.assertTrue(restored)
+                self.assertIn(
+                    f"INFO:torchtnt.utils.rank_zero_log:Loading checkpoint from {os.path.join(temp_dir, 'epoch_0_step_10_val_loss=-0.1')}",
+                    log.output,
+                )
+
+            my_unit = DummyTrainUnit(input_dim=input_dim)
+            with self.assertLogs(level="INFO") as log:
+                restored = bcs_cb.restore_from_best(
+                    temp_dir, my_unit, "val_loss", "max"
+                )
+                self.assertTrue(restored)
+                self.assertIn(
+                    f"INFO:torchtnt.utils.rank_zero_log:Loading checkpoint from {os.path.join(temp_dir, 'epoch_0_step_20_val_loss=0.1')}",
+                    log.output,
+                )
+
+    def test_restore_from_best_empty_dir(self) -> None:
+        input_dim = 2
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            bcs_cb = BaseCheckpointSaver(
+                temp_dir,
+            )
+
+            with self.assertLogs(level="WARNING") as log:
+                restored = bcs_cb.restore_from_best(
+                    temp_dir, my_unit, "val_loss", "min"
+                )
+                self.assertIn(
+                    f"WARNING:torchtnt.framework.callbacks.base_checkpointer:No checkpoints with metric name val_loss were found in {temp_dir}. Not loading any checkpoint.",
+                    log.output,
+                )
+                self.assertFalse(restored)
+
     def test_save_on_train_end(self) -> None:
         input_dim = 2
         dataset_len = 10

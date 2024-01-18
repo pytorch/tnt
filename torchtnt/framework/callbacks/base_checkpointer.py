@@ -7,7 +7,7 @@
 import abc
 import logging
 import os
-from typing import Any, cast, Iterable, List, Optional
+from typing import Any, cast, Iterable, List, Literal, Optional
 
 import torch.distributed as dist
 
@@ -16,6 +16,7 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
     _metadata_exists,
     _sort_by_recency,
+    get_best_checkpoint_path,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
     rank_zero_read_and_broadcast,
@@ -26,7 +27,7 @@ from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainData, TTrain
 from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.distributed import PGWrapper
 from torchtnt.utils.fsspec import get_filesystem
-from torchtnt.utils.rank_zero_log import rank_zero_warn
+from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -306,6 +307,65 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             restore_options=restore_options,
             **kwargs,
         )
+        return True
+
+    @classmethod
+    def restore_from_best(
+        cls,
+        dirpath: str,
+        unit: AppStateMixin,
+        metric_name: str,
+        mode: Literal["min", "max"],
+        *,
+        train_dataloader: Optional[Iterable[TTrainData]] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
+        restore_options: Optional[RestoreOptions] = None,
+        **kwargs: Any,
+    ) -> bool:
+        """
+        Given a parent directory where checkpoints are saved, restore the checkpoint state from the best checkpoint in the directory.
+
+        There are additional flags offered should the user want to skip loading the train and eval progress.
+        By default, the train and eval progress are restored, if applicable.
+
+        Args:
+            dirpath: Parent directory from which to get the latest checkpoint.
+            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
+            metric_name: Name of the metric to use to find the best checkpoint.
+            mode: Either 'min' or 'max'. If 'min', finds and loads the lowest value metric checkpoint. If 'max', finds and loads the largest.
+            train_dataloader: An optional train dataloader to restore.
+            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+            restore_options: Controls what to  filter when restoring the state.
+
+        Returns:
+            True if the best checkpoint directory was found and successfully restored, otherwise False.
+        """
+        best_checkpoint_path = get_best_checkpoint_path(
+            dirpath,
+            metric_name=metric_name,
+            mode=mode,
+            metadata_fname=cls.metadata_fname,
+            process_group=process_group,
+        )
+
+        if best_checkpoint_path is None:
+            rank_zero_warn(
+                f"No checkpoints with metric name {metric_name} were found in {dirpath}. Not loading any checkpoint.",
+                logger=logger,
+            )
+            return False
+
+        rank_zero_info(f"Loading checkpoint from {best_checkpoint_path}")
+
+        cls.restore(
+            best_checkpoint_path,
+            unit,
+            train_dataloader=train_dataloader,
+            process_group=process_group,
+            restore_options=restore_options,
+            **kwargs,
+        )
+
         return True
 
     @rank_zero_read_and_broadcast
