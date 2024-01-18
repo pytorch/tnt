@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Literal, Optional
 
 # TODO: eventually support overriding all knobs
 @dataclass
@@ -36,3 +36,17 @@ class RestoreOptions:
     restore_eval_progress: bool = True
     restore_optimizers: bool = True
     restore_lr_schedulers: bool = True
+
+
+@dataclass
+class BestCheckpointConfig:
+    """
+    Config for saving the best checkpoints.
+
+    Args:
+        monitored_metric: Metric to monitor for saving best checkpoints. Must be an numerical or tensor attribute on the unit.
+        mode: One of `min` or `max`. The save file is overwritten based the max or min of the monitored metric.
+    """
+
+    monitored_metric: str
+    mode: Literal["min", "max"] = "min"

@@ -5,23 +5,29 @@
 # LICENSE file in the root directory of this source tree.
 
 import abc
+import bisect
 import logging
 import os
-from typing import Any, cast, Iterable, List, Literal, Optional
+from typing import Any, cast, Iterable, List, Literal, Optional, Union
 
 import torch.distributed as dist
+from pyre_extensions import none_throws
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
     _metadata_exists,
+    _sort_by_metric_value,
     _sort_by_recency,
     get_best_checkpoint_path,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
     rank_zero_read_and_broadcast,
 )
-from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
+from torchtnt.framework.callbacks.checkpointer_types import (
+    BestCheckpointConfig,
+    RestoreOptions,
+)
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainData, TTrainUnit
 from torchtnt.framework.utils import get_timing_context
@@ -48,15 +54,21 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         dirpath: Parent directory to save checkpoints to.
         save_every_n_train_steps: Frequency of steps with which to save checkpoints during the train epoch. If None, no intra-epoch checkpoints are generated.
         save_every_n_epochs: Frequency of epochs with which to save checkpoints during training. If None, no end-of-epoch checkpoints are generated.
+        save_every_n_eval_epochs: Frequency of evaluation epochs with which to save checkpoints during training. Use this if wanting to save checkpoints after every eval epoch during fit.
         keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference.
+        best_checkpoint_config: Configuration for saving the best checkpoint based on a monitored metric. The metric is read off the attribute of the unit prior to checkpoint.
         process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Note:
         If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks
 
-     Note:
+    Note:
         This class assumes checkpoint items are saved in the directory provided in ``_checkpoint_impl`` and will be in the form of ``<dirpath>/<epoch>-<step>/``. Checkpoint contents
         should be stored within this directory, as deleting and retrieving latest checkpoint relies on reading the <epoch>-<step> directory name within <dirpath>
+
+    Note:
+        If best_checkpoint_config is enabled, the attribute must be on the unit upon checkpoint time, and must be castable to "float". This value must be maintained by the unit, and updated
+        appropriately. For example, if logging validation accuracy, the unit must be responsible for maintaining the value and resetting it when the epoch ends.
     """
 
     metadata_fname: Optional[str] = None
@@ -67,7 +79,9 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         *,
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
+        save_every_n_eval_epochs: Optional[int] = None,
         keep_last_n_checkpoints: Optional[int] = None,
+        best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         process_group: Optional[dist.ProcessGroup] = None,
     ) -> None:
         if save_every_n_train_steps is not None and save_every_n_train_steps <= 0:
@@ -83,13 +97,39 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
                 f"Invalid value passed for keep_last_n_checkpoints. Expected to receive either None or positive number, but received {keep_last_n_checkpoints}"
             )
 
+        self._best_checkpoint_config = best_checkpoint_config
+        if best_checkpoint_config and best_checkpoint_config.mode not in {"min", "max"}:
+            raise ValueError(
+                f"Invalid value passed for best_checkpoint_config.mode. Expected to receive 'min' or 'max', but received {best_checkpoint_config.mode}"
+            )
+
         self._save_every_n_train_steps = save_every_n_train_steps
         self._save_every_n_epochs = save_every_n_epochs
+        self._save_every_n_eval_epochs = save_every_n_eval_epochs
         self._keep_last_n_checkpoints = keep_last_n_checkpoints
+
         self._ckpt_dirpaths: List[str] = []
         if self._keep_last_n_checkpoints:
-            ckpt_dirpaths = get_checkpoint_dirpaths(dirpath, self.metadata_fname)
-            self._ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
+            metric_name = (
+                None
+                if not best_checkpoint_config
+                else best_checkpoint_config.monitored_metric
+            )
+            ckpt_dirpaths = get_checkpoint_dirpaths(
+                dirpath=dirpath,
+                metadata_fname=self.metadata_fname,
+                metric_name=metric_name,
+                process_group=process_group,
+            )
+
+            # sort by metric value if doing best checkpoint, else by recency
+            if best_checkpoint_config:
+                self._ckpt_dirpaths = _sort_by_metric_value(
+                    ckpt_dirpaths, mode=best_checkpoint_config.mode
+                )
+            else:
+                self._ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
+
         self._process_group = process_group
         self._pg_wrapper = PGWrapper(process_group)
 
@@ -116,7 +156,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         return self._dirpath
 
     def _generate_checkpoint_and_upkeep(
-        self, state: State, unit: TTrainUnit, hook: str
+        self, state: State, unit: Union[TTrainUnit, TEvalUnit], hook: str
     ) -> bool:
         """
         Implementation for saving checkpoint while taking care of checkpoint
@@ -130,6 +170,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         Returns:
             True if checkpoint was successfully saved. False otherwise.
         """
+        unit = cast(TTrainUnit, unit)
+
         # 1) generate checkpoint name
         num_steps_completed = unit.train_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
@@ -146,7 +188,34 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
             return False
 
-        # 2) save checkpoint
+        # 2) handle best checkpoint config on all hooks except `on_train_end`
+        # TODO: isolate this logic into its own function
+        metric_value_f: Optional[float] = None
+        best_checkpoint_config = self._best_checkpoint_config
+        if best_checkpoint_config and hook != "on_train_end":
+            if not hasattr(unit, best_checkpoint_config.monitored_metric):
+                raise RuntimeError(
+                    f"Unit does not have attribute {best_checkpoint_config.monitored_metric}, unable to retrieve metric to checkpoint."
+                )
+
+            metric_value = getattr(unit, best_checkpoint_config.monitored_metric)
+            try:
+                metric_value_f = float(metric_value)
+            except Exception as e:
+                raise RuntimeError(
+                    f"Unable to convert monitored metric {best_checkpoint_config.monitored_metric} to a float. Please ensure the value can be converted to float and is not a multi-element tensor value."
+                ) from e
+
+            # update checkpoint path to include the metric value info
+            checkpoint_path += (
+                f"_{best_checkpoint_config.monitored_metric}={metric_value_f}"
+            )
+
+        should_checkpoint = self._should_save_checkpoint(metric_value_f)
+        if not should_checkpoint:
+            return False
+
+        # 3) try to save checkpoint
         success = self._checkpoint_impl(
             state,
             unit,
@@ -154,11 +223,28 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             hook=hook,
         )
 
-        # 3) book keep and remove oldest checkpoints
         if success:
+            # remove the checkpoint if applicable
+            # and update the tracked list of checkpoint paths
+
             if self._should_remove_checkpoint():
                 self._remove_checkpoint(state)
-            self._ckpt_dirpaths.append(checkpoint_path)
+
+            if best_checkpoint_config:
+                # insert the checkpoint path at the right index to preserve ordering
+                keys = [
+                    float(os.path.basename(x).split("=")[-1])
+                    for x in self._ckpt_dirpaths
+                ]
+                if best_checkpoint_config.mode == "min":
+                    keys.reverse()
+                # Use bisect.bisect() to find the insertion point
+                idx = bisect.bisect(keys, none_throws(metric_value_f))
+                if best_checkpoint_config.mode == "min":
+                    idx = len(self._ckpt_dirpaths) - idx
+                self._ckpt_dirpaths.insert(idx, checkpoint_path)
+            else:
+                self._ckpt_dirpaths.append(checkpoint_path)
 
         return success
 
@@ -200,6 +286,14 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
         self._generate_checkpoint_and_upkeep(state, unit, hook="on_train_epoch_end")
 
+    def on_eval_epoch_end(self, state: State, unit: TEvalUnit) -> None:
+        epoch = unit.eval_progress.num_epochs_completed
+        save_every_n_eval_epochs = self._save_every_n_eval_epochs
+        if save_every_n_eval_epochs is None or epoch % save_every_n_eval_epochs != 0:
+            return
+
+        self._generate_checkpoint_and_upkeep(state, unit, hook="on_eval_epoch_end")
+
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         self._generate_checkpoint_and_upkeep(state, unit, hook="on_train_end")
 
@@ -226,7 +320,45 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         """
         ...
 
+    def _should_save_checkpoint(self, metric_value: Optional[float] = None) -> bool:
+        """
+        Whether a new checkpoint should be saved.
+        """
+
+        keep_last_n_checkpoints = self._keep_last_n_checkpoints
+        if not keep_last_n_checkpoints:
+            # always save candidate checkpoint if no limit of checkpoints is specified
+            return True
+
+        if len(self._ckpt_dirpaths) < keep_last_n_checkpoints:
+            # limit of checkpoints has not been reached
+            return True
+
+        best_checkpoint_config = self._best_checkpoint_config
+        if not best_checkpoint_config:
+            # we always save the latest checkpoint
+            return True
+
+        # otherwise, we need to determine if we should overwrite the worst checkpoint
+        assert metric_value
+        ckpt_value = float(self._ckpt_dirpaths[0].split("=")[-1])
+
+        # do not checkpoint if candidate is worse than the existing one
+        if best_checkpoint_config.mode == "min" and metric_value > ckpt_value:
+            return False
+        elif best_checkpoint_config.mode == "max" and metric_value < ckpt_value:
+            return False
+        # the candidate checkpoint is better than the existing one, so we must overwrite it
+        return True
+
     def _should_remove_checkpoint(self) -> bool:
+        """
+        Whether the oldest / worst checkpoint should be removed.
+
+        This is called after the candidate checkpoint is saved, so it is already evaluated that the
+        candidate checkpoint was worth saving.
+        """
+
         keep_last_n_checkpoints = self._keep_last_n_checkpoints
         return (
             keep_last_n_checkpoints is not None

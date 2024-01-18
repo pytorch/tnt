@@ -19,6 +19,7 @@ import torch
 import torch.distributed as dist
 
 from torchtnt.framework._test_utils import (
+    Batch,
     DummyFitUnit,
     DummyTrainUnit,
     generate_random_dataloader,
@@ -26,12 +27,16 @@ from torchtnt.framework._test_utils import (
     get_dummy_train_state,
 )
 from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
-from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
+from torchtnt.framework.callbacks.checkpointer_types import (
+    BestCheckpointConfig,
+    RestoreOptions,
+)
 from torchtnt.framework.callbacks.lambda_callback import Lambda
+from torchtnt.framework.fit import fit
 from torchtnt.framework.state import State
 
 from torchtnt.framework.train import train
-from torchtnt.framework.unit import AppStateMixin, TTrainData
+from torchtnt.framework.unit import AppStateMixin, TrainUnit, TTrainData
 from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.test_utils import spawn_multi_process
@@ -48,14 +53,18 @@ class BaseCheckpointSaver(BaseCheckpointer):
         *,
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
+        save_every_n_eval_epochs: Optional[int] = None,
         keep_last_n_checkpoints: Optional[int] = None,
+        best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         process_group: Optional[dist.ProcessGroup] = None,
     ) -> None:
         super().__init__(
             dirpath,
             save_every_n_train_steps=save_every_n_train_steps,
             save_every_n_epochs=save_every_n_epochs,
+            save_every_n_eval_epochs=save_every_n_eval_epochs,
             keep_last_n_checkpoints=keep_last_n_checkpoints,
+            best_checkpoint_config=best_checkpoint_config,
             process_group=process_group,
         )
         self._latest_checkpoint_path: str = ""
@@ -142,6 +151,37 @@ class BaseCheckpointerTest(unittest.TestCase):
                 save_every_n_epochs=save_every_n_train_epochs,
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[checkpointer])
+            self.assertTrue(
+                os.path.exists(expected_path) and os.path.isdir(expected_path)
+            )
+
+    def test_save_every_n_eval_epochs(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 3
+        expected_steps_per_epoch = math.ceil(dataset_len / batch_size)
+        save_every_n_eval_epochs = 2
+
+        my_unit = DummyFitUnit(input_dim=input_dim)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            expected_path = os.path.join(
+                temp_dir,
+                f"epoch_2_step_{expected_steps_per_epoch * 4}",  # 3 train epochs + 1 eval epoch = 4
+            )
+            checkpointer = BaseCheckpointSaver(
+                temp_dir,
+                save_every_n_eval_epochs=save_every_n_eval_epochs,
+            )
+            fit(
+                my_unit,
+                dataloader,
+                eval_dataloader=dataloader,
+                evaluate_every_n_epochs=1,
+                max_epochs=max_epochs,
+                callbacks=[checkpointer],
+            )
             self.assertTrue(
                 os.path.exists(expected_path) and os.path.isdir(expected_path)
             )
@@ -555,3 +595,225 @@ class BaseCheckpointerTest(unittest.TestCase):
             os.remove(os.path.join(temp_dir, ".metadata"))
             does_checkpoint_exist = bc._does_checkpoint_exist(temp_dir)
             self.assertFalse(does_checkpoint_exist)
+
+    def test_should_save_checkpoint(self) -> None:
+        """
+        Tests basic functionality of should_save_checkpoint
+        """
+        bc = BaseCheckpointSaver("foo")
+
+        # test default behavior
+        self.assertTrue(bc._should_save_checkpoint())
+
+        bc._ckpt_dirpaths = ["foo/epoch_0_step_1"]
+        self.assertTrue(bc._should_save_checkpoint())
+        bc._keep_last_n_checkpoints = 1
+        self.assertTrue(bc._should_save_checkpoint())
+
+        bc._ckpt_dirpaths = ["foo/epoch_0_step_1_val_loss=0.01"]
+        bc._best_checkpoint_config = BestCheckpointConfig(
+            monitored_metric="val_loss",
+            mode="min",
+        )
+        bc._keep_last_n_checkpoints = None
+        self.assertTrue(bc._should_save_checkpoint(0.02))
+        bc._keep_last_n_checkpoints = 1
+        self.assertFalse(bc._should_save_checkpoint(0.02))
+        self.assertTrue(bc._should_save_checkpoint(0.001))
+        bc._keep_last_n_checkpoints = 2
+        self.assertTrue(bc._should_save_checkpoint(0.02))
+
+        bc._best_checkpoint_config = BestCheckpointConfig(
+            monitored_metric="val_loss",
+            mode="max",
+        )
+        bc._keep_last_n_checkpoints = 1
+        self.assertTrue(bc._should_save_checkpoint(0.02))
+        self.assertFalse(bc._should_save_checkpoint(0.001))
+        bc._keep_last_n_checkpoints = 2
+        self.assertTrue(bc._should_save_checkpoint(0.001))
+
+    def test_best_checkpoint_attr_missing(self) -> None:
+        bcs = BaseCheckpointSaver(
+            "foo",
+            save_every_n_epochs=1,
+            best_checkpoint_config=BestCheckpointConfig(
+                monitored_metric="train_loss",
+                mode="min",
+            ),
+        )
+
+        state = get_dummy_train_state()
+        my_val_unit = MyValLossUnit()
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "Unit does not have attribute train_loss, unable to retrieve metric to checkpoint.",
+        ):
+            bcs.on_train_epoch_end(state, my_val_unit)
+
+    def test_best_checkpoint_no_top_k(self) -> None:
+        """
+        Tests basic functionality of best checkpoint saving
+
+        - Checks that the best checkpoint is saved when the monitored metric
+        - top_k is not configured, so no checkpoints should be deleted
+        """
+
+        for mode in ("min", "max"):
+            with tempfile.TemporaryDirectory() as temp_dir:
+                bcs = BaseCheckpointSaver(
+                    temp_dir,
+                    save_every_n_epochs=1,
+                    best_checkpoint_config=BestCheckpointConfig(
+                        monitored_metric="train_loss",
+                        # pyre-ignore: Incompatible parameter type [6]
+                        mode=mode,
+                    ),
+                )
+
+                state = get_dummy_train_state()
+                my_train_unit = MyTrainLossUnit()
+
+                bcs.on_train_epoch_end(state, my_train_unit)
+                self.assertEqual(
+                    bcs._ckpt_dirpaths,
+                    [os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01")],
+                )
+
+                my_train_unit.train_loss = 0.02
+                my_train_unit.train_progress.increment_epoch()
+                bcs.on_train_epoch_end(state, my_train_unit)
+                self.assertEqual(
+                    bcs._ckpt_dirpaths,
+                    [
+                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                    ]
+                    if mode == "min"
+                    else [
+                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                    ],
+                )
+
+                my_train_unit.train_loss = 0.015
+                my_train_unit.train_progress.increment_epoch()
+                bcs.on_train_epoch_end(state, my_train_unit)
+                self.assertEqual(
+                    bcs._ckpt_dirpaths,
+                    [
+                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                        os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.015"),
+                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                    ]
+                    if mode == "min"
+                    else [
+                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                        os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.015"),
+                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                    ],
+                )
+
+    def test_best_checkpoint_top_k(self) -> None:
+        # test top_k = 1
+        with tempfile.TemporaryDirectory() as temp_dir:
+            bcs = BaseCheckpointSaver(
+                temp_dir,
+                save_every_n_epochs=1,
+                best_checkpoint_config=BestCheckpointConfig(
+                    monitored_metric="train_loss",
+                    mode="min",
+                ),
+                keep_last_n_checkpoints=1,
+            )
+
+            state = get_dummy_train_state()
+            my_train_unit = MyTrainLossUnit()
+
+            bcs.on_train_epoch_end(state, my_train_unit)
+            self.assertEqual(
+                bcs._ckpt_dirpaths,
+                [os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01")],
+            )
+
+            my_train_unit.train_loss = 0.02
+            my_train_unit.train_progress.increment_epoch()
+            bcs.on_train_epoch_end(state, my_train_unit)
+            self.assertEqual(
+                bcs._ckpt_dirpaths,
+                [
+                    os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                ],
+            )
+
+            my_train_unit.train_loss = 0.001
+            my_train_unit.train_progress.increment_epoch()
+            bcs.on_train_epoch_end(state, my_train_unit)
+            self.assertEqual(
+                bcs._ckpt_dirpaths,
+                [
+                    os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.001"),
+                ],
+            )
+
+        # test top_k = 2
+        with tempfile.TemporaryDirectory() as temp_dir:
+            bcs = BaseCheckpointSaver(
+                temp_dir,
+                save_every_n_epochs=1,
+                best_checkpoint_config=BestCheckpointConfig(
+                    monitored_metric="train_loss",
+                    mode="min",
+                ),
+                keep_last_n_checkpoints=2,
+            )
+
+            state = get_dummy_train_state()
+            my_train_unit = MyTrainLossUnit()
+
+            bcs.on_train_epoch_end(state, my_train_unit)
+            self.assertEqual(
+                bcs._ckpt_dirpaths,
+                [os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01")],
+            )
+
+            my_train_unit.train_loss = 0.02
+            my_train_unit.train_progress.increment_epoch()
+            bcs.on_train_epoch_end(state, my_train_unit)
+            self.assertEqual(
+                bcs._ckpt_dirpaths,
+                [
+                    os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                    os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                ],
+            )
+
+            my_train_unit.train_loss = 0.001
+            my_train_unit.train_progress.increment_epoch()
+            bcs.on_train_epoch_end(state, my_train_unit)
+            self.assertEqual(
+                bcs._ckpt_dirpaths,
+                [
+                    os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                    os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.001"),
+                ],
+            )
+
+
+class MyValLossUnit(TrainUnit[Batch]):
+    def __init__(self) -> None:
+        super().__init__()
+        self.val_loss = 0.01
+
+    def train_step(self, state: State, data: Batch) -> None:
+        return None
+
+
+class MyTrainLossUnit(TrainUnit[Batch]):
+    def __init__(self) -> None:
+        super().__init__()
+        self.train_loss = 0.01
+
+    def train_step(self, state: State, data: Batch) -> None:
+        return None
