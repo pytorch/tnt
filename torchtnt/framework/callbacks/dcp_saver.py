@@ -19,7 +19,10 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
 )
 
 from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
-from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
+from torchtnt.framework.callbacks.checkpointer_types import (
+    BestCheckpointConfig,
+    RestoreOptions,
+)
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import AppStateMixin, TTrainData
 from torchtnt.framework.utils import get_timing_context
@@ -45,7 +48,9 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         dirpath: Parent directory to save snapshots to.
         save_every_n_train_steps: Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.
         save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
-        keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference.
+        save_every_n_eval_epochs: Frequency of evaluation epochs with which to save checkpoints during training. Use this if wanting to save checkpoints after every eval epoch during fit.
+        keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference. If best checkpoint config is enabled, this param will manage the top n checkpoints instead.
+        best_checkpoint_config: Configuration for saving the best checkpoint based on a monitored metric. The metric is read off the attribute of the unit prior to checkpoint.
         process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Note:
@@ -54,6 +59,10 @@ class DistributedCheckpointSaver(BaseCheckpointer):
 
     Note:
         If checkpointing FSDP model, you can set state_dict type calling `set_state_dict_type <https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type>`_ prior to starting training.
+
+    Note:
+        If best_checkpoint_config is enabled, the attribute must be on the unit upon checkpoint time, and must be castable to "float". This value must be maintained by the unit, and updated
+        appropriately. For example, if logging validation accuracy, the unit must be responsible for maintaining the value and resetting it when the epoch ends.
     """
 
     def __init__(
@@ -62,14 +71,18 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         *,
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
+        save_every_n_eval_epochs: Optional[int] = None,
         keep_last_n_checkpoints: Optional[int] = None,
+        best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         process_group: Optional[dist.ProcessGroup] = None,
     ) -> None:
         super().__init__(
             dirpath=dirpath,
             save_every_n_train_steps=save_every_n_train_steps,
             save_every_n_epochs=save_every_n_epochs,
+            save_every_n_eval_epochs=save_every_n_eval_epochs,
             keep_last_n_checkpoints=keep_last_n_checkpoints,
+            best_checkpoint_config=best_checkpoint_config,
             process_group=process_group,
         )
 
