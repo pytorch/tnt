@@ -9,17 +9,7 @@ import contextlib
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterator,
-    List,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, Generic, Iterator, List, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
