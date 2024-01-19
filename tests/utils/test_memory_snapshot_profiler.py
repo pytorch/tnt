@@ -15,17 +15,15 @@ from torchtnt.utils.memory_snapshot_profiler import (
     MemorySnapshotParams,
     MemorySnapshotProfiler,
 )
+from torchtnt.utils.test_utils import skip_if_not_gpu
 from torchtnt.utils.version import is_torch_version_geq_2_0
 
 
 class MemorySnapshotProfilerTest(unittest.TestCase):
 
-    cuda_available: bool = torch.cuda.is_available()
     torch_version_geq_2_0: bool = is_torch_version_geq_2_0()
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     @unittest.skipUnless(
         condition=torch_version_geq_2_0,
         reason="This test needs changes from PyTorch 2.0 to run.",

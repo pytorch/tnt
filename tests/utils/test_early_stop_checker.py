@@ -9,13 +9,10 @@ import unittest
 
 import torch
 from torchtnt.utils.early_stop_checker import EarlyStopChecker
+from torchtnt.utils.test_utils import skip_if_not_gpu
 
 
 class EarlyStopCheckerTest(unittest.TestCase):
-
-    # pyre-fixme[4]: Attribute must be annotated.
-    cuda_available = torch.cuda.is_available()
-
     def test_early_stop_patience(self) -> None:
         # Loss does not decrease beyond 0.25
         losses = [0.4, 0.3, 0.28, 0.25, 0.26, 0.25]
@@ -87,9 +84,7 @@ class EarlyStopCheckerTest(unittest.TestCase):
         should_stop = es2.check(torch.tensor(0.26))
         self.assertTrue(should_stop)
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_early_stop_min_delta_on_gpu(self) -> None:
         device = torch.device("cuda:0")
 

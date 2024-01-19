@@ -33,13 +33,14 @@ from torchtnt.framework.callbacks.torchsnapshot_saver import (
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.env import seed
-from torchtnt.utils.test_utils import spawn_multi_process
+from torchtnt.utils.test_utils import (
+    skip_if_not_distributed,
+    skip_if_not_gpu,
+    spawn_multi_process,
+)
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
-    cuda_available: bool = torch.cuda.is_available()
-    distributed_available: bool = torch.distributed.is_available()
-
     def test_save_restore(self) -> None:
         input_dim = 2
         dataset_len = 10
@@ -227,12 +228,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
         self.assertIn("lr_scheduler", app_state)
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_distributed
+    @skip_if_not_gpu
     def test_save_restore_fsdp(self) -> None:
         spawn_multi_process(
             2,
@@ -281,9 +278,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_save_restore_ddp(self) -> None:
         spawn_multi_process(
             2,

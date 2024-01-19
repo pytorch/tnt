@@ -23,21 +23,17 @@ from torchtnt.utils.device import (
     record_data_in_stream,
     set_float32_precision,
 )
+from torchtnt.utils.test_utils import skip_if_not_gpu
 
 
 class DeviceTest(unittest.TestCase):
-
-    cuda_available: bool = torch.cuda.is_available()
-
     @patch("torch.cuda.is_available", return_value=False)
     def test_get_cpu_device(self, _) -> None:
         device = get_device_from_env()
         self.assertEqual(device.type, "cpu")
         self.assertEqual(device.index, None)
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_get_gpu_device(self) -> None:
         device_idx = torch.cuda.device_count() - 1
         self.assertGreaterEqual(device_idx, 0)
@@ -61,9 +57,7 @@ class DeviceTest(unittest.TestCase):
         self.assertEqual(device.index, 0)
         self.assertEqual(device.index, torch.cuda.current_device())
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_tensor(self) -> None:
         cuda_0 = torch.device("cuda:0")
         a = torch.tensor([1, 2, 3])
@@ -71,9 +65,7 @@ class DeviceTest(unittest.TestCase):
         a = copy_data_to_device(a, cuda_0)
         self.assertEqual(a.device.type, "cuda")
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_module(self) -> None:
         cuda_0 = torch.device("cuda:0")
         model = torch.nn.Linear(1, 1)
@@ -83,9 +75,7 @@ class DeviceTest(unittest.TestCase):
         for param in model.parameters():
             self.assertEqual(param.device.type, "cuda")
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_list(self) -> None:
         cuda_0 = torch.device("cuda:0")
         b = torch.tensor([1, 2, 3])
@@ -97,9 +87,7 @@ class DeviceTest(unittest.TestCase):
         for elem in new_list:
             self.assertEqual(elem.device.type, "cuda")
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_tuple(self) -> None:
         cuda_0 = torch.device("cuda:0")
         d = torch.tensor([1, 2, 3])
@@ -111,9 +99,7 @@ class DeviceTest(unittest.TestCase):
         for elem in new_tuple:
             self.assertEqual(elem.device.type, "cuda")
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_dict(self) -> None:
         cuda_0 = torch.device("cuda:0")
         f = torch.tensor([1, 2, 3])
@@ -125,9 +111,7 @@ class DeviceTest(unittest.TestCase):
         for key in new_dict.keys():
             self.assertEqual(new_dict[key].device.type, "cuda")
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_named_tuple(self) -> None:
         cuda_0 = torch.device("cuda:0")
 
@@ -146,9 +130,7 @@ class DeviceTest(unittest.TestCase):
         self.assertIsNotNone(new_named_tuple.tensor_b)
         self.assertEqual(type(original_named_tuple), type(new_named_tuple))
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_dataclass(self) -> None:
         cuda_0 = torch.device("cuda:0")
 
@@ -193,9 +175,7 @@ class DeviceTest(unittest.TestCase):
             torch.equal(new_data_class.val, torch.tensor([1, 2], device=cuda_0))
         )
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_defaultdict(self) -> None:
         cuda_0 = torch.device("cuda:0")
 
@@ -215,9 +195,7 @@ class DeviceTest(unittest.TestCase):
         # make sure the type of new keys is the same
         self.assertEqual(type(dd[3]), type(new_dd[3]))
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_copy_data_to_device_nested(self) -> None:
         h = torch.tensor([1, 2, 3])
         i = torch.tensor([4, 5, 6])
@@ -296,9 +274,7 @@ class DeviceTest(unittest.TestCase):
         self.assertGreaterEqual(gpu_stats["temperature_gpu_celsius"], 0)
         self.assertGreaterEqual(gpu_stats["temperature_memory_celsius"], 0)
 
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test must run on a GPU host."
-    )
+    @skip_if_not_gpu
     def test_record_data_in_stream_dict(self) -> None:
         curr_stream = torch.cuda.current_stream()
         a = torch.tensor([1, 2, 3])
@@ -314,9 +290,7 @@ class DeviceTest(unittest.TestCase):
             mock_record_stream_a.assert_called_once()
             mock_record_stream_b.assert_called_once()
 
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test must run on a GPU host."
-    )
+    @skip_if_not_gpu
     def test_record_data_in_stream_tuple(self) -> None:
         curr_stream = torch.cuda.current_stream()
         a = torch.tensor([1, 2, 3])
@@ -332,9 +306,7 @@ class DeviceTest(unittest.TestCase):
             mock_record_stream_a.assert_called_once()
             mock_record_stream_b.assert_called_once()
 
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test must run on a GPU host."
-    )
+    @skip_if_not_gpu
     def test_record_data_in_stream_list(self) -> None:
         curr_stream = torch.cuda.current_stream()
         a = torch.tensor([1, 2, 3])
@@ -350,9 +322,7 @@ class DeviceTest(unittest.TestCase):
             mock_record_stream_a.assert_called_once()
             mock_record_stream_b.assert_called_once()
 
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test must run on a GPU host."
-    )
+    @skip_if_not_gpu
     def test_set_float32_precision(self) -> None:
         set_float32_precision("highest")
         self.assertEqual(torch.get_float32_matmul_precision(), "highest")

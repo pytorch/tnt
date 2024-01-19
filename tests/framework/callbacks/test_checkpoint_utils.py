@@ -32,14 +32,16 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
 from torchtnt.utils.distributed import get_global_rank, PGWrapper
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.fsspec import get_filesystem
-from torchtnt.utils.test_utils import get_pet_launch_config, spawn_multi_process
+from torchtnt.utils.test_utils import (
+    get_pet_launch_config,
+    skip_if_not_distributed,
+    spawn_multi_process,
+)
 
 METADATA_FNAME: str = ".metadata"
 
 
 class CheckpointUtilsTest(unittest.TestCase):
-    distributed_available: bool = torch.distributed.is_available()
-
     @staticmethod
     def _create_snapshot_metadata(output_dir: str) -> None:
         path = os.path.join(output_dir, METADATA_FNAME)
@@ -86,9 +88,7 @@ class CheckpointUtilsTest(unittest.TestCase):
                 get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_2
             )
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_latest_checkpoint_path_distributed(self) -> None:
         config = get_pet_launch_config(2)
         launcher.elastic_launch(
@@ -290,9 +290,7 @@ class CheckpointUtilsTest(unittest.TestCase):
                 {os.path.join(temp_dir, paths[1])},
             )
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_distributed_get_checkpoint_dirpaths(self) -> None:
         spawn_multi_process(2, "gloo", self._distributed_get_checkpoint_dirpaths)
 
@@ -425,9 +423,7 @@ class CheckpointUtilsTest(unittest.TestCase):
             ["module", "optimizer", "loss_fn", "train_progress"],
         )
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_rank_zero_read_and_broadcast(self) -> None:
         spawn_multi_process(2, "gloo", self._test_rank_zero_read_and_broadcast)
 

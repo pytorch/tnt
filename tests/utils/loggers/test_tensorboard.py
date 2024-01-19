@@ -17,7 +17,7 @@ from tensorboard.backend.event_processing.event_accumulator import EventAccumula
 from torch import distributed as dist
 
 from torchtnt.utils.loggers.tensorboard import TensorBoardLogger
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.test_utils import get_pet_launch_config, skip_if_not_distributed
 
 
 class TensorBoardLoggerTest(unittest.TestCase):
@@ -87,9 +87,7 @@ class TensorBoardLoggerTest(unittest.TestCase):
             assert test_path in logger.path
             assert invalid_path not in logger.path
 
-    @unittest.skipUnless(
-        bool(dist.is_available()), reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_multiple_workers(self: TensorBoardLoggerTest) -> None:
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._test_distributed)()

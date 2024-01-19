@@ -18,13 +18,14 @@ from torchtnt.framework._unit_utils import (
 )
 from torchtnt.framework.state import State
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.test_utils import spawn_multi_process
+from torchtnt.utils.test_utils import (
+    skip_if_not_distributed,
+    skip_if_not_gpu,
+    spawn_multi_process,
+)
 
 
 class UnitUtilsTest(unittest.TestCase):
-    cuda_available: bool = torch.cuda.is_available()
-    distributed_available: bool = torch.distributed.is_available()
-
     def test_step_func_requires_iterator(self) -> None:
         class Foo:
             def bar(self, state: State, data: object) -> object:
@@ -56,12 +57,8 @@ class UnitUtilsTest(unittest.TestCase):
         optim_name, _ = optimizers[0]
         self.assertEqual(optim_name, "optim2")
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_distributed
+    @skip_if_not_gpu
     def test_find_optimizers_for_FSDP_module(self) -> None:
         spawn_multi_process(2, "nccl", self._find_optimizers_for_FSDP_module)
 
