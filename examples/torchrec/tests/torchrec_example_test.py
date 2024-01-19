@@ -8,19 +8,13 @@
 import unittest
 
 import torch
-from torchtnt.utils.test_utils import skip_if_asan, spawn_multi_process
+from torchtnt.utils.test_utils import skip_if_asan, skip_if_not_gpu, spawn_multi_process
 
 from ..main import main
 
 
 class TorchrecExampleTest(unittest.TestCase):
-
-    cuda_available: bool = torch.cuda.is_available()
-
     @skip_if_asan
-    @unittest.skipUnless(
-        cuda_available,
-        "Skip when CUDA is not available",
-    )
+    @skip_if_not_gpu
     def test_torchrec_example(self) -> None:
         spawn_multi_process(2, "nccl", main, [])

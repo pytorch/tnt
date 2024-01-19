@@ -31,12 +31,10 @@ from torchtnt.utils.distributed import (
     revert_sync_batchnorm,
     sync_bool,
 )
-from torchtnt.utils.test_utils import get_pet_launch_config
+from torchtnt.utils.test_utils import get_pet_launch_config, skip_if_not_distributed
 
 
 class DistributedTest(unittest.TestCase):
-    distributed_available: bool = torch.distributed.is_available()
-
     def test_get_process_group_backend_cpu(self) -> None:
         device = torch.device("cpu")
         pg_backend = get_process_group_backend_from_device(device)
@@ -50,9 +48,7 @@ class DistributedTest(unittest.TestCase):
     def test_get_world_size_single(self) -> None:
         self.assertEqual(get_world_size(), 1)
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_get_world_size(self) -> None:
         world_size = 4
         config = get_pet_launch_config(world_size)
@@ -67,9 +63,7 @@ class DistributedTest(unittest.TestCase):
         dist.init_process_group("gloo")
         assert get_world_size() == dist.get_world_size()
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_get_global_rank(self) -> None:
         config = get_pet_launch_config(4)
         launcher.elastic_launch(config, entrypoint=self._test_get_global_rank)()
@@ -86,9 +80,7 @@ class DistributedTest(unittest.TestCase):
         self.assertEqual(get_local_rank(), 0)
         self.assertEqual(get_local_world_size(), 1)
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_get_local_rank(self) -> None:
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._test_get_local_rank)()
@@ -105,18 +97,14 @@ class DistributedTest(unittest.TestCase):
         destroy_process_group()
         assert not torch.distributed.is_initialized()
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_destroy_process_group(self) -> None:
         # should be a no-op if dist is not initialized
         destroy_process_group()
         config = get_pet_launch_config(2)
         launcher.elastic_launch(config, entrypoint=self._destroy_process_group)()
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_gather_uneven(self, world_size: Optional[int] = 4) -> None:
         config = get_pet_launch_config(2)
         launcher.elastic_launch(
@@ -136,9 +124,7 @@ class DistributedTest(unittest.TestCase):
             assert len(result[idx]) == idx
             assert (result[idx] == torch.ones_like(result[idx])).all()
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_gather_uneven_multidim(self) -> None:
         config = get_pet_launch_config(2)
         launcher.elastic_launch(
@@ -222,9 +208,7 @@ class DistributedTest(unittest.TestCase):
         # these should be the same in a single process case
         self.assertEqual(val, new_val)
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_sync_bool_multi_process_coherence_mode_rank_zero(self) -> None:
         config = get_pet_launch_config(2)
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
@@ -234,9 +218,7 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_sync_bool_multi_process_coherence_mode_any(self) -> None:
         config = get_pet_launch_config(2)
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
@@ -246,9 +228,7 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_sync_bool_multi_process_coherence_mode_all(self) -> None:
         config = get_pet_launch_config(2)
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(
@@ -258,9 +238,7 @@ class DistributedTest(unittest.TestCase):
         self.assertFalse(result[0])
         self.assertFalse(result[1])
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_sync_bool_multi_process_coherence_mode_int_false(self) -> None:
         config = get_pet_launch_config(2)
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(2)
@@ -268,9 +246,7 @@ class DistributedTest(unittest.TestCase):
         self.assertFalse(result[0])
         self.assertFalse(result[1])
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_sync_bool_multi_process_coherence_mode_int_true(self) -> None:
         config = get_pet_launch_config(2)
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(1)
@@ -278,9 +254,7 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_sync_bool_multi_process_coherence_mode_float_true(self) -> None:
         config = get_pet_launch_config(2)
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(0.4)
@@ -288,9 +262,7 @@ class DistributedTest(unittest.TestCase):
         self.assertTrue(result[0])
         self.assertTrue(result[1])
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_sync_bool_multi_process_coherence_mode_float_false(self) -> None:
         config = get_pet_launch_config(2)
         result = launcher.elastic_launch(config, entrypoint=self._full_sync_worker)(1.0)

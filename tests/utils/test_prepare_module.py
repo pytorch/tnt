@@ -23,7 +23,11 @@ from torchtnt.utils.prepare_module import (
     prepare_module,
     TorchCompileParams,
 )
-from torchtnt.utils.test_utils import spawn_multi_process
+from torchtnt.utils.test_utils import (
+    skip_if_not_distributed,
+    skip_if_not_gpu,
+    spawn_multi_process,
+)
 from torchtnt.utils.version import is_torch_version_geq_1_13, is_torch_version_geq_2_0
 
 COMPILE_AVAIL = False
@@ -36,22 +40,14 @@ if is_torch_version_geq_2_0():
 
 
 class PrepareModelTest(unittest.TestCase):
-
-    cuda_available: bool = torch.cuda.is_available()
-    distributed_available: bool = torch.distributed.is_available()
-
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test should run on a GPU host."
-    )
+    @skip_if_not_gpu
     def test_prepare_no_strategy(self) -> None:
         module = torch.nn.Linear(2, 2)  # initialize on cpu
         device = init_from_env()  # should be cuda device
         module = prepare_module(module, device, strategy=None)
         self.assertEqual(next(module.parameters()).device, device)
 
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test should run on a GPU host."
-    )
+    @skip_if_not_gpu
     def test_prepare_noop(self) -> None:
         module = torch.nn.Linear(2, 2)  # initialize on cpu
         device = init_from_env()  # should be cuda device
@@ -62,12 +58,8 @@ class PrepareModelTest(unittest.TestCase):
         module2 = prepare_module(module2, device, strategy="noop")
         self.assertNotEqual(next(module2.parameters()).device, device)
 
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test should run on a GPU host."
-    )
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_gpu
+    @skip_if_not_distributed
     def test_prepare_ddp(self) -> None:
         spawn_multi_process(
             2,
@@ -87,12 +79,8 @@ class PrepareModelTest(unittest.TestCase):
         tc = unittest.TestCase()
         tc.assertTrue(isinstance(ddp_module, DDP))
 
-    @unittest.skipUnless(
-        condition=(cuda_available), reason="This test should run on a GPU host."
-    )
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_gpu
+    @skip_if_not_distributed
     def test_prepare_fsdp(self) -> None:
         spawn_multi_process(
             2,
@@ -108,12 +96,8 @@ class PrepareModelTest(unittest.TestCase):
         tc = unittest.TestCase()
         tc.assertTrue(isinstance(fsdp_module, FSDP))
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_distributed
+    @skip_if_not_gpu
     def test_fsdp_pytorch_version(self) -> None:
         """
         Test that a RuntimeError is thrown when using FSDP, and PyTorch < v1.12
@@ -150,11 +134,9 @@ class PrepareModelTest(unittest.TestCase):
             fully_shard(model)
             assert _is_fsdp_module(model)
 
+    @skip_if_not_distributed
     @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=bool(cuda_available and torch.cuda.device_count() >= 2),
+        condition=bool(torch.cuda.device_count() >= 2),
         reason="This test needs 2 GPUs to run.",
     )
     def test_is_fsdp_module(self) -> None:
@@ -164,12 +146,8 @@ class PrepareModelTest(unittest.TestCase):
             self._test_is_fsdp_module,
         )
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_distributed
+    @skip_if_not_gpu
     def test_fdsp_precision(self) -> None:
         spawn_multi_process(
             2,
@@ -206,12 +184,8 @@ class PrepareModelTest(unittest.TestCase):
                 strategy="foo",
             )
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_distributed
+    @skip_if_not_gpu
     def test_prepare_module_with_fsdp(self) -> None:
         """
         Launch tests of FSDP strategy
@@ -257,9 +231,7 @@ class PrepareModelTest(unittest.TestCase):
 
         tc.assertTrue(isinstance(fsdp_module, FSDP))
 
-    @unittest.skipUnless(
-        distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_prepare_module_with_ddp(self) -> None:
         """
         Launch tests of DDP strategy
@@ -333,9 +305,7 @@ class PrepareModelTest(unittest.TestCase):
         condition=COMPILE_AVAIL,
         reason="This test needs PyTorch 1.13 or greater to run.",
     )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_prepare_module_compile_module_state_dict(self) -> None:
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2, device=device)

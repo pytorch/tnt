@@ -11,15 +11,12 @@ from typing import Tuple
 import torch
 from torch.utils.data.dataset import Dataset, TensorDataset
 from torchtnt.utils.data.data_prefetcher import CudaDataPrefetcher
+from torchtnt.utils.test_utils import skip_if_not_gpu
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
 
 class DataTest(unittest.TestCase):
-
-    # pyre-fixme[4]: Attribute must be annotated.
-    cuda_available = torch.cuda.is_available()
-
     def _generate_dataset(self, num_samples: int, input_dim: int) -> Dataset[Batch]:
         """Returns a dataset of random inputs and labels for binary classification."""
         data = torch.randn(num_samples, input_dim)
@@ -39,9 +36,7 @@ class DataTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "expects a CUDA device"):
             _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches)
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_num_prefetch_batches_data_prefetcher(self) -> None:
         device = torch.device("cuda:0")
 
@@ -65,9 +60,7 @@ class DataTest(unittest.TestCase):
         _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=1)
         _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=2)
 
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_gpu
     def test_cuda_data_prefetcher(self) -> None:
         device = torch.device("cuda:0")
 

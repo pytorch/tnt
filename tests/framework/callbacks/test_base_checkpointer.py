@@ -39,7 +39,11 @@ from torchtnt.framework.train import train
 from torchtnt.framework.unit import AppStateMixin, TrainUnit, TTrainData
 from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.test_utils import spawn_multi_process
+from torchtnt.utils.test_utils import (
+    skip_if_not_distributed,
+    skip_if_not_gpu,
+    spawn_multi_process,
+)
 
 
 class BaseCheckpointSaver(BaseCheckpointer):
@@ -363,9 +367,7 @@ class BaseCheckpointerTest(unittest.TestCase):
                     ],
                 )
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
+    @skip_if_not_distributed
     def test_directory_sync_collective(self) -> None:
         spawn_multi_process(
             2,
@@ -410,12 +412,8 @@ class BaseCheckpointerTest(unittest.TestCase):
             ):
                 BaseCheckpointSaver(temp_dir, save_every_n_epochs=0)
 
-    @unittest.skipUnless(
-        condition=distributed_available, reason="Torch distributed is needed to run"
-    )
-    @unittest.skipUnless(
-        condition=cuda_available, reason="This test needs a GPU host to run."
-    )
+    @skip_if_not_distributed
+    @skip_if_not_gpu
     def test_process_group_plumbing(self) -> None:
         """
         Creates a new process group and verifies that it's passed through correctly
