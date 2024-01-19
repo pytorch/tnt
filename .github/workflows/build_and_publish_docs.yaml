@@ -12,6 +12,9 @@ concurrency:
 jobs:
   build_and_publish_docs:
     runs-on: ubuntu-latest
+    permissions:
+      # Grant write permission here so that the doc can be pushed to gh-pages branch
+      contents: write
     steps:
       - name: Check out repo
         uses: actions/checkout@v2
