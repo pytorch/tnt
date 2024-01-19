@@ -54,10 +54,6 @@ from typing_extensions import Literal
 
 TData = TypeVar("TData")
 
-TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
-# pyre-ignore Invalid type parameters [24]: Generic type `Callable` expects 2 type parameters.
-TSWA_multi_avg_fn = Callable
-
 
 @dataclass
 class SWALRParams:
