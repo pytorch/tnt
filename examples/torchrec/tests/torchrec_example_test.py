@@ -7,7 +7,6 @@
 
 import unittest
 
-import torch
 from torchtnt.utils.test_utils import skip_if_asan, skip_if_not_gpu, spawn_multi_process
 
 from ..main import main
