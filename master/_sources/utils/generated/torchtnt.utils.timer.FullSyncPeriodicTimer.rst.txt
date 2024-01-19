@@ -15,6 +15,7 @@
    
       ~FullSyncPeriodicTimer.__init__
       ~FullSyncPeriodicTimer.check
+      ~FullSyncPeriodicTimer.wait_remaining_work
    
    
 

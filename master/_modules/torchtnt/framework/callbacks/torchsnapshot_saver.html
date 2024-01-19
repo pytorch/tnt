@@ -385,7 +385,11 @@
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.base_checkpointer</span> <span class="kn">import</span> <span class="n">BaseCheckpointer</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.checkpointer_types</span> <span class="kn">import</span> <span class="n">KnobOptions</span><span class="p">,</span> <span class="n">RestoreOptions</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.checkpointer_types</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BestCheckpointConfig</span><span class="p">,</span>
+    <span class="n">KnobOptions</span><span class="p">,</span>
+    <span class="n">RestoreOptions</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AppStateMixin</span><span class="p">,</span>
@@ -431,7 +435,9 @@
 <span class="sd">        dirpath: Parent directory to save snapshots to.</span>
 <span class="sd">        save_every_n_train_steps: Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.</span>
 <span class="sd">        save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.</span>
-<span class="sd">        keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference.</span>
+<span class="sd">        save_every_n_eval_epochs: Frequency of evaluation epochs with which to save checkpoints during training. Use this if wanting to save checkpoints after every eval epoch during fit.</span>
+<span class="sd">        keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference. If best checkpoint config is enabled, this param will manage the top n checkpoints instead.</span>
+<span class="sd">        best_checkpoint_config: Configuration for saving the best checkpoint based on a monitored metric. The metric is read off the attribute of the unit prior to checkpoint.</span>
 <span class="sd">        process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
 <span class="sd">        async_checkpoint: Whether to perform asynchronous snapshotting. Default: ``True``.</span>
 <span class="sd">        replicated: A glob-pattern of replicated key names that indicate which application state entries have the same state across all processes.</span>
@@ -450,6 +456,10 @@
 
 <span class="sd">    Note:</span>
 <span class="sd">        If checkpointing FSDP model, you can set state_dict type calling `set_state_dict_type &lt;https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type&gt;`_ prior to starting training.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        If best_checkpoint_config is enabled, the attribute must be on the unit upon checkpoint time, and must be castable to &quot;float&quot;. This value must be maintained by the unit, and updated</span>
+<span class="sd">        appropriately. For example, if logging validation accuracy, the unit must be responsible for maintaining the value and resetting it when the epoch ends.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">metadata_fname</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;.snapshot_metadata&quot;</span>
@@ -460,7 +470,9 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">save_every_n_train_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">save_every_n_epochs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">save_every_n_eval_epochs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">keep_last_n_checkpoints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">best_checkpoint_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BestCheckpointConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">async_checkpoint</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">replicated</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -472,7 +484,9 @@
             <span class="n">dirpath</span><span class="o">=</span><span class="n">dirpath</span><span class="p">,</span>
             <span class="n">save_every_n_train_steps</span><span class="o">=</span><span class="n">save_every_n_train_steps</span><span class="p">,</span>
             <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="n">save_every_n_epochs</span><span class="p">,</span>
+            <span class="n">save_every_n_eval_epochs</span><span class="o">=</span><span class="n">save_every_n_eval_epochs</span><span class="p">,</span>
             <span class="n">keep_last_n_checkpoints</span><span class="o">=</span><span class="n">keep_last_n_checkpoints</span><span class="p">,</span>
+            <span class="n">best_checkpoint_config</span><span class="o">=</span><span class="n">best_checkpoint_config</span><span class="p">,</span>
             <span class="n">process_group</span><span class="o">=</span><span class="n">process_group</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_async_checkpoint</span> <span class="o">=</span> <span class="n">async_checkpoint</span>

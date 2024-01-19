@@ -419,10 +419,6 @@
 
 <span class="n">TData</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TData&quot;</span><span class="p">)</span>
 
-<span class="n">TSWA_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
-<span class="c1"># pyre-ignore Invalid type parameters [24]: Generic type `Callable` expects 2 type parameters.</span>
-<span class="n">TSWA_multi_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span>
-
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SWALRParams</span><span class="p">:</span>
