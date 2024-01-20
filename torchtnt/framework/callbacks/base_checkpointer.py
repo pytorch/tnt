@@ -8,6 +8,7 @@ import abc
 import bisect
 import logging
 import os
+from datetime import timedelta
 from typing import Any, cast, Iterable, List, Literal, Optional, Union
 
 import torch.distributed as dist
@@ -57,7 +58,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         save_every_n_eval_epochs: Frequency of evaluation epochs with which to save checkpoints during training. Use this if wanting to save checkpoints after every eval epoch during fit.
         keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference. If best checkpoint config is enabled, this param will manage the top n checkpoints instead.
         best_checkpoint_config: Configuration for saving the best checkpoint based on a monitored metric. The metric is read off the attribute of the unit prior to checkpoint.
-        process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+        process_group: The process group on which the ranks will communicate on. If the process group is not gloo-based, a new gloo-based process group will be created.
 
     Note:
         If torch.distributed is available and default process group is initialized, the constructor will call a collective operation for rank 0 to broadcast the dirpath to all other ranks
@@ -130,11 +131,35 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             else:
                 self._ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
 
-        self._process_group = process_group
+        self._process_group: Optional[dist.ProcessGroup] = None
+        self._setup_gloo_pg(process_group)
         self._pg_wrapper = PGWrapper(process_group)
 
         # sync dirpaths from rank 0
         self._sync_dirpath_to_all_ranks(dirpath)
+
+    def _setup_gloo_pg(self, process_group: Optional[dist.ProcessGroup]) -> None:
+        """
+        Setups gloo process group to be used for any collectives called during
+        checkpointing. If global process group is already gloo, no action is required.
+        Gloo is used over nccl for better compatibility.
+        """
+        if not dist.is_initialized():
+            # there can be no process group
+            return
+
+        if process_group is None:
+            # use global process group
+            process_group = dist.group.WORLD
+
+        # we create a new gloo process group if different backend is being used
+        if dist.get_backend(process_group) != dist.Backend.GLOO:
+            rank_zero_info("Creating new gloo process group for checkpointing.")
+            self._process_group = dist.new_group(
+                timeout=timedelta(seconds=3600), backend=dist.Backend.GLOO
+            )
+        else:
+            self._process_group = process_group
 
     def _sync_dirpath_to_all_ranks(self, dirpath: str) -> None:
         if not (dist.is_available() and dist.is_initialized()):

@@ -416,33 +416,32 @@ class BaseCheckpointerTest(unittest.TestCase):
     @skip_if_not_gpu
     def test_process_group_plumbing(self) -> None:
         """
-        Creates a new process group and verifies that it's passed through correctly
+        Creates a new process group and verifies GLOO group is created accordingly
         """
         spawn_multi_process(
             2,
             "nccl",
             self._test_process_group_plumbing,
         )
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_process_group_plumbing,
+        )
 
     @staticmethod
     def _test_process_group_plumbing() -> None:
-        new_pg = dist.new_group(backend="gloo")
-
-        if get_global_rank() == 0:
-            temp_dir = tempfile.mkdtemp()
-        else:
-            temp_dir = ""
-
         checkpoint_cb = BaseCheckpointSaver(
-            temp_dir,
-            process_group=new_pg,
+            "foo",
+            process_group=None,
         )
         tc = unittest.TestCase()
-        try:
-            tc.assertEqual(checkpoint_cb._process_group, new_pg)
-        finally:
-            if get_global_rank() == 0:
-                shutil.rmtree(temp_dir)  # delete temp directory
+        tc.assertEqual(
+            dist.get_backend(checkpoint_cb._process_group), dist.Backend.GLOO
+        )
+        if dist.get_backend(dist.group.WORLD) == dist.Backend.GLOO:
+            # verify no new process group was created
+            tc.assertEqual(checkpoint_cb._process_group, dist.group.WORLD)
 
     @patch(
         "torchtnt.framework.callbacks.base_checkpointer.get_checkpoint_dirpaths",
