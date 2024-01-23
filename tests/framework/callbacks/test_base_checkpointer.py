@@ -672,6 +672,13 @@ class BaseCheckpointerTest(unittest.TestCase):
                 state = get_dummy_train_state()
                 my_train_unit = MyTrainLossUnit()
 
+                my_train_unit.train_loss = None
+                bcs.on_train_epoch_end(state, my_train_unit)
+                # none metric-value will not be updated in checkpoint dirpaths
+                self.assertEqual(bcs._ckpt_dirpaths, [])
+                self.assertEqual(os.listdir(temp_dir), ["epoch_0_step_0"])
+
+                my_train_unit.train_loss = 0.01
                 bcs.on_train_epoch_end(state, my_train_unit)
                 self.assertEqual(
                     bcs._ckpt_dirpaths,
@@ -810,7 +817,7 @@ class MyValLossUnit(TrainUnit[Batch]):
 class MyTrainLossUnit(TrainUnit[Batch]):
     def __init__(self) -> None:
         super().__init__()
-        self.train_loss = 0.01
+        self.train_loss: Optional[float] = 0.01
 
     def train_step(self, state: State, data: Batch) -> None:
         return None
