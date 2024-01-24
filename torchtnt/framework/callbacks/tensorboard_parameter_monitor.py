@@ -14,9 +14,16 @@ from torchtnt.framework.state import State
 from torchtnt.framework.unit import TTrainUnit
 from torchtnt.utils.loggers.tensorboard import TensorBoardLogger
 
+# Too many params could result in a stuck job so we suggest to limit
+# the number of bins. Default is set to 1M below
+DEFAULT_MAX_HISTOGRAM_BINS: int = 1024 * 1024
+
 
 def _write_histogram_parameters(
-    summary_writer: SummaryWriter, modules: Dict[str, torch.nn.Module], step: int
+    summary_writer: SummaryWriter,
+    modules: Dict[str, torch.nn.Module],
+    step: int,
+    max_bins: int,
 ) -> None:
     for module_name, module in modules.items():
         for param_name, parameter in module.named_parameters():
@@ -24,6 +31,7 @@ def _write_histogram_parameters(
                 f"Parameters/{module_name}/{param_name}",
                 parameter,
                 global_step=step,
+                max_bins=max_bins,
             )
 
 
@@ -37,10 +45,15 @@ class TensorBoardParameterMonitor(Callback):
             or a :class:`torch.utils.tensorboard.SummaryWriter` instance.
     """
 
-    def __init__(self, logger: Union[TensorBoardLogger, SummaryWriter]) -> None:
+    def __init__(
+        self,
+        logger: Union[TensorBoardLogger, SummaryWriter],
+        max_histogram_bins: int = DEFAULT_MAX_HISTOGRAM_BINS,
+    ) -> None:
         if isinstance(logger, TensorBoardLogger):
             logger = logger.writer
         self._writer: Optional[SummaryWriter] = logger
+        self._max_histogram_bins = max_histogram_bins
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         writer = self._writer
@@ -49,4 +62,4 @@ class TensorBoardParameterMonitor(Callback):
 
         step = unit.train_progress.num_steps_completed
         modules = unit.tracked_modules()
-        _write_histogram_parameters(writer, modules, step)
+        _write_histogram_parameters(writer, modules, step, self._max_histogram_bins)
