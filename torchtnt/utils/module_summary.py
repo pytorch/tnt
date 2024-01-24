@@ -209,9 +209,9 @@ def _clean_flops(flop: DefaultDict[str, DefaultDict[str, int]], N: int) -> None:
 
 def _get_module_flops_and_activation_sizes(
     module: torch.nn.Module,
-    # pyre-ignore
+    # pyre-fixme
     module_args: Optional[Tuple[Any, ...]] = None,
-    # pyre-ignore
+    # pyre-fixme
     module_kwargs: Optional[MutableMapping[str, Any]] = None,
 ) -> _ModuleSummaryData:
     # a mapping from module name to activation size tuple (in_size, out_size)
@@ -309,9 +309,9 @@ def _has_tensor(item: Optional[PyTree]) -> bool:
 
 def get_module_summary(
     module: torch.nn.Module,
-    # pyre-ignore
+    # pyre-fixme
     module_args: Optional[Tuple[Any, ...]] = None,
-    # pyre-ignore
+    # pyre-fixme
     module_kwargs: Optional[MutableMapping[str, Any]] = None,
 ) -> ModuleSummary:
     """
@@ -669,13 +669,13 @@ def _activation_size_hook(
     activation_sizes: Dict[
         str, Tuple[Union[TUnknown, List[int]], Union[TUnknown, List[int]]]
     ],
-    # pyre-ignore: Invalid type parameters [24]
+    # pyre-fixme: Invalid type parameters [24]
 ) -> Callable[[str], Callable]:
-    # pyre-ignore: Missing parameter annotation [2]
+    # pyre-fixme: Missing parameter annotation [2]
     def intermediate_hook(
         module_name: str,
     ) -> Callable[[torch.nn.Module, Any, Any], None]:
-        # pyre-ignore
+        # pyre-fixme
         def hook(_: torch.nn.Module, inp: Any, out: Any) -> None:
             if len(inp) == 1:
                 inp = inp[0]
@@ -690,9 +690,9 @@ def _activation_size_hook(
 
 def _forward_time_pre_hook(
     timer_mapping: Dict[str, float]
-    # pyre-ignore: Invalid type parameters [24]
+    # pyre-fixme: Invalid type parameters [24]
 ) -> Callable[[str], Callable]:
-    # pyre-ignore: Missing parameter annotation [2]
+    # pyre-fixme: Missing parameter annotation [2]
     def intermediate_hook(
         module_name: str,
     ) -> Callable[[torch.nn.Module, Any], None]:
@@ -707,9 +707,9 @@ def _forward_time_pre_hook(
 def _forward_time_hook(
     timer_mapping: Dict[str, float],
     elapsed_times: Dict[str, float],
-    # pyre-ignore: Invalid type parameters [24]
+    # pyre-fixme: Invalid type parameters [24]
 ) -> Callable[[str], Callable]:
-    # pyre-ignore: Missing parameter annotation [2]
+    # pyre-fixme: Missing parameter annotation [2]
     def intermediate_hook(
         module_name: str,
     ) -> Callable[[torch.nn.Module, Any, Any], None]:
@@ -725,7 +725,7 @@ def _forward_time_hook(
 
 def _register_hooks(
     module: torch.nn.Module,
-    # pyre-ignore: Invalid type parameters [24]
+    # pyre-fixme: Invalid type parameters [24]
     hooks: List[Tuple[Callable, _HookType]],
 ) -> List[RemovableHandle]:
     """

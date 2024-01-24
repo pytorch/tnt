@@ -52,7 +52,7 @@ def profile_dataloader(
                 with timer.time("copy_data_to_device"), record_function(
                     "copy_data_to_device"
                 ):
-                    # pyre-ignore [6]: device is checked as not None before calling this
+                    # pyre-fixme [6]: device is checked as not None before calling this
                     data = copy_data_to_device(data, device)
 
             steps_completed += 1

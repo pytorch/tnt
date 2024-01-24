@@ -191,7 +191,7 @@ class TestSWA(unittest.TestCase):
         with self.assertRaisesRegex(
             ValueError, "Unknown averaging method: foo. Only ema and swa are supported."
         ):
-            # pyre-ignore On purpose to test run time exception
+            # pyre-fixme On purpose to test run time exception
             AveragedModel(model, averaging_method="foo")
 
     def test_lit_ema(self) -> None:

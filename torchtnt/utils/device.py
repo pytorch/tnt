@@ -313,14 +313,14 @@ def collect_system_stats(device: torch.device) -> Dict[str, Any]:
     system_stats: Dict[str, Any] = {}
     cpu_stats = get_psutil_cpu_stats()
 
-    # pyre-ignore
+    # pyre-fixme
     system_stats.update(cpu_stats)
 
     if torch.cuda.is_available():
         try:
             gpu_stats = get_nvidia_smi_gpu_stats(device)
 
-            # pyre-ignore
+            # pyre-fixme
             system_stats.update(gpu_stats)
             system_stats.update(torch.cuda.memory_stats())
         except FileNotFoundError:

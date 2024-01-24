@@ -20,14 +20,14 @@ _DEFAULT_MEASURE_INTERVAL = timedelta(milliseconds=100)
 
 
 def _is_named_tuple(
-    # pyre-ignore: Missing parameter annotation [2]: Parameter `x` must have a type other than `Any`.
+    # pyre-fixme: Missing parameter annotation [2]: Parameter `x` must have a type other than `Any`.
     x: Any,
 ) -> bool:
     return isinstance(x, tuple) and hasattr(x, "_asdict") and hasattr(x, "_fields")
 
 
 def get_tensor_size_bytes_map(
-    # pyre-ignore: Missing parameter annotation [2]: Parameter `obj` must have a type other than `Any`.
+    # pyre-fixme: Missing parameter annotation [2]: Parameter `obj` must have a type other than `Any`.
     obj: Any,
 ) -> Dict[torch.Tensor, int]:
     tensor_map = {}

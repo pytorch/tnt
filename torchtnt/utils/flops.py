@@ -21,7 +21,7 @@ from torch.utils._pytree import PyTree, tree_map
 aten: torch._ops._OpNamespace = torch.ops.aten
 
 
-# pyre-ignore [2] we don't care the type in outputs
+# pyre-fixme [2] we don't care the type in outputs
 def _matmul_flop_jit(inputs: Tuple[torch.Tensor], outputs: Tuple[Any]) -> Number:
     """
     Count flops for matmul.
@@ -35,7 +35,7 @@ def _matmul_flop_jit(inputs: Tuple[torch.Tensor], outputs: Tuple[Any]) -> Number
     return flop
 
 
-# pyre-ignore [2] we don't care the type in outputs
+# pyre-fixme [2] we don't care the type in outputs
 def _addmm_flop_jit(inputs: Tuple[torch.Tensor], outputs: Tuple[Any]) -> Number:
     """
     Count flops for fully connected layers.
@@ -53,7 +53,7 @@ def _addmm_flop_jit(inputs: Tuple[torch.Tensor], outputs: Tuple[Any]) -> Number:
     return flops
 
 
-# pyre-ignore [2] we don't care the type in outputs
+# pyre-fixme [2] we don't care the type in outputs
 def _bmm_flop_jit(inputs: Tuple[torch.Tensor], outputs: Tuple[Any]) -> Number:
     """
     Count flops for the bmm operation.
@@ -98,7 +98,7 @@ def _conv_flop_count(
 
 
 def _conv_flop_jit(
-    inputs: Tuple[Any],  # pyre-ignore [2] the inputs can be union of Tensor/bool/Tuple
+    inputs: Tuple[Any],  # pyre-fixme [2] the inputs can be union of Tensor/bool/Tuple
     outputs: Tuple[torch.Tensor],
 ) -> Number:
     """
@@ -118,7 +118,7 @@ def _transpose_shape(shape: torch.Size) -> List[int]:
     return [shape[1], shape[0]] + list(shape[2:])
 
 
-# pyre-ignore [2] the inputs can be union of Tensor/bool/Tuple & we don't care about outputs
+# pyre-fixme [2] the inputs can be union of Tensor/bool/Tuple & we don't care about outputs
 def _conv_backward_flop_jit(inputs: Tuple[Any], outputs: Tuple[Any]) -> Number:
     grad_out_shape, x_shape, w_shape = [i.shape for i in inputs[:3]]
     output_mask = inputs[-1]
@@ -127,7 +127,7 @@ def _conv_backward_flop_jit(inputs: Tuple[Any], outputs: Tuple[Any]) -> Number:
 
     if output_mask[0]:
         grad_input_shape = outputs[0].shape
-        # pyre-ignore [58] this is actually sum of Number and Number
+        # pyre-fixme [58] this is actually sum of Number and Number
         flop_count = flop_count + _conv_flop_count(
             grad_out_shape, w_shape, grad_input_shape, not fwd_transposed
         )
@@ -143,7 +143,7 @@ def _conv_backward_flop_jit(inputs: Tuple[Any], outputs: Tuple[Any]) -> Number:
     return flop_count
 
 
-# pyre-ignore [5]
+# pyre-fixme [5]
 flop_mapping: Dict[Callable[..., Any], Callable[[Tuple[Any], Tuple[Any]], Number]] = {
     aten.mm: _matmul_flop_jit,
     aten.matmul: _matmul_flop_jit,
@@ -163,7 +163,7 @@ flop_mapping: Dict[Callable[..., Any], Callable[[Tuple[Any], Tuple[Any]], Number
 }
 
 
-# pyre-ignore [2, 3] it can be Tuple of anything.
+# pyre-fixme [2, 3] it can be Tuple of anything.
 def _normalize_tuple(x: Any) -> Tuple[Any]:
     if not isinstance(x, tuple):
         return (x,)
@@ -213,7 +213,7 @@ class FlopTensorDispatchMode(TorchDispatchMode):
         )
         self._parents: List[str] = [""]
 
-    # pyre-ignore
+    # pyre-fixme
     def __exit__(self, exc_type, exc_val, exc_tb):
         for hook_handle in self._all_hooks:
             hook_handle.remove()
@@ -221,10 +221,10 @@ class FlopTensorDispatchMode(TorchDispatchMode):
 
     def __torch_dispatch__(
         self,
-        func: Callable[..., Any],  # pyre-ignore [2] func can be any func
-        types: Tuple[Any],  # pyre-ignore [2]
-        args=(),  # pyre-ignore [2]
-        kwargs=None,  # pyre-ignore [2]
+        func: Callable[..., Any],  # pyre-fixme [2] func can be any func
+        types: Tuple[Any],  # pyre-fixme [2]
+        args=(),  # pyre-fixme [2]
+        kwargs=None,  # pyre-fixme [2]
     ) -> PyTree:
         rs = func(*args, **kwargs)
         outs = _normalize_tuple(rs)
@@ -232,14 +232,14 @@ class FlopTensorDispatchMode(TorchDispatchMode):
         if func in flop_mapping:
             flop_count = flop_mapping[func](args, outs)
             for par in self._parents:
-                # pyre-ignore [58]
+                # pyre-fixme [58]
                 self.flop_counts[par][func.__name__] += flop_count
         else:
             logging.debug(f"{func} is not yet supported in FLOPs calculation.")
 
         return rs
 
-    # pyre-ignore [3]
+    # pyre-fixme [3]
     def _create_backwards_push(self, name: str) -> Callable[..., Any]:
         class PushState(torch.autograd.Function):
             @staticmethod
@@ -262,7 +262,7 @@ class FlopTensorDispatchMode(TorchDispatchMode):
         # using a function parameter.
         return PushState.apply
 
-    # pyre-ignore [3]
+    # pyre-fixme [3]
     def _create_backwards_pop(self, name: str) -> Callable[..., Any]:
         class PopState(torch.autograd.Function):
             @staticmethod
@@ -286,9 +286,9 @@ class FlopTensorDispatchMode(TorchDispatchMode):
         # using a function parameter.
         return PopState.apply
 
-    # pyre-ignore [3] Return a callable function
+    # pyre-fixme [3] Return a callable function
     def _enter_module(self, name: str) -> Callable[..., Any]:
-        # pyre-ignore [2, 3]
+        # pyre-fixme [2, 3]
         def f(module: torch.nn.Module, inputs: Tuple[Any]):
             parents = self._parents
             parents.append(name)
@@ -298,9 +298,9 @@ class FlopTensorDispatchMode(TorchDispatchMode):
 
         return f
 
-    # pyre-ignore [3] Return a callable function
+    # pyre-fixme [3] Return a callable function
     def _exit_module(self, name: str) -> Callable[..., Any]:
-        # pyre-ignore [2, 3]
+        # pyre-fixme [2, 3]
         def f(module: torch.nn.Module, inputs: Tuple[Any], outputs: Tuple[Any]):
             parents = self._parents
             assert parents[-1] == name

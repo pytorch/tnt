@@ -364,7 +364,7 @@ def _sync_durations(
     pg_wrapper.all_gather_object(outputs, recorded_durations)
     ret = defaultdict(list)
     for output in outputs:
-        # pyre-ignore [16]: `Optional` has no attribute `__getitem__`.
+        # pyre-fixme [16]: `Optional` has no attribute `__getitem__`.
         for k, v in output.items():
             if k not in ret:
                 ret[k] = []
