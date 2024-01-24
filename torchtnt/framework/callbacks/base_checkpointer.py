@@ -69,7 +69,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
     Note:
         If best_checkpoint_config is enabled, the attribute must be on the unit upon checkpoint time, and must be castable to "float". This value must be maintained by the unit, and updated
-        appropriately. For example, if logging validation accuracy, the unit must be responsible for maintaining the value and resetting it when the epoch ends.
+        appropriately. For example, if logging validation accuracy, the unit must be responsible for maintaining the value and resetting it when the epoch ends. If the metric value is None, the
+        checkpoint will be saved, without the metric value in the checkpoint name
     """
 
     metadata_fname: Optional[str] = None
@@ -224,17 +225,18 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
                 )
 
             metric_value = getattr(unit, best_checkpoint_config.monitored_metric)
-            try:
-                metric_value_f = float(metric_value)
-            except Exception as e:
-                raise RuntimeError(
-                    f"Unable to convert monitored metric {best_checkpoint_config.monitored_metric} to a float. Please ensure the value can be converted to float and is not a multi-element tensor value."
-                ) from e
+            if metric_value is not None:
+                try:
+                    metric_value_f = float(metric_value)
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Unable to convert monitored metric {best_checkpoint_config.monitored_metric} to a float. Please ensure the value can be converted to float and is not a multi-element tensor value."
+                    ) from e
 
-            # update checkpoint path to include the metric value info
-            checkpoint_path += (
-                f"_{best_checkpoint_config.monitored_metric}={metric_value_f}"
-            )
+                # update checkpoint path to include the metric value info
+                checkpoint_path += (
+                    f"_{best_checkpoint_config.monitored_metric}={metric_value_f}"
+                )
 
         should_checkpoint = self._should_save_checkpoint(metric_value_f)
         if not should_checkpoint:
@@ -256,18 +258,19 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
                 self._remove_checkpoint(state)
 
             if best_checkpoint_config:
-                # insert the checkpoint path at the right index to preserve ordering
-                keys = [
-                    float(os.path.basename(x).split("=")[-1])
-                    for x in self._ckpt_dirpaths
-                ]
-                if best_checkpoint_config.mode == "min":
-                    keys.reverse()
-                # Use bisect.bisect() to find the insertion point
-                idx = bisect.bisect(keys, none_throws(metric_value_f))
-                if best_checkpoint_config.mode == "min":
-                    idx = len(self._ckpt_dirpaths) - idx
-                self._ckpt_dirpaths.insert(idx, checkpoint_path)
+                if metric_value_f:
+                    # insert the checkpoint path at the right index to preserve ordering
+                    keys = [
+                        float(os.path.basename(x).split("=")[-1])
+                        for x in self._ckpt_dirpaths
+                    ]
+                    if best_checkpoint_config.mode == "min":
+                        keys.reverse()
+                    # Use bisect.bisect() to find the insertion point
+                    idx = bisect.bisect(keys, metric_value_f)
+                    if best_checkpoint_config.mode == "min":
+                        idx = len(self._ckpt_dirpaths) - idx
+                    self._ckpt_dirpaths.insert(idx, checkpoint_path)
             else:
                 self._ckpt_dirpaths.append(checkpoint_path)
 
