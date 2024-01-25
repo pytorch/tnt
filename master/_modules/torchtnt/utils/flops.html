@@ -386,7 +386,7 @@
 <span class="n">aten</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">_ops</span><span class="o">.</span><span class="n">_OpNamespace</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">aten</span>
 
 
-<span class="c1"># pyre-ignore [2] we don&#39;t care the type in outputs</span>
+<span class="c1"># pyre-fixme [2] we don&#39;t care the type in outputs</span>
 <span class="k">def</span> <span class="nf">_matmul_flop_jit</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Count flops for matmul.</span>
@@ -400,7 +400,7 @@
     <span class="k">return</span> <span class="n">flop</span>
 
 
-<span class="c1"># pyre-ignore [2] we don&#39;t care the type in outputs</span>
+<span class="c1"># pyre-fixme [2] we don&#39;t care the type in outputs</span>
 <span class="k">def</span> <span class="nf">_addmm_flop_jit</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Count flops for fully connected layers.</span>
@@ -418,7 +418,7 @@
     <span class="k">return</span> <span class="n">flops</span>
 
 
-<span class="c1"># pyre-ignore [2] we don&#39;t care the type in outputs</span>
+<span class="c1"># pyre-fixme [2] we don&#39;t care the type in outputs</span>
 <span class="k">def</span> <span class="nf">_bmm_flop_jit</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Count flops for the bmm operation.</span>
@@ -463,7 +463,7 @@
 
 
 <span class="k">def</span> <span class="nf">_conv_flop_jit</span><span class="p">(</span>
-    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>  <span class="c1"># pyre-ignore [2] the inputs can be union of Tensor/bool/Tuple</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>  <span class="c1"># pyre-fixme [2] the inputs can be union of Tensor/bool/Tuple</span>
     <span class="n">outputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -483,7 +483,7 @@
     <span class="k">return</span> <span class="p">[</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
 
 
-<span class="c1"># pyre-ignore [2] the inputs can be union of Tensor/bool/Tuple &amp; we don&#39;t care about outputs</span>
+<span class="c1"># pyre-fixme [2] the inputs can be union of Tensor/bool/Tuple &amp; we don&#39;t care about outputs</span>
 <span class="k">def</span> <span class="nf">_conv_backward_flop_jit</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
     <span class="n">grad_out_shape</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">,</span> <span class="n">w_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">[:</span><span class="mi">3</span><span class="p">]]</span>
     <span class="n">output_mask</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
@@ -492,7 +492,7 @@
 
     <span class="k">if</span> <span class="n">output_mask</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
         <span class="n">grad_input_shape</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
-        <span class="c1"># pyre-ignore [58] this is actually sum of Number and Number</span>
+        <span class="c1"># pyre-fixme [58] this is actually sum of Number and Number</span>
         <span class="n">flop_count</span> <span class="o">=</span> <span class="n">flop_count</span> <span class="o">+</span> <span class="n">_conv_flop_count</span><span class="p">(</span>
             <span class="n">grad_out_shape</span><span class="p">,</span> <span class="n">w_shape</span><span class="p">,</span> <span class="n">grad_input_shape</span><span class="p">,</span> <span class="ow">not</span> <span class="n">fwd_transposed</span>
         <span class="p">)</span>
@@ -508,7 +508,7 @@
     <span class="k">return</span> <span class="n">flop_count</span>
 
 
-<span class="c1"># pyre-ignore [5]</span>
+<span class="c1"># pyre-fixme [5]</span>
 <span class="n">flop_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">Number</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">aten</span><span class="o">.</span><span class="n">mm</span><span class="p">:</span> <span class="n">_matmul_flop_jit</span><span class="p">,</span>
     <span class="n">aten</span><span class="o">.</span><span class="n">matmul</span><span class="p">:</span> <span class="n">_matmul_flop_jit</span><span class="p">,</span>
@@ -528,7 +528,7 @@
 <span class="p">}</span>
 
 
-<span class="c1"># pyre-ignore [2, 3] it can be Tuple of anything.</span>
+<span class="c1"># pyre-fixme [2, 3] it can be Tuple of anything.</span>
 <span class="k">def</span> <span class="nf">_normalize_tuple</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,)</span>
@@ -578,7 +578,7 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span></div>
 
-    <span class="c1"># pyre-ignore</span>
+    <span class="c1"># pyre-fixme</span>
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">hook_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_all_hooks</span><span class="p">:</span>
             <span class="n">hook_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
@@ -586,10 +586,10 @@
 
     <span class="k">def</span> <span class="nf">__torch_dispatch__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>  <span class="c1"># pyre-ignore [2] func can be any func</span>
-        <span class="n">types</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>  <span class="c1"># pyre-ignore [2]</span>
-        <span class="n">args</span><span class="o">=</span><span class="p">(),</span>  <span class="c1"># pyre-ignore [2]</span>
-        <span class="n">kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># pyre-ignore [2]</span>
+        <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>  <span class="c1"># pyre-fixme [2] func can be any func</span>
+        <span class="n">types</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span>  <span class="c1"># pyre-fixme [2]</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(),</span>  <span class="c1"># pyre-fixme [2]</span>
+        <span class="n">kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># pyre-fixme [2]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PyTree</span><span class="p">:</span>
         <span class="n">rs</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">outs</span> <span class="o">=</span> <span class="n">_normalize_tuple</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span>
@@ -597,14 +597,14 @@
         <span class="k">if</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">flop_mapping</span><span class="p">:</span>
             <span class="n">flop_count</span> <span class="o">=</span> <span class="n">flop_mapping</span><span class="p">[</span><span class="n">func</span><span class="p">](</span><span class="n">args</span><span class="p">,</span> <span class="n">outs</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="p">:</span>
-                <span class="c1"># pyre-ignore [58]</span>
+                <span class="c1"># pyre-fixme [58]</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">flop_counts</span><span class="p">[</span><span class="n">par</span><span class="p">][</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flop_count</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2"> is not yet supported in FLOPs calculation.&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">rs</span>
 
-    <span class="c1"># pyre-ignore [3]</span>
+    <span class="c1"># pyre-fixme [3]</span>
     <span class="k">def</span> <span class="nf">_create_backwards_push</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">class</span> <span class="nc">PushState</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">Function</span><span class="p">):</span>
             <span class="nd">@staticmethod</span>
@@ -627,7 +627,7 @@
         <span class="c1"># using a function parameter.</span>
         <span class="k">return</span> <span class="n">PushState</span><span class="o">.</span><span class="n">apply</span>
 
-    <span class="c1"># pyre-ignore [3]</span>
+    <span class="c1"># pyre-fixme [3]</span>
     <span class="k">def</span> <span class="nf">_create_backwards_pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">class</span> <span class="nc">PopState</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">Function</span><span class="p">):</span>
             <span class="nd">@staticmethod</span>
@@ -651,9 +651,9 @@
         <span class="c1"># using a function parameter.</span>
         <span class="k">return</span> <span class="n">PopState</span><span class="o">.</span><span class="n">apply</span>
 
-    <span class="c1"># pyre-ignore [3] Return a callable function</span>
+    <span class="c1"># pyre-fixme [3] Return a callable function</span>
     <span class="k">def</span> <span class="nf">_enter_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="c1"># pyre-ignore [2, 3]</span>
+        <span class="c1"># pyre-fixme [2, 3]</span>
         <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
             <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span>
             <span class="n">parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
@@ -663,9 +663,9 @@
 
         <span class="k">return</span> <span class="n">f</span>
 
-    <span class="c1"># pyre-ignore [3] Return a callable function</span>
+    <span class="c1"># pyre-fixme [3] Return a callable function</span>
     <span class="k">def</span> <span class="nf">_exit_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="c1"># pyre-ignore [2, 3]</span>
+        <span class="c1"># pyre-fixme [2, 3]</span>
         <span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">outputs</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
             <span class="n">parents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span>
             <span class="k">assert</span> <span class="n">parents</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span>

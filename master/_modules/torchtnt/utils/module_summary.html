@@ -574,9 +574,9 @@
 
 <span class="k">def</span> <span class="nf">_get_module_flops_and_activation_sizes</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
-    <span class="c1"># pyre-ignore</span>
+    <span class="c1"># pyre-fixme</span>
     <span class="n">module_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="c1"># pyre-ignore</span>
+    <span class="c1"># pyre-fixme</span>
     <span class="n">module_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ModuleSummaryData</span><span class="p">:</span>
     <span class="c1"># a mapping from module name to activation size tuple (in_size, out_size)</span>
@@ -674,9 +674,9 @@
 
 <div class="viewcode-block" id="get_module_summary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.get_module_summary.html#torchtnt.utils.module_summary.get_module_summary">[docs]</a><span class="k">def</span> <span class="nf">get_module_summary</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
-    <span class="c1"># pyre-ignore</span>
+    <span class="c1"># pyre-fixme</span>
     <span class="n">module_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="c1"># pyre-ignore</span>
+    <span class="c1"># pyre-fixme</span>
     <span class="n">module_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModuleSummary</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1034,13 +1034,13 @@
     <span class="n">activation_sizes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
         <span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span>
     <span class="p">],</span>
-    <span class="c1"># pyre-ignore: Invalid type parameters [24]</span>
+    <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]:</span>
-    <span class="c1"># pyre-ignore: Missing parameter annotation [2]</span>
+    <span class="c1"># pyre-fixme: Missing parameter annotation [2]</span>
     <span class="k">def</span> <span class="nf">intermediate_hook</span><span class="p">(</span>
         <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
-        <span class="c1"># pyre-ignore</span>
+        <span class="c1"># pyre-fixme</span>
         <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="n">_</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">inp</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -1055,9 +1055,9 @@
 
 <span class="k">def</span> <span class="nf">_forward_time_pre_hook</span><span class="p">(</span>
     <span class="n">timer_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
-    <span class="c1"># pyre-ignore: Invalid type parameters [24]</span>
+    <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]:</span>
-    <span class="c1"># pyre-ignore: Missing parameter annotation [2]</span>
+    <span class="c1"># pyre-fixme: Missing parameter annotation [2]</span>
     <span class="k">def</span> <span class="nf">intermediate_hook</span><span class="p">(</span>
         <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
@@ -1072,9 +1072,9 @@
 <span class="k">def</span> <span class="nf">_forward_time_hook</span><span class="p">(</span>
     <span class="n">timer_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
     <span class="n">elapsed_times</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-    <span class="c1"># pyre-ignore: Invalid type parameters [24]</span>
+    <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]:</span>
-    <span class="c1"># pyre-ignore: Missing parameter annotation [2]</span>
+    <span class="c1"># pyre-fixme: Missing parameter annotation [2]</span>
     <span class="k">def</span> <span class="nf">intermediate_hook</span><span class="p">(</span>
         <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
@@ -1090,7 +1090,7 @@
 
 <span class="k">def</span> <span class="nf">_register_hooks</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
-    <span class="c1"># pyre-ignore: Invalid type parameters [24]</span>
+    <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
     <span class="n">hooks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">_HookType</span><span class="p">]],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">RemovableHandle</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>

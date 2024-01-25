@@ -678,14 +678,14 @@
     <span class="n">system_stats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">cpu_stats</span> <span class="o">=</span> <span class="n">get_psutil_cpu_stats</span><span class="p">()</span>
 
-    <span class="c1"># pyre-ignore</span>
+    <span class="c1"># pyre-fixme</span>
     <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cpu_stats</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">gpu_stats</span> <span class="o">=</span> <span class="n">get_nvidia_smi_gpu_stats</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
-            <span class="c1"># pyre-ignore</span>
+            <span class="c1"># pyre-fixme</span>
             <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">gpu_stats</span><span class="p">)</span>
             <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">memory_stats</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
