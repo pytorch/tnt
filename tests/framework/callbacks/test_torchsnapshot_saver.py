@@ -374,7 +374,7 @@ class DummyStatefulDataLoader:
         self.state_dict_call_count += 1
         return {}
 
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+    def load_state_dict(self, state_dict: Dict[str, Any], strict: bool = True) -> None:
         self.load_state_dict_call_count += 1
         return None
 
