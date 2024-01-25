@@ -469,6 +469,9 @@
 </div>
 <p>By specifying the monitored metric to be “train_loss”, the checkpointer will expect the <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> to have a “train_loss” attribute at the time of checkpointing, and it will cast this value to a float and append the value to the checkpoint path name. This attribute is expected to be computed and kept up to date appropriately in the unit by the user.</p>
 <p>Later on, the best checkpoint can be loaded via</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TorchSnapshotSaver</span><span class="o">.</span><span class="n">restore_from_best</span><span class="p">(</span><span class="n">your_dirpath_here</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="s2">&quot;train_loss&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>If you’d like to monitor a validation metric (say validation loss after each eval epoch during <a class="reference internal" href="framework/fit.html#torchtnt.framework.fit.fit" title="torchtnt.framework.fit.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a>), you can use the <cite>save_every_n_eval_epochs</cite> flag instead, like so</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
