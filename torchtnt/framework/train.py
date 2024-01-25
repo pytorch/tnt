@@ -223,7 +223,7 @@ def _train_epoch_impl(
             ):
                 _evaluate_impl(
                     state,
-                    # pyre-ignore: Incompatible parameter type [6]
+                    # pyre-fixme: Incompatible parameter type [6]
                     train_unit,
                     callback_handler,
                 )
@@ -257,7 +257,7 @@ def _train_epoch_impl(
     ):
         _evaluate_impl(
             state,
-            # pyre-ignore: Incompatible parameter type [6]
+            # pyre-fixme: Incompatible parameter type [6]
             train_unit,
             callback_handler,
         )

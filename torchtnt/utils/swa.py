@@ -9,7 +9,7 @@ from typing import Callable, List, Literal, Optional
 import torch
 
 # TODO: torch/optim/swa_utils.pyi needs to be updated
-# pyre-ignore Undefined import [21]: Could not find a name `get_ema_multi_avg_fn` defined in module `torch.optim.swa_utils`.
+# pyre-fixme Undefined import [21]: Could not find a name `get_ema_multi_avg_fn` defined in module `torch.optim.swa_utils`.
 from torch.optim.swa_utils import (
     AveragedModel as PyTorchAveragedModel,
     get_ema_multi_avg_fn,
@@ -55,11 +55,11 @@ class AveragedModel(PyTorchAveragedModel):
                 raise ValueError(f"Decay must be between 0 and 1, got {ema_decay}")
 
             # TODO: torch/optim/swa_utils.pyi needs to be updated
-            # pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_ema_multi_avg_fn`.
+            # pyre-fixme Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_ema_multi_avg_fn`.
             multi_avg_fn = get_ema_multi_avg_fn(ema_decay)
         elif averaging_method == "swa":
             # TODO: torch/optim/swa_utils.pyi needs to be updated
-            # pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_swa_multi_avg_fn`.
+            # pyre-fixme Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_swa_multi_avg_fn`.
             multi_avg_fn = get_swa_multi_avg_fn()
 
             if use_lit:
@@ -88,7 +88,7 @@ class AveragedModel(PyTorchAveragedModel):
             # use default init implementation
 
             # TODO: torch/optim/swa_utils.pyi needs to be updated
-            # pyre-ignore Unexpected keyword [28]
+            # pyre-fixme Unexpected keyword [28]
             super().__init__(
                 model,
                 device=device,
@@ -104,6 +104,6 @@ class AveragedModel(PyTorchAveragedModel):
             )
 
             # TODO: torch/optim/swa_utils.pyi needs to be updated
-            # pyre-ignore Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_ema_multi_avg_fn`.
+            # pyre-fixme Undefined attribute [16]: Module `torch.optim.swa_utils` has no attribute `get_ema_multi_avg_fn`.
             self.multi_avg_fn = get_ema_multi_avg_fn(decay)
         super().update_parameters(model)

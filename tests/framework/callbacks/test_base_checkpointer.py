@@ -664,7 +664,7 @@ class BaseCheckpointerTest(unittest.TestCase):
                     save_every_n_epochs=1,
                     best_checkpoint_config=BestCheckpointConfig(
                         monitored_metric="train_loss",
-                        # pyre-ignore: Incompatible parameter type [6]
+                        # pyre-fixme: Incompatible parameter type [6]
                         mode=mode,
                     ),
                 )

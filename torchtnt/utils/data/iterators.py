@@ -343,7 +343,7 @@ class RandomizedBatchSamplerIterator(MultiIterator):
                 name: torch.IntTensor([idx])
                 for idx, name in enumerate(self._iterator_names)
             }
-            # pyre-ignore[4]: missing attribute annotation
+            # pyre-fixme[4]: missing attribute annotation
             self._process_group = dist.new_group(backend="gloo", ranks=None)
 
         self._iterators_finished: List[str] = []

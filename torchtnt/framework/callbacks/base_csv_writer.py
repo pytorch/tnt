@@ -59,7 +59,7 @@ class BaseCSVWriter(Callback, ABC):
         self,
         state: State,
         unit: TPredictUnit,
-        # pyre-ignore: Missing parameter annotation [2]
+        # pyre-fixme: Missing parameter annotation [2]
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:
         ...
