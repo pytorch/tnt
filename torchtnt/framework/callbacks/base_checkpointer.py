@@ -12,7 +12,6 @@ from datetime import timedelta
 from typing import Any, cast, Iterable, List, Literal, Optional, Union
 
 import torch.distributed as dist
-from pyre_extensions import none_throws
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks._checkpoint_utils import (
