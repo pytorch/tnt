@@ -4,7 +4,7 @@ TNT
 **TNT** is a library for PyTorch **t**rai**n**ing **t**ools and utilities.
 
 <p align="center">
-<a href="https://github.com/pytorch/tnt/actions?query=branch%3Amaster"><img src="https://img.shields.io/github/actions/workflow/status/pytorch/tnt/test.yml?branch=master" alt="build status"></a>
+<a href="https://github.com/pytorch/tnt/actions?query=branch%3Amaster"><img src="https://img.shields.io/github/actions/workflow/status/pytorch/tnt/test.yaml?branch=master" alt="build status"></a>
 <a href="https://pypi.org/project/torchtnt"><img src="https://img.shields.io/pypi/v/torchtnt" alt="pypi version"></a>
 <a href="https://anaconda.org/conda-forge/torchtnt"><img src="https://img.shields.io/conda/vn/conda-forge/torchtnt" alt="pypi version"></a>
 <a href="https://pypi.org/project/torchtnt-nightly"><img src="https://img.shields.io/pypi/v/torchtnt-nightly?label=nightly" alt="pypi nightly version"></a>
