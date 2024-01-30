@@ -10,6 +10,7 @@ from typing import Iterable, List, Optional
 from torchtnt.framework._callback_handler import CallbackHandler
 from torchtnt.framework._loop_utils import _log_api_usage
 from torchtnt.framework.callback import Callback
+from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.framework.train import _train_impl
 from torchtnt.framework.unit import (
@@ -33,6 +34,7 @@ def fit(
     max_steps: Optional[int] = None,
     max_train_steps_per_epoch: Optional[int] = None,
     max_eval_steps_per_epoch: Optional[int] = None,
+    num_sanity_eval_steps: Optional[int] = None,
     evaluate_every_n_steps: Optional[int] = None,
     evaluate_every_n_epochs: Optional[int] = 1,
     callbacks: Optional[List[Callback]] = None,
@@ -51,6 +53,7 @@ def fit(
         max_steps: the max number of steps to run for training. ``None`` means no limit (infinite training) unless stopped by max_epochs.
         max_train_steps_per_epoch: the max number of steps to run per epoch for training. None means train until ``train_dataloader`` is exhausted.
         max_eval_steps_per_epoch: the max number of steps to run per epoch for evaluation. None means evaluate until ``eval_dataloader`` is exhausted.
+        num_sanity_eval_steps: number of steps to run a sanity check evaluation before starting the main training loop. Intended to catch any bug in evaluation without needing to wait for the first evaluation to occur.
         evaluate_every_n_steps: how often to run the evaluation loop in terms of training steps.
         evaluate_every_n_epochs: how often to run the evaluation loop in terms of training epochs.
         callbacks: an optional list of callbacks.
@@ -123,9 +126,18 @@ def fit(
         f"max_steps={max_steps} "
         f"max_train_steps_per_epoch={max_train_steps_per_epoch} "
         f"max_eval_steps_per_epoch={max_eval_steps_per_epoch} "
+        f"num_sanity_eval_steps={num_sanity_eval_steps} "
         f"evaluate_every_n_steps={evaluate_every_n_steps} "
         f"evaluate_every_n_epochs={evaluate_every_n_epochs} "
     )
+
+    if num_sanity_eval_steps is not None:
+        evaluate(
+            unit,
+            eval_dataloader,
+            max_steps_per_epoch=num_sanity_eval_steps,
+        )
+        logger.info("Completed sanity check evaluation")
 
     try:
         _train_impl(state, unit, callback_handler)

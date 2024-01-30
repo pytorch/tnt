@@ -326,3 +326,31 @@ class FitTest(unittest.TestCase):
         )
         self.assertIn("train.next(data_iter)", timer.recorded_durations.keys())
         self.assertIn("evaluate.next(data_iter)", timer.recorded_durations.keys())
+
+    def test_fit_num_sanity_eval_steps(self) -> None:
+        """
+        Test that the number of sanity check evaluation steps is set correctly
+        """
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_steps_per_epoch = 1
+        max_epochs = 1
+        evaluate_every_n_epochs = 1
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        with self.assertLogs(level="INFO") as log:
+            fit(
+                DummyFitUnit(input_dim=input_dim),
+                train_dataloader=dataloader,
+                eval_dataloader=dataloader,
+                max_train_steps_per_epoch=max_steps_per_epoch,
+                num_sanity_eval_steps=5,
+                max_epochs=max_epochs,
+                evaluate_every_n_epochs=evaluate_every_n_epochs,
+            )
+            self.assertIn(
+                "INFO:torchtnt.framework.fit:Completed sanity check evaluation",
+                log.output,
+            )
