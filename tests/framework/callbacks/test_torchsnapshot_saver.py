@@ -27,6 +27,7 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
 from torchtnt.framework.callbacks.torchsnapshot_saver import (
+    _exclude_progress_from_replicated,
     _override_knobs,
     TorchSnapshotSaver,
 )
@@ -362,6 +363,68 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         snapshot_cb._sync_snapshot = MagicMock()
         snapshot_cb.on_train_step_end(state, my_unit)
         snapshot_cb._sync_snapshot.assert_called_once()
+
+    def test_exclude_progress_from_replicated(self) -> None:
+        """
+        Tests that replicated is populated correctly with progress excluded
+        """
+
+        module = nn.Linear(2, 3)
+        my_unit = DummyAutoUnit(module=module)
+        keys = my_unit.app_state().keys()
+
+        progress_keys = {"train_progress", "eval_progress", "predict_progress"}
+
+        replicated = _exclude_progress_from_replicated(my_unit.app_state())
+        for key in keys:
+            if key not in progress_keys:
+                self.assertIn(f"{key}/**", replicated)
+
+        # since we exclude 3 keys (train, eval, predict)
+        self.assertEqual(len(keys) - 3, len(replicated))
+
+        # check that progress is not included
+        for progress_key in progress_keys:
+            self.assertNotIn(f"{progress_key}/", replicated)
+
+    @patch("torchtnt.framework.callbacks.torchsnapshot_saver.Snapshot.take")
+    def test_exclude_progress_from_replicated_e2e(self, mock_take: MagicMock) -> None:
+        """
+        Tests that replicated is populated correctly during snapshotting
+        """
+
+        module = nn.Linear(2, 3)
+        my_unit = DummyAutoUnit(module=module)
+        state = get_dummy_train_state()
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for replicated_value in (None, ["optimizer/**"], ["**"]):
+                tss = TorchSnapshotSaver(
+                    dirpath=temp_dir,
+                    save_every_n_train_steps=1,
+                    async_checkpoint=False,
+                    replicated=replicated_value,
+                )
+
+                progress_keys = {"train_progress", "eval_progress", "predict_progress"}
+
+                tss.on_train_step_end(state, my_unit)
+                replicated = mock_take.call_args.kwargs["replicated"]
+
+                if replicated_value is None:
+                    self.assertEqual(replicated, [])
+                elif replicated_value == ["optimizer/**"]:
+                    self.assertEqual(replicated, ["optimizer/**"])
+                elif replicated_value == ["**"]:
+                    expected_replicated = [
+                        f"{key}/**"
+                        for key in my_unit.app_state().keys()
+                        if key not in progress_keys
+                    ]
+                    # this is added outside of the unit's app_state so it should be included
+                    expected_replicated.append("rng_state/**")
+
+                    self.assertEqual(set(replicated), set(expected_replicated))
 
 
 class DummyStatefulDataLoader:
