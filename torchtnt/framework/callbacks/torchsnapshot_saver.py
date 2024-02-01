@@ -216,12 +216,16 @@ class TorchSnapshotSaver(BaseCheckpointer):
                 )
                 return False
 
+        replicated = self._replicated
+        if self._replicated == {"**"}:
+            replicated = _exclude_progress_from_replicated(app_state)
+
         with _override_knobs(self._knob_options):
             self._prev_snapshot = Snapshot.async_take(
                 str(snapshot_path),
                 app_state=app_state,
                 pg=self._process_group,
-                replicated=list(self._replicated),
+                replicated=list(replicated),
                 storage_options=self._storage_options,
             )
         rank_zero_info(f"Saving snapshot to path: {snapshot_path}", logger=logger)
@@ -232,6 +236,10 @@ class TorchSnapshotSaver(BaseCheckpointer):
         snapshot_path: str,
         app_state: Dict[str, _TStateful],
     ) -> bool:
+        replicated = self._replicated
+        if self._replicated == {"**"}:
+            replicated = _exclude_progress_from_replicated(app_state)
+
         with _override_knobs(self._knob_options):
             rank_zero_info(
                 f"Started saving snapshot to path: {snapshot_path}", logger=logger
@@ -240,7 +248,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
                 str(snapshot_path),
                 app_state=app_state,
                 pg=self._process_group,
-                replicated=list(self._replicated),
+                replicated=list(replicated),
                 storage_options=self._storage_options,
             )
         rank_zero_info(
@@ -314,6 +322,22 @@ class TorchSnapshotSaver(BaseCheckpointer):
         with _override_knobs(knob_options):
             snapshot.restore(app_state)
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
+
+
+def _exclude_progress_from_replicated(app_state: Dict[str, _TStateful]) -> Set[str]:
+    """
+    Excludes progress state from being replicated. Called if replicated=["**"] is passed in.
+    Works by populating replicated with all possible keys from app_state, except for
+    the keys that match the "{train,eval,predict}_progress/**" pattern.
+    """
+
+    filtered_replicated = set()
+    progress_keys = {"train_progress", "eval_progress", "predict_progress"}
+    for key in app_state.keys():
+        if key in progress_keys:
+            continue
+        filtered_replicated.add(f"{key}/**")
+    return filtered_replicated
 
 
 def _validate_snapshot_available() -> None:
