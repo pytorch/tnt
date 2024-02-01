@@ -581,12 +581,16 @@
                 <span class="p">)</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
+        <span class="n">replicated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;**&quot;</span><span class="p">}:</span>
+            <span class="n">replicated</span> <span class="o">=</span> <span class="n">_exclude_progress_from_replicated</span><span class="p">(</span><span class="n">app_state</span><span class="p">)</span>
+
         <span class="k">with</span> <span class="n">_override_knobs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_knob_options</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prev_snapshot</span> <span class="o">=</span> <span class="n">Snapshot</span><span class="o">.</span><span class="n">async_take</span><span class="p">(</span>
                 <span class="nb">str</span><span class="p">(</span><span class="n">snapshot_path</span><span class="p">),</span>
                 <span class="n">app_state</span><span class="o">=</span><span class="n">app_state</span><span class="p">,</span>
                 <span class="n">pg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span><span class="p">,</span>
-                <span class="n">replicated</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span><span class="p">),</span>
+                <span class="n">replicated</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">replicated</span><span class="p">),</span>
                 <span class="n">storage_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage_options</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="n">rank_zero_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving snapshot to path: </span><span class="si">{</span><span class="n">snapshot_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
@@ -597,6 +601,10 @@
         <span class="n">snapshot_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">replicated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;**&quot;</span><span class="p">}:</span>
+            <span class="n">replicated</span> <span class="o">=</span> <span class="n">_exclude_progress_from_replicated</span><span class="p">(</span><span class="n">app_state</span><span class="p">)</span>
+
         <span class="k">with</span> <span class="n">_override_knobs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_knob_options</span><span class="p">):</span>
             <span class="n">rank_zero_info</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Started saving snapshot to path: </span><span class="si">{</span><span class="n">snapshot_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span>
@@ -605,7 +613,7 @@
                 <span class="nb">str</span><span class="p">(</span><span class="n">snapshot_path</span><span class="p">),</span>
                 <span class="n">app_state</span><span class="o">=</span><span class="n">app_state</span><span class="p">,</span>
                 <span class="n">pg</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span><span class="p">,</span>
-                <span class="n">replicated</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_replicated</span><span class="p">),</span>
+                <span class="n">replicated</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">replicated</span><span class="p">),</span>
                 <span class="n">storage_options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_storage_options</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="n">rank_zero_info</span><span class="p">(</span>
@@ -679,6 +687,22 @@
         <span class="k">with</span> <span class="n">_override_knobs</span><span class="p">(</span><span class="n">knob_options</span><span class="p">):</span>
             <span class="n">snapshot</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">app_state</span><span class="p">)</span>
         <span class="n">rank_zero_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Restored snapshot from path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_exclude_progress_from_replicated</span><span class="p">(</span><span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Excludes progress state from being replicated. Called if replicated=[&quot;**&quot;] is passed in.</span>
+<span class="sd">    Works by populating replicated with all possible keys from app_state, except for</span>
+<span class="sd">    the keys that match the &quot;{train,eval,predict}_progress/**&quot; pattern.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">filtered_replicated</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">progress_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train_progress&quot;</span><span class="p">,</span> <span class="s2">&quot;eval_progress&quot;</span><span class="p">,</span> <span class="s2">&quot;predict_progress&quot;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">app_state</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">progress_keys</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">filtered_replicated</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">/**&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">filtered_replicated</span>
 
 
 <span class="k">def</span> <span class="nf">_validate_snapshot_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
