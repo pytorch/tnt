@@ -851,7 +851,7 @@
             <span class="n">activation_checkpoint_params</span><span class="o">=</span><span class="n">activation_checkpoint_params</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">grad_scaler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradScaler</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_scaler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">GradScaler</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">grad_scaler</span> <span class="o">=</span> <span class="n">get_grad_scaler_from_precision</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
