@@ -38,7 +38,7 @@ def convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:
 
 def get_grad_scaler_from_precision(
     precision: torch.dtype, module: torch.nn.Module
-) -> Optional[GradScaler]:
+) -> Optional[torch.amp.GradScaler]:
     """
     Returns the correct grad scaler to use based on the precision and whether
     or not the model is FSDP.

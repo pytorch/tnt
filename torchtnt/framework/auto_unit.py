@@ -486,7 +486,7 @@ class AutoUnit(
             activation_checkpoint_params=activation_checkpoint_params,
         )
 
-        self.grad_scaler: Optional[GradScaler] = None
+        self.grad_scaler: Optional[torch.amp.GradScaler] = None
         if self.precision:
             self.grad_scaler = get_grad_scaler_from_precision(
                 self.precision,
