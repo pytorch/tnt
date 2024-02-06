@@ -13,7 +13,6 @@ from typing import Any, Generic, Iterator, List, Optional, Tuple, TypeVar, Union
 
 import torch
 from pyre_extensions import none_throws
-from torch.cuda.amp import GradScaler
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import SWALR
