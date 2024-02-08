@@ -51,7 +51,7 @@ def init_from_env(
     """Utility function that initializes the device and process group, if applicable.
 
     The global process group is initialized only if:
-        - torch.distributed is available is not already initialized
+        - torch.distributed is available and has not already been initialized
         - the program has been launched on multiple processes
 
     This is intended as a convenience to include at the beginning of scripts that follow
