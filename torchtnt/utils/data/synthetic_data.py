@@ -10,7 +10,7 @@ from __future__ import annotations
 import abc
 import logging
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Generic, TypeVar
 
 import torch
 from torch.utils.data import Dataset
@@ -19,15 +19,18 @@ from torchtnt.utils.device import get_device_from_env
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+TItem = TypeVar("TItem")
+
 
 @dataclass
-class AbstractRandomDataset(Dataset, abc.ABC):
+class AbstractRandomDataset(Dataset, abc.ABC, Generic[TItem]):
     """
     An abstract base class for random datasets.
 
     Intended for subclassing, this class provides the framework for implementing
-    custom random datasets. Each subclass should provide
-    a concrete implementation of the `_generate_random_item` method.
+    custom random datasets. Each subclass should provide a concrete implementation
+    of the `_generate_random_item` method that produces a single random dataset
+    item of type `TItem`.
 
     Attributes:
         size (int, default=100): The total number of items the dataset will contain.
@@ -49,7 +52,7 @@ class AbstractRandomDataset(Dataset, abc.ABC):
         """
         return self.size
 
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> TItem:
         """
         Fetch a dataset item by index.
 
@@ -57,8 +60,7 @@ class AbstractRandomDataset(Dataset, abc.ABC):
             idx (int): Index of the desired dataset item.
 
         Returns:
-            Dict[str, torch.Tensor]: Dictionary containing dataset attributes, primarily tensors.
-            The exact keys depend on the implementation of `_generate_random_item`.
+            TItem: A single random item of type `TItem`.
 
         Raises:
             IndexError: If the provided index is out of valid range.
@@ -69,15 +71,14 @@ class AbstractRandomDataset(Dataset, abc.ABC):
         raise IndexError(f"Index {idx} out of range [0, {self.size-1}]")
 
     @abc.abstractmethod
-    def _generate_random_item(self) -> Dict[str, torch.Tensor]:
+    def _generate_random_item(self) -> TItem:
         """
         Abstract method to produce a random dataset item.
 
         Subclasses must override this to define their specific random item generation.
 
         Returns:
-            Dict[str, torch.Tensor]: Dictionary containing item attributes and tensors.
-            The exact keys depend on the implementation of `_generate_random_item`.
+            TItem: A single random item of type `TItem`.
         """
         raise NotImplementedError(
             "Subclasses of AbstractRandomDataset should implement _generate_random_item."
