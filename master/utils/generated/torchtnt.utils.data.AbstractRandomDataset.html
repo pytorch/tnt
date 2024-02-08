@@ -375,8 +375,9 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.data.</span></code><code class="sig-name descname"><span class="pre">AbstractRandomDataset</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/utils/data/synthetic_data.html#AbstractRandomDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.data.AbstractRandomDataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>An abstract base class for random datasets.</p>
 <p>Intended for subclassing, this class provides the framework for implementing
-custom random datasets. Each subclass should provide
-a concrete implementation of the <cite>_generate_random_item</cite> method.</p>
+custom random datasets. Each subclass should provide a concrete implementation
+of the <cite>_generate_random_item</cite> method that produces a single random dataset
+item of type <cite>TItem</cite>.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="torchtnt.utils.data.AbstractRandomDataset.size">
 <code class="sig-name descname"><span class="pre">size</span></code><a class="headerlink" href="#torchtnt.utils.data.AbstractRandomDataset.size" title="Permalink to this definition">¶</a></dt>
