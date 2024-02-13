@@ -4,7 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Optional
+import io
+from typing import Optional, TextIO, Union
 
 from pyre_extensions import none_throws
 
@@ -27,10 +28,16 @@ class TQDMProgressBar(Callback):
 
     Args:
         refresh_rate: Determines at which rate (in number of steps) the progress bars get updated.
+        file: specifies where to output the progress messages (default: sys.stderr)
     """
 
-    def __init__(self, refresh_rate: int = 1) -> None:
+    def __init__(
+        self,
+        refresh_rate: int = 1,
+        file: Optional[Union[TextIO, io.StringIO]] = None,
+    ) -> None:
         self._refresh_rate = refresh_rate
+        self._file = file
 
         self._train_progress_bar: Optional[tqdm] = None
         self._eval_progress_bar: Optional[tqdm] = None
@@ -46,6 +53,7 @@ class TQDMProgressBar(Callback):
                 num_steps_completed=unit.train_progress.num_steps_completed_in_epoch,
                 max_steps=train_state.max_steps,
                 max_steps_per_epoch=train_state.max_steps_per_epoch,
+                file=self._file,
             )
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
@@ -76,6 +84,7 @@ class TQDMProgressBar(Callback):
                 num_steps_completed=unit.eval_progress.num_steps_completed_in_epoch,
                 max_steps=eval_state.max_steps,
                 max_steps_per_epoch=eval_state.max_steps_per_epoch,
+                file=self._file,
             )
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
@@ -106,6 +115,7 @@ class TQDMProgressBar(Callback):
                 num_steps_completed=unit.predict_progress.num_steps_completed,
                 max_steps=predict_state.max_steps,
                 max_steps_per_epoch=predict_state.max_steps_per_epoch,
+                file=self._file,
             )
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
