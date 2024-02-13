@@ -1,4 +1,4 @@
 torch
 torcheval
 torchtnt
-torchvision==0.15.2
+torchvision

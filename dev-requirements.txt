@@ -3,4 +3,4 @@ pytest
 pytest-cov
 torchsnapshot-nightly
 pyre-check
-torchvision
+torchvision==0.16.2
