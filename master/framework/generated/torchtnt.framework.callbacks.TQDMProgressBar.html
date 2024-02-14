@@ -372,14 +372,18 @@
 <h1>TQDMProgressBar<a class="headerlink" href="#tqdmprogressbar" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.framework.callbacks.TQDMProgressBar">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TQDMProgressBar</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">refresh_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/tqdm_progress_bar.html#TQDMProgressBar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TQDMProgressBar</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">refresh_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">TextIO</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">StringIO</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/tqdm_progress_bar.html#TQDMProgressBar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TQDMProgressBar" title="Permalink to this definition">¶</a></dt>
 <dd><p>A callback for progress bar visualization in training, evaluation, and prediction.
 It is initialized only on rank 0 in distributed environments.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>refresh_rate</strong> – Determines at which rate (in number of steps) the progress bars get updated.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>refresh_rate</strong> – Determines at which rate (in number of steps) the progress bars get updated.</li>
+<li><strong>file</strong> – specifies where to output the progress messages (default: sys.stderr)</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
