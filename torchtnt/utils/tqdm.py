@@ -5,8 +5,9 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+import io
 import logging
-from typing import Iterable, Optional
+from typing import Iterable, Optional, TextIO, Union
 
 from torchtnt.utils.progress import estimated_steps_in_epoch
 from tqdm.auto import tqdm
@@ -22,6 +23,7 @@ def create_progress_bar(
     num_steps_completed: int,
     max_steps: Optional[int],
     max_steps_per_epoch: Optional[int],
+    file: Optional[Union[TextIO, io.StringIO]] = None,
 ) -> tqdm:
     """Constructs a :func:`tqdm` progress bar. The number of steps in an epoch is inferred from the dataloader, num_steps_completed, max_steps and max_steps_per_epoch.
 
@@ -32,6 +34,7 @@ def create_progress_bar(
         num_steps_completed: an integer for the number of steps completed so far in the loop.
         max_steps: an optional integer for the number of max steps in the loop.
         max_steps_per_epoch: an optional integer for the number of max steps per epoch.
+        file: specifies where to output the progress messages (default: sys.stderr)
     """
     current_epoch = num_epochs_completed
     total = estimated_steps_in_epoch(
@@ -45,6 +48,7 @@ def create_progress_bar(
         total=total,
         initial=num_steps_completed,
         bar_format="{l_bar}{bar}{r_bar}\n",
+        file=file,
     )
 
 
