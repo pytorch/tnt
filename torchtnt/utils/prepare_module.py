@@ -77,7 +77,7 @@ class DDPStrategy(Strategy):
     ] = None
 
     # SyncBatchNorm params
-    sync_batchnorm: bool = True
+    sync_batchnorm: bool = False
 
 
 @dataclass
