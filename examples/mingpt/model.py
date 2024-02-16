@@ -20,10 +20,10 @@ from torch.nn import functional as F
 
 @dataclass
 class GPTConfig:
-    model_type: str = "gpt2"
     n_layer: int
     n_head: int
     n_embd: int
+    model_type: str = "gpt2"
     # openai's values for gpt2
     vocab_size: int = 50257
     block_size: int = 1024
