@@ -32,6 +32,13 @@ To update to the latest version from master:
 
 Documentation
 ---------------
+.. toctree::
+      :maxdepth: 1
+      :caption: Overview
+      :glob:
+
+      overview
+
 .. fbcode::
 
    .. toctree::
