@@ -27,13 +27,9 @@ from torchtnt.framework._test_utils import (
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.callbacks.dcp_saver import DistributedCheckpointSaver
 from torchtnt.framework.train import train
-from torchtnt.utils.distributed import get_global_rank
+from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
 from torchtnt.utils.env import seed
-from torchtnt.utils.test_utils import (
-    skip_if_not_distributed,
-    skip_if_not_gpu,
-    spawn_multi_process,
-)
+from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 
 
 class DistributedCheckpointSaverTest(unittest.TestCase):

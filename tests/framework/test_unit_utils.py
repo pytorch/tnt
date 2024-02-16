@@ -17,12 +17,9 @@ from torchtnt.framework._unit_utils import (
     _step_requires_iterator,
 )
 from torchtnt.framework.state import State
+from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.test_utils import (
-    skip_if_not_distributed,
-    skip_if_not_gpu,
-    spawn_multi_process,
-)
+from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 
 
 class UnitUtilsTest(unittest.TestCase):

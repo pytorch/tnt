@@ -8,18 +8,23 @@
 
 import os
 import tempfile
+from dataclasses import dataclass
+from datetime import timedelta
 from functools import wraps
-from typing import Any, Callable, cast, List, Optional, TypeVar, Union
+from typing import Any, Callable, cast, Dict, List, Optional, TypeVar, Union
 
 import torch
-import torch.distributed as dist
 import torch.nn.functional as F
-from torch import Tensor
+from pyre_extensions import ParameterSpecification
+from torch import distributed as dist, multiprocessing, Tensor
 from torch.distributed.elastic.utils.distributed import get_free_port
 from typing_extensions import Literal
 
+
 T = TypeVar("T")
 DistObjList = Union[List[T], List[None]]
+TParams = ParameterSpecification("TParams")
+TReturn = TypeVar("TReturn")
 
 
 class PGWrapper:
@@ -504,3 +509,81 @@ def sync_bool(
         raise TypeError(
             f'Invalid value for `coherence_mode` provided: Expected type int, float, or one of ("any", "all", "rank_zero"), but received {coherence_mode}.'
         )
+
+
+@dataclass
+class ProcessGroupSetupParams:
+    backend: str
+    port: str
+    world_size: int
+
+
+def spawn_multi_process(
+    world_size: int,
+    backend: str,
+    test_method: Callable[TParams, TReturn],
+    *test_method_args: Any,
+    **test_method_kwargs: Any,
+) -> List[TReturn]:
+    """
+    Spawn single node, multi-rank function.
+    Uses localhost and free port to communicate.
+
+    Args:
+        world_size: number of processes
+        backend: backend to use. for example, "nccl", "gloo", etc
+        test_method: callable to spawn. first 3 arguments are rank, world_size and mp output dict
+        test_method_args: args for the test method
+        test_method_kwargs: kwargs for the test method
+
+    Returns:
+        A list, l, where l[i] is the return value of test_method on rank i
+    """
+    manager = multiprocessing.Manager()
+    mp_output_dict = manager.dict()
+
+    port = str(get_free_port())
+    torch.multiprocessing.spawn(
+        # torch.multiprocessing.spawn sends rank as the first param
+        # https://pytorch.org/docs/stable/multiprocessing.html#torch.multiprocessing.spawn
+        _init_pg_and_rank_and_launch_test,
+        args=(
+            ProcessGroupSetupParams(backend=backend, port=port, world_size=world_size),
+            mp_output_dict,
+            test_method,
+            test_method_args,
+            test_method_kwargs,
+        ),
+        nprocs=world_size,
+    )
+
+    output_list = []
+    for i in range(world_size):
+        output_list.append(mp_output_dict[i])
+
+    return output_list
+
+
+def _init_pg_and_rank_and_launch_test(
+    rank: int,
+    pg_setup_params: ProcessGroupSetupParams,
+    mp_output_dict: Dict[int, object],
+    test_method: Callable[TParams, TReturn],
+    args: List[object],
+    kwargs: Dict[str, object],
+) -> None:
+    os.environ["MASTER_ADDR"] = "localhost"
+    os.environ["MASTER_PORT"] = pg_setup_params.port
+    os.environ["WORLD_SIZE"] = str(pg_setup_params.world_size)
+    os.environ["LOCAL_RANK"] = str(rank)
+    dist.init_process_group(
+        rank=rank,
+        world_size=pg_setup_params.world_size,
+        backend=pg_setup_params.backend,
+        timeout=timedelta(seconds=10),  # setting up timeout for distributed collectives
+    )
+    try:
+        mp_output_dict[rank] = test_method(*args, **kwargs)  # pyre-fixme
+
+    finally:
+        destroy_process_group()

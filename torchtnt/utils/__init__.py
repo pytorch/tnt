@@ -22,6 +22,7 @@ from .distributed import (
     get_process_group_backend_from_device,
     get_world_size,
     PGWrapper,
+    spawn_multi_process,
     sync_bool,
 )
 from .early_stop_checker import EarlyStopChecker
@@ -65,7 +66,7 @@ from .rank_zero_log import (
 )
 from .stateful import Stateful
 from .swa import AveragedModel
-from .test_utils import get_pet_launch_config, spawn_multi_process
+from .test_utils import get_pet_launch_config
 from .timer import FullSyncPeriodicTimer, get_timer_summary, log_elapsed_time, Timer
 from .tqdm import close_progress_bar, create_progress_bar, update_progress_bar
 from .version import (
