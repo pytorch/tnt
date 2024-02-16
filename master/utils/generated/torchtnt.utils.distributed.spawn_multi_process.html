@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>torchtnt.utils.test_utils.spawn_multi_process &mdash; TorchTNT master documentation</title>
+  <title>torchtnt.utils.distributed.spawn_multi_process &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="torchtnt.utils.timer.log_elapsed_time" href="torchtnt.utils.timer.log_elapsed_time.html" />
-    <link rel="prev" title="torchtnt.utils.test_utils.skip_if_asan" href="torchtnt.utils.test_utils.skip_if_asan.html" />
+    <link rel="next" title="torchtnt.utils.distributed.sync_bool" href="torchtnt.utils.distributed.sync_bool.html" />
+    <link rel="prev" title="torchtnt.utils.distributed.revert_sync_batchnorm" href="torchtnt.utils.distributed.revert_sync_batchnorm.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -332,13 +332,13 @@
         
           <li><a href="../utils.html">Utils</a> &gt;</li>
         
-      <li>torchtnt.utils.test_utils.spawn_multi_process</li>
+      <li>torchtnt.utils.distributed.spawn_multi_process</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/utils/generated/torchtnt.utils.test_utils.spawn_multi_process.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/utils/generated/torchtnt.utils.distributed.spawn_multi_process.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -368,11 +368,11 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="torchtnt-utils-test-utils-spawn-multi-process">
-<h1>torchtnt.utils.test_utils.spawn_multi_process<a class="headerlink" href="#torchtnt-utils-test-utils-spawn-multi-process" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="torchtnt-utils-distributed-spawn-multi-process">
+<h1>torchtnt.utils.distributed.spawn_multi_process<a class="headerlink" href="#torchtnt-utils-distributed-spawn-multi-process" title="Permalink to this heading">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="torchtnt.utils.test_utils.spawn_multi_process">
-<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.test_utils.</span></code><code class="sig-name descname"><span class="pre">spawn_multi_process</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">world_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">test_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TReturn</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">test_method_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">test_method_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">TReturn</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/test_utils.html#spawn_multi_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.test_utils.spawn_multi_process" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.utils.distributed.spawn_multi_process">
+<code class="sig-prename descclassname"><span class="pre">torchtnt.utils.distributed.</span></code><code class="sig-name descname"><span class="pre">spawn_multi_process</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">world_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">test_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">TReturn</span><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">test_method_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">test_method_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">TReturn</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/distributed.html#spawn_multi_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.distributed.spawn_multi_process" title="Permalink to this definition">¶</a></dt>
 <dd><p>Spawn single node, multi-rank function.
 Uses localhost and free port to communicate.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -405,10 +405,10 @@ Uses localhost and free port to communicate.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.utils.timer.log_elapsed_time.html" class="btn btn-neutral float-right" title="torchtnt.utils.timer.log_elapsed_time" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.utils.distributed.sync_bool.html" class="btn btn-neutral float-right" title="torchtnt.utils.distributed.sync_bool" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.utils.test_utils.skip_if_asan.html" class="btn btn-neutral" title="torchtnt.utils.test_utils.skip_if_asan" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.utils.distributed.revert_sync_batchnorm.html" class="btn btn-neutral" title="torchtnt.utils.distributed.revert_sync_batchnorm" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -440,7 +440,7 @@ Uses localhost and free port to communicate.</p>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">torchtnt.utils.test_utils.spawn_multi_process</a></li>
+<li><a class="reference internal" href="#">torchtnt.utils.distributed.spawn_multi_process</a></li>
 </ul>
 
             </div>
