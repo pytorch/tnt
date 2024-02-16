@@ -29,6 +29,7 @@ from torchtnt.utils.distributed import (
     PGWrapper,
     rank_zero_fn,
     revert_sync_batchnorm,
+    spawn_multi_process,
     sync_bool,
 )
 from torchtnt.utils.test_utils import get_pet_launch_config, skip_if_not_distributed
@@ -431,3 +432,12 @@ class DistributedTest(unittest.TestCase):
         )
         tc = unittest.TestCase()
         tc.assertEqual(output_list[0], get_local_rank() + 1)
+
+    @staticmethod
+    def _test_method(offset_arg: int, offset_kwarg: int) -> int:
+        return get_global_rank() + offset_arg - offset_kwarg
+
+    @skip_if_not_distributed
+    def test_spawn_multi_process(self) -> None:
+        mp_list = spawn_multi_process(2, "gloo", self._test_method, 3, offset_kwarg=2)
+        self.assertEqual(mp_list, [1, 2])

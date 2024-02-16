@@ -16,11 +16,8 @@ from unittest.mock import Mock, patch
 import torch
 import torch.distributed as dist
 from pyre_extensions import none_throws
-from torchtnt.utils.test_utils import (
-    skip_if_not_distributed,
-    skip_if_not_gpu,
-    spawn_multi_process,
-)
+from torchtnt.utils.distributed import spawn_multi_process
+from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 from torchtnt.utils.timer import (
     BoundedTimer,
     FullSyncPeriodicTimer,

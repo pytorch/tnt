@@ -12,6 +12,7 @@ import torch
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
 from torch.nn.parallel import DistributedDataParallel as DDP
+from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
     _is_fsdp_module,
@@ -23,11 +24,7 @@ from torchtnt.utils.prepare_module import (
     prepare_module,
     TorchCompileParams,
 )
-from torchtnt.utils.test_utils import (
-    skip_if_not_distributed,
-    skip_if_not_gpu,
-    spawn_multi_process,
-)
+from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 from torchtnt.utils.version import is_torch_version_geq_1_13, is_torch_version_geq_2_0
 
 COMPILE_AVAIL = False

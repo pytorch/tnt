@@ -63,6 +63,7 @@ Distributed Utils
    all_gather_tensors
    rank_zero_fn
    revert_sync_batchnorm
+   spawn_multi_process
    sync_bool
 
 
@@ -284,7 +285,6 @@ Test Utils
    is_asan
    is_tsan
    skip_if_asan
-   spawn_multi_process
 
 
 Timer Utils

@@ -29,14 +29,10 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
     get_latest_checkpoint_path,
     rank_zero_read_and_broadcast,
 )
-from torchtnt.utils.distributed import get_global_rank, PGWrapper
+from torchtnt.utils.distributed import get_global_rank, PGWrapper, spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.fsspec import get_filesystem
-from torchtnt.utils.test_utils import (
-    get_pet_launch_config,
-    skip_if_not_distributed,
-    spawn_multi_process,
-)
+from torchtnt.utils.test_utils import get_pet_launch_config, skip_if_not_distributed
 
 METADATA_FNAME: str = ".metadata"
 

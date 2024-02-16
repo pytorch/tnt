@@ -10,13 +10,14 @@ import unittest
 import torch
 import torch.distributed as dist
 from torchtnt.utils.device import get_device_from_env
-from torchtnt.utils.distributed import all_gather_tensors, get_local_rank, PGWrapper
-from torchtnt.utils.env import init_from_env
-from torchtnt.utils.test_utils import (
-    skip_if_not_distributed,
-    skip_if_not_gpu,
+from torchtnt.utils.distributed import (
+    all_gather_tensors,
+    get_local_rank,
+    PGWrapper,
     spawn_multi_process,
 )
+from torchtnt.utils.env import init_from_env
+from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 
 
 class DistributedGPUTest(unittest.TestCase):
