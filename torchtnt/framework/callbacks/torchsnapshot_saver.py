@@ -158,18 +158,16 @@ class TorchSnapshotSaver(BaseCheckpointer):
         """
         Checkpoint the current state of the application.
         """
+        if hook not in ["on_train_step_end", "on_train_epoch_end", "on_train_end"]:
+            raise RuntimeError(f"Unexpected hook encountered '{hook}'")
+
         intra_epoch = False
-        prev_snapshot_wait = False
         curr_snapshot_wait = False
+
         if hook == "on_train_step_end":
             intra_epoch = True
-        elif hook == "on_train_epoch_end":
-            prev_snapshot_wait = True
         elif hook == "on_train_end":
-            prev_snapshot_wait = True
             curr_snapshot_wait = True
-        else:
-            raise RuntimeError(f"Unexpected hook encountered '{hook}'")
 
         app_state = _prepare_app_state_for_checkpoint(state, unit, intra_epoch)
         rng_state = torchsnapshot.RNGState()
@@ -183,9 +181,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
                 # since this is async checkpointed, so in
                 # future, add logic to set  successful flag
                 # only when checkpoint is fully written
-                checkpoint_success = self._async_snapshot(
-                    checkpoint_path, app_state, wait=prev_snapshot_wait
-                )
+                checkpoint_success = self._async_snapshot(checkpoint_path, app_state)
                 if curr_snapshot_wait:
                     self._wait()
         else:
@@ -198,7 +194,9 @@ class TorchSnapshotSaver(BaseCheckpointer):
             self._prev_snapshot.wait()
 
     def _async_snapshot(
-        self, snapshot_path: str, app_state: Dict[str, _TStateful], *, wait: bool
+        self,
+        snapshot_path: str,
+        app_state: Dict[str, _TStateful],
     ) -> bool:
         prev_snapshot = self._prev_snapshot
         if prev_snapshot is not None:
@@ -207,14 +205,15 @@ class TorchSnapshotSaver(BaseCheckpointer):
                 # This can happen if we call _async_snapshot twice at the same step.
                 return False
             still_pending = not prev_snapshot.done()
-            if still_pending and wait:
-                prev_snapshot.wait()
-            elif still_pending:
+            if still_pending:
                 rank_zero_warn(
-                    f"Still writing previous snapshot, will skip this one. Consider increasing 'frequency' (current {self._save_every_n_train_steps})",
+                    (
+                        "Still writing previous snapshot; waiting for it to finish before writing a new one. "
+                        f"Consider increasing 'frequency' (current {self._save_every_n_train_steps})"
+                    ),
                     logger=logger,
                 )
-                return False
+                prev_snapshot.wait()
 
         replicated = self._replicated
         if self._replicated == {"**"}:
