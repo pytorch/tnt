@@ -48,6 +48,7 @@ Documentation
 
       meta/getting_started
       meta/migrating
+      meta/migrating_example
 
 .. toctree::
    :maxdepth: 1
