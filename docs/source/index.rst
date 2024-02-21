@@ -71,6 +71,7 @@ Documentation
 
    distributed
    checkpointing
+   meta/checkpointing_FAQ
 
 .. toctree::
    :maxdepth: 1
