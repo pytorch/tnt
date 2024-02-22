@@ -10,13 +10,14 @@ from unittest.mock import MagicMock, Mock
 
 from torchtnt.framework.callbacks.memory_snapshot import MemorySnapshot
 from torchtnt.framework.state import EntryPoint
+from torchtnt.utils.memory_snapshot_profiler import MemorySnapshotProfiler
 
 
 class TestMemorySnapshot(unittest.TestCase):
     def test_on_train_step_end(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             memory_snapshot = MemorySnapshot(
-                output_dir=temp_dir,
+                memory_snapshot_profiler=MemorySnapshotProfiler(output_dir=temp_dir),
             )
             memory_snapshot.memory_snapshot_profiler = Mock()
 
@@ -28,7 +29,7 @@ class TestMemorySnapshot(unittest.TestCase):
     def test_on_eval_step_end(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             memory_snapshot = MemorySnapshot(
-                output_dir=temp_dir,
+                memory_snapshot_profiler=MemorySnapshotProfiler(output_dir=temp_dir),
             )
             memory_snapshot.memory_snapshot_profiler = Mock()
 
@@ -41,7 +42,7 @@ class TestMemorySnapshot(unittest.TestCase):
     def test_on_predict_step_end(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             memory_snapshot = MemorySnapshot(
-                output_dir=temp_dir,
+                memory_snapshot_profiler=MemorySnapshotProfiler(output_dir=temp_dir),
             )
             memory_snapshot.memory_snapshot_profiler = Mock()
 

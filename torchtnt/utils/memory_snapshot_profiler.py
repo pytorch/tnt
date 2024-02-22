@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import logging
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from types import TracebackType
 from typing import Optional, Type
@@ -39,7 +40,36 @@ class MemorySnapshotParams:
     enable_oom_observer: bool = True
 
 
-class MemorySnapshotProfiler:
+class MemorySnapshotProfilerBase(ABC):
+    """
+    Base class for memory snapshot profiler.
+    """
+
+    def __enter__(self) -> None:
+        self.start()
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        self.stop()
+
+    @abstractmethod
+    def start(self) -> None:
+        ...
+
+    @abstractmethod
+    def stop(self) -> None:
+        ...
+
+    @abstractmethod
+    def step(self) -> None:
+        ...
+
+
+class MemorySnapshotProfiler(MemorySnapshotProfilerBase):
     """
     Records a history of memory allocation and free events, and dumps to a
     file which can be visualized offline. It by default keeps track of
@@ -71,6 +101,7 @@ class MemorySnapshotProfiler:
         output_dir: str,
         memory_snapshot_params: Optional[MemorySnapshotParams] = None,
     ) -> None:
+        super().__init__()
         self.output_dir: str = output_dir
         self.params: MemorySnapshotParams = (
             memory_snapshot_params or MemorySnapshotParams()
@@ -114,17 +145,6 @@ class MemorySnapshotProfiler:
         logger.info(
             f"Created MemorySnapshotProfiler with MemorySnapshotParams={self.params}."
         )
-
-    def __enter__(self) -> None:
-        self.start()
-
-    def __exit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        tb: Optional[TracebackType],
-    ) -> Optional[bool]:
-        self.stop()
 
     def start(self) -> None:
         if not torch.cuda.is_available():
