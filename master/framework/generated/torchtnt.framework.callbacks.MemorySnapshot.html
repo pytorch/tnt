@@ -376,18 +376,14 @@
 <h1>MemorySnapshot<a class="headerlink" href="#memorysnapshot" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.framework.callbacks.MemorySnapshot">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">MemorySnapshot</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">memory_snapshot_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">MemorySnapshotParams</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">MemorySnapshot</span></code><span class="sig-paren">(</span><em><span class="o"><span class="pre">*</span></span></em>, <em><span class="n"><span class="pre">memory_snapshot_profiler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MemorySnapshotProfilerBase</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/memory_snapshot.html#MemorySnapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.MemorySnapshot" title="Permalink to this definition">¶</a></dt>
 <dd><p>A callback for memory snapshot collection during training, saving pickle files to the user-specified directory.
 Uses <cite>Memory Snapshots &lt;https://zdevito.github.io/2022/08/16/memory-snapshots.html&gt;</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>output_dir</strong> – Directory where to save the memory snapshots.</li>
-<li><strong>memory_snapshot_params</strong> – Instance of MemorySnapshotParams which will be passed to MemorySnapshotProfiler.</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>memory_snapshot_profiler</strong> – Instance of MemorySnapshotProfilerBase, controls when and where to save the memory snapshots.</td>
 </tr>
 </tbody>
 </table>
