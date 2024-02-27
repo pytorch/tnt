@@ -65,13 +65,21 @@ Documentation
 
       meta/examples
 
+.. fbcode::
+
+   .. toctree::
+      :maxdepth: 2
+      :caption: Debugging FAQ (Meta)
+      :glob:
+
+      meta/checkpointing_FAQ
+
 .. toctree::
    :maxdepth: 1
    :caption: Core Concepts
 
    distributed
    checkpointing
-   meta/checkpointing_FAQ
 
 .. toctree::
    :maxdepth: 1
