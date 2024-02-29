@@ -776,7 +776,7 @@
 <span class="sd">        device: the device to be used.</span>
 <span class="sd">        strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.</span>
 <span class="sd">        step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.</span>
-<span class="sd">        precision: the precision to use in training/evaluation, as either a string or a torch.dtype.</span>
+<span class="sd">        precision: the precision to use in training/evaluation (using automatic mixed precision), as either a string or a torch.dtype. Acceptable strings are ``&#39;fp32&#39;``, ``&#39;fp16&#39;``, and ``&#39;bf16&#39;``.</span>
 <span class="sd">        gradient_accumulation_steps: how many batches to accumulate gradients over.</span>
 <span class="sd">        detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection</span>
 <span class="sd">        clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html</span>
@@ -785,6 +785,9 @@
 <span class="sd">        torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html</span>
 <span class="sd">        activation_checkpoint_params: params for enabling activation checkpointing</span>
 <span class="sd">        training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        If :class:`~torchtnt.utils.prepare_module.FSDPStrategy` and SWAParams are passed in, the swa model will be sharded with the same FSDP parameters.</span>

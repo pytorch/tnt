@@ -407,7 +407,7 @@ and <a class="reference internal" href="unit.html#torchtnt.framework.unit.Predic
 <li><strong>device</strong> – the device to be used.</li>
 <li><strong>strategy</strong> – the data parallelization strategy to be used. if a string, must be one of <code class="docutils literal notranslate"><span class="pre">ddp</span></code> or <code class="docutils literal notranslate"><span class="pre">fsdp</span></code>.</li>
 <li><strong>step_lr_interval</strong> – whether to step lr_scheduler every step or every epoch. Defaults to every epoch.</li>
-<li><strong>precision</strong> – the precision to use in training/evaluation, as either a string or a torch.dtype.</li>
+<li><strong>precision</strong> – the precision to use in training/evaluation (using automatic mixed precision), as either a string or a torch.dtype. Acceptable strings are <code class="docutils literal notranslate"><span class="pre">'fp32'</span></code>, <code class="docutils literal notranslate"><span class="pre">'fp16'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'bf16'</span></code>.</li>
 <li><strong>gradient_accumulation_steps</strong> – how many batches to accumulate gradients over.</li>
 <li><strong>detect_anomaly</strong> – whether to enable anomaly detection for the autograd engine <a class="reference external" href="https://pytorch.org/docs/stable/autograd.html#anomaly-detection" target="_blank">https://pytorch.org/docs/stable/autograd.html#anomaly-detection</a></li>
 <li><strong>clip_grad_norm</strong> – max norm of the gradients for clipping <a class="reference external" href="https://pytorch.org/docs/stable/generated/" target="_blank">https://pytorch.org/docs/stable/generated/</a><a href="#id3"><span class="problematic" id="id4">torch.nn.utils.clip_grad_norm_</span></a>.html</li>
@@ -421,6 +421,10 @@ and <a class="reference internal" href="unit.html#torchtnt.framework.unit.Predic
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Certain strategies, like <a class="reference internal" href="../utils/generated/torchtnt.utils.prepare_module.FSDPStrategy.html#torchtnt.utils.prepare_module.FSDPStrategy" title="torchtnt.utils.prepare_module.FSDPStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSDPStrategy</span></code></a> also support mixed precision as an argument, so can be configured through that class as well.</p>
+</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If <a class="reference internal" href="../utils/generated/torchtnt.utils.prepare_module.FSDPStrategy.html#torchtnt.utils.prepare_module.FSDPStrategy" title="torchtnt.utils.prepare_module.FSDPStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSDPStrategy</span></code></a> and SWAParams are passed in, the swa model will be sharded with the same FSDP parameters.</p>
