@@ -407,7 +407,7 @@ class AutoUnit(
         device: the device to be used.
         strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.
         step_lr_interval: whether to step lr_scheduler every step or every epoch. Defaults to every epoch.
-        precision: the precision to use in training/evaluation, as either a string or a torch.dtype.
+        precision: the precision to use in training/evaluation (using automatic mixed precision), as either a string or a torch.dtype. Acceptable strings are ``'fp32'``, ``'fp16'``, and ``'bf16'``.
         gradient_accumulation_steps: how many batches to accumulate gradients over.
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
@@ -416,6 +416,9 @@ class AutoUnit(
         torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html
         activation_checkpoint_params: params for enabling activation checkpointing
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
+
+    Note:
+        Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.
 
     Note:
         If :class:`~torchtnt.utils.prepare_module.FSDPStrategy` and SWAParams are passed in, the swa model will be sharded with the same FSDP parameters.
