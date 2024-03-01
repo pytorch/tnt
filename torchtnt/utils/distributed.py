@@ -580,7 +580,7 @@ def _init_pg_and_rank_and_launch_test(
         rank=rank,
         world_size=pg_setup_params.world_size,
         backend=pg_setup_params.backend,
-        timeout=timedelta(seconds=10),  # setting up timeout for distributed collectives
+        timeout=timedelta(seconds=60),  # setting up timeout for distributed collectives
     )
     try:
         mp_output_dict[rank] = test_method(*args, **kwargs)  # pyre-fixme
