@@ -701,9 +701,9 @@
                 <span class="nb">float</span><span class="p">(</span><span class="n">weights</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterator_names</span>
             <span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_iterator_is_exhausted</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterator_names</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stopping_mechanism</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
-            <span class="n">StoppingMechanism</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="n">iteration_strategy</span><span class="o">.</span><span class="n">stopping_mechanism</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stopping_mechanism</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StoppingMechanism</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">iteration_strategy</span><span class="o">.</span><span class="n">stopping_mechanism</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">enforce_same_loader_across_ranks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">iteration_strategy</span><span class="o">.</span><span class="n">enforce_same_loader_across_ranks</span>
         <span class="p">)</span>
