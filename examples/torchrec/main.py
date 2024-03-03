@@ -234,9 +234,11 @@ def init_embdedding_configs(
         EmbeddingBagConfig(
             name=f"t_{feature_name}",
             embedding_dim=embedding_dim,
-            num_embeddings=none_throws(num_embeddings_per_feature)[feature_idx]
-            if num_embeddings is None
-            else num_embeddings,
+            num_embeddings=(
+                none_throws(num_embeddings_per_feature)[feature_idx]
+                if num_embeddings is None
+                else num_embeddings
+            ),
             feature_names=[feature_name],
         )
         for feature_idx, feature_name in enumerate(DEFAULT_CAT_NAMES)

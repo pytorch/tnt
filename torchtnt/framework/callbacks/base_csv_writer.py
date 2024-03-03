@@ -61,8 +61,7 @@ class BaseCSVWriter(Callback, ABC):
         unit: TPredictUnit,
         # pyre-fixme: Missing parameter annotation [2]
         step_output: Any,
-    ) -> Union[List[str], List[List[str]]]:
-        ...
+    ) -> Union[List[str], List[List[str]]]: ...
 
     def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
         if get_global_rank() == 0:

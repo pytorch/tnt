@@ -686,15 +686,17 @@ class BaseCheckpointerTest(unittest.TestCase):
                 bcs.on_train_epoch_end(state, my_train_unit)
                 self.assertEqual(
                     bcs._ckpt_dirpaths,
-                    [
-                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
-                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
-                    ]
-                    if mode == "min"
-                    else [
-                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
-                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
-                    ],
+                    (
+                        [
+                            os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                            os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                        ]
+                        if mode == "min"
+                        else [
+                            os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                            os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                        ]
+                    ),
                 )
 
                 my_train_unit.train_loss = 0.015
@@ -702,17 +704,19 @@ class BaseCheckpointerTest(unittest.TestCase):
                 bcs.on_train_epoch_end(state, my_train_unit)
                 self.assertEqual(
                     bcs._ckpt_dirpaths,
-                    [
-                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
-                        os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.015"),
-                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
-                    ]
-                    if mode == "min"
-                    else [
-                        os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
-                        os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.015"),
-                        os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
-                    ],
+                    (
+                        [
+                            os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                            os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.015"),
+                            os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                        ]
+                        if mode == "min"
+                        else [
+                            os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
+                            os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.015"),
+                            os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
+                        ]
+                    ),
                 )
 
     def test_best_checkpoint_top_k(self) -> None:

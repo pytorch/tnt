@@ -332,9 +332,9 @@ class RandomizedBatchSamplerIterator(MultiIterator):
                 float(weights[name]) for name in self._iterator_names
             ]
         self._iterator_is_exhausted: List[bool] = [False] * len(self._iterator_names)
-        self.stopping_mechanism: Optional[
-            StoppingMechanism
-        ] = iteration_strategy.stopping_mechanism
+        self.stopping_mechanism: Optional[StoppingMechanism] = (
+            iteration_strategy.stopping_mechanism
+        )
         self.enforce_same_loader_across_ranks: bool = (
             iteration_strategy.enforce_same_loader_across_ranks
         )

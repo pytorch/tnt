@@ -15,7 +15,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class MemorySnapshot(Callback):
-
     """
     A callback for memory snapshot collection during training, saving pickle files to the user-specified directory.
     Uses `Memory Snapshots <https://zdevito.github.io/2022/08/16/memory-snapshots.html>`.

@@ -20,7 +20,7 @@ from torchtnt.utils.precision import (
 
 class PrecisionTest(unittest.TestCase):
     def test_convert_precision_str_to_dtype_success(self) -> None:
-        for (precision_str, expected_dtype) in [
+        for precision_str, expected_dtype in [
             ("fp16", torch.float16),
             ("bf16", torch.bfloat16),
             ("fp32", None),
