@@ -55,6 +55,7 @@ from .prepare_module import (
     prepare_ddp,
     prepare_fsdp,
 )
+from .profiler import IProfiler
 from .progress import Progress
 from .rank_zero_log import (
     rank_zero_critical,
@@ -125,6 +126,7 @@ __all__ = [
     "NOOPStrategy",
     "prepare_ddp",
     "prepare_fsdp",
+    "IProfiler",
     "Progress",
     "rank_zero_critical",
     "rank_zero_debug",
