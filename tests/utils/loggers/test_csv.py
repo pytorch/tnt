@@ -26,7 +26,6 @@ class CSVLoggerTest(unittest.TestCase):
 
             with open(csv_path) as f:
                 output = list(csv.DictReader(f))
-                # pyre-fixme[16]: `_DictReadMapping` has no attribute `__getitem__`.
                 self.assertEqual(float(output[0][log_name]), log_value)
                 self.assertEqual(int(output[0]["step"]), log_step)
 
@@ -42,6 +41,5 @@ class CSVLoggerTest(unittest.TestCase):
 
             with open(csv_path) as f:
                 output = list(csv.DictReader(f))
-                # pyre-fixme[16]: `_DictReadMapping` has no attribute `__getitem__`.
                 self.assertEqual(float(output[0][log_name]), log_value)
                 self.assertEqual(int(output[0]["step"]), log_step)
