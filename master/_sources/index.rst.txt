@@ -73,6 +73,7 @@ Documentation
       :glob:
 
       meta/checkpointing_FAQ
+      meta/mem_debug
 
 .. toctree::
    :maxdepth: 1
