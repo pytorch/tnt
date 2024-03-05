@@ -208,7 +208,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
         # 1.5) Ensure the need to checkpoint again at the end of training
         if hook == "on_train_end" and self._does_checkpoint_exist(
-            checkpoint_path, self._process_group
+            checkpoint_path, process_group=self._process_group
         ):
             rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
             return False
