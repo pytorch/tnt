@@ -41,6 +41,13 @@ T = TypeVar("T")
 def rank_zero_read_and_broadcast(
     func: Callable[..., T],
 ) -> Callable[..., T]:
+    """
+    Decorator that ensures a function is only executed by rank 0 and returns the result to all ranks.
+
+    Note:
+        By default will use the global process group. To use a custom process group, `process_group` must be an arg to the function and passed as a keyword argument.
+    """
+
     def wrapper(*args: Any, **kwargs: Any) -> T:
         ret = None
         rank = get_global_rank()
