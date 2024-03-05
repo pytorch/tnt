@@ -286,6 +286,9 @@ def get_psutil_cpu_stats() -> CPUStats:
             - 'cpu_vm_percent'
             - 'cpu_percent'
             - 'cpu_swap_percent'
+            - 'worker_cpu_time_user'
+            - 'worker_cpu_time_system'
+            - 'worker_rss'
     """
     try:
         import psutil
