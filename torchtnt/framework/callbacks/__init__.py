@@ -15,6 +15,7 @@ from .module_summary import ModuleSummary
 from .pytorch_profiler import PyTorchProfiler
 from .system_resources_monitor import SystemResourcesMonitor
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
+from .time_limit_interrupter import TimeLimitInterrupter
 from .torch_compile import TorchCompile
 from .torchsnapshot_saver import TorchSnapshotSaver
 from .tqdm_progress_bar import TQDMProgressBar
@@ -32,6 +33,7 @@ __all__ = [
     "PyTorchProfiler",
     "SystemResourcesMonitor",
     "TensorBoardParameterMonitor",
+    "TimeLimitInterrupter",
     "TorchCompile",
     "TorchSnapshotSaver",
     "TQDMProgressBar",
