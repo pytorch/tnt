@@ -804,6 +804,37 @@ class BaseCheckpointerTest(unittest.TestCase):
                 ],
             )
 
+    def test_no_assert_error_in_on_train_end(self) -> None:
+        """
+        Tests no assertion is thrown when using BestCheckpointConfig in on_train_end
+        """
+
+        input_dim = 2
+        dataset_len = 4
+        batch_size = 2
+        max_epochs = 2
+
+        expected_path = (
+            f"epoch_{max_epochs}_step_{max_epochs * (dataset_len // batch_size)}"
+        )
+
+        my_unit = MyValLossUnit()
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            self.assertFalse(os.path.exists(os.path.join(temp_dir, expected_path)))
+            checkpoint_cb = BaseCheckpointSaver(
+                temp_dir,
+                best_checkpoint_config=BestCheckpointConfig("val_loss", "min"),
+                keep_last_n_checkpoints=2,
+                save_every_n_train_steps=1,
+            )
+            train(
+                my_unit,
+                dataloader,
+                max_epochs=max_epochs,
+                callbacks=[checkpoint_cb],
+            )
+
 
 class MyValLossUnit(TrainUnit[Batch]):
     def __init__(self) -> None:

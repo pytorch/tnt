@@ -217,7 +217,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         # TODO: isolate this logic into its own function
         metric_value_f: Optional[float] = None
         best_checkpoint_config = self._best_checkpoint_config
-        if best_checkpoint_config and hook != "on_train_end":
+        if best_checkpoint_config:
             if not hasattr(unit, best_checkpoint_config.monitored_metric):
                 raise RuntimeError(
                     f"Unit does not have attribute {best_checkpoint_config.monitored_metric}, unable to retrieve metric to checkpoint."
