@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 from enum import Enum
 from threading import Event, Thread
-from typing import Any, Dict, Generator, List, Mapping, Sequence, Tuple
+from typing import Dict, Generator, List, Mapping, Sequence, Tuple
 
 import psutil
 import torch
@@ -20,15 +20,13 @@ _DEFAULT_MEASURE_INTERVAL = timedelta(milliseconds=100)
 
 
 def _is_named_tuple(
-    # pyre-fixme: Missing parameter annotation [2]: Parameter `x` must have a type other than `Any`.
-    x: Any,
+    x: object,
 ) -> bool:
     return isinstance(x, tuple) and hasattr(x, "_asdict") and hasattr(x, "_fields")
 
 
 def get_tensor_size_bytes_map(
-    # pyre-fixme: Missing parameter annotation [2]: Parameter `obj` must have a type other than `Any`.
-    obj: Any,
+    obj: object,
 ) -> Dict[torch.Tensor, int]:
     tensor_map = {}
     attributes_q = deque()

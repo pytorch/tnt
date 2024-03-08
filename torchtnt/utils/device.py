@@ -315,16 +315,12 @@ def get_psutil_cpu_stats() -> CPUStats:
 def collect_system_stats(device: torch.device) -> Dict[str, Any]:
     system_stats: Dict[str, Any] = {}
     cpu_stats = get_psutil_cpu_stats()
-
-    # pyre-fixme
-    system_stats.update(cpu_stats)
+    system_stats.update(**cpu_stats)
 
     if torch.cuda.is_available():
         try:
             gpu_stats = get_nvidia_smi_gpu_stats(device)
-
-            # pyre-fixme
-            system_stats.update(gpu_stats)
+            system_stats.update(**gpu_stats)
             system_stats.update(torch.cuda.memory_stats())
         except FileNotFoundError:
             logger.warning("Unable to find nvidia-smi. Skipping GPU stats collection.")

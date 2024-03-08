@@ -141,6 +141,6 @@ def attach_oom_observer(output_dir: str, trace_max_entries: int = 1000000) -> No
     torch.cuda.memory._record_memory_history(
         enabled="all", max_entries=trace_max_entries
     )
-    # pyre-fixme[16]: Module `_C` has no attribute
+    # pyre-ignore[16]: Module `_C` has no attribute
     #  `_cuda_attach_out_of_memory_observer`.
     torch._C._cuda_attach_out_of_memory_observer(_oom_observer(output_dir))

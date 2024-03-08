@@ -43,8 +43,7 @@ class MultiDataLoader:
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter
-        individual_dataloaders: Dict[str, Union[DataLoader, Iterable]],
+        individual_dataloaders: Dict[str, Union[DataLoader, Iterable[object]]],
         iteration_strategy: DataIterationStrategy,
         iterator_cls: Optional[Type[MultiIterator]] = None,
         ignore_empty_data: bool = False,
@@ -74,13 +73,12 @@ class MultiDataLoader:
         iterator_cls = self.iterator_cls
         if iterator_cls is None:
             iterator_cls = DataIterationStrategyRegistry.get(self.iteration_strategy)
-        # pyre-fixme[16]: `MultiDataLoader` has no attribute `iterator`.
-        # pyre-fixme[45]: Cannot instantiate abstract class `MultiIterator`.
-        self.iterator = iterator_cls(
+        # in practice, DataIterationStrategyRegistry.get() returns just concrete classes
+        # pyre-ignore[45]: Cannot instantiate abstract class `MultiIterator`.
+        return iterator_cls(
             individual_dataloaders=self.individual_dataloaders,
             iteration_strategy=self.iteration_strategy,
         )
-        return self.iterator
 
     def state_dict(self) -> Dict[str, Any]:
         """Return an aggregated state dict based on individual dataloaders.

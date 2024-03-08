@@ -41,18 +41,15 @@ def profile_dataloader(
     # If max_steps is not set, run until the dataloader is exhausted
     steps_completed = 0
 
-    should_move_data_to_device = device is not None
-
     while max_steps is None or (steps_completed < max_steps):
         try:
             with timer.time("next(iter)"), record_function("next(iter)"):
                 data = next(data_iter)
 
-            if should_move_data_to_device:
+            if device is not None:
                 with timer.time("copy_data_to_device"), record_function(
                     "copy_data_to_device"
                 ):
-                    # pyre-fixme [6]: device is checked as not None before calling this
                     data = copy_data_to_device(data, device)
 
             steps_completed += 1

@@ -583,7 +583,8 @@ def _init_pg_and_rank_and_launch_test(
         timeout=timedelta(seconds=60),  # setting up timeout for distributed collectives
     )
     try:
-        mp_output_dict[rank] = test_method(*args, **kwargs)  # pyre-fixme
+        # pyre-ignore: spawn_multi_process uses unsafe types to begin with
+        mp_output_dict[rank] = test_method(*args, **kwargs)
 
     finally:
         destroy_process_group()
