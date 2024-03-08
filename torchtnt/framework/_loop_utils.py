@@ -12,6 +12,8 @@ from typing import Callable, Dict, Iterable, Optional, TypeVar
 import torch
 import torch.nn as nn
 import typing_extensions
+from torch.nn.parallel.distributed import DistributedDataParallel
+
 from torchtnt.framework.state import State
 from torchtnt.utils.progress import Progress
 
@@ -59,7 +61,16 @@ def _set_module_training_mode(
     prior_module_train_states = {}
     for name, module in modules.items():
         prior_module_train_states[name] = module.training
-        module.train(mode)
+        if isinstance(module, DistributedDataParallel):
+            module = module.module
+        if torch.ao.quantization.pt2e.export_utils.model_is_exported(module):
+            if mode:
+                module = torch.ao.quantization.move_exported_model_to_train(module)
+            else:
+                module = torch.ao.quantization.move_exported_model_to_eval(module)
+        else:
+            module.train(mode)
+
     return prior_module_train_states
 
 
