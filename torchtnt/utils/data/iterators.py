@@ -14,6 +14,7 @@ from enum import Enum
 from itertools import cycle
 from typing import (
     Any,
+    cast,
     Dict,
     Iterable,
     Iterator,
@@ -59,8 +60,7 @@ class MultiIterator(Iterator[Dict[str, Any]]):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter
-        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable]],
+        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable[object]]],
         iteration_strategy: DataIterationStrategy,
     ) -> None:
         self.individual_dataloaders = individual_dataloaders
@@ -124,8 +124,7 @@ class RoundRobinIterator(MultiIterator):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter
-        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable]],
+        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable[object]]],
         iteration_strategy: RoundRobin,
     ) -> None:
         super().__init__(individual_dataloaders, iteration_strategy)
@@ -138,9 +137,9 @@ class RoundRobinIterator(MultiIterator):
             raise NotImplementedError(
                 "WRAP_AROUND_UNTIL_KILLED is not implemented for RoundRobin"
             )
-        self.individual_iterators: Mapping[str, Iterator[DataLoader]] = {
-            name: iter(dl) for name, dl in individual_dataloaders.items()
-        }
+        self.individual_iterators: Mapping[
+            str, Union[Iterator[DataLoader], Iterator[object]]
+        ] = {name: iter(dl) for name, dl in individual_dataloaders.items()}
         round_robin_order = iteration_strategy.iteration_order or list(
             self.individual_iterators.keys()
         )
@@ -222,8 +221,7 @@ class AllDatasetBatchesIterator(MultiIterator):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter
-        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable]],
+        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable[object]]],
         iteration_strategy: AllDatasetBatches,
     ) -> None:
         super().__init__(individual_dataloaders, iteration_strategy)
@@ -235,9 +233,9 @@ class AllDatasetBatchesIterator(MultiIterator):
             raise NotImplementedError(
                 "WRAP_AROUND_UNTIL_KILLED is not implemented for AllDatasetBatches"
             )
-        self.individual_iterators: Dict[str, Iterator[DataLoader]] = {
-            name: iter(dl) for name, dl in individual_dataloaders.items()
-        }
+        self.individual_iterators: Dict[
+            str, Union[Iterator[DataLoader], Iterator[object]]
+        ] = {name: iter(dl) for name, dl in individual_dataloaders.items()}
         self.iterators_finished: List[str] = []
 
     def __next__(self) -> Dict[str, Any]:
@@ -310,16 +308,15 @@ class RandomizedBatchSamplerIterator(MultiIterator):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter
-        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable]],
+        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable[object]]],
         iteration_strategy: RandomizedBatchSampler,
     ) -> None:
         super().__init__(individual_dataloaders, iteration_strategy)
         self._iteration_strategy = iteration_strategy
         self._individual_dataloaders = individual_dataloaders
-        self._individual_iterators: MutableMapping[str, Iterator[DataLoader]] = {
-            name: iter(dl) for name, dl in self._individual_dataloaders.items()
-        }
+        self._individual_iterators: MutableMapping[
+            str, Union[Iterator[DataLoader], Iterator[object]]
+        ] = {name: iter(dl) for name, dl in self._individual_dataloaders.items()}
         self._iterator_names: List[str] = sorted(self._individual_dataloaders.keys())
         weights = iteration_strategy.weights
         if weights is None:
@@ -343,8 +340,9 @@ class RandomizedBatchSamplerIterator(MultiIterator):
                 name: torch.IntTensor([idx])
                 for idx, name in enumerate(self._iterator_names)
             }
-            # pyre-fixme[4]: missing attribute annotation
-            self._process_group = dist.new_group(backend="gloo", ranks=None)
+            self._process_group: dist.ProcessGroup = dist.new_group(
+                backend="gloo", ranks=None
+            )
 
         self._iterators_finished: List[str] = []
 
@@ -395,9 +393,7 @@ class RandomizedBatchSamplerIterator(MultiIterator):
         ):
             key_idx = self._iterator_names_dict[selected_key]
             dist.broadcast(key_idx, 0, group=self._process_group)
-            # pyre-fixme[6]: For 1st param expected `SupportsIndex` but got
-            #  `Union[bool, float, int]`.
-            selected_key = self._iterator_names[key_idx.item()]
+            selected_key = self._iterator_names[cast(int, key_idx.item())]
 
         try:
             batch = next(self._individual_iterators[selected_key])
@@ -464,15 +460,14 @@ class InOrderIterator(MultiIterator):
 
     def __init__(
         self,
-        # pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter
-        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable]],
+        individual_dataloaders: Mapping[str, Union[DataLoader, Iterable[object]]],
         iteration_strategy: InOrder,
     ) -> None:
         super().__init__(individual_dataloaders, iteration_strategy)
         self.iteration_order: List[str] = iteration_strategy.iteration_order or list(
             self.individual_dataloaders.keys()
         )
-        self.cur_iter: Iterator[DataLoader] = iter(
+        self.cur_iter: Union[Iterator[DataLoader], Iterator[object]] = iter(
             self.individual_dataloaders[self.iteration_order[0]]
         )
         self.cur_iterator: str = self.iteration_order[0]

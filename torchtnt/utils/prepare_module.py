@@ -112,7 +112,7 @@ class TorchCompileParams:
 
     fullgraph: bool = False
     dynamic: bool = False
-    # pyre-fixme: Invalid type parameters [24]
+    # pyre-ignore: Invalid type parameters. Uses PyTorch types.
     backend: Union[str, Callable] = "inductor"
     mode: Union[str, None] = None
     options: Optional[Dict[str, Union[str, int, bool]]] = None
