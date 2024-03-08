@@ -4,6 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-strict
+
 from numpy import ndarray
 from torch import Tensor
 from torchtnt.utils.loggers.logger import Scalar

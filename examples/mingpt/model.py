@@ -4,6 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-strict
+
 """
 Full definition of a GPT Language Model, all of it in this single file.
 Adapted from https://github.com/karpathy/minGPT/blob/master/mingpt/model.py

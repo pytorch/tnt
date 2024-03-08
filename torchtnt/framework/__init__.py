@@ -4,6 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
+# pyre-strict
+
 from .auto_unit import AutoPredictUnit, AutoUnit
 from .callback import Callback
 from .evaluate import evaluate
