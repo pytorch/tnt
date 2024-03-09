@@ -83,6 +83,7 @@ from .version import (
     is_torch_version_geq_1_8,
     is_torch_version_geq_1_9,
     is_torch_version_geq_2_0,
+    is_torch_version_geq_2_1,
     is_windows,
 )
 
@@ -161,6 +162,7 @@ __all__ = [
     "is_torch_version_geq_1_8",
     "is_torch_version_geq_1_9",
     "is_torch_version_geq_2_0",
+    "is_torch_version_geq_2_1",
     "is_windows",
     "get_pet_launch_config",
     "spawn_multi_process",

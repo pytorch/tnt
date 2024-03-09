@@ -27,7 +27,11 @@ from torchtnt.utils.prepare_module import (
     TorchCompileParams,
 )
 from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
-from torchtnt.utils.version import is_torch_version_geq_1_13, is_torch_version_geq_2_0
+from torchtnt.utils.version import (
+    is_torch_version_geq_1_13,
+    is_torch_version_geq_2_0,
+    Version,
+)
 
 COMPILE_AVAIL = False
 if is_torch_version_geq_1_13():
@@ -289,16 +293,27 @@ class PrepareModelTest(unittest.TestCase):
         """
 
         tc = unittest.TestCase()
-        with tc.assertRaisesRegex(
-            RuntimeError,
-            "Torch compile requires DDPStrategy's static_graph to be False",
+        with patch(
+            "torchtnt.utils.version.get_torch_version", return_value=Version("2.0.0")
         ):
-            prepare_module(
-                module=torch.nn.Linear(2, 2),
-                device=init_from_env(),
-                strategy=DDPStrategy(static_graph=True),
-                torch_compile_params=TorchCompileParams(backend="inductor"),
-            )
+            with tc.assertRaisesRegex(
+                RuntimeError,
+                "Torch version >= 2.1.0 required",
+            ):
+                prepare_module(
+                    module=torch.nn.Linear(2, 2),
+                    device=init_from_env(),
+                    strategy=DDPStrategy(static_graph=True),
+                    torch_compile_params=TorchCompileParams(backend="inductor"),
+                )
+
+        # no error should be thrown on latest pytorch
+        prepare_module(
+            module=torch.nn.Linear(2, 2),
+            device=init_from_env(),
+            strategy=DDPStrategy(static_graph=True),
+            torch_compile_params=TorchCompileParams(backend="inductor"),
+        )
 
     @unittest.skipUnless(
         condition=COMPILE_AVAIL,
