@@ -23,7 +23,11 @@ from torch.distributed.fsdp.fully_sharded_data_parallel import (
 )
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.utils.rank_zero_log import rank_zero_warn
-from torchtnt.utils.version import is_torch_version_geq_1_12, is_torch_version_geq_2_0
+from torchtnt.utils.version import (
+    is_torch_version_geq_1_12,
+    is_torch_version_geq_2_0,
+    is_torch_version_geq_2_1,
+)
 
 if is_torch_version_geq_2_0():
     from torch.distributed._composable_state import _get_module_state
@@ -288,10 +292,13 @@ def prepare_module(
         if isinstance(strategy, str):
             strategy = convert_str_to_strategy(strategy)
         if isinstance(strategy, DDPStrategy):
-            if torch_compile_params and strategy.static_graph is True:
-                # https://dev-discuss.pytorch.org/t/torchdynamo-update-9-making-ddp-work-with-torchdynamo/860
+            if (
+                torch_compile_params
+                and strategy.static_graph is True
+                and not is_torch_version_geq_2_1()
+            ):
                 raise RuntimeError(
-                    "Torch compile requires DDPStrategy's static_graph to be False"
+                    "Torch version >= 2.1.0 required for Torch compile + DDP with static graph"
                 )
             module = prepare_ddp(module, device, strategy)
         elif isinstance(strategy, FSDPStrategy):

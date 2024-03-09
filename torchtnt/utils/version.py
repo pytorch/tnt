@@ -90,3 +90,7 @@ def is_torch_version_geq_1_14() -> bool:
 
 def is_torch_version_geq_2_0() -> bool:
     return get_torch_version() >= Version("2.0.0")
+
+
+def is_torch_version_geq_2_1() -> bool:
+    return get_torch_version() >= Version("2.1.0")
