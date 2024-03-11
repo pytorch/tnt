@@ -494,7 +494,7 @@ class AutoUnit(
         if self.precision:
             self.grad_scaler = get_grad_scaler_from_precision(
                 self.precision,
-                self.module,
+                is_fsdp_module=_is_fsdp_module(self.module),
             )
 
         self.step_lr_interval = step_lr_interval
