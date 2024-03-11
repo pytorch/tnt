@@ -8,7 +8,6 @@
 # pyre-strict
 
 import unittest
-from unittest.mock import patch
 
 import torch
 from torch.cuda.amp.grad_scaler import GradScaler
@@ -43,17 +42,14 @@ class PrecisionTest(unittest.TestCase):
 
     def test_get_grad_scaler_from_precision(self) -> None:
         grad_scaler = get_grad_scaler_from_precision(
-            torch.float32, torch.nn.Linear(2, 2)
+            torch.float32, is_fsdp_module=False
         )
         self.assertIsNone(grad_scaler)
 
         grad_scaler = get_grad_scaler_from_precision(
-            torch.float16, torch.nn.Linear(2, 2)
+            torch.float16, is_fsdp_module=False
         )
         self.assertTrue(isinstance(grad_scaler, GradScaler))
 
-        with patch("torchtnt.utils.precision._is_fsdp_module", return_value=True):
-            grad_scaler = get_grad_scaler_from_precision(
-                torch.float16, torch.nn.Linear(2, 2)
-            )
-            self.assertTrue(isinstance(grad_scaler, ShardedGradScaler))
+        grad_scaler = get_grad_scaler_from_precision(torch.float16, is_fsdp_module=True)
+        self.assertTrue(isinstance(grad_scaler, ShardedGradScaler))
