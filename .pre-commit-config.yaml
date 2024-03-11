@@ -31,9 +31,9 @@ repos:
           - torchfix==0.1.1
 
 -   repo: https://github.com/omnilib/ufmt
-    rev: v1.3.0
+    rev: v2.5.1
     hooks:
     - id: ufmt
       additional_dependencies:
-        - black == 22.3.0
+        - black == 24.2.0
         - usort == 1.0.2
