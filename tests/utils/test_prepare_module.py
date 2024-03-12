@@ -174,7 +174,131 @@ class PrepareModelTest(unittest.TestCase):
             fsdp_module.mixed_precision.param_dtype, mixed_precision.param_dtype
         )
 
-    # test strategy options
+    @skip_if_not_distributed
+    @skip_if_not_gpu
+    def test_fdsp_str_types(self) -> None:
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fdsp_precision_str_types,
+        )
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fdsp_backward_prefetch_str_types,
+        )
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fdsp_sharding_strategy_str_types,
+        )
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_fdsp_state_dict_str_types,
+        )
+
+    @staticmethod
+    def _test_fdsp_precision_str_types() -> None:
+        from torchtnt.utils.prepare_module import MixedPrecision as _MixedPrecision
+
+        module = torch.nn.Linear(1, 1)
+        device = init_from_env()
+        mixed_precision = _MixedPrecision(
+            param_dtype="fp16",
+            reduce_dtype="bf16",
+            buffer_dtype="fp32",
+        )
+
+        fsdp_module = prepare_fsdp(
+            module, device, FSDPStrategy(mixed_precision=mixed_precision)
+        )
+        tc = unittest.TestCase()
+        tc.assertTrue(isinstance(fsdp_module, FSDP))
+
+    @staticmethod
+    def _test_fdsp_backward_prefetch_str_types() -> None:
+        module = torch.nn.Linear(1, 1)
+        device = init_from_env()
+
+        tc = unittest.TestCase()
+        for value in ["BACKWARD_PRE", "BACKWARD_POST"]:
+            fsdp_module = prepare_fsdp(
+                module, device, FSDPStrategy(backward_prefetch=value)
+            )
+            tc.assertTrue(isinstance(fsdp_module, FSDP), f"tested value: {value}")
+
+    @staticmethod
+    def _test_fdsp_sharding_strategy_str_types() -> None:
+        module = torch.nn.Linear(1, 1)
+        device = init_from_env()
+
+        tc = unittest.TestCase()
+        for value in [
+            "FULL_SHARD",
+            "SHARD_GRAD_OP",
+            "NO_SHARD",
+            # skip hybrid strategy; tricky to configure in-test
+        ]:
+
+            fsdp_module = prepare_fsdp(
+                module,
+                device,
+                FSDPStrategy(sharding_strategy=value),
+            )
+            tc.assertTrue(isinstance(fsdp_module, FSDP), f"tested value: {value}")
+
+    @staticmethod
+    def _test_fdsp_state_dict_str_types() -> None:
+        module = torch.nn.Linear(1, 1)
+        device = init_from_env()
+
+        tc = unittest.TestCase()
+        for value in [
+            "FULL_STATE_DICT",
+            "LOCAL_STATE_DICT",
+            "SHARDED_STATE_DICT",
+        ]:
+            fsdp_module = prepare_fsdp(
+                module, device, FSDPStrategy(state_dict_type=value)
+            )
+            tc.assertTrue(isinstance(fsdp_module, FSDP), f"tested value: {value}")
+
+    def test_invalid_fsdp_strategy_str_values(self) -> None:
+        from torchtnt.utils.prepare_module import MixedPrecision as _MixedPrecision
+
+        with self.assertRaisesRegex(ValueError, "Invalid BackwardPrefetch 'foo'"):
+            FSDPStrategy(backward_prefetch="foo")
+
+        with self.assertRaisesRegex(ValueError, "Invalid ShardingStrategy 'FOO'"):
+            FSDPStrategy(sharding_strategy="FOO")
+
+        with self.assertRaisesRegex(ValueError, "Invalid StateDictType 'FOO'"):
+            FSDPStrategy(state_dict_type="FOO")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Invalid module class 'torch.nn.modules._BatchNorm': module 'torch.nn.modules' has no attribute '_BatchNorm'",
+        ):
+            FSDPStrategy(
+                mixed_precision=_MixedPrecision(
+                    _module_classes_to_ignore=[
+                        # correct type is torch.nn.modules.batchnorm._BatchNorm
+                        "torch.nn.modules._BatchNorm"
+                    ]
+                )
+            )
+        with self.assertRaisesRegex(
+            ValueError,
+            "Invalid module class 'foo.bar.Baz': No module named 'foo'",
+        ):
+            FSDPStrategy(
+                mixed_precision=_MixedPrecision(
+                    _module_classes_to_ignore=["foo.bar.Baz"]
+                )
+            )
+
+    # # test strategy options
     def test_prepare_module_strategy_invalid_str(self) -> None:
         """
         Test that an exception is raised with an invalid strategy string

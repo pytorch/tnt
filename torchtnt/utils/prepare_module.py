@@ -13,15 +13,25 @@ from typing import Any, Callable, Dict, Iterable, Optional, Union
 import torch
 import torch.distributed as dist
 from torch.distributed import ProcessGroup
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, StateDictType
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    StateDictType as _StateDictType,
+)
 from torch.distributed.fsdp.api import OptimStateDictConfig, StateDictConfig
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
-    BackwardPrefetch,
+    BackwardPrefetch as _BackwardPrefetch,
     CPUOffload,
-    MixedPrecision,
-    ShardingStrategy,
+    MixedPrecision as _MixedPrecision,
+    ShardingStrategy as _ShardingStrategy,
 )
 from torch.nn.parallel import DistributedDataParallel as DDP
+from torchtnt.utils.fsdp_utils import (
+    BackwardPrefetch,
+    MixedPrecision,
+    ShardingStrategy,
+    StateDictType,
+)
+
 from torchtnt.utils.rank_zero_log import rank_zero_warn
 from torchtnt.utils.version import (
     is_torch_version_geq_1_12,
@@ -91,11 +101,13 @@ class FSDPStrategy(Strategy):
     """Dataclass representing the `FullyShardedDataParallel <https://pytorch.org/docs/stable/fsdp.html>`_ strategy"""
 
     process_group: Optional[ProcessGroup] = None
-    sharding_strategy: Optional[ShardingStrategy] = None
+    sharding_strategy: Optional[Union[str, _ShardingStrategy]] = None
     cpu_offload: Optional[CPUOffload] = None
     auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
-    backward_prefetch: Optional[BackwardPrefetch] = BackwardPrefetch.BACKWARD_PRE
-    mixed_precision: Optional[MixedPrecision] = None
+    backward_prefetch: Optional[Union[str, _BackwardPrefetch]] = (
+        _BackwardPrefetch.BACKWARD_PRE
+    )
+    mixed_precision: Optional[Union[_MixedPrecision, MixedPrecision]] = None
     ignored_modules: Optional[Iterable[torch.nn.Module]] = None
     param_init_fn: Optional[Callable[[torch.nn.Module], None]] = None
     sync_module_states: bool = False
@@ -105,9 +117,28 @@ class FSDPStrategy(Strategy):
 
     # FSDP set_state_dict_type params: https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type
     # for setting type of state dict for checkpointing
-    state_dict_type: Optional[StateDictType] = None
+    state_dict_type: Optional[Union[str, _StateDictType]] = None
     state_dict_config: Optional[StateDictConfig] = None
     optim_state_dict_config: Optional[OptimStateDictConfig] = None
+
+    def __post_init__(self) -> None:
+        if isinstance(self.sharding_strategy, str):
+            self.sharding_strategy = ShardingStrategy.to_native_sharding_strategy(
+                self.sharding_strategy
+            )
+
+        if isinstance(self.backward_prefetch, str):
+            self.backward_prefetch = BackwardPrefetch.to_native_backward_prefetch(
+                self.backward_prefetch
+            )
+
+        if isinstance(self.state_dict_type, str):
+            self.state_dict_type = StateDictType.to_native_state_dict_type(
+                self.state_dict_type
+            )
+
+        if isinstance(self.mixed_precision, MixedPrecision):
+            self.mixed_precision = self.mixed_precision.to_native_mixed_precision()
 
 
 @dataclass
