@@ -373,6 +373,8 @@
 <span class="c1"># This source code is licensed under the BSD-style license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
@@ -390,7 +392,11 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DistributedDataParallel</span> <span class="k">as</span> <span class="n">DDP</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.rank_zero_log</span> <span class="kn">import</span> <span class="n">rank_zero_warn</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="n">is_torch_version_geq_1_12</span><span class="p">,</span> <span class="n">is_torch_version_geq_2_0</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">is_torch_version_geq_1_12</span><span class="p">,</span>
+    <span class="n">is_torch_version_geq_2_0</span><span class="p">,</span>
+    <span class="n">is_torch_version_geq_2_1</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="k">if</span> <span class="n">is_torch_version_geq_2_0</span><span class="p">():</span>
     <span class="kn">from</span> <span class="nn">torch.distributed._composable_state</span> <span class="kn">import</span> <span class="n">_get_module_state</span>
@@ -481,7 +487,7 @@
 
     <span class="n">fullgraph</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">dynamic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
+    <span class="c1"># pyre-ignore: Invalid type parameters. Uses PyTorch types.</span>
     <span class="n">backend</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;inductor&quot;</span>
     <span class="n">mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -655,10 +661,13 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">strategy</span> <span class="o">=</span> <span class="n">convert_str_to_strategy</span><span class="p">(</span><span class="n">strategy</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">DDPStrategy</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">torch_compile_params</span> <span class="ow">and</span> <span class="n">strategy</span><span class="o">.</span><span class="n">static_graph</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="c1"># https://dev-discuss.pytorch.org/t/torchdynamo-update-9-making-ddp-work-with-torchdynamo/860</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">torch_compile_params</span>
+                <span class="ow">and</span> <span class="n">strategy</span><span class="o">.</span><span class="n">static_graph</span> <span class="ow">is</span> <span class="kc">True</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_torch_version_geq_2_1</span><span class="p">()</span>
+            <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                    <span class="s2">&quot;Torch compile requires DDPStrategy&#39;s static_graph to be False&quot;</span>
+                    <span class="s2">&quot;Torch version &gt;= 2.1.0 required for Torch compile + DDP with static graph&quot;</span>
                 <span class="p">)</span>
             <span class="n">module</span> <span class="o">=</span> <span class="n">prepare_ddp</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">FSDPStrategy</span><span class="p">):</span>

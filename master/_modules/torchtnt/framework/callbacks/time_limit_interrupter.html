@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>torchtnt.utils.loggers.in_memory &mdash; TorchTNT master documentation</title>
+  <title>torchtnt.framework.callbacks.time_limit_interrupter &mdash; TorchTNT master documentation</title>
   
 
   
@@ -334,7 +334,7 @@
         
           <li><a href="../../../index.html">Module code</a> &gt;</li>
         
-      <li>torchtnt.utils.loggers.in_memory</li>
+      <li>torchtnt.framework.callbacks.time_limit_interrupter</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
@@ -366,9 +366,8 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <h1>Source code for torchtnt.utils.loggers.in_memory</h1><div class="highlight"><pre>
-<span></span><span class="ch">#!/usr/bin/env python3</span>
-<span class="c1"># Copyright (c) Meta Platforms, Inc. and affiliates.</span>
+  <h1>Source code for torchtnt.framework.callbacks.time_limit_interrupter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) Meta Platforms, Inc. and affiliates.</span>
 <span class="c1"># All rights reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># This source code is licensed under the BSD-style license found in the</span>
@@ -376,69 +375,96 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">atexit</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">monotonic</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.logger</span> <span class="kn">import</span> <span class="n">MetricLogger</span><span class="p">,</span> <span class="n">Scalar</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.utils</span> <span class="kn">import</span> <span class="n">scalar_to_float</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TTrainUnit</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">get_global_rank</span><span class="p">,</span> <span class="n">sync_bool</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.rank_zero_log</span> <span class="kn">import</span> <span class="n">rank_zero_info</span>
 
-<span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="InMemoryLogger"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.InMemoryLogger.html#torchtnt.utils.loggers.InMemoryLogger">[docs]</a><span class="k">class</span> <span class="nc">InMemoryLogger</span><span class="p">(</span><span class="n">MetricLogger</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeLimitInterrupter"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter">[docs]</a><span class="k">class</span> <span class="nc">TimeLimitInterrupter</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Simple logger that buffers data in-memory.</span>
+<span class="sd">    This callback tracks the time spent in training and stops the training loop when it exceeds the specified duration.</span>
 
-<span class="sd">    Example:</span>
-<span class="sd">            from torchtnt.utils.loggers import InMemoryLogger</span>
-<span class="sd">            logger = InMemoryLogger()</span>
-<span class="sd">            logger.log(&quot;accuracy&quot;, 23.56, 10)</span>
-<span class="sd">            logger.close()</span>
+<span class="sd">    Args:</span>
+<span class="sd">        duration: The maximum amount of time to spend in training. Can be specified as a string in the form of DD:HH:MM (days, hours, minutes) or as a timedelta.</span>
+<span class="sd">            For example, to specify 20 hours is &quot;00:20:00&quot;.</span>
+<span class="sd">        interval: Can be either &quot;epoch&quot; or &quot;step&quot;. Determines whether to check for time limit exceeding on every epoch or step.</span>
+<span class="sd">        interval_freq: How often to check for time limit exceeding. For example, if interval is &quot;epoch&quot; and interval_freq is 2, then the callback will check every two epochs.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        This callback uses the global process group to communicate between ranks.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="InMemoryLogger.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.InMemoryLogger.html#torchtnt.utils.loggers.InMemoryLogger.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span><span class="p">:</span> <span class="n">OrderedDict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Logging metrics in-memory&quot;</span><span class="p">)</span>
-        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">duration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">],</span>
+        <span class="n">interval</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;epoch&quot;</span><span class="p">,</span>
+        <span class="n">interval_freq</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># checks if string matches DD:HH:MM format and is within valid range</span>
+            <span class="c1"># 00 &lt;= DD &lt;= 99</span>
+            <span class="c1"># 00 &lt;= HH &lt;= 23</span>
+            <span class="c1"># 00 &lt;= MM &lt;= 59</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^\d</span><span class="si">{2}</span><span class="s2">:(0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$&quot;</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Invalid duration format &#39;</span><span class="si">{</span><span class="n">duration</span><span class="si">}</span><span class="s2">&#39;. Expected format is DD:HH:MM&quot;</span>
+                <span class="p">)</span>
+            <span class="n">duration_format</span> <span class="o">=</span> <span class="n">duration</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="n">duration_format</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">duration_format</span><span class="p">))</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span>
+                <span class="n">days</span><span class="o">=</span><span class="n">duration_format</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">hours</span><span class="o">=</span><span class="n">duration_format</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">minutes</span><span class="o">=</span><span class="n">duration_format</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+            <span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">log_buffer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Directly access the buffer.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">duration</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">=</span> <span class="n">interval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interval_freq</span> <span class="o">=</span> <span class="n">interval_freq</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_global_rank</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">log_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">],</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add multiple scalar values.</span>
+<div class="viewcode-block" id="TimeLimitInterrupter.on_train_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span></div>
 
-<span class="sd">        Args:</span>
-<span class="sd">            payload (dict): dictionary of tag name and scalar value</span>
-<span class="sd">            step (int): step value to record</span>
+<div class="viewcode-block" id="TimeLimitInterrupter.on_train_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval_freq</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_should_stop</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TimeLimitInterrupter.on_train_epoch_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">==</span> <span class="s2">&quot;epoch&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval_freq</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_should_stop</span><span class="p">(</span><span class="n">state</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        All ranks sync with rank 0 determine if time limit has exceeded.</span>
+<span class="sd">        If so, indicates the training loop to stop.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">payload</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span>
+            <span class="n">should_stop</span> <span class="o">=</span> <span class="n">time_elapsed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">should_stop</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Scalar</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log scalar data to the in-memory buffer.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            name (string): a unique name to group scalars</span>
-<span class="sd">            data (float/int/Tensor): scalar data to log</span>
-<span class="sd">            step (int): step value to record</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="p">{})[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">scalar_to_float</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span><span class="p">[</span><span class="n">step</span><span class="p">][</span><span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span><span class="p">[</span><span class="n">step</span><span class="p">][</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">monotonic</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+        <span class="n">should_stop</span> <span class="o">=</span> <span class="n">sync_bool</span><span class="p">(</span><span class="n">should_stop</span><span class="p">,</span> <span class="n">coherence_mode</span><span class="o">=</span><span class="s2">&quot;rank_zero&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">should_stop</span><span class="p">:</span>
+            <span class="n">rank_zero_info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Training duration of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_duration</span><span class="si">}</span><span class="s2"> seconds has exceeded. Time elapsed is </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span><span class="si">}</span><span class="s2"> seconds. Stopping training.&quot;</span>
+            <span class="p">)</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
 </pre></div>
 
              </article>

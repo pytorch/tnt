@@ -374,6 +374,8 @@
 <span class="c1"># This source code is licensed under the BSD-style license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
@@ -684,16 +686,12 @@
 <span class="k">def</span> <span class="nf">collect_system_stats</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
     <span class="n">system_stats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">cpu_stats</span> <span class="o">=</span> <span class="n">get_psutil_cpu_stats</span><span class="p">()</span>
-
-    <span class="c1"># pyre-fixme</span>
-    <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cpu_stats</span><span class="p">)</span>
+    <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">cpu_stats</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">gpu_stats</span> <span class="o">=</span> <span class="n">get_nvidia_smi_gpu_stats</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-
-            <span class="c1"># pyre-fixme</span>
-            <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">gpu_stats</span><span class="p">)</span>
+            <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="n">gpu_stats</span><span class="p">)</span>
             <span class="n">system_stats</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">memory_stats</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unable to find nvidia-smi. Skipping GPU stats collection.&quot;</span><span class="p">)</span>

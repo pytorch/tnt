@@ -374,6 +374,8 @@
 <span class="c1"># This source code is licensed under the BSD-style license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">random</span>
@@ -383,6 +385,7 @@
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">cycle</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
+    <span class="n">cast</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
     <span class="n">Iterable</span><span class="p">,</span>
     <span class="n">Iterator</span><span class="p">,</span>
@@ -428,8 +431,7 @@
 
 <div class="viewcode-block" id="MultiIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter</span>
-        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]],</span>
+        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">DataIterationStrategy</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span> <span class="o">=</span> <span class="n">individual_dataloaders</span>
@@ -493,8 +495,7 @@
 
 <div class="viewcode-block" id="RoundRobinIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RoundRobinIterator.html#torchtnt.utils.data.RoundRobinIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter</span>
-        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]],</span>
+        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">RoundRobin</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">individual_dataloaders</span><span class="p">,</span> <span class="n">iteration_strategy</span><span class="p">)</span>
@@ -507,9 +508,9 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;WRAP_AROUND_UNTIL_KILLED is not implemented for RoundRobin&quot;</span>
             <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">individual_iterators</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">name</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">individual_iterators</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="n">round_robin_order</span> <span class="o">=</span> <span class="n">iteration_strategy</span><span class="o">.</span><span class="n">iteration_order</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">individual_iterators</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="p">)</span>
@@ -591,8 +592,7 @@
 
 <div class="viewcode-block" id="AllDatasetBatchesIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter</span>
-        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]],</span>
+        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">AllDatasetBatches</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">individual_dataloaders</span><span class="p">,</span> <span class="n">iteration_strategy</span><span class="p">)</span>
@@ -604,9 +604,9 @@
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;WRAP_AROUND_UNTIL_KILLED is not implemented for AllDatasetBatches&quot;</span>
             <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">individual_iterators</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">name</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">individual_iterators</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterators_finished</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
 
     <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
@@ -679,16 +679,15 @@
 
 <div class="viewcode-block" id="RandomizedBatchSamplerIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.html#torchtnt.utils.data.RandomizedBatchSamplerIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter</span>
-        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]],</span>
+        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">RandomizedBatchSampler</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">individual_dataloaders</span><span class="p">,</span> <span class="n">iteration_strategy</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_iteration_strategy</span> <span class="o">=</span> <span class="n">iteration_strategy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_individual_dataloaders</span> <span class="o">=</span> <span class="n">individual_dataloaders</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_individual_iterators</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">name</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_individual_iterators</span><span class="p">:</span> <span class="n">MutableMapping</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_iterator_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_individual_dataloaders</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="n">iteration_strategy</span><span class="o">.</span><span class="n">weights</span>
         <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -712,8 +711,9 @@
                 <span class="n">name</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">IntTensor</span><span class="p">([</span><span class="n">idx</span><span class="p">])</span>
                 <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterator_names</span><span class="p">)</span>
             <span class="p">}</span>
-            <span class="c1"># pyre-fixme[4]: missing attribute annotation</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">new_group</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;gloo&quot;</span><span class="p">,</span> <span class="n">ranks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span><span class="p">:</span> <span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">new_group</span><span class="p">(</span>
+                <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;gloo&quot;</span><span class="p">,</span> <span class="n">ranks</span><span class="o">=</span><span class="kc">None</span>
+            <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_iterators_finished</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
 
@@ -764,9 +764,7 @@
         <span class="p">):</span>
             <span class="n">key_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterator_names_dict</span><span class="p">[</span><span class="n">selected_key</span><span class="p">]</span>
             <span class="n">dist</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">key_idx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_process_group</span><span class="p">)</span>
-            <span class="c1"># pyre-fixme[6]: For 1st param expected `SupportsIndex` but got</span>
-            <span class="c1">#  `Union[bool, float, int]`.</span>
-            <span class="n">selected_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterator_names</span><span class="p">[</span><span class="n">key_idx</span><span class="o">.</span><span class="n">item</span><span class="p">()]</span>
+            <span class="n">selected_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterator_names</span><span class="p">[</span><span class="n">cast</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">key_idx</span><span class="o">.</span><span class="n">item</span><span class="p">())]</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_individual_iterators</span><span class="p">[</span><span class="n">selected_key</span><span class="p">])</span>
@@ -833,15 +831,14 @@
 
 <div class="viewcode-block" id="InOrderIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.InOrderIterator.html#torchtnt.utils.data.InOrderIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter</span>
-        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]],</span>
+        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">InOrder</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">individual_dataloaders</span><span class="p">,</span> <span class="n">iteration_strategy</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iteration_order</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">iteration_strategy</span><span class="o">.</span><span class="n">iteration_order</span> <span class="ow">or</span> <span class="nb">list</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">]</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cur_iter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterator</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">],</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cur_iterator</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>

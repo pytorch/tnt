@@ -374,6 +374,8 @@
 <span class="c1"># This source code is licensed under the BSD-style license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
@@ -510,7 +512,7 @@
     <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">_record_memory_history</span><span class="p">(</span>
         <span class="n">enabled</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">max_entries</span><span class="o">=</span><span class="n">trace_max_entries</span>
     <span class="p">)</span>
-    <span class="c1"># pyre-fixme[16]: Module `_C` has no attribute</span>
+    <span class="c1"># pyre-ignore[16]: Module `_C` has no attribute</span>
     <span class="c1">#  `_cuda_attach_out_of_memory_observer`.</span>
     <span class="n">torch</span><span class="o">.</span><span class="n">_C</span><span class="o">.</span><span class="n">_cuda_attach_out_of_memory_observer</span><span class="p">(</span><span class="n">_oom_observer</span><span class="p">(</span><span class="n">output_dir</span><span class="p">))</span></div>
 </pre></div>

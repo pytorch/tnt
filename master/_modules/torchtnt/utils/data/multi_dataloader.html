@@ -374,6 +374,8 @@
 <span class="c1"># This source code is licensed under the BSD-style license found in the</span>
 <span class="c1"># LICENSE file in the root directory of this source tree.</span>
 
+<span class="c1"># pyre-strict</span>
+
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -412,8 +414,7 @@
 
 <div class="viewcode-block" id="MultiDataLoader.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiDataLoader.html#torchtnt.utils.data.MultiDataLoader.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="c1"># pyre-fixme[24]: Generic type `Iterable` expects 1 type parameter</span>
-        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]],</span>
+        <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">DataIterationStrategy</span><span class="p">,</span>
         <span class="n">iterator_cls</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">MultiIterator</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">ignore_empty_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -443,13 +444,12 @@
         <span class="n">iterator_cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator_cls</span>
         <span class="k">if</span> <span class="n">iterator_cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">iterator_cls</span> <span class="o">=</span> <span class="n">DataIterationStrategyRegistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_strategy</span><span class="p">)</span>
-        <span class="c1"># pyre-fixme[16]: `MultiDataLoader` has no attribute `iterator`.</span>
-        <span class="c1"># pyre-fixme[45]: Cannot instantiate abstract class `MultiIterator`.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span> <span class="o">=</span> <span class="n">iterator_cls</span><span class="p">(</span>
+        <span class="c1"># in practice, DataIterationStrategyRegistry.get() returns just concrete classes</span>
+        <span class="c1"># pyre-ignore[45]: Cannot instantiate abstract class `MultiIterator`.</span>
+        <span class="k">return</span> <span class="n">iterator_cls</span><span class="p">(</span>
             <span class="n">individual_dataloaders</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span><span class="p">,</span>
             <span class="n">iteration_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_strategy</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator</span>
 
     <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an aggregated state dict based on individual dataloaders.</span>
