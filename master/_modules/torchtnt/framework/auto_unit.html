@@ -863,7 +863,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">grad_scaler</span> <span class="o">=</span> <span class="n">get_grad_scaler_from_precision</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span>
+                <span class="n">is_fsdp_module</span><span class="o">=</span><span class="n">_is_fsdp_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">),</span>
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">=</span> <span class="n">step_lr_interval</span>

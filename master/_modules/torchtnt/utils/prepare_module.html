@@ -382,15 +382,25 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
 <span class="kn">from</span> <span class="nn">torch.distributed</span> <span class="kn">import</span> <span class="n">ProcessGroup</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">FSDP</span><span class="p">,</span> <span class="n">StateDictType</span>
+<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">FSDP</span><span class="p">,</span>
+    <span class="n">StateDictType</span> <span class="k">as</span> <span class="n">_StateDictType</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torch.distributed.fsdp.api</span> <span class="kn">import</span> <span class="n">OptimStateDictConfig</span><span class="p">,</span> <span class="n">StateDictConfig</span>
 <span class="kn">from</span> <span class="nn">torch.distributed.fsdp.fully_sharded_data_parallel</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">BackwardPrefetch</span><span class="p">,</span>
+    <span class="n">BackwardPrefetch</span> <span class="k">as</span> <span class="n">_BackwardPrefetch</span><span class="p">,</span>
     <span class="n">CPUOffload</span><span class="p">,</span>
-    <span class="n">MixedPrecision</span><span class="p">,</span>
-    <span class="n">ShardingStrategy</span><span class="p">,</span>
+    <span class="n">MixedPrecision</span> <span class="k">as</span> <span class="n">_MixedPrecision</span><span class="p">,</span>
+    <span class="n">ShardingStrategy</span> <span class="k">as</span> <span class="n">_ShardingStrategy</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DistributedDataParallel</span> <span class="k">as</span> <span class="n">DDP</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.fsdp_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BackwardPrefetch</span><span class="p">,</span>
+    <span class="n">MixedPrecision</span><span class="p">,</span>
+    <span class="n">ShardingStrategy</span><span class="p">,</span>
+    <span class="n">StateDictType</span><span class="p">,</span>
+<span class="p">)</span>
+
 <span class="kn">from</span> <span class="nn">torchtnt.utils.rank_zero_log</span> <span class="kn">import</span> <span class="n">rank_zero_warn</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">is_torch_version_geq_1_12</span><span class="p">,</span>
@@ -460,11 +470,13 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dataclass representing the `FullyShardedDataParallel &lt;https://pytorch.org/docs/stable/fsdp.html&gt;`_ strategy&quot;&quot;&quot;</span>
 
     <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">sharding_strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShardingStrategy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">sharding_strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_ShardingStrategy</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">cpu_offload</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CPUOffload</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">auto_wrap_policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">backward_prefetch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BackwardPrefetch</span><span class="p">]</span> <span class="o">=</span> <span class="n">BackwardPrefetch</span><span class="o">.</span><span class="n">BACKWARD_PRE</span>
-    <span class="n">mixed_precision</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MixedPrecision</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">backward_prefetch</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_BackwardPrefetch</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_BackwardPrefetch</span><span class="o">.</span><span class="n">BACKWARD_PRE</span>
+    <span class="p">)</span>
+    <span class="n">mixed_precision</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">_MixedPrecision</span><span class="p">,</span> <span class="n">MixedPrecision</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">ignored_modules</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">param_init_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">sync_module_states</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -474,9 +486,28 @@
 
     <span class="c1"># FSDP set_state_dict_type params: https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.set_state_dict_type</span>
     <span class="c1"># for setting type of state dict for checkpointing</span>
-    <span class="n">state_dict_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StateDictType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">state_dict_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_StateDictType</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">optim_state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimStateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">optim_state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimStateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sharding_strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sharding_strategy</span> <span class="o">=</span> <span class="n">ShardingStrategy</span><span class="o">.</span><span class="n">to_native_sharding_strategy</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sharding_strategy</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backward_prefetch</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backward_prefetch</span> <span class="o">=</span> <span class="n">BackwardPrefetch</span><span class="o">.</span><span class="n">to_native_backward_prefetch</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">backward_prefetch</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_dict_type</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_dict_type</span> <span class="o">=</span> <span class="n">StateDictType</span><span class="o">.</span><span class="n">to_native_state_dict_type</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_dict_type</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span><span class="p">,</span> <span class="n">MixedPrecision</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span><span class="o">.</span><span class="n">to_native_mixed_precision</span><span class="p">()</span></div>
 
 
 <span class="nd">@dataclass</span>
