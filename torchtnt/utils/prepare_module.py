@@ -8,7 +8,7 @@
 
 from dataclasses import asdict, dataclass
 from functools import partial
-from typing import Any, Callable, Dict, Iterable, Optional, Union
+from typing import Any, Callable, cast, Dict, Iterable, Optional, Union
 
 import torch
 import torch.distributed as dist
@@ -307,6 +307,7 @@ def prepare_module(
     strategy: Optional[Union[Strategy, str]] = None,
     torch_compile_params: Optional[TorchCompileParams] = None,
     activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
+    enable_compiled_autograd: bool = False,
 ) -> torch.nn.Module:
     """
     Utility to move a module to device, set up parallelism, activation checkpointing and compile.
@@ -317,6 +318,7 @@ def prepare_module(
         strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp``, ``fsdp``, or ``noop``.
         torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html.
         activation_checkpoint_params: params for enabling activation checkpointing.
+        enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.
     """
 
     if strategy:
@@ -331,6 +333,20 @@ def prepare_module(
                 raise RuntimeError(
                     "Torch version >= 2.1.0 required for Torch compile + DDP with static graph"
                 )
+
+            if enable_compiled_autograd:
+                if not torch_compile_params:
+                    raise RuntimeError(
+                        "Compiled autograd should only be used when the module is compiled."
+                    )
+                try:
+                    from torch._dynamo.trace_rules import LEGACY_MOD_INLINELIST
+
+                    LEGACY_MOD_INLINELIST.add("torch.nn.parallel.distributed")
+                except ImportError:
+                    pass
+                # This has to be set before DDP wrapping
+                torch._dynamo.config.optimize_ddp = "python_reducer"
             module = prepare_ddp(module, device, strategy)
         elif isinstance(strategy, FSDPStrategy):
             if torch_compile_params and strategy.use_orig_params is False:
@@ -367,7 +383,9 @@ def prepare_module(
             rank_zero_warn(
                 "Please install PyTorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing."
             )
-            torch.compile(module, **asdict(torch_compile_params))
+            return cast(
+                torch.nn.Module, torch.compile(module, **asdict(torch_compile_params))
+            )
 
     return module
 

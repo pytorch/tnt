@@ -11,7 +11,17 @@ import contextlib
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Generic, Iterator, List, Optional, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    ContextManager,
+    Generic,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import torch
 from pyre_extensions import none_throws
@@ -418,6 +428,7 @@ class AutoUnit(
         torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html
         activation_checkpoint_params: params for enabling activation checkpointing
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
+        enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.
 
     Note:
         Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.
@@ -446,6 +457,7 @@ class AutoUnit(
         torch_compile_params: Optional[TorchCompileParams] = None,
         activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
         training: bool = True,
+        enable_compiled_autograd: bool = False,
     ) -> None:
         super().__init__(
             module=module,
@@ -488,6 +500,7 @@ class AutoUnit(
             strategy=strategy,
             torch_compile_params=torch_compile_params,
             activation_checkpoint_params=activation_checkpoint_params,
+            enable_compiled_autograd=enable_compiled_autograd,
         )
 
         self.grad_scaler: Optional[torch.amp.GradScaler] = None
@@ -506,6 +519,7 @@ class AutoUnit(
 
         # create autocast context based on precision and device type
 
+        self.enable_compiled_autograd = enable_compiled_autograd
         self.training = training
 
         self.optimizer: Optional[torch.optim.Optimizer] = None
@@ -586,13 +600,27 @@ class AutoUnit(
             # normalize loss to account for gradient accumulation
             loss = loss / self.gradient_accumulation_steps
 
-            if grad_scaler:
-                scaled_loss = grad_scaler.scale(loss)
-                with get_timing_context(state, f"{self.__class__.__name__}.backward"):
-                    scaled_loss.backward()
-            else:
-                with get_timing_context(state, f"{self.__class__.__name__}.backward"):
-                    loss.backward()
+            try:
+                from torch._dynamo.utils import maybe_enable_compiled_autograd
+            except ImportError:
+
+                def maybe_enable_compiled_autograd(
+                    val: bool,
+                ) -> ContextManager:
+                    return contextlib.nullcontext()
+
+            with maybe_enable_compiled_autograd(self.enable_compiled_autograd):
+                if grad_scaler:
+                    scaled_loss = grad_scaler.scale(loss)
+                    with get_timing_context(
+                        state, f"{self.__class__.__name__}.backward"
+                    ):
+                        scaled_loss.backward()
+                else:
+                    with get_timing_context(
+                        state, f"{self.__class__.__name__}.backward"
+                    ):
+                        loss.backward()
 
         total_grad_norm = None
         if should_update_weights:
