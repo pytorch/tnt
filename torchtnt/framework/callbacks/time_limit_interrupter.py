@@ -8,8 +8,8 @@
 
 import re
 import time
-from datetime import timedelta
-from typing import Literal, Union
+from datetime import datetime, timedelta
+from typing import Literal, Optional, Union
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
@@ -27,6 +27,8 @@ class TimeLimitInterrupter(Callback):
             For example, to specify 20 hours is "00:20:00".
         interval: Can be either "epoch" or "step". Determines whether to check for time limit exceeding on every epoch or step.
         interval_freq: How often to check for time limit exceeding. For example, if interval is "epoch" and interval_freq is 2, then the callback will check every two epochs.
+        timestamp: Optional datetime object indicating the timestamp at which the training should end. The training will be stopped at the specified timestamp even if the maximum
+            job duration has not been reached yet. Local timezone is assumed if the provided object is not timezone aware.
 
     Note:
         This callback uses the global process group to communicate between ranks.
@@ -38,6 +40,7 @@ class TimeLimitInterrupter(Callback):
         duration: Union[str, timedelta],
         interval: Literal["epoch", "step"] = "epoch",
         interval_freq: int = 1,
+        timestamp: Optional[datetime] = None,
     ) -> None:
         if isinstance(duration, str):
             # checks if string matches DD:HH:MM format and is within valid range
@@ -64,6 +67,10 @@ class TimeLimitInterrupter(Callback):
         self._rank: int = get_global_rank()
         self._start_time: float = 0
 
+        self._timestamp: Optional[datetime] = None
+        if _timestamp := timestamp:
+            self._timestamp = _timestamp.astimezone()
+
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         if self._rank == 0:
             self._start_time = time.monotonic()
@@ -80,19 +87,32 @@ class TimeLimitInterrupter(Callback):
 
     def _should_stop(self, state: State) -> None:
         """
-        All ranks sync with rank 0 determine if time limit has exceeded.
+        Check the max duration and the max timestamp to determine if training should stop.
+        All ranks sync with rank 0 to determine if any of the stop conditions are met.
         If so, indicates the training loop to stop.
         """
+        past_timestamp_limit = False
+        past_duration_limit = False
 
         if self._rank == 0:
-            time_elapsed = time.monotonic() - self._start_time
-            should_stop = time_elapsed >= self._duration
-        else:
-            should_stop = False
+            if timestamp := self._timestamp:
+                past_timestamp_limit = datetime.now().astimezone() >= timestamp
 
-        should_stop = sync_bool(should_stop, coherence_mode="rank_zero")
-        if should_stop:
-            rank_zero_info(
-                f"Training duration of {self._duration} seconds has exceeded. Time elapsed is {time.monotonic() - self._start_time} seconds. Stopping training."
-            )
+            time_elapsed = time.monotonic() - self._start_time
+            past_duration_limit = time_elapsed >= self._duration
+
+        local_should_stop = past_timestamp_limit or past_duration_limit
+        global_should_stop = sync_bool(local_should_stop, coherence_mode="rank_zero")
+
+        if global_should_stop:
+            reason = ""
+            if past_timestamp_limit:
+                reason = f"Training timestamp limit {self._timestamp} has been reached."
+            elif past_duration_limit:
+                reason = (
+                    f"Training duration of {self._duration} seconds has exceeded."
+                    f"Time elapsed is {time.monotonic() - self._start_time} seconds."
+                )
+
+            rank_zero_info(f"{reason} Stopping training.")
             state.stop()
