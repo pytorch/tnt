@@ -176,6 +176,10 @@ class PrepareModelTest(unittest.TestCase):
 
     @skip_if_not_distributed
     @skip_if_not_gpu
+    @unittest.skipUnless(
+        condition=bool(torch.cuda.device_count() >= 2),
+        reason="This test needs 2 GPUs to run.",
+    )
     def test_fdsp_str_types(self) -> None:
         spawn_multi_process(
             2,
