@@ -377,8 +377,8 @@
 
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
@@ -396,6 +396,12 @@
 <span class="sd">            For example, to specify 20 hours is &quot;00:20:00&quot;.</span>
 <span class="sd">        interval: Can be either &quot;epoch&quot; or &quot;step&quot;. Determines whether to check for time limit exceeding on every epoch or step.</span>
 <span class="sd">        interval_freq: How often to check for time limit exceeding. For example, if interval is &quot;epoch&quot; and interval_freq is 2, then the callback will check every two epochs.</span>
+<span class="sd">        timestamp: Optional datetime object indicating the timestamp at which the training should end. The training will be stopped even if the maximum</span>
+<span class="sd">            job duration has not been reached yet. Object must be timezone aware.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the duration is not specified as a string in the form of DD:HH:MM or as a timedelta.</span>
+<span class="sd">            Or if the timestamp datetime object is not timezone aware.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        This callback uses the global process group to communicate between ranks.</span>
@@ -407,6 +413,7 @@
         <span class="n">duration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">],</span>
         <span class="n">interval</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;epoch&quot;</span><span class="p">,</span>
         <span class="n">interval_freq</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">timestamp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="c1"># checks if string matches DD:HH:MM format and is within valid range</span>
@@ -433,6 +440,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_global_rank</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_timestamp</span> <span class="o">=</span> <span class="n">timestamp</span>
+        <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">tzinfo</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid timestamp. Expected a timezone aware datetime object.&quot;</span>
+            <span class="p">)</span>
+
 <div class="viewcode-block" id="TimeLimitInterrupter.on_train_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span></div>
@@ -449,21 +462,34 @@
 
     <span class="k">def</span> <span class="nf">_should_stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        All ranks sync with rank 0 determine if time limit has exceeded.</span>
+<span class="sd">        Check the max duration and the max timestamp to determine if training should stop.</span>
+<span class="sd">        All ranks sync with rank 0 to determine if any of the stop conditions are met.</span>
 <span class="sd">        If so, indicates the training loop to stop.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">past_timestamp_limit</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">past_duration_limit</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span>
-            <span class="n">should_stop</span> <span class="o">=</span> <span class="n">time_elapsed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">should_stop</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">timestamp</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timestamp</span><span class="p">:</span>
+                <span class="n">past_timestamp_limit</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">astimezone</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">timestamp</span>
 
-        <span class="n">should_stop</span> <span class="o">=</span> <span class="n">sync_bool</span><span class="p">(</span><span class="n">should_stop</span><span class="p">,</span> <span class="n">coherence_mode</span><span class="o">=</span><span class="s2">&quot;rank_zero&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">should_stop</span><span class="p">:</span>
-            <span class="n">rank_zero_info</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Training duration of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_duration</span><span class="si">}</span><span class="s2"> seconds has exceeded. Time elapsed is </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span><span class="si">}</span><span class="s2"> seconds. Stopping training.&quot;</span>
-            <span class="p">)</span>
+            <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span>
+            <span class="n">past_duration_limit</span> <span class="o">=</span> <span class="n">time_elapsed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span>
+
+        <span class="n">local_should_stop</span> <span class="o">=</span> <span class="n">past_timestamp_limit</span> <span class="ow">or</span> <span class="n">past_duration_limit</span>
+        <span class="n">global_should_stop</span> <span class="o">=</span> <span class="n">sync_bool</span><span class="p">(</span><span class="n">local_should_stop</span><span class="p">,</span> <span class="n">coherence_mode</span><span class="o">=</span><span class="s2">&quot;rank_zero&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">global_should_stop</span><span class="p">:</span>
+            <span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">past_timestamp_limit</span><span class="p">:</span>
+                <span class="n">reason</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Training timestamp limit </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_timestamp</span><span class="si">}</span><span class="s2"> has been reached.&quot;</span>
+            <span class="k">elif</span> <span class="n">past_duration_limit</span><span class="p">:</span>
+                <span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Training duration of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_duration</span><span class="si">}</span><span class="s2"> seconds has exceeded. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Time elapsed is </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span><span class="si">}</span><span class="s2"> seconds.&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">rank_zero_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2"> Stopping training.&quot;</span><span class="p">)</span>
             <span class="n">state</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
 </pre></div>
 
