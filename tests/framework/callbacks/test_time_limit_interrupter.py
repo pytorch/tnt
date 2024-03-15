@@ -8,11 +8,12 @@
 
 
 import unittest
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, Mock, patch
 
-from torchtnt.framework._test_utils import DummyTrainUnit, get_dummy_train_state
+import torchtnt.framework.callbacks.time_limit_interrupter as time_limit_interrupter
 
+from torchtnt.framework._test_utils import DummyTrainUnit, get_dummy_train_state
 from torchtnt.framework.callbacks.time_limit_interrupter import TimeLimitInterrupter
 
 
@@ -51,6 +52,64 @@ class TimeLimitInterrupterTest(unittest.TestCase):
             mock_time_monotonic.return_value = 42 * 60
             tli._should_stop(state)
             self.assertTrue(state._should_stop)
+
+    @patch(f"{time_limit_interrupter.__name__}.datetime", wraps=datetime)
+    @patch("time.monotonic")
+    def test_should_stop_with_timestamp_limit(
+        self,
+        mock_time_monotonic: MagicMock,
+        mock_datetime: MagicMock,
+    ) -> None:
+        tli = TimeLimitInterrupter(
+            duration="00:00:25", timestamp=datetime(2024, 3, 12, 15, 25, 0).astimezone()
+        )
+        state = get_dummy_train_state()
+
+        mock_time_monotonic.return_value = 0
+        tli.on_train_start(state, Mock())
+
+        # Max duration not reached, timestamp limit not reached -> Should not stop
+        mock_datetime.now.return_value = datetime(2024, 3, 12, 15, 0, 0)
+        mock_time_monotonic.return_value = 5 * 60
+        tli._should_stop(state)
+        self.assertFalse(state._should_stop)
+
+        # Max duration reached, timestamp limit not reached -> Should stop
+        mock_datetime.now.return_value = datetime(2024, 3, 12, 15, 0, 0)
+        mock_time_monotonic.return_value = 50 * 60
+        state._should_stop = False
+        tli._should_stop(state)
+        self.assertTrue(state._should_stop)
+
+        # Max duration not reached, timestamp limit reached -> Should stop
+        mock_datetime.now.return_value = datetime(2024, 3, 12, 15, 25, 0)
+        mock_time_monotonic.return_value = 5 * 60
+        state._should_stop = False
+        tli._should_stop(state)
+        self.assertTrue(state._should_stop)
+
+        # Test timestamp limit reached with a different timezone -> Should stop
+        tli = TimeLimitInterrupter(
+            duration="00:00:25",
+            timestamp=datetime.strptime(
+                "2024-03-13 10:00:00 +0000", "%Y-%m-%d %H:%M:%S %z"
+            ),
+        )
+        state = get_dummy_train_state()
+        mock_time_monotonic.return_value = 0
+        tli.on_train_start(state, Mock())
+        mock_datetime.now.return_value = datetime.strptime(
+            "2024-03-13 9:00:00 -0100", "%Y-%m-%d %H:%M:%S %z"
+        )
+        mock_time_monotonic.return_value = 5 * 60
+        tli._should_stop(state)
+        self.assertTrue(state._should_stop)
+
+        # Test not timezone aware datetime -> Expected error
+        with self.assertRaisesRegex(
+            ValueError, "Invalid timestamp. Expected a timezone aware datetime object."
+        ):
+            tli = TimeLimitInterrupter(duration="00:00:25", timestamp=datetime.now())
 
     def test_interval(self) -> None:
         tli = TimeLimitInterrupter(duration="00:00:42", interval="epoch")
