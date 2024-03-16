@@ -10,11 +10,14 @@
 
 import logging
 from enum import auto, Enum
-from typing import Any, Iterable, Optional
+from typing import Generic, Iterable, Optional, TypeVar
 
 from torchtnt.utils.timer import BoundedTimer, TimerProtocol
 
 _logger: logging.Logger = logging.getLogger(__name__)
+
+TStepOutput = TypeVar("TStepOutput")
+TData = TypeVar("TData")
 
 
 def _check_loop_condition(name: str, val: Optional[int]) -> None:
@@ -58,7 +61,7 @@ class ActivePhase(Enum):
     PREDICT = auto()
 
 
-class PhaseState:
+class PhaseState(Generic[TData, TStepOutput]):
     """State for each phase (train, eval, predict).
     Modified by the framework, read-only for the user.
     """
@@ -66,8 +69,7 @@ class PhaseState:
     def __init__(
         self,
         *,
-        # pyre-fixme[2]: Parameter annotation cannot contain `Any`.
-        dataloader: Iterable[Any],
+        dataloader: Iterable[TData],
         max_epochs: Optional[int] = None,  # used only for train
         max_steps: Optional[int] = None,  # used only for train
         max_steps_per_epoch: Optional[int] = None,
@@ -80,23 +82,20 @@ class PhaseState:
         _check_loop_condition("evaluate_every_n_steps", evaluate_every_n_steps)
         _check_loop_condition("evaluate_every_n_epochs", evaluate_every_n_epochs)
 
-        # pyre-fixme[4]: Attribute annotation cannot contain `Any`.
-        self._dataloader: Iterable[Any] = dataloader
+        self._dataloader: Iterable[TData] = dataloader
         self._max_epochs = max_epochs
         self._max_steps = max_steps
         self._max_steps_per_epoch = max_steps_per_epoch
         self._evaluate_every_n_steps = evaluate_every_n_steps
         self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
-        # pyre-fixme[4]: Attribute annotation cannot be `Any`.
-        self._step_output: Any = None
+        self._step_output: Optional[TStepOutput] = None
         self._iteration_timer = BoundedTimer(
             cuda_sync=False, lower_bound=1_000, upper_bound=5_000
         )
 
     @property
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
-    def dataloader(self) -> Iterable[Any]:
+    def dataloader(self) -> Iterable[TData]:
         """Dataloader defined by the user."""
         return self._dataloader
 
@@ -126,8 +125,7 @@ class PhaseState:
         return self._evaluate_every_n_epochs
 
     @property
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
-    def step_output(self) -> Any:
+    def step_output(self) -> Optional[TStepOutput]:
         """Output of the last step."""
         return self._step_output
 
@@ -135,6 +133,9 @@ class PhaseState:
     def iteration_timer(self) -> TimerProtocol:
         """An always-on :class:`~torchtnt.utils.TimerProtocol` object which contains CPU timings (without synchronisation) of the iterations."""
         return self._iteration_timer
+
+
+TPhaseState = PhaseState[TData, TStepOutput]
 
 
 class State:
@@ -147,9 +148,9 @@ class State:
         *,
         entry_point: EntryPoint,
         timer: Optional[TimerProtocol] = None,
-        train_state: Optional[PhaseState] = None,
-        eval_state: Optional[PhaseState] = None,
-        predict_state: Optional[PhaseState] = None,
+        train_state: Optional[TPhaseState] = None,
+        eval_state: Optional[TPhaseState] = None,
+        predict_state: Optional[TPhaseState] = None,
     ) -> None:
         self._entry_point = entry_point
         self._timer = timer
@@ -175,17 +176,17 @@ class State:
         return self._timer
 
     @property
-    def train_state(self) -> Optional[PhaseState]:
+    def train_state(self) -> Optional[TPhaseState]:
         """A :class:`~torchtnt.framework.state.PhaseState` object which contains meta information about the train phase."""
         return self._train_state
 
     @property
-    def eval_state(self) -> Optional[PhaseState]:
+    def eval_state(self) -> Optional[TPhaseState]:
         """A :class:`~torchtnt.framework.state.PhaseState` object which contains meta information about the eval phase."""
         return self._eval_state
 
     @property
-    def predict_state(self) -> Optional[PhaseState]:
+    def predict_state(self) -> Optional[TPhaseState]:
         """A :class:`~torchtnt.framework.state.PhaseState` object which contains meta information about the predict phase."""
         return self._predict_state
 
