@@ -19,6 +19,8 @@
       ~TensorBoardLogger.log
       ~TensorBoardLogger.log_audio
       ~TensorBoardLogger.log_dict
+      ~TensorBoardLogger.log_figure
+      ~TensorBoardLogger.log_histogram
       ~TensorBoardLogger.log_hparams
       ~TensorBoardLogger.log_image
       ~TensorBoardLogger.log_images

@@ -536,6 +536,17 @@
         <span class="k">if</span> <span class="n">writer</span><span class="p">:</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">add_images</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">log_figure</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add matplotlib figure to TensorBoard.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args (Any): Positional arguments passed to SummaryWriter.add_figure</span>
+<span class="sd">            **kwargs(Any): Keyword arguments passed to SummaryWriter.add_figure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span>
+        <span class="k">if</span> <span class="n">writer</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">add_figure</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">log_audio</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add audio data to TensorBoard.</span>
 
@@ -570,6 +581,16 @@
                 <span class="n">global_step</span><span class="o">=</span><span class="n">global_step</span><span class="p">,</span>
                 <span class="n">walltime</span><span class="o">=</span><span class="n">walltime</span><span class="p">,</span>
             <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">log_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add histogram to TensorBoard.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args (Any): Positional arguments passed to SummaryWriter.add_histogram</span>
+<span class="sd">            **kwargs(Any): Keyword arguments passed to SummaryWriter.add_histogram</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">add_histogram</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Writes pending logs to disk.&quot;&quot;&quot;</span>
