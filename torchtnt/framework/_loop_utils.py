@@ -89,21 +89,3 @@ def _reset_module_training_mode(
 
 def _log_api_usage(entry_point: str) -> None:
     torch._C._log_api_usage_once(f"torchtnt.framework.{entry_point}")
-
-
-def _step_requires_iterator(step_func: Callable[[State, T], object]) -> bool:
-    """
-    Helper function to evaluate whether the loops should pass the data iterator to the `_step`
-    functions, or whether the loop should call `next(data_iter)` and pass a single batch to process.
-
-    This is closely tied to the Unit's corresponding step function signature.
-    """
-    argspec = inspect.getfullargspec(step_func)
-    annotations = argspec.annotations
-    if "data" not in annotations:
-        _logger.warning(
-            f"Expected step function to have an annotated argument named ``data``. Found {annotations}."
-        )
-        return False
-    annotated_type = annotations["data"]
-    return typing_extensions.get_origin(annotated_type) is collections.abc.Iterator
