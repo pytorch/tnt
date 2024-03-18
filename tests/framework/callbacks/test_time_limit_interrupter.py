@@ -88,9 +88,8 @@ class TimeLimitInterrupterTest(unittest.TestCase):
         tli._should_stop(state)
         self.assertTrue(state._should_stop)
 
-        # Test timestamp limit reached with a different timezone -> Should stop
+        # Test timestamp limit reached with a different timezone, no duration -> Should stop
         tli = TimeLimitInterrupter(
-            duration="00:00:25",
             timestamp=datetime.strptime(
                 "2024-03-13 10:00:00 +0000", "%Y-%m-%d %H:%M:%S %z"
             ),
@@ -101,7 +100,6 @@ class TimeLimitInterrupterTest(unittest.TestCase):
         mock_datetime.now.return_value = datetime.strptime(
             "2024-03-13 9:00:00 -0100", "%Y-%m-%d %H:%M:%S %z"
         )
-        mock_time_monotonic.return_value = 5 * 60
         tli._should_stop(state)
         self.assertTrue(state._should_stop)
 
@@ -110,6 +108,61 @@ class TimeLimitInterrupterTest(unittest.TestCase):
             ValueError, "Invalid timestamp. Expected a timezone aware datetime object."
         ):
             tli = TimeLimitInterrupter(duration="00:00:25", timestamp=datetime.now())
+
+    @patch(f"{time_limit_interrupter.__name__}.datetime", wraps=datetime)
+    @patch("time.monotonic")
+    def test_should_stop_optional_params(
+        self,
+        mock_time_monotonic: MagicMock,
+        mock_datetime: MagicMock,
+    ) -> None:
+        # Test only input duration
+        tli = TimeLimitInterrupter(duration="00:00:42")
+        self.assertEqual(tli._duration, 42 * 60)
+        self.assertIsNone(tli._timestamp)
+
+        state = get_dummy_train_state()
+        mock_time_monotonic.return_value = 0
+        tli.on_train_start(state, Mock())
+
+        mock_time_monotonic.return_value = 42 * 60
+        tli._should_stop(state)
+        self.assertTrue(state._should_stop)
+
+        # Test only input timestamp
+        tms = datetime(2024, 3, 12, 15, 25, 0).astimezone()
+        tli = TimeLimitInterrupter(timestamp=tms)
+        self.assertEqual(tli._timestamp, tms)
+        self.assertIsNone(tli._duration)
+
+        state = get_dummy_train_state()
+        mock_time_monotonic.return_value = 0
+        tli.on_train_start(state, Mock())
+
+        mock_datetime.now.return_value = tms
+        tli._should_stop(state)
+        self.assertTrue(state._should_stop)
+
+        # Test input both duration and timestamp
+        mock_time_monotonic.return_value = 0
+        tms = datetime.now().astimezone()
+        tli = TimeLimitInterrupter(timestamp=tms, duration="00:00:42")
+        self.assertEqual(tli._timestamp, tms)
+        self.assertEqual(tli._duration, 42 * 60)
+
+        # Test no input error
+        with self.assertRaisesRegex(
+            ValueError,
+            "Invalid parameters. Expected at least one of duration or timestamp to be specified.",
+        ):
+            TimeLimitInterrupter()
+
+        # Test empty duration i.e. not input error
+        with self.assertRaisesRegex(
+            ValueError,
+            "Invalid parameters. Expected at least one of duration or timestamp to be specified.",
+        ):
+            TimeLimitInterrupter(duration="")
 
     def test_interval(self) -> None:
         tli = TimeLimitInterrupter(duration="00:00:42", interval="epoch")
