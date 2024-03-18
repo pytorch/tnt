@@ -20,10 +20,11 @@ from torchtnt.utils.rank_zero_log import rank_zero_info
 
 class TimeLimitInterrupter(Callback):
     """
-    This callback tracks the time spent in training and stops the training loop when it exceeds the specified duration.
+    This callback tracks the time spent in training and stops the training loop when a time limit is reached. It is possible to define a maximum duration for the training job,
+    and/or an absolute timestamp limit. At least one of them should be provided. If both are provided, the callback will stop the training loop when the first condition is met.
 
     Args:
-        duration: The maximum amount of time to spend in training. Can be specified as a string in the form of DD:HH:MM (days, hours, minutes) or as a timedelta.
+        duration: Optional, the maximum amount of time to spend in training. Can be specified as a string in the form of DD:HH:MM (days, hours, minutes) or as a timedelta.
             For example, to specify 20 hours is "00:20:00".
         interval: Can be either "epoch" or "step". Determines whether to check for time limit exceeding on every epoch or step.
         interval_freq: How often to check for time limit exceeding. For example, if interval is "epoch" and interval_freq is 2, then the callback will check every two epochs.
@@ -31,8 +32,10 @@ class TimeLimitInterrupter(Callback):
             job duration has not been reached yet. Object must be timezone aware.
 
     Raises:
-        ValueError: If the duration is not specified as a string in the form of DD:HH:MM or as a timedelta.
-            Or if the timestamp datetime object is not timezone aware.
+        ValueError:
+            - If the duration is not specified as a string in the form of DD:HH:MM or as a timedelta.
+            - If the timestamp datetime object is not timezone aware.
+            - If both duration and timestamp are None (i.e. at least one must be specified).
 
     Note:
         This callback uses the global process group to communicate between ranks.
@@ -41,11 +44,16 @@ class TimeLimitInterrupter(Callback):
 
     def __init__(
         self,
-        duration: Union[str, timedelta],
+        duration: Optional[Union[str, timedelta]] = None,
         interval: Literal["epoch", "step"] = "epoch",
         interval_freq: int = 1,
         timestamp: Optional[datetime] = None,
     ) -> None:
+        if not (duration or timestamp):
+            raise ValueError(
+                "Invalid parameters. Expected at least one of duration or timestamp to be specified."
+            )
+
         if isinstance(duration, str):
             # checks if string matches DD:HH:MM format and is within valid range
             # 00 <= DD <= 99
@@ -64,7 +72,10 @@ class TimeLimitInterrupter(Callback):
                 minutes=duration_format[2],
             )
 
-        self._duration: float = duration.total_seconds()
+        self._duration: Optional[float] = None
+        if duration:
+            self._duration = duration.total_seconds()
+
         self._interval = interval
         self._interval_freq = interval_freq
 
@@ -104,8 +115,9 @@ class TimeLimitInterrupter(Callback):
             if timestamp := self._timestamp:
                 past_timestamp_limit = datetime.now().astimezone() >= timestamp
 
-            time_elapsed = time.monotonic() - self._start_time
-            past_duration_limit = time_elapsed >= self._duration
+            if duration := self._duration:
+                time_elapsed = time.monotonic() - self._start_time
+                past_duration_limit = time_elapsed >= duration
 
         local_should_stop = past_timestamp_limit or past_duration_limit
         global_should_stop = sync_bool(local_should_stop, coherence_mode="rank_zero")
