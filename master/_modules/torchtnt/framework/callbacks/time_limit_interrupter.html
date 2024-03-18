@@ -389,10 +389,11 @@
 
 <div class="viewcode-block" id="TimeLimitInterrupter"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter">[docs]</a><span class="k">class</span> <span class="nc">TimeLimitInterrupter</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This callback tracks the time spent in training and stops the training loop when it exceeds the specified duration.</span>
+<span class="sd">    This callback tracks the time spent in training and stops the training loop when a time limit is reached. It is possible to define a maximum duration for the training job,</span>
+<span class="sd">    and/or an absolute timestamp limit. At least one of them should be provided. If both are provided, the callback will stop the training loop when the first condition is met.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        duration: The maximum amount of time to spend in training. Can be specified as a string in the form of DD:HH:MM (days, hours, minutes) or as a timedelta.</span>
+<span class="sd">        duration: Optional, the maximum amount of time to spend in training. Can be specified as a string in the form of DD:HH:MM (days, hours, minutes) or as a timedelta.</span>
 <span class="sd">            For example, to specify 20 hours is &quot;00:20:00&quot;.</span>
 <span class="sd">        interval: Can be either &quot;epoch&quot; or &quot;step&quot;. Determines whether to check for time limit exceeding on every epoch or step.</span>
 <span class="sd">        interval_freq: How often to check for time limit exceeding. For example, if interval is &quot;epoch&quot; and interval_freq is 2, then the callback will check every two epochs.</span>
@@ -400,8 +401,10 @@
 <span class="sd">            job duration has not been reached yet. Object must be timezone aware.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If the duration is not specified as a string in the form of DD:HH:MM or as a timedelta.</span>
-<span class="sd">            Or if the timestamp datetime object is not timezone aware.</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            - If the duration is not specified as a string in the form of DD:HH:MM or as a timedelta.</span>
+<span class="sd">            - If the timestamp datetime object is not timezone aware.</span>
+<span class="sd">            - If both duration and timestamp are None (i.e. at least one must be specified).</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        This callback uses the global process group to communicate between ranks.</span>
@@ -410,11 +413,16 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">duration</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">],</span>
+        <span class="n">duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">interval</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;epoch&quot;</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;epoch&quot;</span><span class="p">,</span>
         <span class="n">interval_freq</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">timestamp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">duration</span> <span class="ow">or</span> <span class="n">timestamp</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid parameters. Expected at least one of duration or timestamp to be specified.&quot;</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="c1"># checks if string matches DD:HH:MM format and is within valid range</span>
             <span class="c1"># 00 &lt;= DD &lt;= 99</span>
@@ -433,7 +441,10 @@
                 <span class="n">minutes</span><span class="o">=</span><span class="n">duration_format</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
             <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">duration</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">duration</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span> <span class="o">=</span> <span class="n">duration</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">=</span> <span class="n">interval</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interval_freq</span> <span class="o">=</span> <span class="n">interval_freq</span>
 
@@ -473,8 +484,9 @@
             <span class="k">if</span> <span class="n">timestamp</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timestamp</span><span class="p">:</span>
                 <span class="n">past_timestamp_limit</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">astimezone</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">timestamp</span>
 
-            <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span>
-            <span class="n">past_duration_limit</span> <span class="o">=</span> <span class="n">time_elapsed</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span>
+            <span class="k">if</span> <span class="n">duration</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span><span class="p">:</span>
+                <span class="n">time_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">monotonic</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_time</span>
+                <span class="n">past_duration_limit</span> <span class="o">=</span> <span class="n">time_elapsed</span> <span class="o">&gt;=</span> <span class="n">duration</span>
 
         <span class="n">local_should_stop</span> <span class="o">=</span> <span class="n">past_timestamp_limit</span> <span class="ow">or</span> <span class="n">past_duration_limit</span>
         <span class="n">global_should_stop</span> <span class="o">=</span> <span class="n">sync_bool</span><span class="p">(</span><span class="n">local_should_stop</span><span class="p">,</span> <span class="n">coherence_mode</span><span class="o">=</span><span class="s2">&quot;rank_zero&quot;</span><span class="p">)</span>
