@@ -167,6 +167,17 @@ class TensorBoardLogger(MetricLogger):
         if writer:
             writer.add_images(*args, **kwargs)
 
+    def log_figure(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
+        """Add matplotlib figure to TensorBoard.
+
+        Args:
+            *args (Any): Positional arguments passed to SummaryWriter.add_figure
+            **kwargs(Any): Keyword arguments passed to SummaryWriter.add_figure
+        """
+        writer = self._writer
+        if writer:
+            writer.add_figure(*args, **kwargs)
+
     def log_audio(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
         """Add audio data to TensorBoard.
 
@@ -201,6 +212,16 @@ class TensorBoardLogger(MetricLogger):
                 global_step=global_step,
                 walltime=walltime,
             )
+
+    def log_histogram(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
+        """Add histogram to TensorBoard.
+
+        Args:
+            *args (Any): Positional arguments passed to SummaryWriter.add_histogram
+            **kwargs(Any): Keyword arguments passed to SummaryWriter.add_histogram
+        """
+        if self._writer:
+            self._writer.add_histogram(*args, **kwargs)
 
     def flush(self: TensorBoardLogger) -> None:
         """Writes pending logs to disk."""
