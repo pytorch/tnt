@@ -8,7 +8,7 @@
 # pyre-strict
 
 import unittest
-from typing import cast, Dict, Iterator
+from typing import cast, Dict
 
 import torch
 from torch import distributed as dist, nn
@@ -22,10 +22,8 @@ from torchtnt.framework._loop_utils import (
     _maybe_set_distributed_sampler_epoch,
     _reset_module_training_mode,
     _set_module_training_mode,
-    _step_requires_iterator,
 )
 from torchtnt.framework._test_utils import generate_random_dataset
-from torchtnt.framework.state import State
 from torchtnt.utils.progress import Progress
 from torchtnt.utils.test_utils import get_pet_launch_config
 
@@ -112,23 +110,6 @@ class LoopUtilsTest(unittest.TestCase):
 
         self.assertTrue(module.training)
         self.assertTrue(loss_fn.training)
-
-    def test_step_func_requires_iterator(self) -> None:
-        class Foo:
-            def bar(self, state: State, data: object) -> object:
-                return data
-
-            def baz(self, state: State, data: Iterator[torch.Tensor]) -> object:
-                pass
-
-        def dummy(a: int, b: str, data: Iterator[str]) -> None:
-            pass
-
-        foo = Foo()
-
-        self.assertFalse(_step_requires_iterator(foo.bar))
-        self.assertTrue(_step_requires_iterator(foo.baz))
-        self.assertTrue(_step_requires_iterator(dummy))
 
     def test_is_done(self) -> None:
         p = Progress(
