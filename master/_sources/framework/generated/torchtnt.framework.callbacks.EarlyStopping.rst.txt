@@ -1,0 +1,10 @@
+﻿.. role:: hidden
+    :class: hidden-section
+.. currentmodule:: torchtnt.framework.callbacks
+
+
+EarlyStopping
+=============
+
+.. autoclass:: EarlyStopping
+    :members:
