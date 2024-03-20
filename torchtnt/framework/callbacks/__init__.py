@@ -7,6 +7,7 @@
 # pyre-strict
 
 from .base_csv_writer import BaseCSVWriter
+from .early_stopping import EarlyStopping
 from .empty_cuda_cache import EmptyCudaCache
 from .garbage_collector import GarbageCollector
 from .iteration_time_logger import IterationTimeLogger
@@ -25,6 +26,7 @@ from .train_progress_monitor import TrainProgressMonitor
 
 __all__ = [
     "BaseCSVWriter",
+    "EarlyStopping",
     "EmptyCudaCache",
     "GarbageCollector",
     "IterationTimeLogger",
