@@ -26,10 +26,10 @@ class TimeLimitInterrupter(Callback):
     Args:
         duration: Optional, the maximum amount of time to spend in training. Can be specified as a string in the form of DD:HH:MM (days, hours, minutes) or as a timedelta.
             For example, to specify 20 hours is "00:20:00".
-        interval: Can be either "epoch" or "step". Determines whether to check for time limit exceeding on every epoch or step.
-        interval_freq: How often to check for time limit exceeding. For example, if interval is "epoch" and interval_freq is 2, then the callback will check every two epochs.
         timestamp: Optional datetime object indicating the timestamp at which the training should end. The training will be stopped even if the maximum
             job duration has not been reached yet. Object must be timezone aware.
+        interval: Can be either "epoch" or "step". Determines whether to check for time limit exceeding on every epoch or step.
+        interval_freq: How often to check for time limit exceeding. For example, if interval is "epoch" and interval_freq is 2, then the callback will check every two epochs.
 
     Raises:
         ValueError:
@@ -45,9 +45,9 @@ class TimeLimitInterrupter(Callback):
     def __init__(
         self,
         duration: Optional[Union[str, timedelta]] = None,
+        timestamp: Optional[datetime] = None,
         interval: Literal["epoch", "step"] = "epoch",
         interval_freq: int = 1,
-        timestamp: Optional[datetime] = None,
     ) -> None:
         if not (duration or timestamp):
             raise ValueError(
