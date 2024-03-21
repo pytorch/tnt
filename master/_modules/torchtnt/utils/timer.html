@@ -476,9 +476,6 @@
 <span class="sd">        Args:</span>
 <span class="sd">            cuda_sync: whether to call torch.cuda.synchronize() before and after timing. Defaults to True if CUDA is available.</span>
 <span class="sd">            verbose: whether to enable verbose logging.</span>
-<span class="sd">            size_bounds: defines the range of samples that should be kept in the timer. The lower bound should be smaller than</span>
-<span class="sd">                the upper bound. When the number of samples reaches the upper bound, the oldest (upper-lower) bound samples will</span>
-<span class="sd">                be removed. This range is applied per action.</span>
 
 <span class="sd">        Note:</span>
 <span class="sd">            Enabling cuda_sync will incur a performance hit, but will ensure accurate timings on GPUs.</span>
