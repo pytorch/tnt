@@ -61,13 +61,8 @@ def _set_module_training_mode(
         prior_module_train_states[name] = module.training
         if isinstance(module, DistributedDataParallel):
             module = module.module
-        if torch.ao.quantization.pt2e.export_utils.model_is_exported(module):
-            if mode:
-                module = torch.ao.quantization.move_exported_model_to_train(module)
-            else:
-                module = torch.ao.quantization.move_exported_model_to_eval(module)
-        else:
-            module.train(mode)
+
+        module = torch.nn.modules.utils._set_module_training_mode(module, mode)
 
     return prior_module_train_states
 
