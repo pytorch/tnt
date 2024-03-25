@@ -21,13 +21,12 @@ from torchtnt.framework.callbacks.iteration_time_logger import IterationTimeLogg
 
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
-from torchtnt.utils.loggers import TensorBoardLogger
+from torchtnt.utils.loggers.logger import MetricLogger
 
 
 class IterationTimeLoggerTest(unittest.TestCase):
     def test_iteration_time_logger_test_on_train_step_end(self) -> None:
-        logger = MagicMock(spec=TensorBoardLogger)
-        logger.writer = MagicMock(spec=SummaryWriter)
+        logger = MagicMock(spec=MetricLogger)
         state = MagicMock(spec=State)
 
         # Test that the recorded times are tracked separately and that we properly
@@ -64,7 +63,7 @@ class IterationTimeLoggerTest(unittest.TestCase):
         callback.on_eval_step_end(state, eval_unit)
         callback.on_predict_step_end(state, predict_unit)
 
-        logger.writer.add_scalar.assert_has_calls(
+        logger.log.assert_has_calls(
             [
                 call(
                     "Train Iteration Time (seconds)",
@@ -85,12 +84,26 @@ class IterationTimeLoggerTest(unittest.TestCase):
         """
 
         my_unit = DummyTrainUnit(input_dim=2)
-        logger = MagicMock(spec=TensorBoardLogger)
-        logger.writer = MagicMock(spec=SummaryWriter)
+        logger = MagicMock(spec=MetricLogger)
         callback = IterationTimeLogger(logger, moving_avg_window=1, log_every_n_steps=3)
         dataloader = generate_random_dataloader(
             num_samples=12, input_dim=2, batch_size=2
         )
         train(my_unit, dataloader, max_epochs=2, callbacks=[callback])
         # 2 epochs, 6 iterations each, logging every third step
-        self.assertEqual(logger.writer.add_scalar.call_count, 4)
+        self.assertEqual(logger.log.call_count, 4)
+
+    def test_with_summary_writer(self) -> None:
+        """
+        Test IterationTimeLogger callback with train entry point and SummaryWriter
+        """
+
+        my_unit = DummyTrainUnit(input_dim=2)
+        logger = MagicMock(spec=SummaryWriter)
+        callback = IterationTimeLogger(logger, moving_avg_window=1, log_every_n_steps=3)
+        dataloader = generate_random_dataloader(
+            num_samples=12, input_dim=2, batch_size=2
+        )
+        train(my_unit, dataloader, max_epochs=2, callbacks=[callback])
+        # 2 epochs, 6 iterations each, logging every third step
+        self.assertEqual(logger.add_scalar.call_count, 4)
