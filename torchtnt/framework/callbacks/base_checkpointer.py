@@ -439,8 +439,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         **kwargs: Any,
     ) -> bool:
         """
-        Given a parent directory where checkpoints are saved, restore the checkppoint state from the latest checkpoint in the directory.
-
+        Given a parent directory where checkpoints are saved, restore the checkpoint state from the latest checkpoint in the directory.
         There are additional flags offered should the user want to skip loading the train and eval progress.
         By default, the train and eval progress are restored, if applicable.
 
