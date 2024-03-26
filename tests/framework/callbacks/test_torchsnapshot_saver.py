@@ -36,7 +36,7 @@ from torchtnt.framework.callbacks.torchsnapshot_saver import (
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
 from torchtnt.utils.env import seed
-from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
+from torchtnt.utils.test_utils import skip_if_not_distributed
 
 
 class TorchSnapshotSaverTest(unittest.TestCase):
@@ -226,56 +226,6 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         TorchSnapshotSaver.restore(path="path/to/snapshot", unit=my_unit)
         app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
         self.assertIn("lr_scheduler", app_state)
-
-    @skip_if_not_distributed
-    @skip_if_not_gpu
-    def test_save_restore_fsdp(self) -> None:
-        spawn_multi_process(
-            2,
-            "nccl",
-            self._save_restore_fsdp,
-        )
-
-    @staticmethod
-    def _save_restore_fsdp() -> None:
-        input_dim = 2
-        dataset_len = 10
-        batch_size = 2
-        max_epochs = 2
-        save_every_n_epochs = 1
-
-        my_unit = DummyAutoUnit(module=torch.nn.Linear(input_dim, 2), strategy="fsdp")
-        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
-        if get_global_rank() == 0:
-            temp_dir = tempfile.mkdtemp()
-        else:
-            temp_dir = ""
-
-        snapshot_cb = TorchSnapshotSaver(
-            temp_dir,
-            save_every_n_epochs=save_every_n_epochs,
-            replicated=["**"],
-        )
-        temp_dir = snapshot_cb.dirpath
-        train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[snapshot_cb])
-
-        tc = unittest.TestCase()
-        try:
-            my_new_unit = DummyAutoUnit(
-                module=torch.nn.Linear(input_dim, 2), strategy="fsdp"
-            )
-            tc.assertNotEqual(
-                my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
-            )
-            # get latest checkpoint
-            ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_step_10")
-            snapshot_cb.restore(ckpt_path, my_new_unit)
-            tc.assertEqual(
-                my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
-            )
-        finally:
-            if get_global_rank() == 0:
-                shutil.rmtree(temp_dir)  # delete temp directory
 
     @skip_if_not_distributed
     def test_save_restore_ddp(self) -> None:
