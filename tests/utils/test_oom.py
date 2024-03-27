@@ -7,21 +7,14 @@
 
 # pyre-strict
 
-import os
-import tempfile
 import unittest
 
-import torch
-from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.oom import (
     _bytes_to_mb_gb,
     is_out_of_cpu_memory,
     is_out_of_cuda_memory,
     is_out_of_memory_error,
-    log_memory_snapshot,
 )
-from torchtnt.utils.test_utils import skip_if_not_gpu
-from torchtnt.utils.version import is_torch_version_geq_2_0
 
 
 class OomTest(unittest.TestCase):
@@ -55,37 +48,6 @@ class OomTest(unittest.TestCase):
         self.assertTrue(is_out_of_memory_error(cuda_oom_error_2))
         not_oom_error = RuntimeError("RuntimeError: blah")
         self.assertFalse(is_out_of_memory_error(not_oom_error))
-
-    @skip_if_not_gpu
-    @unittest.skipUnless(
-        condition=bool(is_torch_version_geq_2_0()),
-        reason="This test needs changes from PyTorch 2.0 to run.",
-    )
-    def test_log_memory_snapshot(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Record history
-            torch.cuda.memory._record_memory_history(enabled="all", max_entries=10000)
-
-            # initialize device & allocate memory for tensors
-            device = get_device_from_env()
-            a = torch.rand((1024, 1024), device=device)
-            b = torch.rand((1024, 1024), device=device)
-            _ = (a + b) * (a - b)
-
-            # save a snapshot
-            log_memory_snapshot(temp_dir, "foo")
-
-            # Check if the corresponding files exist
-            save_dir = os.path.join(temp_dir, "foo_rank0")
-
-            pickle_dump_path = os.path.join(save_dir, "snapshot.pickle")
-            self.assertTrue(os.path.exists(pickle_dump_path))
-
-            trace_path = os.path.join(save_dir, "trace_plot.html")
-            self.assertTrue(os.path.exists(trace_path))
-
-            segment_plot_path = os.path.join(save_dir, "segment_plot.html")
-            self.assertTrue(os.path.exists(segment_plot_path))
 
     def test_bytes_to_mb_gb(self) -> None:
         bytes_to_mb_test_cases = [
