@@ -28,7 +28,9 @@ from torchtnt.framework._test_utils import (
     get_dummy_fit_state,
     get_dummy_train_state,
 )
-from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
+from torchtnt.framework.callbacks.base_checkpointer import (
+    BaseCheckpointer as BaseCheckpointer,
+)
 from torchtnt.framework.callbacks.checkpointer_types import (
     BestCheckpointConfig,
     RestoreOptions,
@@ -41,7 +43,7 @@ from torchtnt.framework.train import train
 from torchtnt.framework.unit import AppStateMixin, TrainUnit, TTrainData
 from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
+from torchtnt.utils.test_utils import skip_if_not_distributed
 
 
 class BaseCheckpointSaver(BaseCheckpointer):
@@ -411,24 +413,20 @@ class BaseCheckpointerTest(unittest.TestCase):
                 BaseCheckpointSaver(temp_dir, save_every_n_epochs=0)
 
     @skip_if_not_distributed
-    @skip_if_not_gpu
     def test_process_group_plumbing(self) -> None:
-        """
-        Creates a new process group and verifies GLOO group is created accordingly
-        """
-        spawn_multi_process(
-            2,
-            "nccl",
-            self._test_process_group_plumbing,
-        )
         spawn_multi_process(
             2,
             "gloo",
-            self._test_process_group_plumbing,
+            self._test_process_group_plumbing_gloo,
+        )
+        spawn_multi_process(
+            2,
+            "gloo",  # inner test mocks nccl backend
+            self._test_process_group_plumbing_nccl,
         )
 
     @staticmethod
-    def _test_process_group_plumbing() -> None:
+    def _test_process_group_plumbing_gloo() -> None:
         checkpoint_cb = BaseCheckpointSaver(
             "foo",
             process_group=None,
@@ -440,6 +438,23 @@ class BaseCheckpointerTest(unittest.TestCase):
         if dist.get_backend(dist.group.WORLD) == dist.Backend.GLOO:
             # verify no new process group was created
             tc.assertEqual(checkpoint_cb._process_group, dist.group.WORLD)
+
+    @staticmethod
+    @patch("torch.cuda.nccl.version", return_value=(1, 0, 0))
+    def _test_process_group_plumbing_nccl(_: MagicMock) -> None:
+        with patch("torch.distributed.get_backend", return_value=dist.Backend.NCCL):
+            checkpoint_cb = BaseCheckpointSaver(
+                "foo",
+                process_group=None,
+            )
+
+        tc = unittest.TestCase()
+        tc.assertIsNotNone(checkpoint_cb._process_group)
+        tc.assertEqual(
+            checkpoint_cb._process_group._get_backend_name(), dist.Backend.GLOO
+        )
+        # check that a new process group was created
+        tc.assertNotEqual(checkpoint_cb._process_group, dist.group.WORLD)
 
     @patch(
         "torchtnt.framework.callbacks.base_checkpointer.get_checkpoint_dirpaths",
