@@ -87,7 +87,6 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             dcp_cb = DistributedCheckpointSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                # async_checkpoint=False,
             )
             train(
                 my_unit,
@@ -226,7 +225,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
     def test_save_restore_ddp(self) -> None:
         spawn_multi_process(
             2,
-            "cpu:gloo,cuda:nccl",
+            "cpu:gloo,cuda:gloo",
             self._save_restore_ddp,
         )
 
