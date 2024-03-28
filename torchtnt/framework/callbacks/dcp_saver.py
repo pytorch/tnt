@@ -42,6 +42,10 @@ from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import MultiStateful
 
 
+from torch.distributed.checkpoint import FileSystemReader, FileSystemWriter
+FsspecReader, FsspecWriter = FileSystemReader, FileSystemWriter # just testing something
+
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
