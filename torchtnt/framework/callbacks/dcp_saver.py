@@ -14,6 +14,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 import torch
 import torch.distributed as dist
 from torch.distributed import checkpoint as dcp
+
 from torch.distributed.checkpoint._fsspec_filesystem import FsspecReader, FsspecWriter
 from torch.distributed.checkpoint.state_dict import _init_optim_state
 from torch.distributed.checkpoint.stateful import Stateful
@@ -40,10 +41,6 @@ from torchtnt.framework.unit import (
 from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import MultiStateful
-
-
-from torch.distributed.checkpoint import FileSystemReader, FileSystemWriter
-FsspecReader, FsspecWriter = FileSystemReader, FileSystemWriter # just testing something
 
 
 logger: logging.Logger = logging.getLogger(__name__)
