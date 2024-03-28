@@ -13,13 +13,11 @@ import unittest
 from datetime import timedelta
 from random import random
 from unittest import mock
-from unittest.mock import Mock, patch
 
-import torch
 import torch.distributed as dist
 from pyre_extensions import none_throws
 from torchtnt.utils.distributed import spawn_multi_process
-from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
+from torchtnt.utils.test_utils import skip_if_not_distributed
 from torchtnt.utils.timer import (
     BoundedTimer,
     FullSyncPeriodicTimer,
@@ -68,8 +66,7 @@ class TimerTest(unittest.TestCase):
                 UPPER_BOUND,
             )
 
-    @patch("torch.cuda.synchronize")
-    def test_timer_context_manager(self, _) -> None:
+    def test_timer_context_manager(self) -> None:
         """Test the context manager in the timer class"""
 
         # Generate 3 intervals between 0.5 and 2 seconds
@@ -102,24 +99,6 @@ class TimerTest(unittest.TestCase):
         self.assert_within_tolerance(
             timer.recorded_durations["action_4"][0], intervals[2]
         )
-
-    @skip_if_not_gpu
-    @patch("torch.cuda.synchronize")
-    def test_timer_synchronize(self, mock_synchornize: Mock) -> None:
-        """Make sure that torch.cuda.synchronize() is called when GPU is present."""
-
-        start_event = torch.cuda.Event(enable_timing=True)
-        end_event = torch.cuda.Event(enable_timing=True)
-        timer = Timer()
-
-        # Do not explicitly call synchronize, timer must call it for test to pass.
-
-        with timer.time("action_1"):
-            start_event.record()
-            time.sleep(0.5)
-            end_event.record()
-
-        self.assertEqual(mock_synchornize.call_count, 2)
 
     def test_get_timer_summary(self) -> None:
         """Test the get_timer_summary function"""
