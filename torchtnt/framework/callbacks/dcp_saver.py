@@ -270,6 +270,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         # TODO: expose these options in KnobOptions
         dcp_options = {
             "thread_count": self._knob_options.max_per_rank_io_concurrency or 16,
+            "sync_files": False,
             "single_file_per_rank": False,
         }
 
