@@ -25,7 +25,7 @@ from torchtnt.framework._test_utils import (
     DummyTrainUnit,
     generate_random_dataloader,
 )
-from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
+from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.callbacks.dcp_saver import DistributedCheckpointSaver
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
@@ -60,7 +60,6 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             dcp_cb = DistributedCheckpointSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                knob_options=KnobOptions(1),
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[dcp_cb])
 
@@ -88,7 +87,6 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             dcp_cb = DistributedCheckpointSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                knob_options=KnobOptions(1),
             )
             train(
                 my_unit,
@@ -140,7 +138,6 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             dcp_cb = DistributedCheckpointSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                knob_options=KnobOptions(1),
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[dcp_cb])
 
@@ -180,7 +177,6 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             dcp_cb = DistributedCheckpointSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
-                knob_options=KnobOptions(1),
             )
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[dcp_cb])
 
@@ -252,7 +248,6 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         dcp_cb = DistributedCheckpointSaver(
             temp_dir,
             save_every_n_epochs=save_every_n_epochs,
-            knob_options=KnobOptions(1),
         )
         temp_dir = dcp_cb.dirpath
         train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[dcp_cb])
