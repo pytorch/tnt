@@ -87,6 +87,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             dcp_cb = DistributedCheckpointSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
+                # async_checkpoint=False,
             )
             train(
                 my_unit,
@@ -191,7 +192,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             # no train progress was restored so the progress after restoration should be the same as the progress before restoration
             self.assertEqual(restored_num_steps_completed, end_num_steps_completed)
 
-    @patch("torchtnt.framework.callbacks.dcp_saver.dist_cp")
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
     def test_save_restore_no_optimizer_restore(self, mock_dist_cp: MagicMock) -> None:
         my_unit = DummyTrainUnit(input_dim=2)
         restore_options = RestoreOptions(restore_optimizers=False)
@@ -200,13 +201,13 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             unit=my_unit,
             restore_options=restore_options,
         )
-        app_state = mock_dist_cp.load_state_dict.call_args.args[0]["app_state"]
+        app_state = mock_dist_cp.load.call_args.args[0]["app_state"].state_dict()
         self.assertNotIn("optimizer", app_state)
         DistributedCheckpointSaver.restore(path="path/to/snapshot", unit=my_unit)
-        app_state = mock_dist_cp.load_state_dict.call_args.args[0]["app_state"]
+        app_state = mock_dist_cp.load.call_args.args[0]["app_state"].state_dict()
         self.assertIn("optimizer", app_state)
 
-    @patch("torchtnt.framework.callbacks.dcp_saver.dist_cp")
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
     def test_save_restore_no_lr_scheduler_restore(
         self, mock_dist_cp: MagicMock
     ) -> None:
@@ -215,17 +216,17 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         DistributedCheckpointSaver.restore(
             path="path/to/snapshot", unit=my_unit, restore_options=restore_options
         )
-        app_state = mock_dist_cp.load_state_dict.call_args.args[0]["app_state"]
+        app_state = mock_dist_cp.load.call_args.args[0]["app_state"].state_dict()
         self.assertNotIn("lr_scheduler", app_state)
         DistributedCheckpointSaver.restore(path="path/to/snapshot", unit=my_unit)
-        app_state = mock_dist_cp.load_state_dict.call_args.args[0]["app_state"]
+        app_state = mock_dist_cp.load.call_args.args[0]["app_state"].state_dict()
         self.assertIn("lr_scheduler", app_state)
 
     @skip_if_not_distributed
     def test_save_restore_ddp(self) -> None:
         spawn_multi_process(
             2,
-            "gloo",
+            "cpu:gloo,cuda:nccl",
             self._save_restore_ddp,
         )
 
