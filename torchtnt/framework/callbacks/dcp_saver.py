@@ -95,7 +95,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         keep_last_n_checkpoints: Optional[int] = None,
         best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         process_group: Optional[dist.ProcessGroup] = None,
-        async_checkpoint: bool = True,
+        async_checkpoint: bool = False,
         knob_options: Optional[KnobOptions] = None,
     ) -> None:
         super().__init__(
