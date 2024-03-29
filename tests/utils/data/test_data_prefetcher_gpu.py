@@ -26,30 +26,6 @@ class DataPrefetcherGPUTest(unittest.TestCase):
         return TensorDataset(data, labels)
 
     @skip_if_not_gpu
-    def test_num_prefetch_batches_data_prefetcher(self) -> None:
-        device = torch.device("cuda:0")
-
-        num_samples = 12
-        batch_size = 4
-        dataloader = torch.utils.data.DataLoader(
-            self._generate_dataset(num_samples, 2), batch_size=batch_size
-        )
-
-        with self.assertRaisesRegex(
-            ValueError, "`num_prefetch_batches` must be greater than 0"
-        ):
-            _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=-1)
-
-        with self.assertRaisesRegex(
-            ValueError, "`num_prefetch_batches` must be greater than 0"
-        ):
-            _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=0)
-
-        # no exceptions raised
-        _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=1)
-        _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=2)
-
-    @skip_if_not_gpu
     def test_cuda_data_prefetcher(self) -> None:
         device = torch.device("cuda:0")
 

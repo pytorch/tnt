@@ -9,6 +9,7 @@
 
 import unittest
 from typing import Tuple
+from unittest.mock import MagicMock, patch
 
 import torch
 from torch.utils.data.dataset import Dataset, TensorDataset
@@ -36,3 +37,30 @@ class DataPrefetcherTest(unittest.TestCase):
         num_prefetch_batches = 2
         with self.assertRaisesRegex(ValueError, "expects a CUDA device"):
             _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches)
+
+    @patch("torch.cuda.Stream")
+    def test_num_prefetch_batches_data_prefetcher(self, mock_stream: MagicMock) -> None:
+        device = torch.device("cuda:0")
+
+        num_samples = 12
+        batch_size = 4
+        dataloader = torch.utils.data.DataLoader(
+            self._generate_dataset(num_samples, 2), batch_size=batch_size
+        )
+
+        with self.assertRaisesRegex(
+            ValueError, "`num_prefetch_batches` must be greater than 0"
+        ):
+            _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=-1)
+
+        with self.assertRaisesRegex(
+            ValueError, "`num_prefetch_batches` must be greater than 0"
+        ):
+            _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=0)
+
+        # no exceptions raised
+        _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=1)
+        _ = CudaDataPrefetcher(dataloader, device, num_prefetch_batches=2)
+
+        # Check that CUDA streams were created
+        self.assertEqual(mock_stream.call_count, 2)
