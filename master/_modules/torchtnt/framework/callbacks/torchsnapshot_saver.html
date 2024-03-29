@@ -636,6 +636,7 @@
         <span class="n">restore_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RestoreOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">storage_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">knob_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">KnobOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Utility method to restore snapshot state from a path.</span>
 
@@ -650,6 +651,7 @@
 <span class="sd">            restore_options: Controls what to  filter when restoring the state.</span>
 <span class="sd">            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot &lt;https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot&gt;`_. See each storage plugin&#39;s documentation for customizations.</span>
 <span class="sd">            knob_options: Additional keyword options for the snapshot knobs</span>
+<span class="sd">            strict: If ``False``, allows loading a snapshot even if not all keys exist in the unit&#39;s app_state.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">_validate_snapshot_available</span><span class="p">()</span>
@@ -688,9 +690,25 @@
                         <span class="s2">&quot;train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot&quot;</span>
                     <span class="p">)</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">strict</span><span class="p">:</span>
+            <span class="c1"># if app_state keys not in torchsnapshot checkpoint,</span>
+            <span class="c1"># remove them from app_state prior to checkpoint load</span>
+            <span class="n">missing_stateful_keys</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">manifest</span> <span class="o">=</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">get_manifest</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">stateful_key</span> <span class="ow">in</span> <span class="n">app_state</span><span class="p">:</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="nb">any</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">stateful_key</span><span class="si">}</span><span class="s2">/&quot;</span> <span class="ow">in</span> <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="n">missing_stateful_keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stateful_key</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">missing_stateful_keys</span><span class="p">:</span>
+                <span class="n">rank_zero_warn</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> was passed to `restore` but does not exists in the snapshot&quot;</span>
+                <span class="p">)</span>
+                <span class="n">app_state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
         <span class="n">knob_options</span> <span class="o">=</span> <span class="n">knob_options</span> <span class="ow">or</span> <span class="n">KnobOptions</span><span class="p">()</span>
         <span class="k">with</span> <span class="n">_override_knobs</span><span class="p">(</span><span class="n">knob_options</span><span class="p">):</span>
-            <span class="n">snapshot</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">app_state</span><span class="p">)</span>
+            <span class="n">snapshot</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">app_state</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
         <span class="n">rank_zero_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Restored snapshot from path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span></div></div>
 
 
