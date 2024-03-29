@@ -579,25 +579,28 @@ subclass the Callback class and add your own code into the hooks.</p>
 <tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.PyTorchProfiler.html#torchtnt.framework.callbacks.PyTorchProfiler" title="torchtnt.framework.callbacks.PyTorchProfiler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PyTorchProfiler</span></code></a></td>
 <td>A callback which profiles user code using <a class="reference external" href="https://pytorch.org/docs/stable/profiler.html/" target="_blank">PyTorch Profiler</a>.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.SystemResourcesMonitor.html#torchtnt.framework.callbacks.SystemResourcesMonitor" title="torchtnt.framework.callbacks.SystemResourcesMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SystemResourcesMonitor</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.SlowRankDetector.html#torchtnt.framework.callbacks.SlowRankDetector" title="torchtnt.framework.callbacks.SlowRankDetector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SlowRankDetector</span></code></a></td>
+<td>A callback which detects slow ranks every N steps/epochs by comparing the time on each process.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.SystemResourcesMonitor.html#torchtnt.framework.callbacks.SystemResourcesMonitor" title="torchtnt.framework.callbacks.SystemResourcesMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SystemResourcesMonitor</span></code></a></td>
 <td>A callback which logs system stats, including: - CPU usage - resident set size - GPU usage - cuda memory stats</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.html#torchtnt.framework.callbacks.TensorBoardParameterMonitor" title="torchtnt.framework.callbacks.TensorBoardParameterMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorBoardParameterMonitor</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TensorBoardParameterMonitor.html#torchtnt.framework.callbacks.TensorBoardParameterMonitor" title="torchtnt.framework.callbacks.TensorBoardParameterMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorBoardParameterMonitor</span></code></a></td>
 <td>A callback which logs module parameters as histograms to TensorBoard.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter" title="torchtnt.framework.callbacks.TimeLimitInterrupter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeLimitInterrupter</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TimeLimitInterrupter.html#torchtnt.framework.callbacks.TimeLimitInterrupter" title="torchtnt.framework.callbacks.TimeLimitInterrupter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeLimitInterrupter</span></code></a></td>
 <td>This callback tracks the time spent in training and stops the training loop when a time limit is reached.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.IterationTimeLogger.html#torchtnt.framework.callbacks.IterationTimeLogger" title="torchtnt.framework.callbacks.IterationTimeLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IterationTimeLogger</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.IterationTimeLogger.html#torchtnt.framework.callbacks.IterationTimeLogger" title="torchtnt.framework.callbacks.IterationTimeLogger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IterationTimeLogger</span></code></a></td>
 <td>A callback which logs iteration times as scalars to TensorBoard.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a></td>
 <td>A callback which periodically saves the application state during training using <a class="reference external" href="https://pytorch.org/torchsnapshot/" target="_blank">TorchSnapshot</a>.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TQDMProgressBar.html#torchtnt.framework.callbacks.TQDMProgressBar" title="torchtnt.framework.callbacks.TQDMProgressBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TQDMProgressBar</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TQDMProgressBar.html#torchtnt.framework.callbacks.TQDMProgressBar" title="torchtnt.framework.callbacks.TQDMProgressBar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TQDMProgressBar</span></code></a></td>
 <td>A callback for progress bar visualization in training, evaluation, and prediction.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TrainProgressMonitor.html#torchtnt.framework.callbacks.TrainProgressMonitor" title="torchtnt.framework.callbacks.TrainProgressMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TrainProgressMonitor</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/torchtnt.framework.callbacks.TrainProgressMonitor.html#torchtnt.framework.callbacks.TrainProgressMonitor" title="torchtnt.framework.callbacks.TrainProgressMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TrainProgressMonitor</span></code></a></td>
 <td>A callback which logs training progress in terms of steps vs epochs.</td>
 </tr>
 </tbody>

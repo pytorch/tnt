@@ -27,6 +27,7 @@ We offer several pre-written callbacks which are ready to be used out of the box
     MemorySnapshot
     ModuleSummary
     PyTorchProfiler
+    SlowRankDetector
     SystemResourcesMonitor
     TensorBoardParameterMonitor
     TimeLimitInterrupter
