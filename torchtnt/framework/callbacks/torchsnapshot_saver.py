@@ -267,6 +267,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
         restore_options: Optional[RestoreOptions] = None,
         storage_options: Optional[Dict[str, Any]] = None,
         knob_options: Optional[KnobOptions] = None,
+        strict: bool = True,
     ) -> None:
         """Utility method to restore snapshot state from a path.
 
@@ -281,6 +282,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
             restore_options: Controls what to  filter when restoring the state.
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.
             knob_options: Additional keyword options for the snapshot knobs
+            strict: If ``False``, allows loading a snapshot even if not all keys exist in the unit's app_state.
         """
 
         _validate_snapshot_available()
@@ -319,9 +321,25 @@ class TorchSnapshotSaver(BaseCheckpointer):
                         "train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
                     )
 
+        if not strict:
+            # if app_state keys not in torchsnapshot checkpoint,
+            # remove them from app_state prior to checkpoint load
+            missing_stateful_keys = []
+            manifest = snapshot.get_manifest()
+            for stateful_key in app_state:
+                found = any((f"/{stateful_key}/" in key for key in manifest.keys()))
+                if not found:
+                    missing_stateful_keys.append(stateful_key)
+
+            for key in missing_stateful_keys:
+                rank_zero_warn(
+                    f"{key} was passed to `restore` but does not exists in the snapshot"
+                )
+                app_state.pop(key)
+
         knob_options = knob_options or KnobOptions()
         with _override_knobs(knob_options):
-            snapshot.restore(app_state)
+            snapshot.restore(app_state, strict=strict)
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
 
 

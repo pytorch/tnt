@@ -227,6 +227,39 @@ class TorchSnapshotSaverTest(unittest.TestCase):
         app_state = mock_torchsnapshot.Snapshot().restore.call_args.args[0]
         self.assertIn("lr_scheduler", app_state)
 
+    def test_restore_strict(self) -> None:
+        my_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2))
+        with tempfile.TemporaryDirectory() as temp_dir:
+            state = get_dummy_train_state()
+            snapshot_cb = TorchSnapshotSaver(
+                temp_dir, save_every_n_train_steps=1, async_checkpoint=False
+            )
+            snapshot_cb.on_train_step_end(state, my_unit)
+
+            # add a new parameter to the module
+            my_unit.module2 = torch.nn.Linear(2, 2)
+
+            with self.assertRaisesRegex(
+                AssertionError,
+                "module2 is absent in both manifest and flattened.",
+            ):
+                TorchSnapshotSaver.restore(
+                    path=os.path.join(temp_dir, "epoch_0_step_0"),
+                    unit=my_unit,
+                    strict=True,
+                )
+
+            with self.assertLogs(level="WARNING") as log:
+                TorchSnapshotSaver.restore(
+                    path=os.path.join(temp_dir, "epoch_0_step_0"),
+                    unit=my_unit,
+                    strict=False,
+                )
+                self.assertEqual(
+                    log.output[0],
+                    "WARNING:torchtnt.utils.rank_zero_log:module2 was passed to `restore` but does not exists in the snapshot",
+                )
+
     @skip_if_not_distributed
     def test_save_restore_ddp(self) -> None:
         spawn_multi_process(
