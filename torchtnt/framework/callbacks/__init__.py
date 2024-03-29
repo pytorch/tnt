@@ -16,6 +16,7 @@ from .learning_rate_monitor import LearningRateMonitor
 from .memory_snapshot import MemorySnapshot
 from .module_summary import ModuleSummary
 from .pytorch_profiler import PyTorchProfiler
+from .slow_rank_detector import SlowRankDetector
 from .system_resources_monitor import SystemResourcesMonitor
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
 from .time_limit_interrupter import TimeLimitInterrupter
@@ -35,6 +36,7 @@ __all__ = [
     "MemorySnapshot",
     "ModuleSummary",
     "PyTorchProfiler",
+    "SlowRankDetector",
     "SystemResourcesMonitor",
     "TensorBoardParameterMonitor",
     "TimeLimitInterrupter",
