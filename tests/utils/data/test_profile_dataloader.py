@@ -14,7 +14,6 @@ import torch
 from torch.profiler import ProfilerActivity
 from torchtnt.utils.data.profile_dataloader import profile_dataloader
 from torchtnt.utils.env import init_from_env
-from torchtnt.utils.test_utils import skip_if_not_gpu
 
 
 class DummyIterable:
@@ -49,7 +48,6 @@ class ProfileDataLoaderTest(unittest.TestCase):
             timer = profile_dataloader(iterable, p)
         self.assertEqual(len(timer.recorded_durations["next(iter)"]), max_length)
 
-    @skip_if_not_gpu
     def test_profile_dataloader_device(self) -> None:
         device = init_from_env()
         max_length = 10
