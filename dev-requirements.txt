@@ -1,6 +1,6 @@
 parameterized
 pytest
 pytest-cov
-torchsnapshot-nightly
+torchsnapshot@git+https://github.com/pytorch/torchsnapshot@main
 pyre-check
 torchvision==0.16.2
