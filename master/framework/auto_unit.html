@@ -394,6 +394,7 @@ Additionally, the AutoUnit offers these optional hooks:</p>
 <li><code class="docutils literal notranslate"><span class="pre">on_eval_step_end</span></code></li>
 <li><code class="docutils literal notranslate"><span class="pre">on_predict_step_end</span></code></li>
 </ul>
+<p>The user can also override the LR step method, <code class="docutils literal notranslate"><span class="pre">step_lr_scheduler</span></code>, in case they want to have custom logic.</p>
 <p>Then use with the <code class="xref py py-func docutils literal notranslate"><span class="pre">train()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code>, or
 <code class="xref py py-func docutils literal notranslate"><span class="pre">predict()</span></code> entry point as normal.</p>
 <p>For more advanced customization, directly use the <a class="reference internal" href="unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a>, <a class="reference internal" href="unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>,
@@ -649,6 +650,12 @@ Optionally can be decorated with <code class="docutils literal notranslate"><spa
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.auto_unit.AutoUnit.step_lr_scheduler">
+<code class="sig-name descname"><span class="pre">step_lr_scheduler</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/auto_unit.html#AutoUnit.step_lr_scheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.auto_unit.AutoUnit.step_lr_scheduler" title="Permalink to this definition">¶</a></dt>
+<dd><p>LR step method extracted to a method in case the user wants to override</p>
 </dd></dl>
 
 <dl class="py method">

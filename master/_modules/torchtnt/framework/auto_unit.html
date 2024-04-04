@@ -777,6 +777,8 @@
 <span class="sd">    - ``on_eval_step_end``</span>
 <span class="sd">    - ``on_predict_step_end``</span>
 
+<span class="sd">    The user can also override the LR step method, ``step_lr_scheduler``, in case they want to have custom logic.</span>
+
 <span class="sd">    Then use with the :py:func:`~torchtnt.framework.train`, :py:func:`~torchtnt.framework.evaluate`, :py:func:`~torchtnt.framework.fit`, or</span>
 <span class="sd">    :py:func:`~torchtnt.framework.predict` entry point as normal.</span>
 
@@ -1100,6 +1102,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
+<div class="viewcode-block" id="AutoUnit.step_lr_scheduler"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.step_lr_scheduler">[docs]</a>    <span class="k">def</span> <span class="nf">step_lr_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        LR step method extracted to a method in case the user wants to override</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
+
     <span class="k">def</span> <span class="nf">_update_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates weights of the module, handles clip gradient norm, etc.</span>
@@ -1234,12 +1242,11 @@
                 <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># optionally step lr scheduler if SWA not in use</span>
-            <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span>
-            <span class="k">if</span> <span class="n">lr_scheduler</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">:</span>
                 <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
                     <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.lr_scheduler_step&quot;</span>
                 <span class="p">):</span>
-                    <span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_scheduler</span><span class="p">()</span></div>
 
 
 <span class="k">def</span> <span class="nf">_validate_torch_compile_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
