@@ -731,6 +731,12 @@ class AutoUnit(
         """
         pass
 
+    def step_lr_scheduler(self) -> None:
+        """
+        LR step method extracted to a method in case the user wants to override
+        """
+        none_throws(self.lr_scheduler).step()
+
     def _update_weights(self, state: State) -> Optional[torch.Tensor]:
         """
         Updates weights of the module, handles clip gradient norm, etc.
@@ -865,12 +871,11 @@ class AutoUnit(
                 none_throws(self.swa_scheduler).step()
         else:
             # optionally step lr scheduler if SWA not in use
-            lr_scheduler = self.lr_scheduler
-            if lr_scheduler:
+            if self.lr_scheduler:
                 with get_timing_context(
                     state, f"{self.__class__.__name__}.lr_scheduler_step"
                 ):
-                    lr_scheduler.step()
+                    self.step_lr_scheduler()
 
 
 def _validate_torch_compile_available() -> None:
