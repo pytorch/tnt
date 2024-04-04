@@ -131,6 +131,7 @@ class MemorySnapshotProfiler(MemorySnapshotProfilerBase):
             )
 
         self.step_num: int = 0
+        self.is_started: bool = False
 
         if not is_torch_version_geq_2_0():
             raise RuntimeError("CUDA memory snapshot requires torch>=2.0")
@@ -146,20 +147,26 @@ class MemorySnapshotProfiler(MemorySnapshotProfilerBase):
         )
 
     def start(self) -> None:
+        if self.is_started:
+            return
         if not torch.cuda.is_available():
             logger.warn("CUDA unavailable. Not recording memory history.")
             return
 
         logger.info("Starting to record memory history.")
         torch.cuda.memory._record_memory_history(max_entries=self.params.max_entries)
+        self.is_started = True
 
     def stop(self) -> None:
+        if not self.is_started:
+            return
         if not torch.cuda.is_available():
             logger.warn("CUDA unavailable. Not recording memory history.")
             return
 
         logger.info("Stopping recording memory history.")
         torch.cuda.memory._record_memory_history(enabled=None)
+        self.is_started = False
 
     def step(self) -> None:
         self.step_num += 1
@@ -169,7 +176,10 @@ class MemorySnapshotProfiler(MemorySnapshotProfilerBase):
         ):
             self.start()
         if self.params.stop_step is not None and self.step_num == self.params.stop_step:
-            log_memory_snapshot(
-                output_dir=self.output_dir, file_prefix=f"step_{self.step_num}"
-            )
+            self.log_memory_snapshot()
             self.stop()
+
+    def log_memory_snapshot(self) -> None:
+        log_memory_snapshot(
+            output_dir=self.output_dir, file_prefix=f"step_{self.step_num}"
+        )
