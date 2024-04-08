@@ -213,6 +213,16 @@ class PredictTest(unittest.TestCase):
         )
         self.assertIn("predict.next(data_iter)", timer.recorded_durations.keys())
 
+    def test_error_message(self) -> None:
+        with self.assertRaises(ValueError), self.assertLogs(level="INFO") as log:
+            predict(PredictUnitWithError(), [1, 2, 3, 4])
+
+        self.assertIn(
+            "INFO:torchtnt.framework.predict:Exception during predict after the following progress: "
+            "completed epochs: 0, completed steps: 3, completed steps in current epoch: 3.:\nfoo",
+            log.output,
+        )
+
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
@@ -238,3 +248,9 @@ class StopPredictUnit(PredictUnit[Batch]):
 
         self.steps_processed += 1
         return outputs
+
+
+class PredictUnitWithError(PredictUnit[int]):
+    def predict_step(self, state: State, data: int) -> None:
+        if self.predict_progress.num_steps_completed == 3:
+            raise ValueError("foo")

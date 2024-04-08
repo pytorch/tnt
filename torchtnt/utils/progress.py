@@ -62,6 +62,9 @@ class Progress:
         self._num_steps_completed = state_dict["num_steps_completed"]
         self._num_steps_completed_in_epoch = state_dict["num_steps_completed_in_epoch"]
 
+    def get_progress_string(self) -> str:
+        return f"completed epochs: {self.num_epochs_completed}, completed steps: {self.num_steps_completed}, completed steps in current epoch: {self.num_steps_completed_in_epoch}."
+
 
 def estimated_steps_in_epoch(
     dataloader: Iterable[object],
