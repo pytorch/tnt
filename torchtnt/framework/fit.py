@@ -136,7 +136,9 @@ def fit(
             logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
-        logger.info(f"Exception during fit:\n{e}")
+        logger.info(
+            f"Exception during fit after the following progress: train progress: {unit.train_progress.get_progress_string()} eval progress: {unit.eval_progress.get_progress_string()}:\n{e}"
+        )
         unit.on_exception(state, e)
         callback_handler.on_exception(state, unit, e)
         raise e

@@ -328,3 +328,30 @@ class FitTest(unittest.TestCase):
         )
         self.assertIn("train.next(data_iter)", timer.recorded_durations.keys())
         self.assertIn("evaluate.next(data_iter)", timer.recorded_durations.keys())
+
+    def test_error_message(self) -> None:
+        self.maxDiff = None
+        with self.assertRaises(ValueError), self.assertLogs(level="INFO") as log:
+            fit(
+                UnitWithError(),
+                train_dataloader=[1, 2, 3, 4],
+                eval_dataloader=[1, 2, 3, 4],
+                max_steps=10,
+                evaluate_every_n_epochs=1,
+            )
+
+        self.assertIn(
+            "INFO:torchtnt.framework.fit:Exception during fit after the following progress: train "
+            "progress: completed epochs: 1, completed steps: 4, completed steps in current epoch: 0. "
+            "eval progress: completed epochs: 0, completed steps: 2, completed steps in current epoch: 2.:\nfoo",
+            log.output,
+        )
+
+
+class UnitWithError(TrainUnit[int], EvalUnit[int]):
+    def train_step(self, state: State, data: int) -> None:
+        pass
+
+    def eval_step(self, state: State, data: int) -> None:
+        if self.eval_progress.num_steps_completed == 2:
+            raise ValueError("foo")

@@ -263,6 +263,16 @@ class TrainTest(unittest.TestCase):
         )
         self.assertIn("train.next(data_iter)", timer.recorded_durations.keys())
 
+    def test_error_message(self) -> None:
+        with self.assertRaises(ValueError), self.assertLogs(level="INFO") as log:
+            train(TrainUnitWithError(), [1, 2, 3, 4], max_steps=10)
+
+        self.assertIn(
+            "INFO:torchtnt.framework.train:Exception during train after the following progress: "
+            "completed epochs: 0, completed steps: 2, completed steps in current epoch: 2.:\nfoo",
+            log.output,
+        )
+
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
@@ -298,6 +308,12 @@ class StopTrainUnit(TrainUnit[Batch]):
 
         self.steps_processed += 1
         return loss, outputs
+
+
+class TrainUnitWithError(TrainUnit[Batch]):
+    def train_step(self, state: State, data: Batch) -> None:
+        if self.train_progress.num_steps_completed == 2:
+            raise ValueError("foo")
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]

@@ -95,7 +95,9 @@ def evaluate(
             logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
-        logger.info(e)
+        logger.info(
+            f"Exception during evaluate after the following progress: {eval_unit.eval_progress.get_progress_string()}:\n{e}"
+        )
         eval_unit.on_exception(state, e)
         callback_handler.on_exception(state, eval_unit, e)
         raise e

@@ -205,6 +205,16 @@ class EvaluateTest(unittest.TestCase):
         )
         self.assertIn("evaluate.next(data_iter)", timer.recorded_durations.keys())
 
+    def test_error_message(self) -> None:
+        with self.assertRaises(ValueError), self.assertLogs(level="INFO") as log:
+            evaluate(EvalUnitWithError(), [1, 2, 3, 4])
+
+        self.assertIn(
+            "INFO:torchtnt.framework.evaluate:Exception during evaluate after the following progress: "
+            "completed epochs: 0, completed steps: 1, completed steps in current epoch: 1.:\nfoo",
+            log.output,
+        )
+
 
 class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
     def __init__(self, input_dim: int, steps_before_stopping: int) -> None:
@@ -235,4 +245,7 @@ class StopEvalUnit(EvalUnit[Tuple[torch.Tensor, torch.Tensor]]):
         return loss, outputs
 
 
-Batch = Tuple[torch.Tensor, torch.Tensor]
+class EvalUnitWithError(EvalUnit[int]):
+    def eval_step(self, state: State, data: int) -> None:
+        if self.eval_progress.num_steps_completed == 1:
+            raise ValueError("foo")

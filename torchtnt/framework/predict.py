@@ -95,7 +95,9 @@ def predict(
             logger.info(get_timer_summary(state.timer))
     except Exception as e:
         # TODO: log for diagnostics
-        logger.info(f"Exception during predict:\n{e}")
+        logger.info(
+            f"Exception during predict after the following progress: {predict_unit.predict_progress.get_progress_string()}:\n{e}"
+        )
         predict_unit.on_exception(state, e)
         callback_handler.on_exception(state, predict_unit, e)
         raise e
