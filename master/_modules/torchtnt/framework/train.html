@@ -474,7 +474,9 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">get_timer_summary</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">timer</span><span class="p">))</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># TODO: log for diagnostics</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exception during train:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Exception during train after the following progress: </span><span class="si">{</span><span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">get_progress_string</span><span class="p">()</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
         <span class="n">train_unit</span><span class="o">.</span><span class="n">on_exception</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_exception</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">train_unit</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">e</span></div>
