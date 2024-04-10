@@ -144,7 +144,7 @@ The :class:`~torchtnt.framework.auto_unit.AutoUnit` implements the TrainUnit, Ev
             self,
             module: torch.nn.Module,
             device: torch.device,
-            strategy: str,
+            strategy: Optional[str],
             precision: Optional[str],
             gradient_accumulation_steps: int,
             *,
