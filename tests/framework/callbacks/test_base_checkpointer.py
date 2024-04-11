@@ -852,6 +852,51 @@ class BaseCheckpointerTest(unittest.TestCase):
                 callbacks=[checkpoint_cb],
             )
 
+    def test_get_tracked_metric_value(self) -> None:
+        """
+        Tests that _get_tracked_metric_value returns the correct value
+        """
+        val_loss_unit = MyValLossUnit()
+
+        val_loss_ckpt_cb = BaseCheckpointSaver(
+            dirpath="checkpoint",
+            best_checkpoint_config=BestCheckpointConfig("val_loss", "min"),
+        )
+        val_loss = val_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+        self.assertEqual(0.01, val_loss)
+
+        # pyre-ignore
+        val_loss_unit.val_loss = "0.01"  # Test when returned as a string
+        val_loss_from_s = val_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+        self.assertEqual(0.01, val_loss_from_s)
+
+        # pyre-ignore
+        val_loss_unit.val_loss = "hola"  # Test weird metric value
+        with self.assertRaisesRegex(
+            RuntimeError,
+            (
+                "Unable to convert monitored metric val_loss to a float. Please ensure the value "
+                "can be converted to float and is not a multi-element tensor value."
+            ),
+        ):
+            val_loss = val_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+
+        train_loss_ckpt_cb = BaseCheckpointSaver(
+            dirpath="checkpoint",
+            best_checkpoint_config=BestCheckpointConfig("train_loss", "max"),
+        )
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "Unit does not have attribute train_loss, unable to retrieve metric to checkpoint.",
+        ):
+            val_loss = train_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+
+        ckpt_cb = BaseCheckpointSaver(
+            dirpath="checkpoint",
+        )
+        no_metric = ckpt_cb._get_tracked_metric_value(val_loss_unit)
+        self.assertIsNone(no_metric)
+
 
 class MyValLossUnit(TrainUnit[Batch]):
     def __init__(self) -> None:

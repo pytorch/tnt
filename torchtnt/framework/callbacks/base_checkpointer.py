@@ -14,7 +14,7 @@ from datetime import timedelta
 from typing import Any, cast, Iterable, List, Literal, Optional, Union
 
 import torch.distributed as dist
-
+from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _delete_checkpoint,
@@ -197,85 +197,96 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         Returns:
             True if checkpoint was successfully saved. False otherwise.
         """
-        unit = cast(TTrainUnit, unit)
-
         # 1) generate checkpoint name
+        unit = cast(TTrainUnit, unit)
         num_steps_completed = unit.train_progress.num_steps_completed
         if state.entry_point == EntryPoint.FIT:
-            num_steps_completed += cast(
-                TEvalUnit, unit
-            ).eval_progress.num_steps_completed
+            eval_unit = cast(TEvalUnit, unit)
+            num_steps_completed += eval_unit.eval_progress.num_steps_completed
         epoch = unit.train_progress.num_epochs_completed
         checkpoint_path = _get_save_path(self._dirpath, epoch, num_steps_completed)
 
-        # 1.5) Ensure the need to checkpoint again at the end of training
+        # 1.1) Make sure that last checkpoint does not already exist
         if hook == "on_train_end" and self._does_checkpoint_exist(
             checkpoint_path, process_group=self._process_group
         ):
             rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
             return False
 
-        # 2) handle best checkpoint config on all hooks except `on_train_end`
-        # TODO: isolate this logic into its own function
-        metric_value_f: Optional[float] = None
-        best_checkpoint_config = self._best_checkpoint_config
-        if best_checkpoint_config:
-            if not hasattr(unit, best_checkpoint_config.monitored_metric):
-                raise RuntimeError(
-                    f"Unit does not have attribute {best_checkpoint_config.monitored_metric}, unable to retrieve metric to checkpoint."
-                )
+        # 1.2) If there is a tracked metric, add to the checkpoint
+        metric_value = self._get_tracked_metric_value(unit)
+        if metric_value is not None:
+            metric_name = none_throws(self._best_checkpoint_config).monitored_metric
+            checkpoint_path += f"_{metric_name}={metric_value}"
 
-            metric_value = getattr(unit, best_checkpoint_config.monitored_metric)
-            if metric_value is not None:
-                try:
-                    metric_value_f = float(metric_value)
-                except Exception as e:
-                    raise RuntimeError(
-                        f"Unable to convert monitored metric {best_checkpoint_config.monitored_metric} to a float. Please ensure the value can be converted to float and is not a multi-element tensor value."
-                    ) from e
-
-                # update checkpoint path to include the metric value info
-                checkpoint_path += (
-                    f"_{best_checkpoint_config.monitored_metric}={metric_value_f}"
-                )
-
-        should_checkpoint = self._should_save_checkpoint(metric_value_f)
-        if not should_checkpoint:
+        # 2) Determine if checkpoint should be saved
+        if not self._should_save_checkpoint(metric_value):
             return False
 
         # 3) try to save checkpoint
-        success = self._checkpoint_impl(
-            state,
-            unit,
-            checkpoint_path=checkpoint_path,
-            hook=hook,
-        )
+        if not self._checkpoint_impl(
+            state, unit, checkpoint_path=checkpoint_path, hook=hook
+        ):
+            return False
 
-        if success:
-            # remove the checkpoint if applicable
-            # and update the tracked list of checkpoint paths
+        # 4) remove the oldest/worst checkpoint if applicable
+        if self._should_remove_checkpoint():
+            self._remove_checkpoint(state)
 
-            if self._should_remove_checkpoint():
-                self._remove_checkpoint(state)
+        # 5) update the tracked list of checkpoint paths
+        if self._best_checkpoint_config and (metric_value is not None):
+            metric_mode = none_throws(self._best_checkpoint_config).mode
+            # insert the checkpoint path at the correct index to preserve ordering
+            keys = [
+                float(os.path.basename(x).split("=")[-1]) for x in self._ckpt_dirpaths
+            ]
+            if metric_mode == "min":
+                keys.reverse()
+            # Use bisect.bisect() to find the insertion point
+            idx = bisect.bisect(keys, metric_value)
+            if metric_mode == "min":
+                idx = len(self._ckpt_dirpaths) - idx
+            self._ckpt_dirpaths.insert(idx, checkpoint_path)
 
-            if best_checkpoint_config:
-                if metric_value_f:
-                    # insert the checkpoint path at the right index to preserve ordering
-                    keys = [
-                        float(os.path.basename(x).split("=")[-1])
-                        for x in self._ckpt_dirpaths
-                    ]
-                    if best_checkpoint_config.mode == "min":
-                        keys.reverse()
-                    # Use bisect.bisect() to find the insertion point
-                    idx = bisect.bisect(keys, metric_value_f)
-                    if best_checkpoint_config.mode == "min":
-                        idx = len(self._ckpt_dirpaths) - idx
-                    self._ckpt_dirpaths.insert(idx, checkpoint_path)
-            else:
-                self._ckpt_dirpaths.append(checkpoint_path)
+        elif not self._best_checkpoint_config:  # no metric to track
+            self._ckpt_dirpaths.append(checkpoint_path)
 
-        return success
+        return True
+
+    def _get_tracked_metric_value(self, unit: TTrainUnit) -> Optional[float]:
+        """
+        If the checkpointer has a tracked metric, look the value in the unit using reflection, and cast to float.
+
+        Args:
+            unit: The training unit to look for the tracked metric in.
+
+        Returns:
+            The value of the tracked metric, or None if there is no best_checkpoint config defined.
+
+        Raises:
+            RuntimeError: If the unit does not have the attribute specified in the best_checkpoint config,
+                or if the value cannot be cast to a float.
+        """
+        if not self._best_checkpoint_config:
+            return None
+
+        monitored_metric_name = self._best_checkpoint_config.monitored_metric
+        if not hasattr(unit, monitored_metric_name):
+            raise RuntimeError(
+                f"Unit does not have attribute {monitored_metric_name}, unable to retrieve metric to checkpoint."
+            )
+
+        metric_value_f = None
+        if (metric_value := getattr(unit, monitored_metric_name)) is not None:
+            try:
+                metric_value_f = float(metric_value)
+            except ValueError as e:
+                raise RuntimeError(
+                    f"Unable to convert monitored metric {monitored_metric_name} to a float. Please ensure the value "
+                    "can be converted to float and is not a multi-element tensor value."
+                ) from e
+
+        return metric_value_f
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         # clean up the difference if surplus of checkpoints exist
