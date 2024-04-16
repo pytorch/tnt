@@ -26,6 +26,7 @@ We offer several pre-written callbacks which are ready to be used out of the box
     LearningRateMonitor
     MemorySnapshot
     ModuleSummary
+    ProgressReporter
     PyTorchProfiler
     SlowRankDetector
     SystemResourcesMonitor
