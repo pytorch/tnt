@@ -16,6 +16,7 @@ from .lambda_callback import Lambda
 from .learning_rate_monitor import LearningRateMonitor
 from .memory_snapshot import MemorySnapshot
 from .module_summary import ModuleSummary
+from .progress_reporter import ProgressReporter
 from .pytorch_profiler import PyTorchProfiler
 from .slow_rank_detector import SlowRankDetector
 from .system_resources_monitor import SystemResourcesMonitor
@@ -36,6 +37,7 @@ __all__ = [
     "LearningRateMonitor",
     "MemorySnapshot",
     "ModuleSummary",
+    "ProgressReporter",
     "PyTorchProfiler",
     "SlowRankDetector",
     "SystemResourcesMonitor",
