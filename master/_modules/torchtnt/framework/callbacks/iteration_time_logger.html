@@ -456,6 +456,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
             <span class="s2">&quot;train_iteration_time&quot;</span><span class="p">,</span>
             <span class="n">timer</span><span class="p">,</span>
+            <span class="c1"># on_train_step_end happens after the num steps is incremented, but before the timer list is populated,</span>
+            <span class="c1"># so it logs for step-1</span>
+            <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="IterationTimeLogger.on_train_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.IterationTimeLogger.html#torchtnt.framework.callbacks.IterationTimeLogger.on_train_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
+            <span class="s2">&quot;train_iteration_time&quot;</span><span class="p">,</span>
+            <span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">train_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span><span class="p">,</span>
             <span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -464,10 +473,29 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
             <span class="s2">&quot;eval_iteration_time&quot;</span><span class="p">,</span>
             <span class="n">timer</span><span class="p">,</span>
+            <span class="c1"># on_eval_step_end happens after the num steps is incremented, but before the timer list is populated,</span>
+            <span class="c1"># so it logs for step-1</span>
+            <span class="n">unit</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="IterationTimeLogger.on_eval_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.IterationTimeLogger.html#torchtnt.framework.callbacks.IterationTimeLogger.on_eval_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
+            <span class="s2">&quot;eval_iteration_time&quot;</span><span class="p">,</span>
+            <span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">eval_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span><span class="p">,</span>
             <span class="n">unit</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="IterationTimeLogger.on_predict_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.IterationTimeLogger.html#torchtnt.framework.callbacks.IterationTimeLogger.on_predict_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">timer</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">predict_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
+            <span class="s2">&quot;predict_iteration_time&quot;</span><span class="p">,</span>
+            <span class="n">timer</span><span class="p">,</span>
+            <span class="c1"># on_predict_step_end happens after the num steps is incremented, but before the timer list is populated,</span>
+            <span class="c1"># so it logs for step-1</span>
+            <span class="n">unit</span><span class="o">.</span><span class="n">predict_progress</span><span class="o">.</span><span class="n">num_steps_completed</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="IterationTimeLogger.on_predict_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.IterationTimeLogger.html#torchtnt.framework.callbacks.IterationTimeLogger.on_predict_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">timer</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">predict_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
             <span class="s2">&quot;predict_iteration_time&quot;</span><span class="p">,</span>
