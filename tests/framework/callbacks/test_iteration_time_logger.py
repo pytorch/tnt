@@ -10,8 +10,13 @@
 import unittest
 from unittest.mock import call, MagicMock
 
+import torch
+from pyre_extensions import none_throws
+
 from torch.utils.tensorboard import SummaryWriter
+from torchtnt.framework._callback_handler import CallbackHandler
 from torchtnt.framework._test_utils import (
+    DummyAutoUnit,
     DummyEvalUnit,
     DummyPredictUnit,
     DummyTrainUnit,
@@ -19,8 +24,8 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callbacks.iteration_time_logger import IterationTimeLogger
 
-from torchtnt.framework.state import State
-from torchtnt.framework.train import train
+from torchtnt.framework.state import EntryPoint, PhaseState, State
+from torchtnt.framework.train import _train_impl, train
 from torchtnt.utils.loggers.logger import MetricLogger
 
 
@@ -68,12 +73,12 @@ class IterationTimeLoggerTest(unittest.TestCase):
                 call(
                     "Train Iteration Time (seconds)",
                     6.0,  # the average of the last 4 numbers is 6
-                    2,  # after incrementing twice, step should be 2
+                    1,  # at on_train_step_end we report for step-1, we incremented twice so value should be 1
                 ),
                 call(
                     "Prediction Iteration Time (seconds)",
                     16.0,  # the average of the last 4 numbers is 16
-                    2,  # after incrementing twice, step should be 2
+                    1,  # at on_predict_step_end we report for step-1, we incremented twice so value should be 1
                 ),
             ]
         )
@@ -92,6 +97,58 @@ class IterationTimeLoggerTest(unittest.TestCase):
         train(my_unit, dataloader, max_epochs=2, callbacks=[callback])
         # 2 epochs, 6 iterations each, logging every third step
         self.assertEqual(logger.log.call_count, 4)
+
+    def test_comparing_step_logging_time(self) -> None:
+        """
+        Test IterationTimeLogger callback and compare reported time to collected time
+        """
+
+        my_auto_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2))
+        logger = MagicMock(spec=MetricLogger)
+        iteration_time_logger = IterationTimeLogger(
+            logger, moving_avg_window=1, log_every_n_steps=1
+        )
+        dataloader = generate_random_dataloader(
+            num_samples=8, input_dim=2, batch_size=2
+        )
+        state = State(
+            entry_point=EntryPoint.FIT,
+            train_state=PhaseState(
+                dataloader=dataloader,
+                max_epochs=2,
+                max_steps_per_epoch=2,
+            ),
+            eval_state=PhaseState(
+                dataloader=dataloader,
+                max_steps_per_epoch=2,
+                evaluate_every_n_epochs=1,
+            ),
+        )
+
+        # we want to be able to compare the logging value to the state, so we need to create state manually and
+        # call _train_impl. This would have been similar to calling fit() and getting the state as a ret value
+
+        _train_impl(state, my_auto_unit, CallbackHandler([iteration_time_logger]))
+        train_iteration_timer = none_throws(
+            state.train_state
+        ).iteration_timer.recorded_durations["train_iteration_time"]
+        eval_iteration_timer = none_throws(
+            state.eval_state
+        ).iteration_timer.recorded_durations["eval_iteration_time"]
+
+        expected_training_iteration_time_calls = [
+            call("Train Iteration Time (seconds)", train_iteration_timer[i], i + 1)
+            for i in range(4)
+        ]
+        expected_eval_iteration_time_calls = [
+            call("Eval Iteration Time (seconds)", eval_iteration_timer[i], i + 1)
+            for i in range(4)
+        ]
+
+        logger.log.assert_has_calls(
+            expected_training_iteration_time_calls + expected_eval_iteration_time_calls,
+            any_order=True,
+        )
 
     def test_with_summary_writer(self) -> None:
         """
