@@ -272,7 +272,8 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         dcp_options = {
             "thread_count": self._knob_options.max_per_rank_io_concurrency or 16,
             "sync_files": False,
-            "single_file_per_rank": False,
         }
+        if dcp_options["thread_count"] > 1:
+            dcp_options["single_file_per_rank"] = False
 
         return dcp_options
