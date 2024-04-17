@@ -38,6 +38,7 @@ from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.precision import (
     convert_precision_str_to_dtype,
     get_grad_scaler_from_precision,
+    GradScaler,
 )
 from torchtnt.utils.prepare_module import (
     _is_fsdp_module,
@@ -505,7 +506,7 @@ class AutoUnit(
             enable_compiled_autograd=enable_compiled_autograd,
         )
 
-        self.grad_scaler: Optional[torch.amp.GradScaler] = None
+        self.grad_scaler: Optional[GradScaler] = None
         if self.precision:
             self.grad_scaler = get_grad_scaler_from_precision(
                 self.precision,
