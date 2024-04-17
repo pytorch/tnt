@@ -244,8 +244,12 @@ class DistributedCheckpointSaver(BaseCheckpointer):
 
         # necessary for loading optimizers since states are initialized lazy
         for obj in app_state.values():
-            if isinstance(obj, torch.optim.Optimizer):
-                _init_optim_state(obj)
+            # sometimes optimizers are actually held in a wrapper which handles calling
+            # state_dict and load_state_dict, sa is the case for
+            # `torchtnt.utils.prepare_module.FSDPOptimizerWrapper`, this handles that case.
+            optimizer = getattr(obj, "optimizer", obj)
+            if isinstance(optimizer, torch.optim.Optimizer):
+                _init_optim_state(optimizer)
 
         dcp.load(
             {"app_state": MultiStateful(app_state)},
