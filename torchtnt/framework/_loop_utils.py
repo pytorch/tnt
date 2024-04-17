@@ -7,7 +7,7 @@
 # pyre-strict
 
 import logging
-from typing import Dict, Iterable, Optional, TypeVar
+from typing import Dict, Iterable, Optional, Protocol, runtime_checkable, TypeVar
 
 import torch
 import torch.nn as nn
@@ -37,6 +37,11 @@ def _is_epoch_done(
     )
 
 
+@runtime_checkable
+class _DistributedSampler(Protocol):
+    def set_epoch(self, epoch: int) -> None: ...
+
+
 def _maybe_set_distributed_sampler_epoch(
     dataloader: Iterable[object],
     current_epoch: int,
@@ -47,7 +52,7 @@ def _maybe_set_distributed_sampler_epoch(
     # Set current training epoch for any DistributedSampler in dataloader
     if isinstance(dataloader, torch.utils.data.DataLoader) and isinstance(
         dataloader.sampler,
-        torch.utils.data.distributed.DistributedSampler,
+        _DistributedSampler,
     ):
         dataloader.sampler.set_epoch(current_epoch)
 
