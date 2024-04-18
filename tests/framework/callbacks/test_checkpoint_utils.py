@@ -14,7 +14,6 @@ import unittest
 import torch
 import torch.distributed as dist
 from torch import nn
-from torch.distributed import launcher
 from torchsnapshot import Snapshot
 from torchsnapshot.snapshot import SNAPSHOT_METADATA_FNAME
 from torchtnt.framework._test_utils import DummyTrainUnit, get_dummy_train_state
@@ -34,7 +33,7 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
 from torchtnt.utils.distributed import get_global_rank, PGWrapper, spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.fsspec import get_filesystem
-from torchtnt.utils.test_utils import get_pet_launch_config, skip_if_not_distributed
+from torchtnt.utils.test_utils import skip_if_not_distributed
 
 METADATA_FNAME: str = ".metadata"
 
@@ -88,10 +87,11 @@ class CheckpointUtilsTest(unittest.TestCase):
 
     @skip_if_not_distributed
     def test_latest_checkpoint_path_distributed(self) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(
-            config, entrypoint=self._latest_checkpoint_path_distributed
-        )()
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._latest_checkpoint_path_distributed,
+        )
 
     @staticmethod
     def _latest_checkpoint_path_distributed() -> None:
@@ -130,6 +130,7 @@ class CheckpointUtilsTest(unittest.TestCase):
         path_container = [path_2] if is_rank0 else [None]
         pg.broadcast_object_list(path_container, 0)
         expected_path = path_container[0]
+        tc.assertIsNotNone(expected_path)
         tc.assertEqual(
             get_latest_checkpoint_path(temp_dir, METADATA_FNAME), expected_path
         )
