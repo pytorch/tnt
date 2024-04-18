@@ -22,6 +22,7 @@ from .slow_rank_detector import SlowRankDetector
 from .system_resources_monitor import SystemResourcesMonitor
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
 from .time_limit_interrupter import TimeLimitInterrupter
+from .time_wait_for_batch_logger import TimeWaitForBatchLogger
 from .torch_compile import TorchCompile
 from .torchsnapshot_saver import TorchSnapshotSaver
 from .tqdm_progress_bar import TQDMProgressBar
@@ -43,6 +44,7 @@ __all__ = [
     "SystemResourcesMonitor",
     "TensorBoardParameterMonitor",
     "TimeLimitInterrupter",
+    "TimeWaitForBatchLogger",
     "TorchCompile",
     "TorchSnapshotSaver",
     "TQDMProgressBar",
