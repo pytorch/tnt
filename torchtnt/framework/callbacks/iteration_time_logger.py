@@ -31,8 +31,6 @@ class IterationTimeLogger(Callback):
         log_every_n_steps: an optional int to control the log frequency
     """
 
-    _writer: Optional[SummaryWriter] = None
-
     def __init__(
         self,
         logger: Union[MetricLogger, SummaryWriter],
