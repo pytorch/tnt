@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TimeLimitInterrupter &mdash; TorchTNT master documentation</title>
+  <title>TimeWaitForBatchLogger &mdash; TorchTNT master documentation</title>
   
 
   
@@ -33,8 +33,8 @@
   <link rel="stylesheet" href="../../_static/css/torchtnt.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="TimeWaitForBatchLogger" href="torchtnt.framework.callbacks.TimeWaitForBatchLogger.html" />
-    <link rel="prev" title="TensorBoardParameterMonitor" href="torchtnt.framework.callbacks.TensorBoardParameterMonitor.html" />
+    <link rel="next" title="IterationTimeLogger" href="torchtnt.framework.callbacks.IterationTimeLogger.html" />
+    <link rel="prev" title="TimeLimitInterrupter" href="torchtnt.framework.callbacks.TimeLimitInterrupter.html" />
   <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -336,13 +336,13 @@
         
           <li><a href="../callbacks.html">Callbacks</a> &gt;</li>
         
-      <li>TimeLimitInterrupter</li>
+      <li>TimeWaitForBatchLogger</li>
     
     
       <li class="pytorch-breadcrumbs-aside">
         
             
-            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.TimeLimitInterrupter.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
+            <a href="../../_sources/framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.rst.txt" rel="nofollow"><img src="../../_static/images/view-page-source-icon.svg"></a>
           
         
       </li>
@@ -372,56 +372,40 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="pytorch-article" class="pytorch-article">
               
-  <div class="section" id="timelimitinterrupter">
-<h1>TimeLimitInterrupter<a class="headerlink" href="#timelimitinterrupter" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="timewaitforbatchlogger">
+<h1>TimeWaitForBatchLogger<a class="headerlink" href="#timewaitforbatchlogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeLimitInterrupter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TimeLimitInterrupter</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">timedelta</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">datetime</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="n"><span class="pre">interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'epoch'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'step'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'epoch'</span></span></em>, <em><span class="n"><span class="pre">interval_freq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_limit_interrupter.html#TimeLimitInterrupter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeLimitInterrupter" title="Permalink to this definition">¶</a></dt>
-<dd><p>This callback tracks the time spent in training and stops the training loop when a time limit is reached. It is possible to define a maximum duration for the training job,
-and/or an absolute timestamp limit. At least one of them should be provided. If both are provided, the callback will stop the training loop when the first condition is met.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeWaitForBatchLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.framework.callbacks.</span></code><code class="sig-name descname"><span class="pre">TimeWaitForBatchLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../../utils/generated/torchtnt.utils.loggers.MetricLogger.html#torchtnt.utils.loggers.MetricLogger" title="torchtnt.utils.loggers.logger.MetricLogger"><span class="pre">MetricLogger</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensorboard.html#torch.utils.tensorboard.writer.SummaryWriter" target="_blank" title="(in PyTorch v2.2)"><span class="pre">SummaryWriter</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em><span class="n"><span class="pre">log_every_n_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_wait_for_batch_logger.html#TimeWaitForBatchLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeWaitForBatchLogger" title="Permalink to this definition">¶</a></dt>
+<dd><p>A callback which logs time wait for batch as scalars to a MetricLogger.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>duration</strong> – Optional, the maximum amount of time to spend in training. Can be specified as a string in the form of DD:HH:MM (days, hours, minutes) or as a timedelta.
-For example, to specify 20 hours is “00:20:00”.</li>
-<li><strong>timestamp</strong> – Optional datetime object indicating the timestamp at which the training should end. The training will be stopped even if the maximum
-job duration has not been reached yet. Object must be timezone aware.</li>
-<li><strong>interval</strong> – Can be either “epoch” or “step”. Determines whether to check for time limit exceeding on every epoch or step.</li>
-<li><strong>interval_freq</strong> – How often to check for time limit exceeding. For example, if interval is “epoch” and interval_freq is 2, then the callback will check every two epochs.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>logger</strong> – Either a subclass of <a class="reference internal" href="../../utils/generated/torchtnt.utils.loggers.MetricLogger.html#torchtnt.utils.loggers.MetricLogger" title="torchtnt.utils.loggers.logger.MetricLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.utils.loggers.logger.MetricLogger</span></code></a>
+or a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.tensorboard.SummaryWriter</span></code> instance.</li>
+<li><strong>log_every_n_steps</strong> – an optional int to control the log frequency</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – <ul class="simple">
-<li>If the duration is not specified as a string in the form of DD:HH:MM or as a timedelta.
-    - If the timestamp datetime object is not timezone aware.
-    - If both duration and timestamp are None (i.e. at least one must be specified).</li>
-</ul>
-</p>
 </td>
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This callback uses the global process group to communicate between ranks.</p>
-</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_epoch_end">
-<code class="sig-name descname"><span class="pre">on_train_epoch_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_limit_interrupter.html#TimeLimitInterrupter.on_train_epoch_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_epoch_end" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called after a train epoch ends.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_eval_step_end">
+<code class="sig-name descname"><span class="pre">on_eval_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><span class="pre">EvalUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TEvalData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_wait_for_batch_logger.html#TimeWaitForBatchLogger.on_eval_step_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_eval_step_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after an eval step ends.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_start">
-<code class="sig-name descname"><span class="pre">on_train_start</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_limit_interrupter.html#TimeLimitInterrupter.on_train_start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_start" title="Permalink to this definition">¶</a></dt>
-<dd><p>Hook called before training starts.</p>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_predict_step_end">
+<code class="sig-name descname"><span class="pre">on_predict_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><span class="pre">PredictUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TPredictData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_wait_for_batch_logger.html#TimeWaitForBatchLogger.on_predict_step_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_predict_step_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after a predict step ends.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_step_end">
-<code class="sig-name descname"><span class="pre">on_train_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_limit_interrupter.html#TimeLimitInterrupter.on_train_step_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeLimitInterrupter.on_train_step_end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_train_step_end">
+<code class="sig-name descname"><span class="pre">on_train_step_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><span class="pre">TrainUnit</span></a><span class="p"><span class="pre">[</span></span><span class="pre">TTrainData</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/framework/callbacks/time_wait_for_batch_logger.html#TimeWaitForBatchLogger.on_train_step_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_train_step_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after a train step ends.</p>
 </dd></dl>
 
@@ -437,10 +421,10 @@ job duration has not been reached yet. Object must be timezone aware.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="torchtnt.framework.callbacks.TimeWaitForBatchLogger.html" class="btn btn-neutral float-right" title="TimeWaitForBatchLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="torchtnt.framework.callbacks.IterationTimeLogger.html" class="btn btn-neutral float-right" title="IterationTimeLogger" accesskey="n" rel="next">Next <img src="../../_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="torchtnt.framework.callbacks.TensorBoardParameterMonitor.html" class="btn btn-neutral" title="TensorBoardParameterMonitor" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="torchtnt.framework.callbacks.TimeLimitInterrupter.html" class="btn btn-neutral" title="TimeLimitInterrupter" accesskey="p" rel="prev"><img src="../../_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -472,7 +456,7 @@ job duration has not been reached yet. Object must be timezone aware.</li>
           <div class="pytorch-right-menu" id="pytorch-right-menu">
             <div class="pytorch-side-scroll" id="pytorch-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">TimeLimitInterrupter</a></li>
+<li><a class="reference internal" href="#">TimeWaitForBatchLogger</a></li>
 </ul>
 
             </div>
