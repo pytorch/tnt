@@ -7,7 +7,7 @@
 # pyre-strict
 
 
-from typing import cast, Optional, Union
+from typing import cast, Union
 
 from pyre_extensions import none_throws
 from torch.utils.tensorboard import SummaryWriter
@@ -30,8 +30,6 @@ class IterationTimeLogger(Callback):
         moving_avg_window: an optional int to control the moving average window
         log_every_n_steps: an optional int to control the log frequency
     """
-
-    _writer: Optional[SummaryWriter] = None
 
     def __init__(
         self,
