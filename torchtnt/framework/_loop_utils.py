@@ -64,13 +64,19 @@ def _set_module_training_mode(
     prior_module_train_states = {}
     for name, module in modules.items():
         prior_module_train_states[name] = module.training
-        if isinstance(module, DistributedDataParallel):
-            module = module.module
-        if torch.ao.quantization.pt2e.export_utils.model_is_exported(module):
+        is_ddp = isinstance(module, DistributedDataParallel)
+
+        if torch.ao.quantization.pt2e.export_utils.model_is_exported(
+            module.module if is_ddp else module
+        ):
             if mode:
-                module = torch.ao.quantization.move_exported_model_to_train(module)
+                module = torch.ao.quantization.move_exported_model_to_train(
+                    module.module if is_ddp else module
+                )
             else:
-                module = torch.ao.quantization.move_exported_model_to_eval(module)
+                module = torch.ao.quantization.move_exported_model_to_eval(
+                    module.module if is_ddp else module
+                )
         else:
             module.train(mode)
 
