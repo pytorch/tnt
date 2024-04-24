@@ -199,3 +199,14 @@ class State:
         """Signal to the loop to end after the current step completes."""
         _logger.warning("Received signal to stop")
         self._should_stop = True
+
+    def active_phase_state(self) -> Optional[TPhaseState]:
+        """Returns the current active phase state."""
+        if self._active_phase == ActivePhase.TRAIN:
+            return self._train_state
+        elif self._active_phase == ActivePhase.EVALUATE:
+            return self._eval_state
+        elif self._active_phase == ActivePhase.PREDICT:
+            return self._predict_state
+        else:
+            raise ValueError(f"Invalid active phase: {self._active_phase}")
