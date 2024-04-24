@@ -30,8 +30,8 @@ import torch
 from torch.nn.parameter import UninitializedParameter
 from torch.utils._pytree import PyTree, tree_flatten
 from torch.utils.hooks import RemovableHandle
+from torchtnt.utils.flops import FlopTensorDispatchMode
 
-from torchtnt.utils.version import is_torch_version_geq_1_13
 from typing_extensions import Literal
 
 _ATTRIB_TO_COL_HEADER = {
@@ -244,35 +244,25 @@ def _get_module_flops_and_activation_sizes(
     module_kwargs = module_kwargs or {}
     flops_forward = None
     flops_backward = None
-    if not is_torch_version_geq_1_13():
-        warnings.warn(
-            "Please install PyTorch 1.13 or higher to compute FLOPs: https://pytorch.org/get-started/locally/"
-        )
-        module(*module_args, **module_kwargs)
+
+    with FlopTensorDispatchMode(module) as ftdm:
+        # Count for forward flops (+ compute activation sizes)
+        res = module(*module_args, **module_kwargs)
+
         # detach activation size hook handles
         for hook_handle in activation_size_handles:
             hook_handle.remove()
-    else:
-        from torchtnt.utils.flops import FlopTensorDispatchMode
 
-        with FlopTensorDispatchMode(module) as ftdm:
-            # Count for forward flops (+ compute activation sizes)
-            res = module(*module_args, **module_kwargs)
-
-            # detach activation size hook handles
-            for hook_handle in activation_size_handles:
-                hook_handle.remove()
-
-            flops_forward = copy.deepcopy(ftdm.flop_counts)
-            if isinstance(res, torch.Tensor):
-                # Count for backward flops
-                ftdm.reset()
-                res.mean().backward()
-                flops_backward = copy.deepcopy(ftdm.flop_counts)
-            else:
-                warnings.warn(
-                    "Backward FLOPs are only computed if module foward returns a tensor."
-                )
+        flops_forward = copy.deepcopy(ftdm.flop_counts)
+        if isinstance(res, torch.Tensor):
+            # Count for backward flops
+            ftdm.reset()
+            res.mean().backward()
+            flops_backward = copy.deepcopy(ftdm.flop_counts)
+        else:
+            warnings.warn(
+                "Backward FLOPs are only computed if module foward returns a tensor."
+            )
 
     # remove forward time elapsed handles
     for hook_handle in forward_elapsed_time_handles:

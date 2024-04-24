@@ -16,15 +16,10 @@ from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.oom import log_memory_snapshot
 
 from torchtnt.utils.test_utils import skip_if_not_gpu
-from torchtnt.utils.version import is_torch_version_geq_2_0
 
 
 class OomGPUTest(unittest.TestCase):
     @skip_if_not_gpu
-    @unittest.skipUnless(
-        condition=bool(is_torch_version_geq_2_0()),
-        reason="This test needs changes from PyTorch 2.0 to run.",
-    )
     def test_log_memory_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             # Record history
