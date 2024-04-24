@@ -30,6 +30,7 @@ from torchtnt.framework.auto_unit import (
     SWAParams,
     TrainStepResults,
 )
+from torchtnt.utils.swa import _AVERAGED_MODEL_AVAIL
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import ActivePhase, State
@@ -149,6 +150,7 @@ class TestAutoUnit(unittest.TestCase):
             predict(auto_unit, pred_dataloader, max_steps_per_epoch=1)
             mock_predict_step_end.assert_called_once()
 
+    @unittest.skipUnless(_AVERAGED_MODEL_AVAIL, "AveragedModel needed in version of Pytorch")
     def test_stochastic_weight_averaging_basic(self) -> None:
         """
         Basic stochastic weight averaging tests
@@ -182,6 +184,7 @@ class TestAutoUnit(unittest.TestCase):
         self.assertIn("swa_scheduler", auto_unit2.app_state())
         self.assertIn("swa_scheduler", auto_unit2.tracked_lr_schedulers())
 
+    @unittest.skipUnless(_AVERAGED_MODEL_AVAIL, "AveragedModel needed in version of Pytorch")
     def test_stochastic_weight_averaging_update_freq(self) -> None:
         """
         e2e stochastic weight averaging test to ensure that the SWA model is updated at the correct frequency
@@ -295,11 +298,12 @@ class TestAutoUnit(unittest.TestCase):
         Launch tests of AutoUnit with DDP strategy
         """
 
-        spawn_multi_process(
-            2,
-            "gloo",
-            self._test_stochastic_weight_averaging_with_ddp,
-        )
+        if _AVERAGED_MODEL_AVAIL:
+            spawn_multi_process(
+                2,
+                "gloo",
+                self._test_stochastic_weight_averaging_with_ddp,
+            )
         spawn_multi_process(
             2,
             "gloo",
