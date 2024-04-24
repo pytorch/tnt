@@ -49,4 +49,4 @@ class TestVersion(unittest.TestCase):
 
     def test_torch_version_comparators(self) -> None:
         with patch.object(torch, "__version__", "2.0.0a0"):
-            self.assertFalse(version.is_torch_version_geq_2_1())
+            self.assertFalse(version.is_torch_version_geq("2.1.0"))
