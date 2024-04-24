@@ -143,9 +143,7 @@ class PrepareModelTest(unittest.TestCase):
         """
 
         tc = unittest.TestCase()
-        with patch(
-            "torchtnt.utils.version.get_torch_version", return_value=Version("2.0.0")
-        ):
+        with patch("torchtnt.utils.version.is_torch_version_geq", return_value=False):
             with tc.assertRaisesRegex(
                 RuntimeError,
                 "Torch version >= 2.1.0 required",
