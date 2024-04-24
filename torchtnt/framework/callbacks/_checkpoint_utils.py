@@ -10,18 +10,7 @@ import logging
 import os
 import re
 
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Pattern,
-    Tuple,
-    TypeVar,
-)
+from typing import Any, Dict, List, Literal, Optional, Pattern, Tuple, TypeVar
 
 import fsspec
 
@@ -30,7 +19,7 @@ from torch import distributed as dist
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import AppStateMixin
-from torchtnt.utils.distributed import get_global_rank, PGWrapper
+from torchtnt.utils.distributed import rank_zero_read_and_broadcast
 
 from torchtnt.utils.fsspec import get_filesystem
 from torchtnt.utils.stateful import Stateful
@@ -38,44 +27,6 @@ from torchtnt.utils.stateful import Stateful
 logger: logging.Logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
-
-
-def rank_zero_read_and_broadcast(
-    func: Callable[..., T],
-) -> Callable[..., T]:
-    """
-    Decorator that ensures a function is only executed by rank 0 and returns the result to all ranks.
-
-    Note:
-        By default will use the global process group. To use a custom process group, `process_group` must be an arg to the function and passed as a keyword argument.
-    """
-
-    def wrapper(*args: Any, **kwargs: Any) -> T:
-        ret = None
-        rank = get_global_rank()
-        process_group = kwargs.pop("process_group", None)
-
-        # Do all filesystem reads from rank 0 only
-        if rank == 0:
-            ret = func(*args, **kwargs)
-
-        # If not running in a distributed setting, return as is
-        if not (dist.is_available() and dist.is_initialized()):
-            # we cast here to avoid type errors, since it is
-            # guaranteed the return value is of type T
-            return cast(T, ret)
-
-        # Otherwise, broadcast result from rank 0 to all ranks
-        pg = PGWrapper(process_group)
-        path_container = [ret]
-        pg.broadcast_object_list(path_container, 0)
-        val = path_container[0]
-
-        # we cast here to avoid type errors, since it is
-        # guaranteed the return value is of type T
-        return cast(T, val)
-
-    return wrapper
 
 
 @rank_zero_read_and_broadcast

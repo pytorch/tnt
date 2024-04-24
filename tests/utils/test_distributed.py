@@ -30,6 +30,7 @@ from torchtnt.utils.distributed import (
     get_world_size,
     PGWrapper,
     rank_zero_fn,
+    rank_zero_read_and_broadcast,
     revert_sync_batchnorm,
     spawn_multi_process,
     sync_bool,
@@ -443,3 +444,22 @@ class DistributedTest(unittest.TestCase):
     def test_spawn_multi_process(self) -> None:
         mp_list = spawn_multi_process(2, "gloo", self._test_method, 3, offset_kwarg=2)
         self.assertEqual(mp_list, [1, 2])
+
+    @skip_if_not_distributed
+    def test_rank_zero_read_and_broadcast(self) -> None:
+        spawn_multi_process(2, "gloo", self._test_rank_zero_read_and_broadcast)
+
+    @staticmethod
+    def _test_rank_zero_read_and_broadcast() -> None:
+        """
+        Tests that rank_zero_read_and_broadcast decorator works as expected
+        """
+
+        @rank_zero_read_and_broadcast
+        def _test_method_for_rank_zero() -> str:
+            assert get_global_rank() == 0
+            return "foo"
+
+        val_from_test_method = _test_method_for_rank_zero()
+        tc = unittest.TestCase()
+        tc.assertEqual(val_from_test_method, "foo")

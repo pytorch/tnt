@@ -24,7 +24,6 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
     get_best_checkpoint_path,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
-    rank_zero_read_and_broadcast,
 )
 from torchtnt.framework.callbacks.checkpointer_types import (
     BestCheckpointConfig,
@@ -33,7 +32,7 @@ from torchtnt.framework.callbacks.checkpointer_types import (
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainData, TTrainUnit
 from torchtnt.framework.utils import get_timing_context
-from torchtnt.utils.distributed import PGWrapper
+from torchtnt.utils.distributed import PGWrapper, rank_zero_read_and_broadcast
 from torchtnt.utils.fsspec import get_filesystem
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 
