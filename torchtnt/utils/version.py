@@ -56,41 +56,5 @@ def get_torch_version() -> Version:
     return pkg_version
 
 
-def is_torch_version_geq_1_8() -> bool:
-    return get_torch_version() >= Version("1.8.0")
-
-
-def is_torch_version_geq_1_9() -> bool:
-    return get_torch_version() >= Version("1.9.0")
-
-
-def is_torch_version_geq_1_10() -> bool:
-    return get_torch_version() >= Version("1.10.0")
-
-
-def is_torch_version_geq_1_11() -> bool:
-    return get_torch_version() >= Version("1.11.0")
-
-
-def is_torch_version_geq_1_12() -> bool:
-    return get_torch_version() >= Version("1.12.0")
-
-
-def is_torch_version_geq_1_13() -> bool:
-    return get_torch_version() >= Version("1.13.0")
-
-
-def is_torch_version_ge_1_13_1() -> bool:
-    return get_torch_version() > Version("1.13.1")
-
-
-def is_torch_version_geq_1_14() -> bool:
-    return get_torch_version() >= Version("1.14.0")
-
-
-def is_torch_version_geq_2_0() -> bool:
-    return get_torch_version() >= Version("2.0.0")
-
-
 def is_torch_version_geq_2_1() -> bool:
     return get_torch_version() >= Version("2.1.0")
