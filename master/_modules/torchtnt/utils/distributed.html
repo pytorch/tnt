@@ -959,6 +959,44 @@
 
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">destroy_process_group</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">rank_zero_read_and_broadcast</span><span class="p">(</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">T</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator that ensures a function is only executed by rank 0 and returns the result to all ranks.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        By default will use the global process group. To use a custom process group, `process_group` must be an arg to the function and passed as a keyword argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="n">get_global_rank</span><span class="p">()</span>
+        <span class="n">process_group</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;process_group&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Do all filesystem reads from rank 0 only</span>
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># If not running in a distributed setting, return as is</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dist</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">()):</span>
+            <span class="c1"># we cast here to avoid type errors, since it is</span>
+            <span class="c1"># guaranteed the return value is of type T</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span>
+
+        <span class="c1"># Otherwise, broadcast result from rank 0 to all ranks</span>
+        <span class="n">pg</span> <span class="o">=</span> <span class="n">PGWrapper</span><span class="p">(</span><span class="n">process_group</span><span class="p">)</span>
+        <span class="n">path_container</span> <span class="o">=</span> <span class="p">[</span><span class="n">ret</span><span class="p">]</span>
+        <span class="n">pg</span><span class="o">.</span><span class="n">broadcast_object_list</span><span class="p">(</span><span class="n">path_container</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">path_container</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># we cast here to avoid type errors, since it is</span>
+        <span class="c1"># guaranteed the return value is of type T</span>
+        <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span>
 </pre></div>
 
              </article>
