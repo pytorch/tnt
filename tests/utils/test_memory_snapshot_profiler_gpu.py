@@ -18,18 +18,10 @@ from torchtnt.utils.memory_snapshot_profiler import (
     MemorySnapshotProfiler,
 )
 from torchtnt.utils.test_utils import skip_if_not_gpu
-from torchtnt.utils.version import is_torch_version_geq_2_0
 
 
 class MemorySnapshotProfilerGPUTest(unittest.TestCase):
-
-    torch_version_geq_2_0: bool = is_torch_version_geq_2_0()
-
     @skip_if_not_gpu
-    @unittest.skipUnless(
-        condition=torch_version_geq_2_0,
-        reason="This test needs changes from PyTorch 2.0 to run.",
-    )
     def test_stop_step(self) -> None:
         """Test that a memory snapshot is saved when stop_step is reached."""
         with tempfile.TemporaryDirectory() as temp_dir:
