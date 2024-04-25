@@ -381,6 +381,8 @@
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">auto</span><span class="p">,</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
 
+<span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
+
 <span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">BoundedTimer</span><span class="p">,</span> <span class="n">TimerProtocol</span>
 
 <span class="n">_logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -567,7 +569,18 @@
 <div class="viewcode-block" id="State.stop"><a class="viewcode-back" href="../../../framework/state.html#torchtnt.framework.state.State.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Signal to the loop to end after the current step completes.&quot;&quot;&quot;</span>
         <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Received signal to stop&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_should_stop</span> <span class="o">=</span> <span class="kc">True</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_should_stop</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="State.active_phase_state"><a class="viewcode-back" href="../../../framework/state.html#torchtnt.framework.state.State.active_phase_state">[docs]</a>    <span class="k">def</span> <span class="nf">active_phase_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TPhaseState</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the current active phase state.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_phase</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_train_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_phase</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eval_state</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_active_phase</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_predict_state</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid active phase: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_active_phase</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
              </article>
