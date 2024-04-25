@@ -22,10 +22,12 @@ from torchtnt.utils.prepare_module import (
     TorchCompileParams,
 )
 from torchtnt.utils.test_utils import skip_if_not_distributed
-from torchtnt.utils.version import Version
+from torchtnt.utils.version import is_torch_version_geq
 
 
 class PrepareModelTest(unittest.TestCase):
+    torch_version_geq_2_1_0: bool = is_torch_version_geq("2.1.0")
+
     def test_invalid_fsdp_strategy_str_values(self) -> None:
         from torchtnt.utils.prepare_module import MixedPrecision as _MixedPrecision
 
@@ -143,7 +145,9 @@ class PrepareModelTest(unittest.TestCase):
         """
 
         tc = unittest.TestCase()
-        with patch("torchtnt.utils.version.is_torch_version_geq", return_value=False):
+        with patch(
+            "torchtnt.utils.prepare_module.is_torch_version_geq", return_value=False
+        ):
             with tc.assertRaisesRegex(
                 RuntimeError,
                 "Torch version >= 2.1.0 required",
@@ -154,14 +158,6 @@ class PrepareModelTest(unittest.TestCase):
                     strategy=DDPStrategy(static_graph=True),
                     torch_compile_params=TorchCompileParams(backend="inductor"),
                 )
-
-        # no error should be thrown on latest pytorch
-        prepare_module(
-            module=torch.nn.Linear(2, 2),
-            device=init_from_env(),
-            strategy=DDPStrategy(static_graph=True),
-            torch_compile_params=TorchCompileParams(backend="inductor"),
-        )
 
     def test_prepare_module_compile_invalid_backend(self) -> None:
         """
@@ -188,6 +184,10 @@ class PrepareModelTest(unittest.TestCase):
                 torch_compile_params=TorchCompileParams(),
             )
 
+    @unittest.skipUnless(
+        torch_version_geq_2_1_0,
+        reason="Must be on torch 2.1.0+ to run test",
+    )
     def test_prepare_module_compile_module_state_dict(self) -> None:
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2, device=device)
