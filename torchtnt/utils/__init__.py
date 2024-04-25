@@ -74,7 +74,7 @@ from .tqdm import close_progress_bar, create_progress_bar, update_progress_bar
 from .version import (
     get_python_version,
     get_torch_version,
-    is_torch_version_geq_2_1,
+    is_torch_version_geq,
     is_windows,
 )
 
@@ -144,7 +144,7 @@ __all__ = [
     "TLRScheduler",
     "get_python_version",
     "get_torch_version",
-    "is_torch_version_geq_2_1",
+    "is_torch_version_geq",
     "is_windows",
     "get_pet_launch_config",
     "spawn_multi_process",

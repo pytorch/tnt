@@ -56,5 +56,5 @@ def get_torch_version() -> Version:
     return pkg_version
 
 
-def is_torch_version_geq_2_1() -> bool:
-    return get_torch_version() >= Version("2.1.0")
+def is_torch_version_geq(version: str) -> bool:
+    return get_torch_version() >= Version(version)
