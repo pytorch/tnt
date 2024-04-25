@@ -8,24 +8,16 @@
 # pyre-strict
 
 import unittest
+
+from copy import deepcopy
 from typing import TypeVar
 from unittest.mock import MagicMock, patch
 
 import torch
-from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
-from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
-
-from torchtnt.utils.version import is_torch_version_geq_1_13
-
-COMPILE_AVAIL = False
-if is_torch_version_geq_1_13():
-    COMPILE_AVAIL = True
-    import torch._dynamo
-
-from copy import deepcopy
 
 from pyre_extensions import ParameterSpecification as ParamSpec
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
     generate_random_dataloader,
@@ -40,6 +32,7 @@ from torchtnt.framework.train import train
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env, seed
 from torchtnt.utils.prepare_module import DDPStrategy, FSDPStrategy, TorchCompileParams
+from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 
 TParams = ParamSpec("TParams")
 T = TypeVar("T")
@@ -320,10 +313,6 @@ class TestAutoUnitGPU(unittest.TestCase):
             device_type="cuda", dtype=torch.float16, enabled=True
         )
 
-    @unittest.skipUnless(
-        condition=COMPILE_AVAIL,
-        reason="This test needs PyTorch 1.13 or greater to run.",
-    )
     @skip_if_not_gpu
     @patch("torch.compile")
     def test_compile_predict(self, mock_dynamo: MagicMock) -> None:

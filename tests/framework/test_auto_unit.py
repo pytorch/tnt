@@ -12,15 +12,6 @@ from typing import Any, Literal, Optional, Tuple, TypeVar
 from unittest.mock import MagicMock, patch
 
 import torch
-from torchtnt.framework.auto_unit import TrainStepResults
-from torchtnt.utils.test_utils import skip_if_not_distributed
-
-from torchtnt.utils.version import is_torch_version_geq_1_13
-
-COMPILE_AVAIL = False
-if is_torch_version_geq_1_13():
-    COMPILE_AVAIL = True
-    import torch._dynamo
 
 from pyre_extensions import none_throws, ParameterSpecification as ParamSpec
 
@@ -37,6 +28,7 @@ from torchtnt.framework.auto_unit import (
     AutoUnit,
     SWALRParams,
     SWAParams,
+    TrainStepResults,
 )
 from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.predict import predict
@@ -49,6 +41,7 @@ from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import DDPStrategy
 from torchtnt.utils.progress import Progress
+from torchtnt.utils.test_utils import skip_if_not_distributed
 from torchtnt.utils.timer import Timer
 
 TParams = ParamSpec("TParams")
