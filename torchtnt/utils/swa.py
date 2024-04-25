@@ -10,11 +10,17 @@ from typing import Callable, List, Literal, Optional
 
 import torch
 
-from torch.optim.swa_utils import (
-    AveragedModel as PyTorchAveragedModel,
-    get_ema_multi_avg_fn,
-    get_swa_multi_avg_fn,
-)
+_AVERAGED_MODEL_AVAIL: bool = True
+
+try:
+    from torch.optim.swa_utils import (
+        AveragedModel as PyTorchAveragedModel,
+        get_ema_multi_avg_fn,
+        get_swa_multi_avg_fn,
+    )
+except ImportError:
+    _AVERAGED_MODEL_AVAIL = False
+
 
 TSWA_avg_fn = Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor]
 TSWA_multi_avg_fn = Callable[[List[torch.Tensor], List[torch.Tensor], int], None]
@@ -49,6 +55,12 @@ class AveragedModel(PyTorchAveragedModel):
                 number of updates. The EMA decay will start small and will approach the
                 specified ema_decay as more updates occur.
         """
+        if not _AVERAGED_MODEL_AVAIL:
+            raise ImportError(
+                "AveragedModel is not available in this version of PyTorch. \
+                Please install the latest version of PyTorch."
+            )
+
         # setup averaging method
         if averaging_method == "ema":
             if ema_decay < 0.0 or ema_decay > 1.0:
