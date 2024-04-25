@@ -41,7 +41,7 @@ from torchtnt.utils.fsdp_utils import (
 )
 
 from torchtnt.utils.rank_zero_log import rank_zero_warn
-from torchtnt.utils.version import is_torch_version_geq_2_1
+from torchtnt.utils.version import is_torch_version_geq
 
 
 @dataclass
@@ -318,7 +318,7 @@ def prepare_module(
             if (
                 torch_compile_params
                 and strategy.static_graph is True
-                and not is_torch_version_geq_2_1()
+                and not is_torch_version_geq("2.1.0")
             ):
                 raise RuntimeError(
                     "Torch version >= 2.1.0 required for Torch compile + DDP with static graph"
