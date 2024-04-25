@@ -22,6 +22,7 @@ We offer several pre-written callbacks which are ready to be used out of the box
     BaseCSVWriter
     EarlyStopping
     GarbageCollector
+   IterationTimeLogger
     Lambda
     LearningRateMonitor
     MemorySnapshot
@@ -33,7 +34,7 @@ We offer several pre-written callbacks which are ready to be used out of the box
     TensorBoardParameterMonitor
     TimeLimitInterrupter
     TimeWaitForBatchLogger
-    IterationTimeLogger
+    ThroughputLogger
     TorchSnapshotSaver
     TQDMProgressBar
     TrainProgressMonitor

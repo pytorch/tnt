@@ -21,6 +21,7 @@ from .pytorch_profiler import PyTorchProfiler
 from .slow_rank_detector import SlowRankDetector
 from .system_resources_monitor import SystemResourcesMonitor
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
+from .throughput_logger import ThroughputLogger
 from .time_limit_interrupter import TimeLimitInterrupter
 from .time_wait_for_batch_logger import TimeWaitForBatchLogger
 from .torch_compile import TorchCompile
@@ -43,6 +44,7 @@ __all__ = [
     "SlowRankDetector",
     "SystemResourcesMonitor",
     "TensorBoardParameterMonitor",
+    "ThroughputLogger",
     "TimeLimitInterrupter",
     "TimeWaitForBatchLogger",
     "TorchCompile",
