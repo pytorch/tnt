@@ -12,6 +12,8 @@ import logging
 from enum import auto, Enum
 from typing import Generic, Iterable, Optional, TypeVar
 
+from pyre_extensions import none_throws
+
 from torchtnt.utils.timer import BoundedTimer, TimerProtocol
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -199,3 +201,14 @@ class State:
         """Signal to the loop to end after the current step completes."""
         _logger.warning("Received signal to stop")
         self._should_stop = True
+
+    def active_phase_state(self) -> TPhaseState:
+        """Returns the current active phase state."""
+        if self._active_phase == ActivePhase.TRAIN:
+            return none_throws(self._train_state)
+        elif self._active_phase == ActivePhase.EVALUATE:
+            return none_throws(self._eval_state)
+        elif self._active_phase == ActivePhase.PREDICT:
+            return none_throws(self._predict_state)
+        else:
+            raise ValueError(f"Invalid active phase: {self._active_phase}")
