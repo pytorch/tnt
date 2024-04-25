@@ -14,7 +14,6 @@ from typing import Optional, Type
 
 import torch
 from torchtnt.utils.oom import attach_oom_observer, log_memory_snapshot
-from torchtnt.utils.version import is_torch_version_geq_2_0
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -133,8 +132,6 @@ class MemorySnapshotProfiler(MemorySnapshotProfilerBase):
         self.step_num: int = 0
         self.is_started: bool = False
 
-        if not is_torch_version_geq_2_0():
-            raise RuntimeError("CUDA memory snapshot requires torch>=2.0")
         if self.params.enable_oom_observer:
             attach_oom_observer(
                 output_dir=output_dir, trace_max_entries=self.params.max_entries

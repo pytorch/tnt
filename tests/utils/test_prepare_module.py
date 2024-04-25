@@ -22,12 +22,7 @@ from torchtnt.utils.prepare_module import (
     TorchCompileParams,
 )
 from torchtnt.utils.test_utils import skip_if_not_distributed
-from torchtnt.utils.version import is_torch_version_geq_1_13, Version
-
-COMPILE_AVAIL = False
-if is_torch_version_geq_1_13():
-    COMPILE_AVAIL = True
-    import torch._dynamo
+from torchtnt.utils.version import Version
 
 
 class PrepareModelTest(unittest.TestCase):
@@ -170,10 +165,6 @@ class PrepareModelTest(unittest.TestCase):
             torch_compile_params=TorchCompileParams(backend="inductor"),
         )
 
-    @unittest.skipUnless(
-        condition=COMPILE_AVAIL,
-        reason="This test needs PyTorch 1.13 or greater to run.",
-    )
     def test_prepare_module_compile_invalid_backend(self) -> None:
         """
         verify error is thrown on invalid backend
@@ -199,10 +190,6 @@ class PrepareModelTest(unittest.TestCase):
                 torch_compile_params=TorchCompileParams(),
             )
 
-    @unittest.skipUnless(
-        condition=COMPILE_AVAIL,
-        reason="This test needs PyTorch 1.13 or greater to run.",
-    )
     def test_prepare_module_compile_module_state_dict(self) -> None:
         device = init_from_env()
         my_module = torch.nn.Linear(2, 2, device=device)
