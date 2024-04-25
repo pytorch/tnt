@@ -13,10 +13,18 @@ from typing import Any, Callable, cast, Dict, Iterable, Optional, Union
 import torch
 import torch.distributed as dist
 from torch.distributed import ProcessGroup
+
+from torch.distributed._composable_state import _get_module_state
+from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
+    apply_activation_checkpointing,
+    checkpoint_wrapper,
+    CheckpointImpl,
+)
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
     StateDictType as _StateDictType,
 )
+from torch.distributed.fsdp._common_utils import _FSDPState
 from torch.distributed.fsdp.api import OptimStateDictConfig, StateDictConfig
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     BackwardPrefetch as _BackwardPrefetch,
@@ -33,20 +41,7 @@ from torchtnt.utils.fsdp_utils import (
 )
 
 from torchtnt.utils.rank_zero_log import rank_zero_warn
-from torchtnt.utils.version import (
-    is_torch_version_geq_1_12,
-    is_torch_version_geq_2_0,
-    is_torch_version_geq_2_1,
-)
-
-if is_torch_version_geq_2_0():
-    from torch.distributed._composable_state import _get_module_state
-    from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
-        apply_activation_checkpointing,
-        checkpoint_wrapper,
-        CheckpointImpl,
-    )
-    from torch.distributed.fsdp._common_utils import _FSDPState
+from torchtnt.utils.version import is_torch_version_geq
 
 
 @dataclass
@@ -237,10 +232,6 @@ def prepare_fsdp(
         device = torch.device("cuda")
         fsdp_module = prepare_fsdp(module, device, strategy)
     """
-    if not is_torch_version_geq_1_12():
-        raise RuntimeError(
-            "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/"
-        )
     strategy = strategy if strategy is not None else FSDPStrategy()
 
     # we use __dict__ and not asdict() here because asdict() is recursively applied on nested objects
@@ -291,11 +282,10 @@ def _is_fsdp_module(module: torch.nn.Module) -> bool:
     if isinstance(module, FSDP):
         return True
 
-    if is_torch_version_geq_2_0():
-        # Also check for composable FSDP API
-        maybe_composable_state = _get_module_state(module)
-        if maybe_composable_state is not None:
-            return isinstance(maybe_composable_state, _FSDPState)
+    # Also check for composable FSDP API
+    maybe_composable_state = _get_module_state(module)
+    if maybe_composable_state is not None:
+        return isinstance(maybe_composable_state, _FSDPState)
 
     return False
 
@@ -328,7 +318,7 @@ def prepare_module(
             if (
                 torch_compile_params
                 and strategy.static_graph is True
-                and not is_torch_version_geq_2_1()
+                and not is_torch_version_geq("2.1.0")
             ):
                 raise RuntimeError(
                     "Torch version >= 2.1.0 required for Torch compile + DDP with static graph"
@@ -359,8 +349,6 @@ def prepare_module(
         module = module.to(device)
 
     if activation_checkpoint_params:
-        if not is_torch_version_geq_2_0():
-            raise RuntimeError("Activation checkpointing requires torch>=2.0")
         checkpoint_impl = activation_checkpoint_params.checkpoint_impl
         check_fn = activation_checkpoint_params.check_fn
         auto_wrap_policy = activation_checkpoint_params.auto_wrap_policy
