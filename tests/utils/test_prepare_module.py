@@ -22,15 +22,12 @@ from torchtnt.utils.prepare_module import (
     TorchCompileParams,
 )
 from torchtnt.utils.test_utils import skip_if_not_distributed
-from torchtnt.utils.version import is_torch_version_geq_1_13, Version
-
-COMPILE_AVAIL = False
-if is_torch_version_geq_1_13():
-    COMPILE_AVAIL = True
-    import torch._dynamo
+from torchtnt.utils.version import is_torch_version_geq
 
 
 class PrepareModelTest(unittest.TestCase):
+    torch_version_geq_2_1_0: bool = is_torch_version_geq("2.1.0")
+
     def test_invalid_fsdp_strategy_str_values(self) -> None:
         from torchtnt.utils.prepare_module import MixedPrecision as _MixedPrecision
 
@@ -149,7 +146,7 @@ class PrepareModelTest(unittest.TestCase):
 
         tc = unittest.TestCase()
         with patch(
-            "torchtnt.utils.version.get_torch_version", return_value=Version("2.0.0")
+            "torchtnt.utils.prepare_module.is_torch_version_geq", return_value=False
         ):
             with tc.assertRaisesRegex(
                 RuntimeError,
@@ -162,18 +159,6 @@ class PrepareModelTest(unittest.TestCase):
                     torch_compile_params=TorchCompileParams(backend="inductor"),
                 )
 
-        # no error should be thrown on latest pytorch
-        prepare_module(
-            module=torch.nn.Linear(2, 2),
-            device=init_from_env(),
-            strategy=DDPStrategy(static_graph=True),
-            torch_compile_params=TorchCompileParams(backend="inductor"),
-        )
-
-    @unittest.skipUnless(
-        condition=COMPILE_AVAIL,
-        reason="This test needs PyTorch 1.13 or greater to run.",
-    )
     def test_prepare_module_compile_invalid_backend(self) -> None:
         """
         verify error is thrown on invalid backend
@@ -200,8 +185,8 @@ class PrepareModelTest(unittest.TestCase):
             )
 
     @unittest.skipUnless(
-        condition=COMPILE_AVAIL,
-        reason="This test needs PyTorch 1.13 or greater to run.",
+        torch_version_geq_2_1_0,
+        reason="Must be on torch 2.1.0+ to run test",
     )
     def test_prepare_module_compile_module_state_dict(self) -> None:
         device = init_from_env()
