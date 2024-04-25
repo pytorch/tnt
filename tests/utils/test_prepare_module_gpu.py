@@ -7,9 +7,10 @@
 
 # pyre-strict
 import unittest
-from unittest.mock import patch
 
 import torch
+
+from torch.distributed._composable import fully_shard
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -24,15 +25,6 @@ from torchtnt.utils.prepare_module import (
     prepare_module,
 )
 from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
-from torchtnt.utils.version import is_torch_version_geq_1_13, is_torch_version_geq_2_0
-
-COMPILE_AVAIL = False
-if is_torch_version_geq_1_13():
-    COMPILE_AVAIL = True
-    import torch._dynamo
-
-if is_torch_version_geq_2_0():
-    from torch.distributed._composable import fully_shard
 
 
 class PrepareModelGPUTest(unittest.TestCase):
@@ -82,33 +74,6 @@ class PrepareModelGPUTest(unittest.TestCase):
         tc.assertTrue(isinstance(fsdp_module, FSDP))
 
     @skip_if_not_distributed
-    @skip_if_not_gpu
-    def test_fsdp_pytorch_version(self) -> None:
-        """
-        Test that a RuntimeError is thrown when using FSDP, and PyTorch < v1.12
-        """
-        spawn_multi_process(
-            2,
-            "nccl",
-            self._test_fsdp_pytorch_version,
-        )
-
-    @staticmethod
-    def _test_fsdp_pytorch_version() -> None:
-        device = init_from_env()
-        module = torch.nn.Linear(2, 2).to(device)
-
-        tc = unittest.TestCase()
-        with patch(
-            "torchtnt.utils.prepare_module.is_torch_version_geq_1_12",
-            return_value=False,
-        ), tc.assertRaisesRegex(
-            RuntimeError,
-            "Please install PyTorch 1.12 or higher to use FSDP: https://pytorch.org/get-started/locally/",
-        ):
-            _ = prepare_fsdp(module, device, FSDPStrategy())
-
-    @skip_if_not_distributed
     @unittest.skipUnless(
         condition=bool(torch.cuda.device_count() >= 2),
         reason="This test needs 2 GPUs to run.",
@@ -128,9 +93,8 @@ class PrepareModelGPUTest(unittest.TestCase):
         model = FSDP(torch.nn.Linear(1, 1, device=device))
         assert _is_fsdp_module(model)
         model = torch.nn.Linear(1, 1, device=device)
-        if is_torch_version_geq_2_0():
-            fully_shard(model)
-            assert _is_fsdp_module(model)
+        fully_shard(model)
+        assert _is_fsdp_module(model)
 
     @skip_if_not_distributed
     @skip_if_not_gpu
