@@ -50,7 +50,6 @@ from torchtnt.utils.prepare_module import (
     TorchCompileParams,
 )
 from torchtnt.utils.swa import AveragedModel
-from torchtnt.utils.version import is_torch_version_ge_1_13_1
 from typing_extensions import Literal
 
 
@@ -166,8 +165,6 @@ class _AutoUnitMixin(Generic[TData]):
         torch_compile_params: Optional[TorchCompileParams] = None,
     ) -> None:
         super().__init__()
-        if torch_compile_params:
-            _validate_torch_compile_available()
 
         self.device: torch.device = device or init_from_env()
         self.precision: Optional[torch.dtype] = (
@@ -879,11 +876,3 @@ class AutoUnit(
                     state, f"{self.__class__.__name__}.lr_scheduler_step"
                 ):
                     self.step_lr_scheduler()
-
-
-def _validate_torch_compile_available() -> None:
-    if not is_torch_version_ge_1_13_1():
-        raise RuntimeError(
-            "Torch compile support is available only in PyTorch 2.0 or higher. "
-            "Please install PyTorch 2.0 or higher to continue: https://pytorch.org/get-started/locally/"
-        )
