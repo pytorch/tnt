@@ -13,7 +13,10 @@ from typing import List, Tuple
 
 import torch
 
-from torchtnt.utils.swa import AveragedModel
+from torchtnt.utils.swa import _AVERAGED_MODEL_AVAIL, AveragedModel
+
+if not _AVERAGED_MODEL_AVAIL:
+    raise unittest.SkipTest("Latest Pytorch is required to run SWA tests")
 
 
 class TestSWA(unittest.TestCase):
