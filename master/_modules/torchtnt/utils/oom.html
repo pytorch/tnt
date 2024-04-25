@@ -384,7 +384,6 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">get_global_rank</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.fsspec</span> <span class="kn">import</span> <span class="n">get_filesystem</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="n">is_torch_version_geq_2_0</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -459,11 +458,6 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CUDA unavailable. Not logging snapshot&quot;</span><span class="p">)</span>
         <span class="k">return</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_torch_version_geq_2_0</span><span class="p">():</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s2">&quot;CUDA memory snapshot utilities are unavailable. Not logging snapshot&quot;</span>
-        <span class="p">)</span>
-        <span class="k">return</span>
 
     <span class="n">rank</span> <span class="o">=</span> <span class="n">get_global_rank</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">file_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -502,11 +496,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CUDA unavailable. Not attaching OOM observer.&quot;</span><span class="p">)</span>
-        <span class="k">return</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_torch_version_geq_2_0</span><span class="p">():</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s2">&quot;CUDA memory snapshot utilities are unavailable. Not attaching OOM observer.&quot;</span>
-        <span class="p">)</span>
         <span class="k">return</span>
 
     <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">memory</span><span class="o">.</span><span class="n">_record_memory_history</span><span class="p">(</span>

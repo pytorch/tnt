@@ -425,44 +425,8 @@
     <span class="k">return</span> <span class="n">pkg_version</span></div>
 
 
-<span class="k">def</span> <span class="nf">is_torch_version_geq_1_8</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.8.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_1_9</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.9.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_1_10</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.10.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_1_11</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.11.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_1_12</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.12.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_1_13</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.13.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_ge_1_13_1</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.13.1&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_1_14</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.14.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_2_0</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;2.0.0&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_torch_version_geq_2_1</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;2.1.0&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">is_torch_version_geq</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
 </pre></div>
 
              </article>
