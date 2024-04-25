@@ -16,7 +16,6 @@ from dataclasses import fields, is_dataclass
 from typing import Any, Dict, Mapping, TypeVar
 
 import torch
-from torchtnt.utils.version import is_torch_version_geq_1_12
 from typing_extensions import Protocol, runtime_checkable, TypedDict
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -42,11 +41,7 @@ def get_device_from_env() -> torch.device:
             )
         device = torch.device(f"cuda:{local_rank}")
         torch.cuda.set_device(device)
-    elif (
-        is_torch_version_geq_1_12()
-        and torch.backends.mps.is_built()
-        and torch.backends.mps.is_available()
-    ):
+    elif torch.backends.mps.is_built() and torch.backends.mps.is_available():
         device = torch.device("mps")
     else:
         device = torch.device("cpu")
@@ -340,10 +335,7 @@ def set_float32_precision(precision: str = "high") -> None:
     Args:
         precision: The setting to determine which datatypes to use for matrix multiplication and convolution operations.
     """
-    if not (
-        torch.cuda.is_available()  # Not relevant for non-CUDA devices
-        and is_torch_version_geq_1_12()  # API exposed from PyTorch 1.12 onward
-    ):
+    if not (torch.cuda.is_available()):  # Not relevant for non-CUDA devices
         return
     # set precision for matrix multiplications
     torch.set_float32_matmul_precision(precision)
