@@ -48,48 +48,5 @@ class TestVersion(unittest.TestCase):
             self.assertEqual(version.get_torch_version(), Version("1.12.0"))
 
     def test_torch_version_comparators(self) -> None:
-        with patch.object(torch, "__version__", "1.7.0"):
-            self.assertFalse(version.is_torch_version_geq_1_8())
-            self.assertFalse(version.is_torch_version_geq_1_9())
-            self.assertFalse(version.is_torch_version_geq_1_10())
-            self.assertFalse(version.is_torch_version_geq_1_11())
-            self.assertFalse(version.is_torch_version_geq_1_12())
-
-        with patch.object(torch, "__version__", "1.8.0"):
-            self.assertTrue(version.is_torch_version_geq_1_8())
-            self.assertFalse(version.is_torch_version_geq_1_9())
-            self.assertFalse(version.is_torch_version_geq_1_10())
-            self.assertFalse(version.is_torch_version_geq_1_11())
-            self.assertFalse(version.is_torch_version_geq_1_12())
-
-        with patch.object(torch, "__version__", "1.9.0"):
-            self.assertTrue(version.is_torch_version_geq_1_8())
-            self.assertTrue(version.is_torch_version_geq_1_9())
-            self.assertFalse(version.is_torch_version_geq_1_10())
-            self.assertFalse(version.is_torch_version_geq_1_11())
-            self.assertFalse(version.is_torch_version_geq_1_12())
-
-        with patch.object(torch, "__version__", "1.10.0"):
-            self.assertTrue(version.is_torch_version_geq_1_8())
-            self.assertTrue(version.is_torch_version_geq_1_9())
-            self.assertTrue(version.is_torch_version_geq_1_10())
-            self.assertFalse(version.is_torch_version_geq_1_11())
-            self.assertFalse(version.is_torch_version_geq_1_12())
-
-        with patch.object(torch, "__version__", "1.11.0"):
-            self.assertTrue(version.is_torch_version_geq_1_8())
-            self.assertTrue(version.is_torch_version_geq_1_9())
-            self.assertTrue(version.is_torch_version_geq_1_10())
-            self.assertTrue(version.is_torch_version_geq_1_11())
-            self.assertFalse(version.is_torch_version_geq_1_12())
-
-        with patch.object(torch, "__version__", "1.12.0"):
-            self.assertTrue(version.is_torch_version_geq_1_8())
-            self.assertTrue(version.is_torch_version_geq_1_9())
-            self.assertTrue(version.is_torch_version_geq_1_10())
-            self.assertTrue(version.is_torch_version_geq_1_11())
-            self.assertTrue(version.is_torch_version_geq_1_12())
-
         with patch.object(torch, "__version__", "2.0.0a0"):
-            self.assertTrue(version.is_torch_version_ge_1_13_1())
-            self.assertFalse(version.is_torch_version_geq_2_0())
+            self.assertFalse(version.is_torch_version_geq("2.1.0"))

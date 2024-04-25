@@ -14,17 +14,9 @@ from torchtnt.utils.memory_snapshot_profiler import (
     MemorySnapshotParams,
     MemorySnapshotProfiler,
 )
-from torchtnt.utils.version import is_torch_version_geq_2_0
 
 
 class MemorySnapshotProfilerTest(unittest.TestCase):
-
-    torch_version_geq_2_0: bool = is_torch_version_geq_2_0()
-
-    @unittest.skipUnless(
-        condition=torch_version_geq_2_0,
-        reason="This test needs changes from PyTorch 2.0 to run.",
-    )
     def test_validation(self) -> None:
         """Test parameter validation."""
         with tempfile.TemporaryDirectory() as temp_dir:
