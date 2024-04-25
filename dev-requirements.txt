@@ -3,4 +3,4 @@ pytest
 pytest-cov
 torchsnapshot@git+https://github.com/pytorch/torchsnapshot@main
 pyre-check
-torchvision==0.16.2
+torchvision==0.15.2

@@ -15,7 +15,6 @@ from typing import Any, Callable, Dict, Optional, Union
 import torch
 from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.fsspec import get_filesystem
-from torchtnt.utils.version import is_torch_version_geq_2_0
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -90,11 +89,6 @@ def log_memory_snapshot(output_dir: str, file_prefix: Optional[str] = None) -> N
     if not torch.cuda.is_available():
         logger.info("CUDA unavailable. Not logging snapshot")
         return
-    if not is_torch_version_geq_2_0():
-        logger.warning(
-            "CUDA memory snapshot utilities are unavailable. Not logging snapshot"
-        )
-        return
 
     rank = get_global_rank()
     if file_prefix is None:
@@ -133,11 +127,6 @@ def attach_oom_observer(output_dir: str, trace_max_entries: int = 1000000) -> No
     """
     if not torch.cuda.is_available():
         logger.info("CUDA unavailable. Not attaching OOM observer.")
-        return
-    if not is_torch_version_geq_2_0():
-        logger.warning(
-            "CUDA memory snapshot utilities are unavailable. Not attaching OOM observer."
-        )
         return
 
     torch.cuda.memory._record_memory_history(
