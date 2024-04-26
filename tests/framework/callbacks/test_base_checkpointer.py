@@ -249,7 +249,7 @@ class BaseCheckpointerTest(unittest.TestCase):
                 self.assertEqual(
                     log.output,
                     [
-                        f"WARNING:torchtnt.framework.callbacks._checkpoint_utils:Input dirpath doesn't contain any subdirectories: {temp_dir}"
+                        f"WARNING:torchtnt.utils.checkpoint:Input dirpath doesn't contain any subdirectories: {temp_dir}"
                     ],
                 )
                 self.assertFalse(restored)
