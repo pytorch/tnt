@@ -6,7 +6,13 @@
 
 # pyre-strict
 
-from .checkpoint import CheckpointPath, MetricData
+from .checkpoint import (
+    CheckpointPath,
+    get_best_checkpoint_path,
+    get_checkpoint_dirpaths,
+    get_latest_checkpoint_path,
+    MetricData,
+)
 from .device import (
     copy_data_to_device,
     CPUStats,
@@ -80,6 +86,11 @@ from .version import (
 )
 
 __all__ = [
+    "CheckpointPath",
+    "MetricData",
+    "get_best_checkpoint_path",
+    "get_checkpoint_dirpaths",
+    "get_latest_checkpoint_path",
     "copy_data_to_device",
     "CPUStats",
     "get_device_from_env",
@@ -149,6 +160,4 @@ __all__ = [
     "is_windows",
     "get_pet_launch_config",
     "spawn_multi_process",
-    "CheckpointPath",
-    "MetricData",
 ]

@@ -5,13 +5,20 @@
 # LICENSE file in the root directory of this source tree.
 
 # pyre-strict
+import logging
 import os
 import re
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Literal, Optional, Pattern
+from typing import List, Literal, Optional, Pattern, Tuple
 
+import fsspec
+import torch.distributed as dist
+from fsspec.core import url_to_fs
 from pyre_extensions import none_throws
+from torchtnt.utils.distributed import rank_zero_read_and_broadcast
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -176,3 +183,243 @@ class CheckpointPath:
 
     def __gt__(self, other: "CheckpointPath") -> bool:
         return self.newer_than(other)
+
+
+@rank_zero_read_and_broadcast
+def get_latest_checkpoint_path(
+    dirpath: str,
+    metadata_fname: Optional[str] = None,
+    process_group: Optional[dist.ProcessGroup] = None,
+) -> Optional[str]:
+    """
+    Given a parent directory where checkpoints are saved, return the latest checkpoint subdirectory.
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+        process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
+
+    Raises:
+        AssertionError if the checkpoint subdirectories are not named in the format epoch_{epoch}_step_{step}.
+    """
+
+    return _latest_checkpoint_path(dirpath, metadata_fname)
+
+
+def _latest_checkpoint_path(
+    dirpath: str, metadata_fname: Optional[str]
+) -> Optional[str]:
+    candidate_dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname)
+
+    # Initialize variables to store the largest epoch and step numbers
+    largest_subdirectory = None
+    largest_epoch = -1
+    largest_step = -1
+
+    # Iterate through all files and directories in the specified directory
+    for candidate in candidate_dirpaths:
+        # Extract the epoch and step numbers from the directory name
+        dirname = os.path.basename(candidate)
+
+        # dirname will be of the format epoch_N_step_M
+        # where N is the epoch number and M is the step number as integers
+        split = dirname.split("_")
+        if len(split) < 4:
+            raise AssertionError(
+                f"Expected 4 or more elements for pattern of epoch_N_step_M, but received {split})"
+            )
+
+        epoch_num, step_num = int(split[1]), int(split[3])
+        # Check if the current epoch and step numbers are larger than the largest ones found so far
+        if epoch_num > largest_epoch:
+            largest_epoch = epoch_num
+            largest_step = step_num
+            largest_subdirectory = dirname
+        elif largest_epoch == epoch_num and step_num > largest_step:
+            largest_step = step_num
+            largest_subdirectory = dirname
+
+    if largest_subdirectory is None:
+        return None
+
+    # Rejoin with the parent directory path and return the largest subdirectory
+    return os.path.join(dirpath, none_throws(largest_subdirectory))
+
+
+@rank_zero_read_and_broadcast
+def get_best_checkpoint_path(
+    dirpath: str,
+    metric_name: str,
+    mode: Literal["min", "max"],
+    metadata_fname: Optional[str] = None,
+    process_group: Optional[dist.ProcessGroup] = None,
+) -> Optional[str]:
+    """
+    Given a parent directory where checkpoints are saved, return the best checkpoint subdirectory.
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+        metric_name: Name of the metric to use to find the best checkpoint.
+        mode: Either 'min' or 'max'. If 'min', finds and loads the lowest value metric checkpoint. If 'max', finds and loads the largest.
+        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+        process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
+    """
+
+    dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname, metric_name)
+    if len(dirpaths) == 0:
+        # no checkpoints found
+        return None
+
+    best_checkpoint_path = None
+    best_metric_value = float("inf") if mode == "min" else float("-inf")
+    for dirpath in dirpaths:
+        dirname = os.path.basename(dirpath)
+        metric_value = float(dirname.split("=")[-1])
+
+        if mode == "min":
+            if metric_value < best_metric_value:
+                best_metric_value = metric_value
+                best_checkpoint_path = dirpath
+        else:
+            if metric_value > best_metric_value:
+                best_metric_value = metric_value
+                best_checkpoint_path = dirpath
+
+    return best_checkpoint_path
+
+
+@rank_zero_read_and_broadcast
+def get_checkpoint_dirpaths(
+    dirpath: str,
+    metadata_fname: Optional[str] = None,
+    metric_name: Optional[str] = None,
+    process_group: Optional[dist.ProcessGroup] = None,
+) -> List[str]:
+    """
+    Given a parent directory where checkpoints are saved, returns the checkpoint subdirectories.
+    The order of the checkpoints is not guarenteed.
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+        metric_name: fetches all the checkpoint directories containing the metric name only.
+        process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
+    """
+
+    return _retrieve_checkpoint_dirpaths(dirpath, metadata_fname, metric_name)
+
+
+def _sort_by_recency(dirpaths: List[str]) -> List[str]:
+    """
+    Sorts the given list of directories by oldest to newest.
+
+    Args:
+        dirpaths: A list of directory paths.
+
+    Returns:
+        A sorted list of directory paths, sorted by recency.
+    """
+
+    def sort_fn(path: str) -> Tuple[int, int]:
+        x = os.path.basename(path)
+        return (int(x.split("_")[1]), int(x.split("_")[3]))
+
+    return sorted(dirpaths, key=sort_fn)
+
+
+def _sort_by_metric_value(
+    dirpaths: List[str], mode: Literal["min", "max"]
+) -> List[str]:
+    """
+    Sorts the given list of directories by the metric values.
+
+    Args:
+        dirpaths: A list of directory paths.
+        mode: Either 'min' or 'max'. If 'min', sorts in descending order. If 'max', sorts in ascending order
+
+    Returns:
+        A sorted list of directory paths, sorted by the metric values.
+    """
+
+    def sort_metric_fn(path: str) -> float:
+        x = os.path.basename(path)
+        metric_val = float(x.split("=")[-1])
+        return metric_val
+
+    return sorted(
+        dirpaths,
+        key=sort_metric_fn,
+        # sort descending if min, placing worst metric at top of list
+        reverse=(mode == "min"),
+    )
+
+
+def _retrieve_checkpoint_dirpaths(
+    dirpath: str,
+    metadata_fname: Optional[str],
+    metric_name: Optional[str] = None,
+) -> List[str]:
+    """
+    Given a parent directory where checkpoints are saved, return the unsorted checkpoint subdirectories
+
+    Args:
+        dirpath: parent directory where checkpoints are saved.
+        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+        metric_name: Name of the metric that must exist in checkpoint name.
+    """
+
+    if dirpath[-1] == "/":
+        # removes trailing forward slash if present
+        # required for regex search to work
+        dirpath = dirpath[:-1]
+
+    fs, _ = url_to_fs(dirpath)
+
+    if not fs.exists(dirpath):
+        logger.warning(f"Input dirpath doesn't exist: {dirpath}")
+        return []
+
+    contents = fs.ls(dirpath, detail=True)
+    contents = [item["name"] for item in contents if item["type"] == "directory"]
+    if len(contents) == 0:
+        logger.warning(f"Input dirpath doesn't contain any subdirectories: {dirpath}")
+        return []
+
+    # Define the regex pattern to match the directory names
+    pattern = rf"^{dirpath}/epoch_\d+_step_\d+"
+    if metric_name:
+        # inject metric name in regex search
+        pattern += rf"_{metric_name}="
+    snapshot_dirpath_pattern: Pattern[str] = re.compile(pattern)
+    candidate_dirpaths = list(filter(snapshot_dirpath_pattern.match, contents))
+
+    if not metadata_fname:
+        # return early as we don't need to filter out any paths
+        return candidate_dirpaths
+
+    # Iterate through all files and directories in the specified directory
+    # and check if metedata is present or not
+    valid_ckpt_dirpaths = []
+    for candidate in candidate_dirpaths:
+        if not _metadata_exists(fs, candidate, metadata_fname):
+            logger.warning(
+                f"Snapshot metadata is missing from {candidate}! Skipping this path"
+            )
+            continue
+
+        valid_ckpt_dirpaths.append(candidate)
+
+    return valid_ckpt_dirpaths
+
+
+def _delete_checkpoint(dirpath: str, metadata_fname: Optional[str] = None) -> None:
+    fs, _ = url_to_fs(dirpath)
+    if metadata_fname and not _metadata_exists(fs, dirpath, metadata_fname):
+        raise RuntimeError(f"{dirpath} does not contain {metadata_fname}")
+    fs.rm(dirpath, recursive=True)
+
+
+def _metadata_exists(
+    fs: fsspec.AbstractFileSystem, dirpath: str, metadata_fname: str
+) -> bool:
+    return fs.exists(os.path.join(dirpath, metadata_fname))
