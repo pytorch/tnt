@@ -15,7 +15,6 @@ import torch
 import torch.distributed as dist
 from torch.distributed import checkpoint as dcp
 
-from torch.distributed.checkpoint._fsspec_filesystem import FsspecReader, FsspecWriter
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _prepare_app_state_for_checkpoint,
     _prepare_app_state_for_restore,
@@ -43,6 +42,22 @@ from torchtnt.utils.stateful import MultiStateful, Stateful
 
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+_LATEST_DCP_AVAIL: bool = True
+try:
+    from torch.distributed.checkpoint._fsspec_filesystem import (
+        FsspecReader as Reader,
+        FsspecWriter as Writer,
+    )
+except ModuleNotFoundError:
+    logger.warn(
+        "To use FsspecReader / FsspecWriter, please install latest pytorch version"
+    )
+    _LATEST_DCP_AVAIL = False
+    from torch.distributed.checkpoint import (
+        FileSystemReader as Reader,
+        FileSystemWriter as Writer,
+    )
 
 
 class DistributedCheckpointSaver(BaseCheckpointer):
@@ -166,17 +181,24 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         self._prev_snapshot = dcp.async_save(
             state_dict={"app_state": MultiStateful(app_state)},
             process_group=self._process_group,
-            storage_writer=FsspecWriter(checkpoint_id, **self.default_writer_options),
+            storage_writer=Writer(checkpoint_id, **self.default_writer_options),
         )
 
         return True
 
     def _save(self, checkpoint_id: str, app_state: Dict[str, Stateful]) -> bool:
-        dcp.save(
-            state_dict={"app_state": MultiStateful(app_state)},
-            process_group=self._process_group,
-            storage_writer=FsspecWriter(checkpoint_id, **self.default_writer_options),
-        )
+        try:
+            dcp.save(
+                state_dict={"app_state": MultiStateful(app_state)},
+                process_group=self._process_group,
+                storage_writer=Writer(checkpoint_id, **self.default_writer_options),
+            )
+        except AttributeError:
+            dcp.save_state_dict(
+                state_dict={"app_state": MultiStateful(app_state)},
+                process_group=self._process_group,
+                storage_writer=Writer(checkpoint_id, **self.default_writer_options),
+            )
 
         return True
 
@@ -217,7 +239,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 "Ignoring `knob_options` which was passed to DistributedCheckpointSaver.restore, but is not supported."
             )
 
-        storage_reader = FsspecReader(path)
+        storage_reader = Reader(path)
 
         restore_options = restore_options or RestoreOptions()
         app_state = _prepare_app_state_for_restore(unit, restore_options)
@@ -250,11 +272,18 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             if isinstance(optimizer, torch.optim.Optimizer):
                 init_optim_state(optimizer)
 
-        dcp.load(
-            {"app_state": MultiStateful(app_state)},
-            storage_reader=storage_reader,
-            process_group=process_group,
-        )
+        try:
+            dcp.load(
+                {"app_state": MultiStateful(app_state)},
+                storage_reader=storage_reader,
+                process_group=process_group,
+            )
+        except AttributeError:
+            dcp.load_state_dict(
+                {"app_state": MultiStateful(app_state)},
+                storage_reader=storage_reader,
+                process_group=process_group,
+            )
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
 
     def _does_checkpoint_exist(
