@@ -9,17 +9,13 @@
 
 from __future__ import annotations
 
-import os
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-import torch.distributed.launcher as launcher
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-from torch import distributed as dist
 
 from torchtnt.utils.loggers.tensorboard import TensorBoardLogger
-from torchtnt.utils.test_utils import get_pet_launch_config, skip_if_not_distributed
 
 
 class TensorBoardLoggerTest(unittest.TestCase):
@@ -73,26 +69,6 @@ class TensorBoardLoggerTest(unittest.TestCase):
             with patch.dict("os.environ", {"RANK": "1"}):
                 logger = TensorBoardLogger(path=log_dir)
                 self.assertEqual(logger.writer, None)
-
-    @staticmethod
-    def _test_distributed() -> None:
-        dist.init_process_group("gloo")
-        rank = dist.get_rank()
-        with tempfile.TemporaryDirectory() as log_dir:
-            test_path = "correct"
-            invalid_path = "invalid"
-            if rank == 0:
-                logger = TensorBoardLogger(os.path.join(log_dir, test_path))
-            else:
-                logger = TensorBoardLogger(os.path.join(log_dir, invalid_path))
-
-            assert test_path in logger.path
-            assert invalid_path not in logger.path
-
-    @skip_if_not_distributed
-    def test_multiple_workers(self: TensorBoardLoggerTest) -> None:
-        config = get_pet_launch_config(2)
-        launcher.elastic_launch(config, entrypoint=self._test_distributed)()
 
     def test_add_scalars_call_is_correctly_passed_to_summary_writer(
         self: TensorBoardLoggerTest,

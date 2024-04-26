@@ -53,9 +53,8 @@ class TensorBoardLogger(MetricLogger):
 
     def __init__(self: TensorBoardLogger, path: str, *args: Any, **kwargs: Any) -> None:
         self._writer: Optional[SummaryWriter] = None
-
+        self._path: str = path
         self._rank: int = get_global_rank()
-        self._sync_path_to_workers(path)
 
         if self._rank == 0:
             logger.info(
@@ -68,22 +67,6 @@ class TensorBoardLogger(MetricLogger):
             )
 
         atexit.register(self.close)
-
-    def _sync_path_to_workers(self: TensorBoardLogger, path: str) -> None:
-        if not (dist.is_available() and dist.is_initialized()):
-            self._path: str = path
-            return
-
-        pg = PGWrapper(dist.group.WORLD)
-        path_container: List[str] = [path] if self._rank == 0 else [""]
-        pg.broadcast_object_list(path_container, 0)
-        updated_path = path_container[0]
-        if updated_path != path:
-            # because the logger only logs on rank 0, if users pass in a different path
-            # the logger will output the wrong `path` property, so we update it to match
-            # the correct path.
-            logger.info(f"Updating TensorBoard path to match rank 0: {updated_path}")
-        self._path: str = updated_path
 
     @property
     def writer(self: TensorBoardLogger) -> Optional[SummaryWriter]:
