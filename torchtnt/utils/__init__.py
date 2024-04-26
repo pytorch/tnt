@@ -6,6 +6,7 @@
 
 # pyre-strict
 
+from .checkpoint import CheckpointPath, MetricData
 from .device import (
     copy_data_to_device,
     CPUStats,
@@ -148,4 +149,6 @@ __all__ = [
     "is_windows",
     "get_pet_launch_config",
     "spawn_multi_process",
+    "CheckpointPath",
+    "MetricData",
 ]
