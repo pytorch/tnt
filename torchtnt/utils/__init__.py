@@ -7,6 +7,7 @@
 # pyre-strict
 
 from .checkpoint import (
+    BestCheckpointConfig,
     CheckpointPath,
     get_best_checkpoint_path,
     get_checkpoint_dirpaths,
@@ -91,6 +92,7 @@ __all__ = [
     "get_best_checkpoint_path",
     "get_checkpoint_dirpaths",
     "get_latest_checkpoint_path",
+    "BestCheckpointConfig",
     "copy_data_to_device",
     "CPUStats",
     "get_device_from_env",
