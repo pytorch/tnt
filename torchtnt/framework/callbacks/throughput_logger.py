@@ -7,7 +7,9 @@
 # pyre-strict
 
 
-from typing import Mapping
+import time
+from collections import defaultdict
+from typing import Dict, Mapping
 
 from pyre_extensions import none_throws
 
@@ -32,9 +34,10 @@ ACTIVE_PHASE_TO_LABEL_PREFIX: Mapping[ActivePhase, str] = {
 class ThroughputLogger(Callback):
     """
     A callback which logs the train/eval/predict/fit throughput. For instance, it can be used to log QPS and number of batches processed per second.
-    The callback logs the throughput on a step basis.
+    The callback logs the throughput on a step basis and on an epoch basis.
     We measure the throughput by dividing the number of batches processed (times the number of items in batch) by the time it took to process the batch:
         On a step granularity, we do this by leveraging the already collected timers for the iteration time and data wait time.
+        On an epoch granularity, we measure the time between on_train_epoch_start and on_train_epoch_end on this callback to calculate the throughput.
 
     Args:
         logger: A a subclass of :class:`torchtnt.utils.loggers.logger.MetricLogger`.
@@ -46,6 +49,7 @@ class ThroughputLogger(Callback):
 
     Note:
         The values reported are only for rank 0.
+        For more accurate measurement of epoch throughput, it is recommended to place this callback at the end of the callback list.
     """
 
     def __init__(
@@ -73,12 +77,15 @@ class ThroughputLogger(Callback):
             )
 
         self._log_every_n_steps = log_every_n_steps
+        self._epoch_start_times: Dict[ActivePhase, float] = {}
+        self._steps_in_epoch: Dict[ActivePhase, int] = defaultdict(int)
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         self._maybe_log_for_step(
             state,
             unit.train_progress.num_steps_completed - 1,
         )
+        self._steps_in_epoch[ActivePhase.TRAIN] += 1
 
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         self._maybe_log_for_step(
@@ -92,12 +99,17 @@ class ThroughputLogger(Callback):
             state,
             unit.eval_progress.num_steps_completed - 1,
         )
+        self._steps_in_epoch[ActivePhase.EVALUATE] += 1
 
     def on_eval_end(self, state: State, unit: TEvalUnit) -> None:
         self._maybe_log_for_step(
             state,
             unit.eval_progress.num_steps_completed,
             is_step_end_hook=False,
+        )
+        self._log_for_epoch(
+            state,
+            epoch_logging_for=unit.eval_progress.num_epochs_completed,
         )
 
     def on_predict_step_end(self, state: State, unit: TPredictUnit) -> None:
@@ -112,6 +124,25 @@ class ThroughputLogger(Callback):
             unit.predict_progress.num_steps_completed,
             is_step_end_hook=False,
         )
+        self._log_for_epoch(
+            state,
+            epoch_logging_for=unit.predict_progress.num_epochs_completed,
+        )
+
+    def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
+        self._epoch_start_times[ActivePhase.TRAIN] = time.perf_counter()
+
+    def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
+        self._log_for_epoch(
+            state,
+            epoch_logging_for=unit.train_progress.num_epochs_completed,
+        )
+
+    def on_eval_start(self, state: State, unit: TEvalUnit) -> None:
+        self._epoch_start_times[ActivePhase.EVALUATE] = time.perf_counter()
+
+    def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
+        self._epoch_start_times[ActivePhase.PREDICT] = time.perf_counter()
 
     def _maybe_log_for_step(
         self,
@@ -154,3 +185,26 @@ class ThroughputLogger(Callback):
                 num_items / total_time,
                 step_logging_for,
             )
+
+    def _log_for_epoch(
+        self,
+        state: State,
+        *,
+        epoch_logging_for: int,
+    ) -> None:
+        time_since_epoch_start = (
+            time.perf_counter() - self._epoch_start_times[state.active_phase]
+        )
+
+        steps_in_epoch = self._steps_in_epoch[state.active_phase]
+        if steps_in_epoch <= 0:
+            return
+
+        for item, num_items in self._throughput_per_batch.items():
+            self._logger.log(
+                f"{ACTIVE_PHASE_TO_LABEL_PREFIX[state.active_phase]}: {item} per second (epoch granularity)",
+                (num_items * steps_in_epoch) / time_since_epoch_start,
+                epoch_logging_for,
+            )
+
+        self._steps_in_epoch[state.active_phase] = 0
