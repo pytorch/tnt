@@ -22,11 +22,7 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
 )
 
 from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
-from torchtnt.framework.callbacks.checkpointer_types import (
-    BestCheckpointConfig,
-    KnobOptions,
-    RestoreOptions,
-)
+from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import (
     AppStateMixin,
@@ -36,6 +32,7 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import get_timing_context
+from torchtnt.utils.checkpoint import BestCheckpointConfig
 from torchtnt.utils.optimizer import init_optim_state
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import Stateful
