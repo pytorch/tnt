@@ -6,6 +6,7 @@
 
 # pyre-strict
 import os
+import pickle
 import shutil
 import tempfile
 import unittest
@@ -172,6 +173,21 @@ class CheckpointPathTest(unittest.TestCase):
         self.assertFalse(smaller.more_optimal_than(larger, mode="max"))
         self.assertTrue(smaller.more_optimal_than(larger, mode="min"))
         self.assertFalse(larger.more_optimal_than(smaller, mode="min"))
+
+    def test_pickling(self) -> None:
+        for path in (
+            "foo/epoch_0_step_1",
+            "file://some/path/checkpoints/0b20e70f-9ad2-4904-b7d6-e8da48087d61/epoch_2_step_1_acc=0.98",
+        ):
+            ckpt = CheckpointPath.from_str(path)
+
+            pickled = pickle.dumps(ckpt)
+
+            # Don't test equality because of custom protocol
+            self.assertTrue(path in str(pickled))
+
+            unpickled = pickle.loads(pickled)
+            self.assertEqual(unpickled, ckpt)
 
 
 class CheckpointUtilsTest(unittest.TestCase):
