@@ -391,11 +391,7 @@
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.base_checkpointer</span> <span class="kn">import</span> <span class="n">BaseCheckpointer</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.checkpointer_types</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">BestCheckpointConfig</span><span class="p">,</span>
-    <span class="n">KnobOptions</span><span class="p">,</span>
-    <span class="n">RestoreOptions</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.checkpointer_types</span> <span class="kn">import</span> <span class="n">KnobOptions</span><span class="p">,</span> <span class="n">RestoreOptions</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AppStateMixin</span><span class="p">,</span>
@@ -405,6 +401,7 @@
     <span class="n">TTrainUnit</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">get_timing_context</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.checkpoint</span> <span class="kn">import</span> <span class="n">BestCheckpointConfig</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.optimizer</span> <span class="kn">import</span> <span class="n">init_optim_state</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.rank_zero_log</span> <span class="kn">import</span> <span class="n">rank_zero_info</span><span class="p">,</span> <span class="n">rank_zero_warn</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">Stateful</span>
