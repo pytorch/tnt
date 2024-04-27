@@ -198,6 +198,25 @@ class CheckpointPath:
     def __gt__(self, other: "CheckpointPath") -> bool:
         return self.newer_than(other)
 
+    def __getstate__(self) -> str:
+        # Lightweight pickling to avoid broadcast errors
+        return self.path
+
+    def __setstate__(self, state: str) -> None:
+        # Match regex directly to avoid creating a new instance with `from_str`
+        path_match = self.PATH_REGEX.match(state)
+        assert path_match, f"Malformed checkpoint found when unpickling: {state}"
+
+        dirpath, epoch, step, metric_name, metric_value = path_match.groups()
+        self.dirpath = dirpath.rstrip("/")
+        self.epoch = int(epoch)
+        self.step = int(step)
+        self.metric_data = (
+            MetricData(name=metric_name, value=float(metric_value))
+            if metric_name and metric_value
+            else None
+        )
+
 
 @rank_zero_read_and_broadcast
 def get_latest_checkpoint_path(
