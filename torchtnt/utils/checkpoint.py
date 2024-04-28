@@ -31,20 +31,6 @@ class MetricData:
     value: float
 
 
-@dataclass
-class BestCheckpointConfig:
-    """
-    Config for saving the best checkpoints.
-
-    Args:
-        monitored_metric: Metric to monitor for saving best checkpoints. Must be an numerical or tensor attribute on the unit.
-        mode: One of `min` or `max`. The save file is overwritten based the max or min of the monitored metric.
-    """
-
-    monitored_metric: str
-    mode: Literal["min", "max"] = "min"
-
-
 @total_ordering
 class CheckpointPath:
     """

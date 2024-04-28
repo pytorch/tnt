@@ -31,14 +31,16 @@ from torchtnt.framework._test_utils import (
 from torchtnt.framework.callbacks.base_checkpointer import (
     BaseCheckpointer as BaseCheckpointer,
 )
-from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
+from torchtnt.framework.callbacks.checkpointer_types import (
+    BestCheckpointConfig,
+    RestoreOptions,
+)
 from torchtnt.framework.callbacks.lambda_callback import Lambda
 from torchtnt.framework.fit import fit
 from torchtnt.framework.state import State
 
 from torchtnt.framework.train import train
 from torchtnt.framework.unit import AppStateMixin, TrainUnit, TTrainData
-from torchtnt.utils.checkpoint import BestCheckpointConfig
 from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.test_utils import skip_if_not_distributed
