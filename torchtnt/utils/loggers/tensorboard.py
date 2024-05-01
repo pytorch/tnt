@@ -11,12 +11,10 @@ from __future__ import annotations
 
 import atexit
 import logging
-from typing import Any, Dict, List, Mapping, Optional, Union
-
-import torch.distributed as dist
+from typing import Any, Dict, Mapping, Optional, Union
 
 from torch.utils.tensorboard import SummaryWriter
-from torchtnt.utils.distributed import get_global_rank, PGWrapper
+from torchtnt.utils.distributed import get_global_rank
 from torchtnt.utils.loggers.logger import MetricLogger, Scalar
 
 logger: logging.Logger = logging.getLogger(__name__)
