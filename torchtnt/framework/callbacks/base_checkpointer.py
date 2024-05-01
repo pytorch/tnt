@@ -124,11 +124,14 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
             # sort by metric value if doing best checkpoint, else by recency
             if best_checkpoint_config:
-                self._ckpt_dirpaths = _sort_by_metric_value(
+                ckpt_dirpaths = _sort_by_metric_value(
                     ckpt_dirpaths, mode=best_checkpoint_config.mode
                 )
             else:
-                self._ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
+                ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
+
+            # TODO Remove this when using CheckpointManager
+            self._ckpt_dirpaths = [str(x) for x in ckpt_dirpaths]
 
         self._process_group: Optional[dist.ProcessGroup] = None
         self._setup_gloo_pg(process_group)
