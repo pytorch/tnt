@@ -13,6 +13,12 @@ import torch
 import torch.nn as nn
 from torch.nn.parallel.distributed import DistributedDataParallel
 
+_EXPORT_UTILS_AVAIL = True
+try:
+    from torch.ao.quantization.pt2e.export_utils import model_is_exported
+except Exception:
+    _EXPORT_UTILS_AVAIL = False
+
 from torchtnt.utils.progress import Progress
 
 _logger: logging.Logger = logging.getLogger(__name__)
@@ -66,7 +72,7 @@ def _set_module_training_mode(
         prior_module_train_states[name] = module.training
         is_ddp = isinstance(module, DistributedDataParallel)
 
-        if torch.ao.quantization.pt2e.export_utils.model_is_exported(
+        if _EXPORT_UTILS_AVAIL and model_is_exported(
             module.module if is_ddp else module
         ):
             if mode:
