@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # pyre-strict
+import bisect
 import logging
 import os
 import re
@@ -16,7 +17,7 @@ import fsspec
 import torch.distributed as dist
 from fsspec.core import url_to_fs
 from pyre_extensions import none_throws
-from torchtnt.utils.distributed import rank_zero_read_and_broadcast
+from torchtnt.utils.distributed import PGWrapper, rank_zero_read_and_broadcast
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -218,6 +219,240 @@ class CheckpointPath:
         )
 
 
+class CheckpointManager:
+    """
+    Manage a group of CheckpointPaths that belong to the same base directory. This involves maintaining
+    ordering checkpoints by recency or metric value if applicable. Then, this is used to determine if a
+    checkpoint should be saved, and what name will be used.
+
+    The checkpoints work in the following format: <dirpath>/epoch_<epoch>_step_<step>
+    If a metric is being tracked, it's added to the name: <dirpath>/epoch_<epoch>_step_<step>_<metric_name>=<metric_value>
+
+    The methods in this class are meant to be used in the following order:
+    1. Create instance - this will load the existing checkpoints (if any)
+    2. `prune_surplus_checkpoints` - this will remove the non-optimal checkpoints to enforce the `keep_last_n_checkpoints`
+    3. For every checkpointing iteration:
+        a. `generate_checkpoint_path`: Gives the CheckpointPath that would be saved next
+        b. `should_save_checkpoint`: Determines if checkpoint should be saved according to the `keep_last_n_checkpoints` and `best_checkpoint_config`
+        c. -- The external checkpointing API should be called if above returns True. CheckpointManager does NOT actually generate checkpoints --
+        d. `append_checkpoint`: If the checkpoint was successfully saved, this should be called to update the internal state
+
+    In general, every file system read/write operation performed by this class is executed only in rank 0, while state is synced across ranks.
+    """
+
+    def __init__(
+        self,
+        dirpath: str,
+        best_checkpoint_config: Optional[BestCheckpointConfig] = None,
+        keep_last_n_checkpoints: Optional[int] = None,
+        metadata_fname: Optional[str] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
+    ) -> None:
+        """
+        Initialize a checkpoint manager. If a `keep_last_n_checkpoints` value is provided, this will read the
+        existing checkpoints in the dirpath (from rank 0 only) to account for them in the max number of checkpoints
+        to keep. Note that no checkpoints are deleted.
+
+        Args:
+            dirpath: The base directory path that checkpoints are saved in. This is synced from rank 0 to every other rank upon initialization.
+            best_checkpoint_config: Optional configuration for the best checkpoint.
+            keep_last_n_checkpoints: Optional number of checkpoints to keep.
+            metadata_fname: Optional name of the metadata file.
+            process_group: Optional process group to use for distributed training. gloo process groups are known
+                to perform better.
+        """
+        self.dirpath: str = self._sync_dirpath_to_all_ranks(
+            dirpath=dirpath, process_group=process_group
+        )
+
+        self._best_checkpoint_config = best_checkpoint_config
+        self._keep_last_n_checkpoints = keep_last_n_checkpoints
+        self._metadata_fname = metadata_fname
+        self._pg_wrapper = PGWrapper(process_group)
+
+        self._ckpt_paths: List[CheckpointPath] = []
+        if not self._keep_last_n_checkpoints:
+            return
+
+        # If there is a max limit of checkpoints to store, keep track of existing ones
+        metric_name = (
+            best_checkpoint_config.monitored_metric if best_checkpoint_config else None
+        )
+        self._ckpt_paths = get_checkpoint_dirpaths(
+            dirpath=dirpath,
+            metadata_fname=self._metadata_fname,
+            metric_name=metric_name,
+            process_group=process_group,
+        )
+        if best_checkpoint_config:
+            self._ckpt_paths.sort(
+                key=lambda x: x.metric_data.value,
+                # sort descending if min, placing worst metric at top of list
+                reverse=(best_checkpoint_config.mode == "min"),
+            )
+        else:
+            self._ckpt_paths.sort()  # Checkpoint paths are well-ordered by recency
+
+    def prune_surplus_checkpoints(self) -> None:
+        """
+        Prune checkpoints that exceed the maximum number of checkpoints to keep. This should be
+        called when training starts, so that the `keep_last_n_checkpoints` config is honored.
+        Files are only deleted in rank 0.
+
+        Note:
+            This is not called on initialization, in case users want to inpsect previous
+            checkpoints. But it should be called before starting training if there is a
+            `keep_last_n_checkpoints` config.
+
+        Args:
+            state: The training state.
+        """
+        keep_last_n_checkpoints = self._keep_last_n_checkpoints
+        if keep_last_n_checkpoints and len(self._ckpt_paths) > keep_last_n_checkpoints:
+            logger.warning(
+                (
+                    f"{len(self._ckpt_paths)} checkpoints found in {self.dirpath}. ",
+                    f"Deleting {len(self._ckpt_paths) - keep_last_n_checkpoints} oldest ",
+                    "checkpoints to enforce ``keep_last_n_checkpoints`` argument.",
+                )
+            )
+            for _ in range(len(self._ckpt_paths) - keep_last_n_checkpoints):
+                self.remove_checkpoint()
+
+    def generate_checkpoint_path(
+        self, epoch: int, step: int, metric_data: Optional[MetricData] = None
+    ) -> CheckpointPath:
+        """
+        Given the current epoch, step, and possibly a metric_data value, determine the path
+        where it should be stored. This does not necessarily mean that the checkpoint should
+        be created. Instead, `should_save_checkpoint` has to be called to determine that.
+
+        Args:
+            unit: The training unit.
+            state: The training state.
+
+        Returns:
+            The path to the checkpoint to save.
+
+        Raises: AssertionError if there is a mismatch in tracked metric, for example:
+            - `best_checkpoint_config` is not set but `metric_data` was provided
+            - `best_checkpoint_config` is set and `metric_data` is passed. But they are not tracking the same metric
+        """
+
+        if metric_data:
+            assert (
+                self._best_checkpoint_config
+            ), "Attempted to get a checkpoint with metric but best checkpoint config is not set"
+
+            assert self._best_checkpoint_config.monitored_metric == metric_data.name, (
+                f"Attempted to get a checkpoint with metric '{metric_data.name}', "
+                f"but best checkpoint config is for '{none_throws(self._best_checkpoint_config).monitored_metric}'"
+            )
+
+        checkpoint_path = CheckpointPath(
+            self.dirpath, epoch, step, metric_data=metric_data
+        )
+
+        return checkpoint_path
+
+    def should_save_checkpoint(self, checkpoint: CheckpointPath) -> bool:
+        """
+        Given a unit and state, determine if a checkpoint should be saved when considering the `keep_last_n_checkpoints`
+        and `best_checkpoint_config` configs.
+
+        Args:
+            checkpoint: The CheckpointPath to be potentially saved, provided by `generate_checkpoint_path`.
+
+        Returns:
+            True if the checkpoint should be saved, otherwise False.
+        """
+
+        keep_last_n_checkpoints = self._keep_last_n_checkpoints
+        if not keep_last_n_checkpoints:
+            # always save candidate checkpoint if no limit of checkpoints is specified
+            return True
+
+        if len(self._ckpt_paths) < keep_last_n_checkpoints:
+            # limit of checkpoints has not been reached
+            return True
+
+        best_checkpoint_config = self._best_checkpoint_config
+        if not best_checkpoint_config:
+            # we always save the latest checkpoint
+            return True
+
+        # otherwise, we need to determine if we should overwrite the worst checkpoint
+        return checkpoint.more_optimal_than(
+            self._ckpt_paths[0], mode=best_checkpoint_config.mode
+        )
+
+    def append_checkpoint(self, ckpt: CheckpointPath) -> None:
+        """
+        This will update the internal state to keep track of the checkpoint. This function should only be called
+        when a checkpoint whose path was returned from `maybe_get_next_checkpoint_path` was successfully created.
+        If a previous checkpoint should be removed to honor `keep_last_n_checkpoint`, it will be deleted on rank 0.
+
+        Args:
+            ckpt: The checkpoint to save.
+            state: The training state.
+        """
+        # Remove oldest checkpoint if needed
+        max_ckpts = self._keep_last_n_checkpoints
+        if max_ckpts and len(self._ckpt_paths) >= max_ckpts:
+            self.remove_checkpoint()
+
+        # If we are monitoring a metric, but the checkpoint has no metric data, we don't track it
+        if self._best_checkpoint_config and ckpt.metric_data:
+            keys = [none_throws(c.metric_data).value for c in self._ckpt_paths]
+            if self._best_checkpoint_config.mode == "min":
+                keys.reverse()
+
+            # Use bisect.bisect() to find the insertion point
+            idx = bisect.bisect(keys, none_throws(ckpt.metric_data).value)
+            if none_throws(self._best_checkpoint_config).mode == "min":
+                idx = len(self._ckpt_paths) - idx
+            self._ckpt_paths.insert(idx, ckpt)
+
+        elif not self._best_checkpoint_config:
+            # No metric tracked, most recents goes last
+            self._ckpt_paths.append(ckpt)
+
+    @rank_zero_read_and_broadcast
+    def does_checkpoint_exist(
+        self, ckpt: CheckpointPath, process_group: Optional[dist.ProcessGroup] = None
+    ) -> bool:
+        """
+        Checking whether a checkpoint already exists by verifying whether the optional metadata file is present in the directory.
+        If the checkpointer doesn't have a metadata file, this function will always return False. Check is executed in rank 0, but
+        result is broadcasted to all ranks.
+        """
+        metadata_fname = self._metadata_fname
+        if not metadata_fname:
+            return False
+
+        fs, _ = url_to_fs(self.dirpath)
+        return _metadata_exists(fs, ckpt.path, metadata_fname)
+
+    @staticmethod
+    @rank_zero_read_and_broadcast
+    def _sync_dirpath_to_all_ranks(
+        dirpath: str, process_group: Optional[dist.ProcessGroup] = None
+    ) -> str:
+        """Synchronize the dirpath across all ranks."""
+        return dirpath
+
+    def remove_checkpoint(self) -> None:
+        """
+        Delete the weakest checkpoint both from the internal state and from the file system (rank 0). This means:
+        - If there is a `best_checkpoint_config`, then the checkpoint with the least optimal metric value
+        - If there is no `best_checkpoint_config`, then the oldest checkpoint
+        """
+        worst_ckpt_path = self._ckpt_paths.pop(0)
+        if self._pg_wrapper.get_rank() == 0:
+            fs, _ = url_to_fs(self.dirpath)
+            fs.rm(worst_ckpt_path.path, recursive=True)
+
+
 @rank_zero_read_and_broadcast
 def get_latest_checkpoint_path(
     dirpath: str,
@@ -235,14 +470,15 @@ def get_latest_checkpoint_path(
     Raises:
         AssertionError if the checkpoint subdirectories are not named in the format epoch_{epoch}_step_{step}.
 
-    Note: When fetching checkpoints in a distributed environment, gloo process groups are recommended over nccl.
+    Note:
+        When doing distributed training, only rank 0 will read the file system. The result will be broadcasted to all ranks.
+        gloo process groups are recommended over nccl.
     """
 
     candidate_dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname)
     if not candidate_dirpaths:
         return None
 
-    # Iterate through all files and directories in the specified directory
     latest_checkpoint = candidate_dirpaths[0]
     for candidate in candidate_dirpaths[1:]:
         if candidate.newer_than(latest_checkpoint):
@@ -260,7 +496,10 @@ def get_best_checkpoint_path(
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> Optional[str]:
     """
-    Given a parent directory where checkpoints are saved, return the best checkpoint subdirectory.
+    Given a parent directory where checkpoints are saved, return the best checkpoint subdirectory based on a metric.
+
+    The checkpoint paths are assumed to have the following format: <dirpath>/epoch_<epoch>_step_<step>_<metric_name>=<metric_value>
+    This will always be the case if the CheckpointManager class is used to produce their names.
 
     Args:
         dirpath: parent directory where checkpoints are saved.
@@ -269,12 +508,13 @@ def get_best_checkpoint_path(
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
-    Note: When fetching checkpoints in a distributed environment, gloo process groups are recommended over nccl.
+    Note:
+        When doing distributed training, only rank 0 will read the file system. The result will be broadcasted to all ranks.
+        gloo process groups are recommended over nccl.
     """
 
     dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname, metric_name)
     if not dirpaths:
-        # no checkpoints found
         return None
 
     best_checkpoint = dirpaths[0]
@@ -294,7 +534,11 @@ def get_checkpoint_dirpaths(
 ) -> List[CheckpointPath]:
     """
     Given a parent directory where checkpoints are saved, returns the checkpoint subdirectories.
-    The order of the checkpoints is not guarenteed.
+    The order of the checkpoints is not guaranteed.
+
+    The checkpoint paths are assumed to have the following format: <dirpath>/epoch_<epoch>_step_<step>
+    If a metric_name is provided the format should be <dirpath>/epoch_<epoch>_step_<step>_<metric_name>=<metric_value>
+    This will always be the case if the CheckpointManager class is used to produce their names.
 
     Args:
         dirpath: parent directory where checkpoints are saved.
@@ -302,7 +546,9 @@ def get_checkpoint_dirpaths(
         metric_name: fetches all the checkpoint directories containing the metric name only.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
-    Note: When fetching checkpoints in a distributed environment, gloo process groups are recommended over nccl.
+    Note:
+        When doing distributed training, only rank 0 will read the file system. The result will be broadcasted to all ranks.
+        gloo process groups are recommended over nccl.
     """
 
     return _retrieve_checkpoint_dirpaths(dirpath, metadata_fname, metric_name)
@@ -353,7 +599,8 @@ def _retrieve_checkpoint_dirpaths(
 
     Args:
         dirpath: parent directory where checkpoints are saved.
-        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.        metric_name: Name of the metric that must exist in checkpoint name.
+        metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+        metric_name: Name of the metric that must exist in checkpoint name.
     """
 
     fs, _ = url_to_fs(dirpath)
