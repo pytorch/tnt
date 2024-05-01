@@ -16,7 +16,10 @@ from typing import Any, cast, Iterable, List, Literal, Optional, Union
 import torch.distributed as dist
 from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
-from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
+from torchtnt.framework.callbacks.checkpointer_types import (
+    BestCheckpointConfig,
+    RestoreOptions,
+)
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainData, TTrainUnit
 from torchtnt.framework.utils import get_timing_context
@@ -25,7 +28,6 @@ from torchtnt.utils.checkpoint import (
     _metadata_exists,
     _sort_by_metric_value,
     _sort_by_recency,
-    BestCheckpointConfig,
     get_best_checkpoint_path,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
