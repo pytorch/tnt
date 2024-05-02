@@ -59,7 +59,7 @@ except ModuleNotFoundError:
 
 class DistributedCheckpointSaver(BaseCheckpointer):
     """
-    A callback which periodically saves the application state during training using `Distributed Checkpoint <https://pytorch.org/docs/stable/distributed.checkpoint.html/>`_.
+    A callback which periodically saves the application state during training using `Distributed Checkpoint <https://pytorch.org/docs/stable/distributed.checkpoint.html>`_.
 
     This callback supplements the application state provided by :class:`torchtnt.unit.AppStateMixin`
     with the train progress, and train dataloader (if applicable).

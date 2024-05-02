@@ -15,7 +15,7 @@ from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
 
 class PyTorchProfiler(Callback):
     """
-    A callback which profiles user code using `PyTorch Profiler <https://pytorch.org/docs/stable/profiler.html/>`_.
+    A callback which profiles user code using `PyTorch Profiler <https://pytorch.org/docs/stable/profiler.html>`_.
 
     Args:
         profiler: a torch.profiler.profile context manager which will be used
