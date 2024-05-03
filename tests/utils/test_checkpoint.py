@@ -24,11 +24,8 @@ from torchtnt.framework.unit import TrainUnit
 from torchtnt.utils import get_global_rank, init_from_env
 
 from torchtnt.utils.checkpoint import (
-    _delete_checkpoint,
     _metadata_exists,
     _retrieve_checkpoint_dirpaths,
-    _sort_by_metric_value,
-    _sort_by_recency,
     BestCheckpointConfig,
     CheckpointManager,
     CheckpointPath,
@@ -194,6 +191,19 @@ class CheckpointPathTest(unittest.TestCase):
 
             unpickled = pickle.loads(pickled)
             self.assertEqual(unpickled, ckpt)
+
+    def test_checkpoint_ordering(self) -> None:
+        """
+        Tests the sort utilities
+        """
+        paths = [
+            "foo/epoch_1_step_20",
+            "foo/epoch_4_step_130",
+            "foo/epoch_0_step_10_val_loss=10.0",
+        ]
+        ckpts = [CheckpointPath.from_str(x) for x in paths]
+        sorted_paths = [str(x) for x in sorted(ckpts)]
+        self.assertEqual(sorted_paths, [paths[2], paths[0], paths[1]])
 
 
 class CheckpointManagerTest(unittest.TestCase):
@@ -883,50 +893,6 @@ class CheckpointUtilsTest(unittest.TestCase):
                 get_checkpoint_dirpaths(temp_dir),
                 [],
             )
-
-    def test_checkpoint_sorting_utils(self) -> None:
-        """
-        Tests the sort utilities
-        """
-        paths = [
-            "foo/epoch_1_step_20",
-            "foo/epoch_4_step_130",
-            "foo/epoch_0_step_10_val_loss=10.0",
-        ]
-        ckpts = [CheckpointPath.from_str(x) for x in paths]
-        sorted_paths = [str(x) for x in _sort_by_recency(ckpts)]
-        self.assertEqual(sorted_paths, [paths[2], paths[0], paths[1]])
-
-        paths = [
-            "foo/epoch_1_step_20_val_loss=0.09",
-            "foo/epoch_4_step_130_val_loss=29.0",
-            "foo/epoch_0_step_10_val_loss=10.0",
-        ]
-        ckpts = [CheckpointPath.from_str(x) for x in paths]
-
-        sorted_paths = [str(x) for x in _sort_by_metric_value(ckpts, mode="min")]
-        self.assertEqual(sorted_paths, [paths[1], paths[2], paths[0]])
-
-        sorted_paths = [str(x) for x in _sort_by_metric_value(ckpts, mode="max")]
-        self.assertEqual(sorted_paths, [paths[0], paths[2], paths[1]])
-
-    def test_delete_checkpoint(self) -> None:
-        """
-        Tests removing checkpoint directories
-        """
-        app_state = {"module": nn.Linear(2, 2)}
-        with tempfile.TemporaryDirectory() as temp_dir:
-            dirpath = os.path.join(temp_dir, "checkpoint")
-            Snapshot.take(dirpath, app_state=app_state)
-            self.assertTrue(os.path.exists(dirpath))
-            # check that error is thrown if .snapshot_metadata is not found in the directory when deleting
-            os.remove(os.path.join(dirpath, SNAPSHOT_METADATA_FNAME))
-            with self.assertRaisesRegex(
-                RuntimeError, f"{temp_dir} does not contain .snapshot_metadata"
-            ):
-                _delete_checkpoint(temp_dir, SNAPSHOT_METADATA_FNAME)
-            _delete_checkpoint(dirpath)
-            self.assertFalse(os.path.exists(dirpath))
 
     def test_metadata_exists(self) -> None:
         app_state = {"module": nn.Linear(2, 2)}
