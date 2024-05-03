@@ -7,11 +7,9 @@
 # pyre-strict
 
 import abc
-import bisect
 import logging
-import os
 from datetime import timedelta
-from typing import Any, cast, Iterable, List, Literal, Optional, Union
+from typing import Any, cast, Iterable, Literal, Optional, Union
 
 import torch.distributed as dist
 from pyre_extensions import none_throws
@@ -19,19 +17,15 @@ from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainData, TTrainUnit
-from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.checkpoint import (
-    _delete_checkpoint,
-    _metadata_exists,
-    _sort_by_metric_value,
-    _sort_by_recency,
     BestCheckpointConfig,
+    CheckpointManager,
+    CheckpointPath,
     get_best_checkpoint_path,
-    get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
+    MetricData,
 )
-from torchtnt.utils.distributed import PGWrapper, rank_zero_read_and_broadcast
-from torchtnt.utils.fsspec import get_filesystem
+from torchtnt.utils.distributed import PGWrapper
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -108,37 +102,17 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         self._save_every_n_eval_epochs = save_every_n_eval_epochs
         self._keep_last_n_checkpoints = keep_last_n_checkpoints
 
-        self._ckpt_dirpaths: List[str] = []
-        if self._keep_last_n_checkpoints:
-            metric_name = (
-                None
-                if not best_checkpoint_config
-                else best_checkpoint_config.monitored_metric
-            )
-            ckpt_dirpaths = get_checkpoint_dirpaths(
-                dirpath=dirpath,
-                metadata_fname=self.metadata_fname,
-                metric_name=metric_name,
-                process_group=process_group,
-            )
-
-            # sort by metric value if doing best checkpoint, else by recency
-            if best_checkpoint_config:
-                ckpt_dirpaths = _sort_by_metric_value(
-                    ckpt_dirpaths, mode=best_checkpoint_config.mode
-                )
-            else:
-                ckpt_dirpaths = _sort_by_recency(ckpt_dirpaths)
-
-            # TODO Remove this when using CheckpointManager
-            self._ckpt_dirpaths = [str(x) for x in ckpt_dirpaths]
-
         self._process_group: Optional[dist.ProcessGroup] = None
         self._setup_gloo_pg(process_group)
         self._pg_wrapper = PGWrapper(process_group)
 
-        # sync dirpaths from rank 0
-        self._sync_dirpath_to_all_ranks(dirpath)
+        self._checkpoint_manager = CheckpointManager(
+            dirpath,
+            best_checkpoint_config,
+            keep_last_n_checkpoints,
+            metadata_fname=self.metadata_fname,
+            process_group=self._process_group,
+        )
 
     def _setup_gloo_pg(self, process_group: Optional[dist.ProcessGroup]) -> None:
         """
@@ -163,24 +137,10 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         else:
             self._process_group = process_group
 
-    def _sync_dirpath_to_all_ranks(self, dirpath: str) -> None:
-        if not (dist.is_available() and dist.is_initialized()):
-            self._dirpath: str = dirpath
-            return
-
-        dirpath_container = [dirpath] if self._pg_wrapper.get_rank() == 0 else [""]
-        # broadcast directory from global rank 0
-        dist.broadcast_object_list(dirpath_container, src=0, group=self._process_group)
-        updated_dirpath = dirpath_container[0]
-        if updated_dirpath != dirpath:
-            logger.warning(f"Updating dirpath to match rank 0: {updated_dirpath}")
-
-        self._dirpath: str = updated_dirpath
-
     @property
     def dirpath(self) -> str:
         """Returns parent directory to save to."""
-        return self._dirpath
+        return self._checkpoint_manager.dirpath
 
     def _generate_checkpoint_and_upkeep(
         self, state: State, unit: Union[TTrainUnit, TEvalUnit], hook: str
@@ -203,55 +163,51 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         if state.entry_point == EntryPoint.FIT:
             eval_unit = cast(TEvalUnit, unit)
             num_steps_completed += eval_unit.eval_progress.num_steps_completed
-        epoch = unit.train_progress.num_epochs_completed
-        checkpoint_path = _get_save_path(self._dirpath, epoch, num_steps_completed)
 
-        # 1.1) Make sure that last checkpoint does not already exist
+        epoch = unit.train_progress.num_epochs_completed
+
+        metric_data: Optional[MetricData] = None
+        if metric_value := self._get_tracked_metric_value(unit):
+            metric_data = MetricData(
+                name=none_throws(self._best_checkpoint_config).monitored_metric,
+                value=metric_value,
+            )
+
+        checkpoint_path = self._checkpoint_manager.generate_checkpoint_path(
+            epoch, num_steps_completed, metric_data
+        )
+
+        # 2) Determine if we should save checkpoint
+        if not self._checkpoint_manager.should_save_checkpoint(checkpoint_path):
+            return False
+
+        # 2.1) Make sure that last checkpoint does not already exist
         if hook == "on_train_end" and self._does_checkpoint_exist(
-            checkpoint_path, process_group=self._process_group
+            checkpoint_path, self._process_group
         ):
             rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
             return False
 
-        # 1.2) If there is a tracked metric, add to the checkpoint path
-        metric_value = self._get_tracked_metric_value(unit)
-        if metric_value is not None:
-            metric_name = none_throws(self._best_checkpoint_config).monitored_metric
-            checkpoint_path += f"_{metric_name}={metric_value}"
-
-        # 2) Determine if checkpoint should be saved
-        if not self._should_save_checkpoint(metric_value):
-            return False
-
         # 3) try to save checkpoint
         if not self._checkpoint_impl(
-            state, unit, checkpoint_path=checkpoint_path, hook=hook
+            state, unit, checkpoint_path=checkpoint_path.path, hook=hook
         ):
             return False
 
-        # 4) remove the oldest/worst checkpoint if applicable
-        if self._should_remove_checkpoint():
-            self._remove_checkpoint(state)
-
-        # 5) update the tracked list of checkpoint paths
-        if self._best_checkpoint_config and (metric_value is not None):
-            metric_mode = none_throws(self._best_checkpoint_config).mode
-            # insert the checkpoint path at the correct index to preserve ordering
-            keys = [
-                float(os.path.basename(x).split("=")[-1]) for x in self._ckpt_dirpaths
-            ]
-            if metric_mode == "min":
-                keys.reverse()
-            # Use bisect.bisect() to find the insertion point
-            idx = bisect.bisect(keys, metric_value)
-            if metric_mode == "min":
-                idx = len(self._ckpt_dirpaths) - idx
-            self._ckpt_dirpaths.insert(idx, checkpoint_path)
-
-        elif not self._best_checkpoint_config:  # no metric to track
-            self._ckpt_dirpaths.append(checkpoint_path)
+        # 4) track checkpoint and clean up surplus if needed
+        self._checkpoint_manager.append_checkpoint(checkpoint_path)
 
         return True
+
+    def _does_checkpoint_exist(
+        self,
+        checkpoint_path: CheckpointPath,
+        process_group: Optional[dist.ProcessGroup] = None,
+    ) -> bool:
+        # Only keep this function as a hook for downstream checkpointer
+        return self._checkpoint_manager.does_checkpoint_exist(
+            checkpoint_path, process_group
+        )
 
     def _get_tracked_metric_value(self, unit: TTrainUnit) -> Optional[float]:
         """
@@ -290,22 +246,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         # clean up the difference if surplus of checkpoints exist
-        keep_last_n_checkpoints = self._keep_last_n_checkpoints
-        if (
-            keep_last_n_checkpoints
-            and len(self._ckpt_dirpaths) > keep_last_n_checkpoints
-        ):
-            logger.warning(
-                " ".join(
-                    [
-                        f"{len(self._ckpt_dirpaths)} checkpoints found in {self._dirpath}.",
-                        f"Deleting {len(self._ckpt_dirpaths) - keep_last_n_checkpoints} oldest",
-                        "checkpoints to enforce ``keep_last_n_checkpoints`` argument.",
-                    ]
-                )
-            )
-            for _ in range(len(self._ckpt_dirpaths) - keep_last_n_checkpoints):
-                self._remove_checkpoint(state)
+        self._checkpoint_manager.prune_surplus_checkpoints()
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         num_steps_completed = unit.train_progress.num_steps_completed
@@ -359,60 +300,6 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             Whether a new checkpoint was created.
         """
         ...
-
-    def _should_save_checkpoint(self, metric_value: Optional[float] = None) -> bool:
-        """
-        Whether a new checkpoint should be saved.
-        """
-
-        keep_last_n_checkpoints = self._keep_last_n_checkpoints
-        if not keep_last_n_checkpoints:
-            # always save candidate checkpoint if no limit of checkpoints is specified
-            return True
-
-        if len(self._ckpt_dirpaths) < keep_last_n_checkpoints:
-            # limit of checkpoints has not been reached
-            return True
-
-        best_checkpoint_config = self._best_checkpoint_config
-        if not best_checkpoint_config:
-            # we always save the latest checkpoint
-            return True
-
-        # otherwise, we need to determine if we should overwrite the worst checkpoint
-        assert metric_value
-        ckpt_value = float(self._ckpt_dirpaths[0].split("=")[-1])
-
-        # do not checkpoint if candidate is worse than the existing one
-        if best_checkpoint_config.mode == "min" and metric_value > ckpt_value:
-            return False
-        elif best_checkpoint_config.mode == "max" and metric_value < ckpt_value:
-            return False
-        # the candidate checkpoint is better than the existing one, so we must overwrite it
-        return True
-
-    def _should_remove_checkpoint(self) -> bool:
-        """
-        Whether the oldest / worst checkpoint should be removed.
-
-        This is called after the candidate checkpoint is saved, so it is already evaluated that the
-        candidate checkpoint was worth saving.
-        """
-
-        keep_last_n_checkpoints = self._keep_last_n_checkpoints
-        return (
-            keep_last_n_checkpoints is not None
-            and len(self._ckpt_dirpaths) >= keep_last_n_checkpoints
-        )
-
-    def _remove_checkpoint(self, state: State) -> None:
-        # remove oldest checkpoint directory
-        oldest_ckpt_path = self._ckpt_dirpaths.pop(0)
-        with get_timing_context(state, f"{self.__class__.__name__}.delete_checkpoint"):
-            if self._pg_wrapper.get_rank() == 0:
-                # only delete on rank 0
-                _delete_checkpoint(oldest_ckpt_path)
-            self._pg_wrapper.barrier()
 
     @staticmethod
     @abc.abstractmethod
@@ -539,23 +426,3 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         )
 
         return True
-
-    @rank_zero_read_and_broadcast
-    def _does_checkpoint_exist(
-        self, checkpoint_path: str, process_group: Optional[dist.ProcessGroup] = None
-    ) -> bool:
-        """
-        Checking whether a checkpoint already exists by verifying whether the optional metadata file is present in the directory.
-        If the checkpointer doesn't have a metadata file, this function will always return False.
-        """
-        metadata_fname = self.metadata_fname
-        if not metadata_fname:
-            return False
-
-        fs = get_filesystem(checkpoint_path)
-        return _metadata_exists(fs, checkpoint_path, metadata_fname)
-
-
-def _get_save_path(dirpath: str, epoch: int, step: int) -> str:
-    # TODO: discuss whether this path should be customized
-    return os.path.join(dirpath, f"epoch_{epoch}_step_{step}")

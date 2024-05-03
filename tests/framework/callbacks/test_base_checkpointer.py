@@ -346,7 +346,7 @@ class BaseCheckpointerTest(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
 
             with self.assertLogs(level="WARNING") as log:
-                checkpoint_cb.metadata_fname = ".metadata"
+                checkpoint_cb._checkpoint_manager._metadata_fname = ".metadata"
                 # create metadata file
                 with open(os.path.join(temp_dir, expected_path, ".metadata"), "w"):
                     pass
@@ -454,99 +454,6 @@ class BaseCheckpointerTest(unittest.TestCase):
         # check that a new process group was created
         tc.assertNotEqual(checkpoint_cb._process_group, dist.group.WORLD)
 
-    @patch(
-        "torchtnt.framework.callbacks.base_checkpointer.get_checkpoint_dirpaths",
-        return_value=["epoch_1_step_10", "epoch_2_step_20"],
-    )
-    def test_ckpt_dirpaths(self, _: MagicMock) -> None:
-        """
-        Tests that ckpt_dirpaths is populated correctly
-        based on if ``keep_last_n_checkpoints`` is set.
-        """
-        bc = BaseCheckpointSaver("foo")
-        self.assertEqual(bc._ckpt_dirpaths, [])
-
-        bc = BaseCheckpointSaver("foo", keep_last_n_checkpoints=10)
-        self.assertEqual(bc._ckpt_dirpaths, ["epoch_1_step_10", "epoch_2_step_20"])
-
-    def test_should_remove_checkpoint(self) -> None:
-        """
-        Tests the helper function that checks if checkpoint should be removed or not
-        """
-        bc = BaseCheckpointSaver("temp")
-
-        # keep_last_n_checkpoints is toggled off
-        self.assertFalse(bc._should_remove_checkpoint())
-
-        # not enough checkpoints are saved yet to be removed
-        bc._keep_last_n_checkpoints = 2
-        bc._ckpt_dirpaths = ["bar"]
-        self.assertFalse(bc._should_remove_checkpoint())
-
-        # enough checkpoints are there to remove
-        bc._keep_last_n_checkpoints = 2
-        bc._ckpt_dirpaths = ["foo", "bar"]
-        self.assertTrue(bc._should_remove_checkpoint())
-
-    @patch("torchtnt.framework.callbacks.base_checkpointer._delete_checkpoint")
-    def test_cleanup_surplus(self, mock_delete_checkpoint: MagicMock) -> None:
-        """
-        Tests surplus of checkpoints being cleaned up
-        """
-        state = get_dummy_train_state()
-        unit = DummyTrainUnit(input_dim=2)
-        warning_messages = []
-        with tempfile.TemporaryDirectory() as temp_dir:
-            bc = BaseCheckpointSaver(temp_dir, keep_last_n_checkpoints=1)
-            bc._ckpt_dirpaths = ["foo", "bar", "baz"]
-
-            expected_warning_msg = " ".join(
-                [
-                    f"3 checkpoints found in {temp_dir}.",
-                    f"Deleting {2} oldest",
-                    "checkpoints to enforce ``keep_last_n_checkpoints`` argument.",
-                ]
-            )
-
-            with patch(
-                "torchtnt.framework.callbacks.base_checkpointer.logging.Logger.warning",
-                warning_messages.append,
-            ):
-                bc.on_train_start(state, unit)
-            self.assertEqual(bc._ckpt_dirpaths, ["baz"])
-            self.assertEqual(warning_messages[0], expected_warning_msg)
-
-            bc = BaseCheckpointSaver(temp_dir)
-            bc._ckpt_dirpaths = ["foo", "bar", "baz"]
-
-            bc.on_train_start(state, unit)
-            self.assertEqual(bc._ckpt_dirpaths, ["foo", "bar", "baz"])
-
-    def test_keep_last_n_checkpoints(self) -> None:
-        """
-        Tests removing checkpoint directories
-        """
-        unit = DummyTrainUnit(input_dim=2)
-        state = get_dummy_train_state()
-        with tempfile.TemporaryDirectory() as temp_dir:
-            bc = BaseCheckpointSaver(
-                temp_dir,
-                save_every_n_train_steps=1,
-                keep_last_n_checkpoints=2,
-            )
-
-            # take 10 steps
-            for _ in range(10):
-                unit.train_progress.increment_step()
-                bc.on_train_step_end(state, unit)
-                # TODO remove time.sleep to avoid potential flaky test
-                time.sleep(0.1)  # sleep to ensure enough time to checkpoint
-
-            dirs = os.listdir(temp_dir)
-            self.assertEqual(len(dirs), 2)
-            self.assertIn("epoch_0_step_9", dirs)
-            self.assertIn("epoch_0_step_10", dirs)
-
     def test_keep_last_n_checkpoints_e2e(self) -> None:
         """
         Tests removing checkpoint directories e2e
@@ -580,66 +487,6 @@ class BaseCheckpointerTest(unittest.TestCase):
                 f"epoch_{max_epochs}_step_{dataset_len // batch_size * max_epochs}",
                 os.listdir(temp_dir),
             )
-
-    def test_does_checkpoint_exist(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with open(os.path.join(temp_dir, ".metadata"), "w"):
-                pass
-            bc = BaseCheckpointSaver(
-                temp_dir,
-                save_every_n_train_steps=2,
-                keep_last_n_checkpoints=1,
-            )
-            # checkpointer doesn't have a metadata_fname
-            does_checkpoint_exist = bc._does_checkpoint_exist(temp_dir)
-            self.assertFalse(does_checkpoint_exist)
-
-            # checkpointer has metadata_fname and the file exists
-            bc.metadata_fname = ".metadata"
-            does_checkpoint_exist = bc._does_checkpoint_exist(temp_dir)
-            self.assertTrue(does_checkpoint_exist)
-
-            # checkpointer has metadata_fname but the file doesn't exist
-            os.remove(os.path.join(temp_dir, ".metadata"))
-            does_checkpoint_exist = bc._does_checkpoint_exist(temp_dir)
-            self.assertFalse(does_checkpoint_exist)
-
-    def test_should_save_checkpoint(self) -> None:
-        """
-        Tests basic functionality of should_save_checkpoint
-        """
-        bc = BaseCheckpointSaver("foo")
-
-        # test default behavior
-        self.assertTrue(bc._should_save_checkpoint())
-
-        bc._ckpt_dirpaths = ["foo/epoch_0_step_1"]
-        self.assertTrue(bc._should_save_checkpoint())
-        bc._keep_last_n_checkpoints = 1
-        self.assertTrue(bc._should_save_checkpoint())
-
-        bc._ckpt_dirpaths = ["foo/epoch_0_step_1_val_loss=0.01"]
-        bc._best_checkpoint_config = BestCheckpointConfig(
-            monitored_metric="val_loss",
-            mode="min",
-        )
-        bc._keep_last_n_checkpoints = None
-        self.assertTrue(bc._should_save_checkpoint(0.02))
-        bc._keep_last_n_checkpoints = 1
-        self.assertFalse(bc._should_save_checkpoint(0.02))
-        self.assertTrue(bc._should_save_checkpoint(0.001))
-        bc._keep_last_n_checkpoints = 2
-        self.assertTrue(bc._should_save_checkpoint(0.02))
-
-        bc._best_checkpoint_config = BestCheckpointConfig(
-            monitored_metric="val_loss",
-            mode="max",
-        )
-        bc._keep_last_n_checkpoints = 1
-        self.assertTrue(bc._should_save_checkpoint(0.02))
-        self.assertFalse(bc._should_save_checkpoint(0.001))
-        bc._keep_last_n_checkpoints = 2
-        self.assertTrue(bc._should_save_checkpoint(0.001))
 
     def test_best_checkpoint_attr_missing(self) -> None:
         bcs = BaseCheckpointSaver(
@@ -686,13 +533,13 @@ class BaseCheckpointerTest(unittest.TestCase):
                 my_train_unit.train_loss = None
                 bcs.on_train_epoch_end(state, my_train_unit)
                 # none metric-value will not be updated in checkpoint dirpaths
-                self.assertEqual(bcs._ckpt_dirpaths, [])
+                self.assertEqual(bcs._checkpoint_manager._ckpt_paths, [])
                 self.assertEqual(os.listdir(temp_dir), ["epoch_0_step_0"])
 
                 my_train_unit.train_loss = 0.01
                 bcs.on_train_epoch_end(state, my_train_unit)
                 self.assertEqual(
-                    bcs._ckpt_dirpaths,
+                    [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                     [os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01")],
                 )
 
@@ -700,7 +547,7 @@ class BaseCheckpointerTest(unittest.TestCase):
                 my_train_unit.train_progress.increment_epoch()
                 bcs.on_train_epoch_end(state, my_train_unit)
                 self.assertEqual(
-                    bcs._ckpt_dirpaths,
+                    [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                     (
                         [
                             os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
@@ -718,7 +565,7 @@ class BaseCheckpointerTest(unittest.TestCase):
                 my_train_unit.train_progress.increment_epoch()
                 bcs.on_train_epoch_end(state, my_train_unit)
                 self.assertEqual(
-                    bcs._ckpt_dirpaths,
+                    [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                     (
                         [
                             os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
@@ -752,7 +599,7 @@ class BaseCheckpointerTest(unittest.TestCase):
 
             bcs.on_train_epoch_end(state, my_train_unit)
             self.assertEqual(
-                bcs._ckpt_dirpaths,
+                [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                 [os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01")],
             )
 
@@ -760,7 +607,7 @@ class BaseCheckpointerTest(unittest.TestCase):
             my_train_unit.train_progress.increment_epoch()
             bcs.on_train_epoch_end(state, my_train_unit)
             self.assertEqual(
-                bcs._ckpt_dirpaths,
+                [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                 [
                     os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
                 ],
@@ -770,7 +617,7 @@ class BaseCheckpointerTest(unittest.TestCase):
             my_train_unit.train_progress.increment_epoch()
             bcs.on_train_epoch_end(state, my_train_unit)
             self.assertEqual(
-                bcs._ckpt_dirpaths,
+                [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                 [
                     os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.001"),
                 ],
@@ -793,7 +640,7 @@ class BaseCheckpointerTest(unittest.TestCase):
 
             bcs.on_train_epoch_end(state, my_train_unit)
             self.assertEqual(
-                bcs._ckpt_dirpaths,
+                [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                 [os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01")],
             )
 
@@ -801,7 +648,7 @@ class BaseCheckpointerTest(unittest.TestCase):
             my_train_unit.train_progress.increment_epoch()
             bcs.on_train_epoch_end(state, my_train_unit)
             self.assertEqual(
-                bcs._ckpt_dirpaths,
+                [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                 [
                     os.path.join(temp_dir, "epoch_1_step_0_train_loss=0.02"),
                     os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
@@ -812,7 +659,7 @@ class BaseCheckpointerTest(unittest.TestCase):
             my_train_unit.train_progress.increment_epoch()
             bcs.on_train_epoch_end(state, my_train_unit)
             self.assertEqual(
-                bcs._ckpt_dirpaths,
+                [str(x) for x in bcs._checkpoint_manager._ckpt_paths],
                 [
                     os.path.join(temp_dir, "epoch_0_step_0_train_loss=0.01"),
                     os.path.join(temp_dir, "epoch_2_step_0_train_loss=0.001"),

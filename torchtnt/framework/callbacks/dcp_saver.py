@@ -32,7 +32,7 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import get_timing_context
-from torchtnt.utils.checkpoint import BestCheckpointConfig
+from torchtnt.utils.checkpoint import BestCheckpointConfig, CheckpointPath
 from torchtnt.utils.optimizer import init_optim_state
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import MultiStateful, Stateful
@@ -284,7 +284,9 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
 
     def _does_checkpoint_exist(
-        self, checkpoint_path: str, process_group: Optional[dist.ProcessGroup] = None
+        self,
+        checkpoint_path: CheckpointPath,
+        process_group: Optional[dist.ProcessGroup] = None,
     ) -> bool:
         # if we are still checkpointing, this might cause a collective hang.
         # so wait here instead

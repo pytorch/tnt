@@ -554,41 +554,6 @@ def get_checkpoint_dirpaths(
     return _retrieve_checkpoint_dirpaths(dirpath, metadata_fname, metric_name)
 
 
-def _sort_by_recency(dirpaths: List[CheckpointPath]) -> List[CheckpointPath]:
-    """
-    Sorts the given list of directories by oldest to newest.
-
-    Args:
-        dirpaths: A list of directory paths.
-
-    Returns:
-        A sorted list of directory paths, sorted by recency.
-    """
-
-    return sorted(dirpaths)  # CheckpointPath is well ordered by recency
-
-
-def _sort_by_metric_value(
-    dirpaths: List[CheckpointPath], mode: Literal["min", "max"]
-) -> List[CheckpointPath]:
-    """
-    Sorts the given list of directories by the metric values.
-
-    Args:
-        dirpaths: A list of directory paths.
-        mode: Either 'min' or 'max'. If 'min', sorts in descending order. If 'max', sorts in ascending order
-
-    Returns:
-        A sorted list of directory paths, sorted by the metric values.
-    """
-    return sorted(
-        dirpaths,
-        key=lambda x: x.metric_data.value,
-        # sort descending if min, placing worst metric at top of list
-        reverse=(mode == "min"),
-    )
-
-
 def _retrieve_checkpoint_dirpaths(
     dirpath: str,
     metadata_fname: Optional[str],
@@ -648,13 +613,6 @@ def _retrieve_checkpoint_dirpaths(
         valid_ckpt_dirpaths.append(candidate)
 
     return valid_ckpt_dirpaths
-
-
-def _delete_checkpoint(dirpath: str, metadata_fname: Optional[str] = None) -> None:
-    fs, _ = url_to_fs(dirpath)
-    if metadata_fname and not _metadata_exists(fs, dirpath, metadata_fname):
-        raise RuntimeError(f"{dirpath} does not contain {metadata_fname}")
-    fs.rm(dirpath, recursive=True)
 
 
 def _metadata_exists(
