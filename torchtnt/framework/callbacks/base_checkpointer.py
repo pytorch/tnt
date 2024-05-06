@@ -356,6 +356,9 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             dirpath, metadata_fname=cls.metadata_fname, process_group=process_group
         )
         if path is None:
+            logger.info(
+                f"Attempted to restore from the following path but no checkpoint was found: {dirpath=}, {cls.metadata_fname}"
+            )
             return False
         logger.info(f"Restoring from path: {path}")
         cls.restore(
