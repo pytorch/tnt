@@ -12,12 +12,15 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Iterable, Iterator, Optional, Type, TYPE_CHECKING, Union
 
+from pyre_extensions import none_throws
+
 from torchtnt.utils.data.iterators import (
     DataIterationStrategy,
     DataIterationStrategyRegistry,
     MultiIterator,
 )
 from torchtnt.utils.stateful import Stateful
+
 
 if TYPE_CHECKING:
     from torch.utils.data import DataLoader
@@ -53,6 +56,7 @@ class MultiDataLoader:
         self.individual_dataloaders = individual_dataloaders
         self.iteration_strategy = iteration_strategy
         self.iterator_cls = iterator_cls
+        self.current_iterator: Optional[MultiIterator] = None
         for name in list(individual_dataloaders.keys()):
             try:
                 next(iter(self.individual_dataloaders[name]))
@@ -64,6 +68,7 @@ class MultiDataLoader:
                         f"Dataloader '{name}' which contains no data. "
                         "You might have empty dataloaders in the input dict."
                     )
+        self.iterator_state: Optional[Dict[str, Any]] = None
 
     def __iter__(self) -> Iterator[Dict[str, Any]]:
         """Iterator functions for the collection of dataloaders.
@@ -77,10 +82,15 @@ class MultiDataLoader:
             iterator_cls = DataIterationStrategyRegistry.get(self.iteration_strategy)
         # in practice, DataIterationStrategyRegistry.get() returns just concrete classes
         # pyre-ignore[45]: Cannot instantiate abstract class `MultiIterator`.
-        return iterator_cls(
+        self.current_iterator = iterator_cls(
             individual_dataloaders=self.individual_dataloaders,
             iteration_strategy=self.iteration_strategy,
         )
+        if self.iterator_state is not None:
+            self.current_iterator.load_state_dict(self.iterator_state)
+
+        self.iterator_state = None
+        return none_throws(self.current_iterator)
 
     def state_dict(self) -> Dict[str, Any]:
         """Return an aggregated state dict based on individual dataloaders.
@@ -94,6 +104,14 @@ class MultiDataLoader:
         for name, dl in self.individual_dataloaders.items():
             if isinstance(dl, Stateful):
                 state_dict[name] = dl.state_dict()
+
+        if (current_iterator := self.current_iterator) is not None:
+            iterator_state = current_iterator.state_dict()
+            if iterator_state:
+                logger.info("Storing iterator state in MultiDataLoader state_dict")
+                # we make an implicit assumption here that none of the dataloaders have the "iterator_state" key in order to be backwards compatible
+                # with already saved checkpoints (we don't want to modify the dataloaders stateful names)
+                state_dict["iterator_state"] = iterator_state
 
         return state_dict
 
@@ -114,3 +132,7 @@ class MultiDataLoader:
                     )
                     continue
                 dl.load_state_dict(contents)
+
+        if "iterator_state" in state_dict:
+            # this will be used during the next __iter__ call
+            self.iterator_state = state_dict["iterator_state"]

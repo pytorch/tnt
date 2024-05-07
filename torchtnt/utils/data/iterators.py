@@ -9,6 +9,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import random
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -32,9 +34,11 @@ from typing import (
 import torch
 import torch.distributed as dist
 
-
 if TYPE_CHECKING:
     from torch.utils.data import DataLoader
+
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -73,6 +77,12 @@ class MultiIterator(Iterator[Dict[str, Any]]):
 
     @abstractmethod
     def __next__(self) -> Dict[str, Any]:
+        pass
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {}
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         pass
 
 
@@ -175,6 +185,26 @@ class RoundRobinIterator(MultiIterator):
                 raise StopIteration
 
             return self.__next__()
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {
+            "finished_dataloaders": self.finished_dataloaders,
+            "cur_dataloader": self.cur_dataloader,
+        }
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        logger.info(
+            f"Loading RoundRobinIterator state. Finished dataloaders: {state_dict['finished_dataloaders']} and trying to set cur_dataloader to {self.cur_dataloader}"
+        )
+        self.finished_dataloaders = state_dict["finished_dataloaders"]
+        cur_dataloader = state_dict["cur_dataloader"]
+        if cur_dataloader not in self.dataloader_cycle:
+            logger.warning(
+                f"Did not find {cur_dataloader} in {list(self.dataloader_cycle)}. Skipping setting cur_dataloader"
+            )
+            return
+        while self.cur_dataloader != cur_dataloader:
+            self.cur_dataloader = next(self.dataloader_cycle)
 
 
 @dataclass
