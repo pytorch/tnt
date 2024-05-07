@@ -14,6 +14,9 @@ from typing import Any, Dict, Iterable, Optional, Union
 import torch
 import torch.distributed as dist
 from torch.distributed import checkpoint as dcp
+from torch.distributed.checkpoint.default_planner import DefaultSavePlanner
+from torch.distributed.checkpoint.planner import SavePlanner
+from torch.distributed.checkpoint.storage import StorageWriter
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _prepare_app_state_for_checkpoint,
@@ -127,6 +130,8 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         *,
         checkpoint_path: str,
         hook: str,
+        planner: Optional[SavePlanner] = None,
+        storage_writer: Optional[StorageWriter] = None,
     ) -> bool:
         if hook not in ["on_train_step_end", "on_train_epoch_end", "on_train_end"]:
             raise RuntimeError(f"Unexpected hook encountered '{hook}'")
@@ -142,12 +147,16 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 # since this is async checkpointed, so in
                 # future, add logic to set  successful flag
                 # only when checkpoint is fully written
-                checkpoint_success = self._async_save(checkpoint_path, app_state)
+                checkpoint_success = self._async_save(
+                    checkpoint_path, app_state, planner, storage_writer
+                )
                 if curr_snapshot_wait:
                     self._wait()
         else:
             with get_timing_context(state, f"{self.__class__.__name__}.save"):
-                checkpoint_success = self._save(checkpoint_path, app_state)
+                checkpoint_success = self._save(
+                    checkpoint_path, app_state, planner, storage_writer
+                )
 
         return checkpoint_success
 
@@ -155,7 +164,19 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         if self._prev_snapshot is not None:
             self._prev_snapshot.result()
 
-    def _async_save(self, checkpoint_id: str, app_state: Dict[str, Stateful]) -> bool:
+    def _async_save(
+        self,
+        checkpoint_id: str,
+        app_state: Dict[str, Stateful],
+        planner: Optional[SavePlanner] = None,
+        storage_writer: Optional[StorageWriter] = None,
+    ) -> bool:
+
+        if planner is None:
+            planner = DefaultSavePlanner()
+
+        if storage_writer is None:
+            storage_writer = Writer(checkpoint_id, **self.default_writer_options)
 
         if self._prev_snapshot is not None:
             if not self._prev_snapshot.done():
@@ -177,24 +198,42 @@ class DistributedCheckpointSaver(BaseCheckpointer):
 
         self._prev_snapshot = dcp.async_save(
             state_dict={"app_state": MultiStateful(app_state)},
+            checkpoint_id=checkpoint_id,
             process_group=self._process_group,
-            storage_writer=Writer(checkpoint_id, **self.default_writer_options),
+            storage_writer=storage_writer,
+            planner=planner,
         )
 
         return True
 
-    def _save(self, checkpoint_id: str, app_state: Dict[str, Stateful]) -> bool:
+    def _save(
+        self,
+        checkpoint_id: str,
+        app_state: Dict[str, Stateful],
+        planner: Optional[SavePlanner] = None,
+        storage_writer: Optional[StorageWriter] = None,
+    ) -> bool:
+        # Initialize DefaultSavePlanner and FsspecWriter if not provided
+        if planner is None:
+            planner = DefaultSavePlanner()
+
+        if storage_writer is None:
+            storage_writer = Writer(checkpoint_id, **self.default_writer_options)
+
         try:
             dcp.save(
                 state_dict={"app_state": MultiStateful(app_state)},
+                checkpoint_id=checkpoint_id,
                 process_group=self._process_group,
-                storage_writer=Writer(checkpoint_id, **self.default_writer_options),
+                storage_writer=storage_writer,
+                planner=planner,
             )
         except AttributeError:
             dcp.save_state_dict(
                 state_dict={"app_state": MultiStateful(app_state)},
                 process_group=self._process_group,
-                storage_writer=Writer(checkpoint_id, **self.default_writer_options),
+                storage_writer=storage_writer,
+                planner=planner,
             )
 
         return True
@@ -229,13 +268,8 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world) Note:
                 If torch.distributed is available and a process group is initialized, dcp assumes the intention is to save/load checkpoints in distributed fashion.
             restore_options: Controls what to  filter when restoring the state.
-            knob_options: Option is kept for legacy reasons but ignored in DCP
+            knob_options: Additional keyword options for StorageWriter and StorageReader
         """
-        if knob_options is not None:
-            rank_zero_warn(
-                "Ignoring `knob_options` which was passed to DistributedCheckpointSaver.restore, but is not supported."
-            )
-
         storage_reader = Reader(path)
 
         restore_options = restore_options or RestoreOptions()
@@ -250,6 +284,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 # request to restore the dataloader state only if
                 # the persisted snapshot state includes the dataloader entry
                 metadata = storage_reader.read_metadata()
+
                 for key in metadata.state_dict_metadata.keys():
                     if _TRAIN_DL_STATE_KEY in key:
                         app_state[_TRAIN_DL_STATE_KEY] = train_dataloader
@@ -272,6 +307,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         try:
             dcp.load(
                 {"app_state": MultiStateful(app_state)},
+                checkpoint_id=path,
                 storage_reader=storage_reader,
                 process_group=process_group,
             )

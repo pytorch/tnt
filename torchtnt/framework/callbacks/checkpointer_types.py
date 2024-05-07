@@ -14,13 +14,18 @@ from typing import Optional
 @dataclass
 class KnobOptions:
     """
-    Controls the knobs in TorchSnapshot.
+    Controls the knobs for Checkpoints.
 
     Args:
-        max_per_rank_io_concurrency: Maximum number of concurrent IO operations per rank. Defaults to 16.
+        max_per_rank_io_concurrency: Maximum number of concurrent IO operations per rank in checkpointing.
+                                     Defaults to 16.
+        enable_storage_optimization: Enable storage efficiency optimizations for Distributed Checkpointing.
     """
 
+    # use a more conservative number of concurrent IO operations per rank in TorchSnapshot
+    # the default value of 16 is too bandwidth hungry for most users
     max_per_rank_io_concurrency: Optional[int] = None
+    enable_storage_optimization: bool = False
 
 
 @dataclass
