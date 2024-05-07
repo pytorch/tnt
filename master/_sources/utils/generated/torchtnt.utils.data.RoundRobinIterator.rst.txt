@@ -14,6 +14,8 @@
    .. autosummary::
    
       ~RoundRobinIterator.__init__
+      ~RoundRobinIterator.load_state_dict
+      ~RoundRobinIterator.state_dict
    
    
 

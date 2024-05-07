@@ -14,6 +14,8 @@
    .. autosummary::
    
       ~RandomizedBatchSamplerIterator.__init__
+      ~RandomizedBatchSamplerIterator.load_state_dict
+      ~RandomizedBatchSamplerIterator.state_dict
    
    
 

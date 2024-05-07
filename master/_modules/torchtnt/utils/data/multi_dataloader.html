@@ -381,12 +381,15 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Union</span>
 
+<span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
+
 <span class="kn">from</span> <span class="nn">torchtnt.utils.data.iterators</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DataIterationStrategy</span><span class="p">,</span>
     <span class="n">DataIterationStrategyRegistry</span><span class="p">,</span>
     <span class="n">MultiIterator</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">Stateful</span>
+
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
@@ -422,6 +425,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span> <span class="o">=</span> <span class="n">individual_dataloaders</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iteration_strategy</span> <span class="o">=</span> <span class="n">iteration_strategy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterator_cls</span> <span class="o">=</span> <span class="n">iterator_cls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iterator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MultiIterator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span><span class="p">[</span><span class="n">name</span><span class="p">]))</span>
@@ -432,7 +436,8 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Dataloader &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; which contains no data. &quot;</span>
                         <span class="s2">&quot;You might have empty dataloaders in the input dict.&quot;</span>
-                    <span class="p">)</span></div>
+                    <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iterator_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterator functions for the collection of dataloaders.</span>
@@ -446,10 +451,15 @@
             <span class="n">iterator_cls</span> <span class="o">=</span> <span class="n">DataIterationStrategyRegistry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_strategy</span><span class="p">)</span>
         <span class="c1"># in practice, DataIterationStrategyRegistry.get() returns just concrete classes</span>
         <span class="c1"># pyre-ignore[45]: Cannot instantiate abstract class `MultiIterator`.</span>
-        <span class="k">return</span> <span class="n">iterator_cls</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_iterator</span> <span class="o">=</span> <span class="n">iterator_cls</span><span class="p">(</span>
             <span class="n">individual_dataloaders</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span><span class="p">,</span>
             <span class="n">iteration_strategy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_strategy</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterator_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_iterator</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterator_state</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">iterator_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iterator</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an aggregated state dict based on individual dataloaders.</span>
@@ -463,6 +473,14 @@
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dl</span><span class="p">,</span> <span class="n">Stateful</span><span class="p">):</span>
                 <span class="n">state_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">dl</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">current_iterator</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_iterator</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iterator_state</span> <span class="o">=</span> <span class="n">current_iterator</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">iterator_state</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Storing iterator state in MultiDataLoader state_dict&quot;</span><span class="p">)</span>
+                <span class="c1"># we make an implicit assumption here that none of the dataloaders have the &quot;iterator_state&quot; key in order to be backwards compatible</span>
+                <span class="c1"># with already saved checkpoints (we don&#39;t want to modify the dataloaders stateful names)</span>
+                <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;iterator_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">iterator_state</span>
 
         <span class="k">return</span> <span class="n">state_dict</span>
 
@@ -482,7 +500,11 @@
                         <span class="sa">f</span><span class="s2">&quot;Skipping loading state dict for dataloader </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> as there is no corresponding entry in the state dict&quot;</span>
                     <span class="p">)</span>
                     <span class="k">continue</span>
-                <span class="n">dl</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span></div>
+                <span class="n">dl</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;iterator_state&quot;</span> <span class="ow">in</span> <span class="n">state_dict</span><span class="p">:</span>
+            <span class="c1"># this will be used during the next __iter__ call</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">iterator_state</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;iterator_state&quot;</span><span class="p">]</span></div>
 </pre></div>
 
              </article>
