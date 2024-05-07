@@ -18,9 +18,12 @@ from unittest.mock import MagicMock, patch
 
 import torch
 from torch import nn
-from torch.distributed.checkpoint import FileSystemWriter
-from torch.distributed.checkpoint.default_planner import DefaultSavePlanner
-from torch.distributed.checkpoint.metadata import STATE_DICT_TYPE
+from torch.distributed.checkpoint import FileSystemReader, FileSystemWriter
+from torch.distributed.checkpoint.default_planner import (
+    DefaultLoadPlanner,
+    DefaultSavePlanner,
+)
+from torch.distributed.checkpoint.metadata import Metadata, STATE_DICT_TYPE
 from torch.utils.data import DataLoader
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 from torchtnt.framework._test_utils import (
@@ -348,6 +351,42 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             self.assertIsInstance(planner, DummySavePlanner)
             self.assertIsInstance(storage_writer, DummyStorageWriter)
 
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_restore_default_planner_storage_components(
+        self, mock_dist_cp: MagicMock
+    ) -> None:
+        from torch.distributed.checkpoint._fsspec_filesystem import FsspecReader
+
+        my_unit = DummyTrainUnit(input_dim=2)
+        restore_options = RestoreOptions(restore_optimizers=False)
+        DistributedCheckpointSaver.restore(
+            path="path/to/snapshot",
+            unit=my_unit,
+            restore_options=restore_options,
+        )
+        planner = mock_dist_cp.load.call_args[1]["planner"]
+        storage_reader = mock_dist_cp.load.call_args[1]["storage_reader"]
+
+        self.assertIsInstance(planner, DefaultLoadPlanner)
+        self.assertIsInstance(storage_reader, FsspecReader)
+
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_restore_planner_storage_components(self, mock_dist_cp: MagicMock) -> None:
+        my_unit = DummyTrainUnit(input_dim=2)
+        restore_options = RestoreOptions(restore_optimizers=False)
+        DistributedCheckpointSaver.restore(
+            path="path/to/snapshot",
+            unit=my_unit,
+            restore_options=restore_options,
+            planner=DummyLoadPlanner(),
+            storage_reader=DummyStorageReader(path="path/to/snapshot"),
+        )
+        planner = mock_dist_cp.load.call_args[1]["planner"]
+        storage_reader = mock_dist_cp.load.call_args[1]["storage_reader"]
+
+        self.assertIsInstance(planner, DummyLoadPlanner)
+        self.assertIsInstance(storage_reader, DummyStorageReader)
+
 
 class DummyStatefulDataLoader:
     def __init__(self, dataloader: DataLoader) -> None:
@@ -375,7 +414,28 @@ class DummySavePlanner(DefaultSavePlanner):
         super().set_up_planner(state_dict, is_coordinator)
 
 
+class DummyLoadPlanner(DefaultLoadPlanner):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def set_up_planner(
+        self,
+        state_dict: STATE_DICT_TYPE,
+        metadata: Metadata,
+        is_coordinator: bool,
+    ) -> None:
+        super().set_up_planner(state_dict, metadata, is_coordinator)
+
+
 class DummyStorageWriter(FileSystemWriter):
+    def __init__(self, path: str) -> None:
+        super().__init__(path)
+
+    def set_up_storage_writer(self, is_coordinator: bool) -> None:
+        pass
+
+
+class DummyStorageReader(FileSystemReader):
     def __init__(self, path: str) -> None:
         super().__init__(path)
 
