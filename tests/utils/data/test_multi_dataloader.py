@@ -14,6 +14,7 @@ from typing import Any, cast, Dict, Iterable, Iterator, List, Mapping, Union
 
 import torch
 from torch.utils.data import DataLoader, Dataset
+from torchtnt.framework._test_utils import generate_random_dataloader
 
 from torchtnt.utils.data.iterators import (
     AllDatasetBatches,
@@ -22,6 +23,7 @@ from torchtnt.utils.data.iterators import (
     MultiIterator,
     RandomizedBatchSampler,
     RoundRobin,
+    RoundRobinIterator,
     StoppingMechanism,
 )
 from torchtnt.utils.data.multi_dataloader import MultiDataLoader
@@ -487,6 +489,92 @@ class TestMultiDataLoader(unittest.TestCase):
             ).iter_count,
             0,
         )
+
+    def test_multi_dataloader_state_dict_with_iterator_state(self) -> None:
+        dataloader_1 = generate_random_dataloader(
+            num_samples=8, input_dim=1, batch_size=8
+        )
+        dataloader_2 = generate_random_dataloader(
+            num_samples=16, input_dim=1, batch_size=8
+        )
+        multi_dataloader = MultiDataLoader(
+            self._get_dataloaders_dict(dataloader_1, dataloader_2),
+            RoundRobin(),
+        )
+
+        multi_dl_state_dict = multi_dataloader.state_dict()
+        # before creating the iterator we don't expect the iterator_state to be present in the dl state dict
+        self.assertFalse("iterator_state" in multi_dl_state_dict)
+
+        multi_dl_iter = iter(multi_dataloader)
+        multi_dl_state_dict = multi_dataloader.state_dict()
+        self.assertTrue("iterator_state" in multi_dl_state_dict)
+        self.assertEqual(
+            multi_dl_state_dict["iterator_state"],
+            {"cur_dataloader": "1", "finished_dataloaders": []},
+        )
+        next(multi_dl_iter)  # should return batch from 1
+        next(multi_dl_iter)  # should return batch from 2
+        next(
+            multi_dl_iter
+        )  # should return batch from 2 after raising StopIteration from the first dl
+        multi_dl_state_dict = multi_dataloader.state_dict()
+        self.assertTrue("iterator_state" in multi_dl_state_dict)
+        self.assertEqual(
+            multi_dl_state_dict["iterator_state"],
+            {"cur_dataloader": "2", "finished_dataloaders": ["1"]},
+        )
+
+        # create fresh dl and load state dict. assert that the initial values are updated.
+        multi_dataloader_2 = MultiDataLoader(
+            self._get_dataloaders_dict(dataloader_1, dataloader_2),
+            RoundRobin(),
+        )
+        multi_dataloader_2.load_state_dict(multi_dl_state_dict)
+        round_robin_iter = cast(RoundRobinIterator, iter(multi_dataloader_2))
+        self.assertEqual(round_robin_iter.cur_dataloader, "2")
+        self.assertEqual(round_robin_iter.finished_dataloaders, ["1"])
+
+        # verify that after calling iter() again, values are reset
+        round_robin_iter = cast(RoundRobinIterator, iter(multi_dataloader_2))
+        self.assertEqual(round_robin_iter.cur_dataloader, "1")
+        self.assertEqual(round_robin_iter.finished_dataloaders, [])
+
+    def test_invalid_load_state_dict(self) -> None:
+        dataloader_1 = generate_random_dataloader(
+            num_samples=8, input_dim=1, batch_size=8
+        )
+        dataloader_2 = generate_random_dataloader(
+            num_samples=16, input_dim=1, batch_size=8
+        )
+        multi_dataloader = MultiDataLoader(
+            self._get_dataloaders_dict(dataloader_1, dataloader_2),
+            RoundRobin(),
+        )
+
+        # invalid state dict - finished dataloaders and curr dataloader do not exist
+        multi_dataloader.load_state_dict(
+            {"finished_dataloaders": ["3"], "cur_dataloader": "4"}
+        )
+        round_robin_iter = cast(RoundRobinIterator, iter(multi_dataloader))
+        # ensure the iterator state is not changed
+        self.assertEqual(round_robin_iter.cur_dataloader, "1")
+        self.assertEqual(round_robin_iter.finished_dataloaders, [])
+
+    def test_state_dict_with_non_stateful_iterator(self) -> None:
+        dataloader_1 = generate_random_dataloader(
+            num_samples=8, input_dim=1, batch_size=8
+        )
+        dataloader_2 = generate_random_dataloader(
+            num_samples=16, input_dim=1, batch_size=8
+        )
+        multi_dataloader = MultiDataLoader(
+            self._get_dataloaders_dict(dataloader_1, dataloader_2),
+            DataIterationStrategy(),
+            CustomRandomIterator,
+        )
+        iter(multi_dataloader)
+        self.assertFalse("iterator_state" in multi_dataloader.state_dict())
 
     def _get_dataloaders_dict(
         self, first_dataloader: DataLoader, second_dataloader: DataLoader
