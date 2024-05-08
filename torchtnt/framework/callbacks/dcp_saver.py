@@ -14,9 +14,12 @@ from typing import Any, Dict, Iterable, Optional, Union
 import torch
 import torch.distributed as dist
 from torch.distributed import checkpoint as dcp
-from torch.distributed.checkpoint.default_planner import DefaultSavePlanner
-from torch.distributed.checkpoint.planner import SavePlanner
-from torch.distributed.checkpoint.storage import StorageWriter
+from torch.distributed.checkpoint.default_planner import (
+    DefaultLoadPlanner,
+    DefaultSavePlanner,
+)
+from torch.distributed.checkpoint.planner import LoadPlanner, SavePlanner
+from torch.distributed.checkpoint.storage import StorageReader, StorageWriter
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
     _prepare_app_state_for_checkpoint,
@@ -255,6 +258,8 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
         knob_options: Optional[KnobOptions] = None,
+        planner: Optional[LoadPlanner] = None,
+        storage_reader: Optional[StorageReader] = None,
     ) -> None:
         """Utility method to restore dcp checkpoint from a path.
 
@@ -269,8 +274,15 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 If torch.distributed is available and a process group is initialized, dcp assumes the intention is to save/load checkpoints in distributed fashion.
             restore_options: Controls what to  filter when restoring the state.
             knob_options: Additional keyword options for StorageWriter and StorageReader
+            planner: Instance of LoadPlanner. If this is not specificed, the default planner will be used. (Default: ``None``)
+            storage_reader: Instance of StorageReader used to perform reads. If this is not specified, it will automatically infer
+                            the reader based on the checkpoint_id. If checkpoint_id is also None, an exception will be raised. (Default: ``None``)
         """
-        storage_reader = Reader(path)
+        if planner is None:
+            planner = DefaultLoadPlanner()
+
+        if storage_reader is None:
+            storage_reader = Reader(path)
 
         restore_options = restore_options or RestoreOptions()
         app_state = _prepare_app_state_for_restore(unit, restore_options)
@@ -309,6 +321,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 {"app_state": MultiStateful(app_state)},
                 checkpoint_id=path,
                 storage_reader=storage_reader,
+                planner=planner,
                 process_group=process_group,
             )
         except AttributeError:
@@ -316,6 +329,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 {"app_state": MultiStateful(app_state)},
                 storage_reader=storage_reader,
                 process_group=process_group,
+                planner=planner,
             )
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
 
