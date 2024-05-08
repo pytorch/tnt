@@ -18,6 +18,9 @@ from unittest.mock import MagicMock, patch
 
 import torch
 from torch import nn
+from torch.distributed.checkpoint import FileSystemWriter
+from torch.distributed.checkpoint.default_planner import DefaultSavePlanner
+from torch.distributed.checkpoint.metadata import STATE_DICT_TYPE
 from torch.utils.data import DataLoader
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 from torchtnt.framework._test_utils import (
@@ -289,6 +292,62 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_save_default_planner_storage_components(
+        self, mock_dist_cp: MagicMock
+    ) -> None:
+        from torch.distributed.checkpoint._fsspec_filesystem import FsspecWriter
+
+        input_dim = 2
+        save_every_n_train_steps = 1
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dcp_cb = DistributedCheckpointSaver(
+                temp_dir,
+                save_every_n_train_steps=save_every_n_train_steps,
+                knob_options=KnobOptions(1),
+            )
+
+            dcp_cb._save(
+                checkpoint_id=temp_dir,
+                app_state=my_unit.module.state_dict(),
+            )
+
+            planner = mock_dist_cp.save.call_args_list[0][1]["planner"]
+            storage_writer = mock_dist_cp.save.call_args_list[0][1]["storage_writer"]
+
+            self.assertIsInstance(planner, DefaultSavePlanner)
+            self.assertIsInstance(storage_writer, FsspecWriter)
+
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_save_planner_storage_components(self, mock_dist_cp: MagicMock) -> None:
+        input_dim = 2
+        save_every_n_train_steps = 1
+
+        my_unit = DummyTrainUnit(input_dim=input_dim)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dcp_cb = DistributedCheckpointSaver(
+                temp_dir,
+                save_every_n_train_steps=save_every_n_train_steps,
+                knob_options=KnobOptions(1),
+            )
+
+            dcp_cb._save(
+                checkpoint_id=temp_dir,
+                app_state=my_unit.module.state_dict(),
+                planner=DummySavePlanner(),
+                storage_writer=DummyStorageWriter(path=temp_dir),
+            )
+
+            planner = mock_dist_cp.save.call_args_list[0][1]["planner"]
+            storage_writer = mock_dist_cp.save.call_args_list[0][1]["storage_writer"]
+
+            self.assertIsInstance(planner, DummySavePlanner)
+            self.assertIsInstance(storage_writer, DummyStorageWriter)
+
 
 class DummyStatefulDataLoader:
     def __init__(self, dataloader: DataLoader) -> None:
@@ -306,3 +365,19 @@ class DummyStatefulDataLoader:
 
     def __iter__(self) -> Iterator[object]:
         return iter(self.dataloader)
+
+
+class DummySavePlanner(DefaultSavePlanner):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def set_up_planner(self, state_dict: STATE_DICT_TYPE, is_coordinator: bool) -> None:
+        super().set_up_planner(state_dict, is_coordinator)
+
+
+class DummyStorageWriter(FileSystemWriter):
+    def __init__(self, path: str) -> None:
+        super().__init__(path)
+
+    def set_up_storage_writer(self, is_coordinator: bool) -> None:
+        pass
