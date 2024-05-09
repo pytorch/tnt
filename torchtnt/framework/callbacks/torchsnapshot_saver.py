@@ -157,7 +157,12 @@ class TorchSnapshotSaver(BaseCheckpointer):
         """
         Checkpoint the current state of the application.
         """
-        if hook not in ["on_train_step_end", "on_train_epoch_end", "on_train_end"]:
+        if hook not in [
+            "on_train_step_end",
+            "on_train_epoch_end",
+            "on_train_end",
+            "on_eval_epoch_end",
+        ]:
             raise RuntimeError(f"Unexpected hook encountered '{hook}'")
 
         intra_epoch = False
