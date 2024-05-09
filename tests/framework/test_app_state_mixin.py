@@ -20,6 +20,7 @@ from torchtnt.framework.unit import AppStateMixin
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import FSDPOptimizerWrapper
+from torchtnt.utils.stateful import MultiStateful
 
 
 class Dummy(AppStateMixin):
@@ -32,6 +33,7 @@ class Dummy(AppStateMixin):
             self.optimizer_c, step_size=30, gamma=0.1
         )
         self.grad_scaler_e = torch.cuda.amp.GradScaler()
+        self.optimizer_class_f = torch.optim.SGD
 
 
 class AppStateMixinTest(unittest.TestCase):
@@ -102,6 +104,15 @@ class AppStateMixinTest(unittest.TestCase):
 
         # assert that the grad scaler is stored in the app_state
         self.assertEqual(my_unit.app_state()["grad_scaler_e"], my_unit.grad_scaler_e)
+
+        # assert that only stateful class objects are being tracked
+        self.assertFalse("optimizer_class_f" in my_unit.tracked_misc_statefuls())
+
+        multi_stateful = MultiStateful(my_unit.tracked_misc_statefuls())
+        try:
+            _ = multi_stateful.state_dict()
+        except TypeError:
+            self.fail("Not able to get the state dict from my_unit.")
 
         # delete the attribute
         # pyre-fixme[8]: Attribute has type `GradScaler`; used as `None`.
