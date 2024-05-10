@@ -410,7 +410,11 @@ class DummySavePlanner(DefaultSavePlanner):
     def __init__(self) -> None:
         super().__init__()
 
+    # pyre-fixme[14]: `set_up_planner` overrides method defined in
+    #  `DefaultSavePlanner` inconsistently.
     def set_up_planner(self, state_dict: STATE_DICT_TYPE, is_coordinator: bool) -> None:
+        # pyre-fixme[6]: For 2nd argument expected `Optional[StorageMeta]` but got
+        #  `bool`.
         super().set_up_planner(state_dict, is_coordinator)
 
 
@@ -418,6 +422,8 @@ class DummyLoadPlanner(DefaultLoadPlanner):
     def __init__(self) -> None:
         super().__init__()
 
+    # pyre-fixme[14]: `set_up_planner` overrides method defined in
+    #  `DefaultLoadPlanner` inconsistently.
     def set_up_planner(
         self,
         state_dict: STATE_DICT_TYPE,
