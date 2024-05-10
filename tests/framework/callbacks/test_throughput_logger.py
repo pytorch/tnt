@@ -272,6 +272,10 @@ class ThroughputLoggerTest(unittest.TestCase):
             throughput_logger.on_train_step_end(state, unit)
         self.assertEqual(throughput_logger._steps_in_epoch[ActivePhase.TRAIN], 1)
 
+        # Make sure we don't log or fail if the _epoch_start_times dict is not initialized
+        throughput_logger._log_for_epoch(state, epoch_logging_for=15)
+        logger.log.assert_not_called()
+
         with patch("time.perf_counter", return_value=0.5):
             throughput_logger.on_train_epoch_start(state, MagicMock(spec=TrainUnit))
         self.assertEqual(throughput_logger._epoch_start_times[ActivePhase.TRAIN], 0.5)

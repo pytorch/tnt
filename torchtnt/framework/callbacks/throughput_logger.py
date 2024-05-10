@@ -7,6 +7,7 @@
 # pyre-strict
 
 
+import logging
 import time
 from collections import defaultdict
 from typing import Dict, Mapping
@@ -29,6 +30,8 @@ ACTIVE_PHASE_TO_LABEL_PREFIX: Mapping[ActivePhase, str] = {
     ActivePhase.EVALUATE: "Eval",
     ActivePhase.PREDICT: "Predict",
 }
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ThroughputLogger(Callback):
@@ -192,6 +195,18 @@ class ThroughputLogger(Callback):
         *,
         epoch_logging_for: int,
     ) -> None:
+
+        # Avoid key errors if active phase is not set. This may happen if we restore
+        # from an intra-epoch checkpoint.
+        if (
+            state.active_phase not in self._epoch_start_times
+            or state.active_phase not in self._steps_in_epoch
+        ):
+            logger.warning(
+                f"Missing troughput data for epoch {epoch_logging_for}, phase {state.active_phase}. Ommiting troughput logging."
+            )
+            return
+
         time_since_epoch_start = (
             time.perf_counter() - self._epoch_start_times[state.active_phase]
         )
