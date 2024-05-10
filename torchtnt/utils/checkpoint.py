@@ -96,7 +96,22 @@ class CheckpointPath:
         Raises:
             ValueError: If the path is malformed and can't be parsed.
         """
-        path_match = cls.PATH_REGEX.match(checkpoint_path)
+        ckpt_path = cls.__new__(cls)
+        ckpt_path._populate_from_str(checkpoint_path)
+        return ckpt_path
+
+    def _populate_from_str(self, checkpoint_path: str) -> None:
+        """
+        Reusable method to parse a checkpoint path string, extract the components, and populate
+        a checkpoint path instance.
+
+        Args:
+            checkpoint_path: The checkpoint path string.
+
+        Raises:
+            ValueError: If the path is malformed (either non-parsable, or contains wrong data types)
+        """
+        path_match = self.PATH_REGEX.match(checkpoint_path)
         if not path_match:
             raise ValueError(
                 f"Attempted to parse malformed checkpoint path: {checkpoint_path}."
@@ -109,12 +124,10 @@ class CheckpointPath:
                 metric_value_f = float(metric_value)
                 metric_data = MetricData(name=metric_name, value=metric_value_f)
 
-            return CheckpointPath(
-                dirpath=dirpath,
-                epoch=int(epoch),
-                step=int(step),
-                metric_data=metric_data,
-            )
+            self.dirpath = dirpath.rstrip("/")
+            self.epoch = int(epoch)
+            self.step = int(step)
+            self.metric_data = metric_data
 
         except ValueError:
             # Should never happen since path matches regex
@@ -205,18 +218,7 @@ class CheckpointPath:
 
     def __setstate__(self, state: str) -> None:
         # Match regex directly to avoid creating a new instance with `from_str`
-        path_match = self.PATH_REGEX.match(state)
-        assert path_match, f"Malformed checkpoint found when unpickling: {state}"
-
-        dirpath, epoch, step, metric_name, metric_value = path_match.groups()
-        self.dirpath = dirpath.rstrip("/")
-        self.epoch = int(epoch)
-        self.step = int(step)
-        self.metric_data = (
-            MetricData(name=metric_name, value=float(metric_value))
-            if metric_name and metric_value
-            else None
-        )
+        self._populate_from_str(state)
 
 
 class CheckpointManager:
