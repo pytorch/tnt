@@ -7,6 +7,7 @@
 # pyre-strict
 
 
+import inspect
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, cast, Dict, Generic, Iterator, TypeVar, Union
@@ -148,7 +149,7 @@ class AppStateMixin:
                 value,
                 self.__dict__.get("_progress"),
             )
-        elif isinstance(value, Stateful):
+        elif isinstance(value, Stateful) and not inspect.isclass(value):
             self._update_attr(
                 name,
                 value,
