@@ -10,8 +10,10 @@ import logging
 import os
 import re
 from dataclasses import dataclass
+from enum import Enum
 from functools import total_ordering
-from typing import List, Literal, Optional, Pattern
+from operator import xor
+from typing import Dict, List, Literal, Optional, Pattern, Tuple, Union
 
 import fsspec
 import torch.distributed as dist
@@ -46,39 +48,62 @@ class BestCheckpointConfig:
     mode: Literal["min", "max"] = "min"
 
 
+class Phase(Enum):
+    NONE = 0  # Only used for backwards compatibility
+    TRAIN = 1
+    EVALUATE = 2
+
+
 @total_ordering
 class CheckpointPath:
     """
     Representation of a checkpoint path. Handles parsing and serialization of the specific path format.
-    Currently, the basic compliant path format is: <dirpath>/epoch_<epoch>_step_<step>
-    If a metric is being tracked, it's added to the name: <dirpath>/epoch_<epoch>_step_<step>_<metric_name>=<metric_value>
 
-    This class is well-ordered by checkpoint recency, so any comparisons will operate using the epoch + step. Sorting by
-    metric can be done by extracting the metric value from the metric_data attribute.
+    A CheckpointPath can be metric aware/naive, and/or phase aware/naive. This means:
+    - A metric aware checkpoint stores the value of a particular metric name. It is possible to compare optimality of two
+        checkpoints that are tracking the same metric by using the `is_more_optimal_than` method.
+    - A phase aware checkpoint stores the step number for a particular phase. This provides a better UX when doing manual
+        exploration of the generated checkpoints. The phase will also be considered to determine recency. However, note that
+        it is possible to compare phase naive and phase aware checkpoints by recency, with the latter always being newer. For
+        two phase aware checkpoints, first the evaluation steps (if any) are compared, then the train steps. It is always assumed
+        that evaluations happens after training for a particular epoch.
+
+    Examples of compliant checkpoint paths:
+    - phase-naive and metric-naive- <dirpath>/epoch_<epoch>_step_<step>
+    - phase-naive and metric-aware- <dirpath>/epoch_<epoch>_step_<step>_<metric_name>=<metric_value>
+    - phase-aware (train only) and metric-naive- <dirpath>/epoch_<epoch>_train_step_<train_step>_<metric_name>=<metric_value>
+    - phase-aware and metric-aware- <dirpath>/epoch_<epoch>_train_step_<train_step>_eval_step_<eval_step>_<metric_name>=<metric_value>
     """
 
-    PATH_REGEX: Pattern = re.compile(
-        r"^(.+)epoch_(\d+)_step_(\d+)(?:_(.+)=(-?\d+\.?\d*))?\/?$"
+    PHASE_NAIVE_REGEX: Pattern = re.compile(
+        r"^(.+)epoch_(\d+)_step_(\d+)(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
+    )
+
+    PHASE_AWARE_REGEX: Pattern = re.compile(
+        r"^(.+)epoch_(\d+)(?:_train_step_(\d+))?(?:_eval_step_(\d+))?(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
     )
 
     def __init__(
         self,
         dirpath: str,
         epoch: int,
-        step: int,
+        step: Union[Dict[Phase, int], int],
         metric_data: Optional[MetricData] = None,
     ) -> None:
         """
         Args:
             dirpath: The base directory path that checkpoints are saved in.
             epoch: The epoch number of this checkpoint.
-            step: The step number of this checkpoint.
+            step: The step number of this checkpoint. This may be an integer for a phase-naive checkpoint. To
+                create a phase-aware path, a dict can be used to map each phase to its step number.
             metric_data: Optional data about the metric being tracked. Should contain both metric name and value.
         """
         self.dirpath: str = dirpath.rstrip("/")
         self.epoch = epoch
-        self.step = step
         self.metric_data = metric_data
+        self.step: Dict[Phase, int] = (
+            step if isinstance(step, dict) else {Phase.NONE: step}
+        )
 
     @classmethod
     def from_str(cls, checkpoint_path: str) -> "CheckpointPath":
@@ -111,14 +136,33 @@ class CheckpointPath:
         Raises:
             ValueError: If the path is malformed (either non-parsable, or contains wrong data types)
         """
-        path_match = self.PATH_REGEX.match(checkpoint_path)
+        is_phase_aware = (
+            "train_step" in checkpoint_path or "eval_step" in checkpoint_path
+        )
+        regex = self.PHASE_AWARE_REGEX if is_phase_aware else self.PHASE_NAIVE_REGEX
+        path_match = regex.match(checkpoint_path)
         if not path_match:
             raise ValueError(
                 f"Attempted to parse malformed checkpoint path: {checkpoint_path}."
             )
 
-        dirpath, epoch, step, metric_name, metric_value = path_match.groups()
         try:
+            step_mapping: Dict[Phase, int] = {}
+            if is_phase_aware:
+                dirpath, epoch, train_steps, eval_steps, metric_name, metric_value = (
+                    path_match.groups()
+                )
+                if train_steps is not None:
+                    step_mapping[Phase.TRAIN] = int(train_steps)
+                if eval_steps is not None:
+                    step_mapping[Phase.EVALUATE] = int(eval_steps)
+
+            else:
+                dirpath, epoch, naive_steps, metric_name, metric_value = (
+                    path_match.groups()
+                )
+                step_mapping[Phase.NONE] = int(naive_steps)
+
             metric_data: Optional[MetricData] = None
             if metric_name:
                 metric_value_f = float(metric_value)
@@ -126,7 +170,7 @@ class CheckpointPath:
 
             self.dirpath = dirpath.rstrip("/")
             self.epoch = int(epoch)
-            self.step = int(step)
+            self.step = step_mapping
             self.metric_data = metric_data
 
         except ValueError:
@@ -141,23 +185,58 @@ class CheckpointPath:
         Returns:
             The full path to the checkpoint directory.
         """
-        name = f"epoch_{self.epoch}_step_{self.step}"
+        name = f"epoch_{self.epoch}"
+
+        if not self._is_phase_aware():
+            name += f"_step_{self.step[Phase.NONE]}"
+        else:
+            if Phase.TRAIN in self.step:
+                name += f"_train_step_{self.step[Phase.TRAIN]}"
+            if Phase.EVALUATE in self.step:
+                name += f"_eval_step_{self.step[Phase.EVALUATE]}"
+
         if self.metric_data:
             name += f"_{self.metric_data.name}={self.metric_data.value}"
 
         return os.path.join(self.dirpath, name)
 
+    def _is_phase_aware(self) -> bool:
+        return Phase.NONE not in self.step
+
     def newer_than(self, other: "CheckpointPath") -> bool:
         """
         Given another CheckpointPath instance, determine if this checkpoint is strictly newer than the other.
+        Note that recency is determine in terms of the epoch, phase, and number of steps. It is NOT related to
+        the timestamp the checkpoint was saved.
 
         Returns:
             True if this checkpoint is newer than the other, otherwise False.
         """
+        # First check always the epoch
         if self.epoch != other.epoch:
             return self.epoch > other.epoch
 
-        return self.step > other.step
+        # If comparing a phase-aware vs phase-naive checkpoint, determine recency by the total number of steps.
+        # In case both are the same, the phase aware checkpoint is considered newer.
+        if xor(self._is_phase_aware(), other._is_phase_aware()):
+            if sum(self.step.values()) != sum(other.step.values()):
+                return sum(self.step.values()) > sum(other.step.values())
+            return self._is_phase_aware()
+
+        # For two phase-naive checkpoints, we only need to look at the step
+        if not self._is_phase_aware():
+            return self.step[Phase.NONE] > other.step[Phase.NONE]
+
+        # If one checkpoint has eval steps and the other doesn't, the one with eval steps is always newer
+        if xor(Phase.EVALUATE in self.step, Phase.EVALUATE in other.step):
+            return Phase.EVALUATE in self.step
+
+        # Otherwise, compare first by eval and then train steps
+        return self._get_phase_steps() > other._get_phase_steps()
+
+    def _get_phase_steps(self) -> Tuple[int, int]:
+        """Tuple with the phase steps ordered by phase priority in comparison (first eval, then train)."""
+        return self.step.get(Phase.EVALUATE, 0), self.step.get(Phase.TRAIN, 0)
 
     def more_optimal_than(
         self, other: "CheckpointPath", mode: Literal["min", "max"]
@@ -322,7 +401,10 @@ class CheckpointManager:
                 self.remove_checkpoint()
 
     def generate_checkpoint_path(
-        self, epoch: int, step: int, metric_data: Optional[MetricData] = None
+        self,
+        epoch: int,
+        step: Union[int, Dict[Phase, int]],
+        metric_data: Optional[MetricData] = None,
     ) -> CheckpointPath:
         """
         Given the current epoch, step, and possibly a metric_data value, determine the path

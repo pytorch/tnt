@@ -33,6 +33,7 @@ from torchtnt.utils.checkpoint import (
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
     MetricData,
+    Phase,
 )
 from torchtnt.utils.distributed import (
     PGWrapper,
@@ -56,6 +57,8 @@ class CheckpointPathTest(unittest.TestCase):
             "foo/epoch_20_step_30_val_loss=1a",
             "foo/epoch_2_step_15_mean=hello",
             "foo/epoch_2.6_step_23",
+            "foo/epoch_3_pred_step_3",
+            "foo/epoch_3__step_3",
         ]
         for path in malformed_paths:
             with self.assertRaisesRegex(
@@ -66,6 +69,10 @@ class CheckpointPathTest(unittest.TestCase):
         # valid paths
         valid_paths = [
             ("foo/epoch_0_step_1", CheckpointPath("foo", epoch=0, step=1)),
+            (
+                "foo_bar/fizz_buzz/epoch_0_step_1",
+                CheckpointPath("foo_bar/fizz_buzz", epoch=0, step={Phase.NONE: 1}),
+            ),
             (
                 "foo/epoch_14_step_3_mean=15.0",
                 CheckpointPath(
@@ -98,8 +105,52 @@ class CheckpointPathTest(unittest.TestCase):
                 CheckpointPath(
                     "file://some/path/checkpoints/0b20e70f-9ad2-4904-b7d6-e8da48087d61",
                     epoch=2,
-                    step=1,
+                    step={Phase.NONE: 1},
                     metric_data=MetricData("acc", 0.98),
+                ),
+            ),
+            (
+                "foo/bar/epoch_23_train_step_31_mean_loss_squared=0.0",
+                CheckpointPath(
+                    "foo/bar/",
+                    epoch=23,
+                    step={Phase.TRAIN: 31},
+                    metric_data=MetricData("mean_loss_squared", 0.0),
+                ),
+            ),
+            (
+                "file://path/some/checkpoints_dir/0b20e70f-9ad2-4904-b7d6-e8da48087d61/epoch_2_eval_step_1_acc=0.98",
+                CheckpointPath(
+                    "file://path/some/checkpoints_dir/0b20e70f-9ad2-4904-b7d6-e8da48087d61",
+                    epoch=2,
+                    step={Phase.EVALUATE: 1},
+                    metric_data=MetricData("acc", 0.98),
+                ),
+            ),
+            (
+                "foo/bar/epoch_23_train_step_31_eval_step_15_mean_loss_squared=-23.6",
+                CheckpointPath(
+                    "foo/bar/",
+                    epoch=23,
+                    step={Phase.TRAIN: 31, Phase.EVALUATE: 15},
+                    metric_data=MetricData("mean_loss_squared", -23.6),
+                ),
+            ),
+            (
+                "file://path/some/checkpoints_dir/0b20e70f-9ad2-4904-b7d6-e8da48087d61/epoch_56_train_step_60_eval_step_1",
+                CheckpointPath(
+                    "file://path/some/checkpoints_dir/0b20e70f-9ad2-4904-b7d6-e8da48087d61",
+                    epoch=56,
+                    step={Phase.TRAIN: 60, Phase.EVALUATE: 1},
+                ),
+            ),
+            (
+                "foo/bar/epoch_0_train_step_0_eval_step_0_mean_loss_squared=0.0",
+                CheckpointPath(
+                    "foo/bar/",
+                    epoch=0,
+                    step={Phase.TRAIN: 0, Phase.EVALUATE: 0},
+                    metric_data=MetricData("mean_loss_squared", 0.0),
                 ),
             ),
         ]
@@ -142,10 +193,52 @@ class CheckpointPathTest(unittest.TestCase):
         )
         self.assertTrue(twin1 == twin2)
 
+        legacy1 = CheckpointPath("foo", epoch=3, step=3)
+        old = CheckpointPath("foo", epoch=3, step={Phase.TRAIN: 5})
+        legacy2 = CheckpointPath("foo", epoch=3, step=7)
+        new = CheckpointPath("foo", epoch=3, step={Phase.TRAIN: 5, Phase.EVALUATE: 5})
+        legacy3 = CheckpointPath("foo", epoch=3, step=10)
+        legacy4 = CheckpointPath("foor", epoch=4, step=12)
+
+        self.assertTrue(old.newer_than(legacy1))
+        self.assertTrue(new.newer_than(legacy1))
+        self.assertTrue(new.newer_than(old))
+        self.assertFalse(old.newer_than(new))
+        self.assertTrue(legacy2.newer_than(old))
+        self.assertTrue(new.newer_than(legacy2))
+        self.assertTrue(new.newer_than(legacy3))
+        self.assertFalse(legacy3.newer_than(new))
+        self.assertTrue(legacy4.newer_than(legacy3))
+        self.assertFalse(new == old)
+
+        old = CheckpointPath("foo", epoch=3, step={Phase.TRAIN: 5})
+        new = CheckpointPath("foo", epoch=3, step={Phase.TRAIN: 6})
+        self.assertTrue(new.newer_than(old))
+        self.assertFalse(old.newer_than(new))
+
+        train_only = CheckpointPath("foo", epoch=3, step={Phase.TRAIN: 10})
+        eval_only = CheckpointPath("foo", epoch=3, step={Phase.EVALUATE: 10})
+        multiphase_1 = CheckpointPath(
+            "foo", epoch=3, step={Phase.TRAIN: 5, Phase.EVALUATE: 5}
+        )
+        multiphase_2 = CheckpointPath(
+            "foo", epoch=4, step={Phase.TRAIN: 15, Phase.EVALUATE: 10}
+        )
+        multiphase_3 = CheckpointPath(
+            "foo", epoch=4, step={Phase.TRAIN: 20, Phase.EVALUATE: 10}
+        )
+
+        self.assertTrue(eval_only > train_only)
+        self.assertFalse(eval_only < train_only)
+        self.assertTrue(train_only < multiphase_1)
+        self.assertTrue(eval_only > multiphase_1)
+        self.assertTrue(eval_only < multiphase_2)
+        self.assertTrue(multiphase_2 < multiphase_3)
+
     def test_compare_by_optimality(self) -> None:
         # not both metric aware
         ckpt1 = CheckpointPath("foo", epoch=0, step=1)
-        ckpt2 = CheckpointPath("foo", epoch=1, step=1)
+        ckpt2 = CheckpointPath("foo", epoch=1, step={Phase.TRAIN: 5})
         ckpt3 = CheckpointPath(
             "foo", epoch=1, step=1, metric_data=MetricData("bar", 1.0)
         )
@@ -170,7 +263,10 @@ class CheckpointPathTest(unittest.TestCase):
             "foo", epoch=0, step=1, metric_data=MetricData("foo", 1.0)
         )
         larger = CheckpointPath(
-            "foo", epoch=0, step=1, metric_data=MetricData("foo", 2.0)
+            "foo",
+            epoch=0,
+            step={Phase.TRAIN: 1},
+            metric_data=MetricData("foo", 2.0),
         )
         self.assertTrue(larger.more_optimal_than(smaller, mode="max"))
         self.assertFalse(smaller.more_optimal_than(larger, mode="max"))
@@ -181,6 +277,7 @@ class CheckpointPathTest(unittest.TestCase):
         for path in (
             "foo/epoch_0_step_1",
             "file://some/path/checkpoints/0b20e70f-9ad2-4904-b7d6-e8da48087d61/epoch_2_step_1_acc=0.98",
+            "foo/epoch_0_train_step_2_eval_step_5",
         ):
             ckpt = CheckpointPath.from_str(path)
 
@@ -205,6 +302,49 @@ class CheckpointPathTest(unittest.TestCase):
         sorted_paths = [str(x) for x in sorted(ckpts)]
         self.assertEqual(sorted_paths, [paths[2], paths[0], paths[1]])
 
+        paths = [
+            "foo/epoch_0_step_1",
+            "foo/epoch_1_train_step_20_val_loss=0.09",
+            "foo/epoch_0_train_step_10_val_loss=10.0",
+            "foo/epoch_1_step_30_val_loss=29.0",
+            "foo/epoch_0_eval_step_2_val_loss=13.0",
+            "foo/epoch_1_train_step_25_val_loss=0.06",
+        ]
+        ckpts = [CheckpointPath.from_str(path) for path in paths]
+        self.assertEqual(
+            [str(path) for path in sorted(ckpts)],
+            [paths[0], paths[2], paths[4], paths[1], paths[5], paths[3]],
+        )
+        paths = [
+            "foo/epoch_1_train_step_20_eval_step_10_val_loss=0.09",
+            "foo/epoch_0_train_step_10_eval_step_0_val_loss=10.0",
+            "foo/epoch_1_step_32_val_loss=29.0",  # phase naive
+            "foo/epoch_1_train_step_20_eval_step_15_val_loss=0.02",
+            "foo/epoch_0_train_step_15_eval_step_0_val_loss=13.0",
+            "foo/epoch_1_train_step_25_val_loss=0.06",
+            "foo/epoch_0_train_step_15_eval_step_5_val_loss=18.0",
+            "foo/epoch_0_eval_step_25_val_loss=18.0",
+            "foo/epoch_0_step_10",  # phase naive
+        ]
+        ckpts = [CheckpointPath.from_str(path) for path in paths]
+        for ckpt in ckpts:
+            print(ckpt.__repr__())
+
+        self.assertEqual(
+            [str(path) for path in sorted(ckpts)],
+            [
+                paths[8],
+                paths[1],
+                paths[4],
+                paths[6],
+                paths[7],
+                paths[5],
+                paths[0],
+                paths[2],
+                paths[3],
+            ],
+        )
+
 
 class CheckpointManagerTest(unittest.TestCase):
     def test_create_checkpoint_manager(self) -> None:
@@ -217,6 +357,10 @@ class CheckpointManagerTest(unittest.TestCase):
                 f"{temp_dir}/epoch_1_step_2_loss=0.5",
                 f"{temp_dir}/epoch_2_step_5_loss=0.3",
                 f"{temp_dir}/epoch_0_step_2_acc=0.7",
+                f"{temp_dir}/epoch_2_train_step_2_eval_step_5",
+                f"{temp_dir}/epoch_3_train_step_5_loss=-0.2",
+                f"{temp_dir}/epoch_3_eval_step_2_loss=0.2",
+                f"{temp_dir}/epoch_3_train_step_1_eval_step_5_loss=0.1",
             ]
             for path in paths:
                 os.mkdir(path)
@@ -237,6 +381,10 @@ class CheckpointManagerTest(unittest.TestCase):
                     f"{temp_dir}/epoch_1_step_2_loss=0.5",
                     f"{temp_dir}/epoch_1_step_3",
                     f"{temp_dir}/epoch_2_step_5_loss=0.3",
+                    f"{temp_dir}/epoch_2_train_step_2_eval_step_5",
+                    f"{temp_dir}/epoch_3_train_step_5_loss=-0.2",
+                    f"{temp_dir}/epoch_3_eval_step_2_loss=0.2",
+                    f"{temp_dir}/epoch_3_train_step_1_eval_step_5_loss=0.1",
                 ],
             )
 
@@ -253,6 +401,9 @@ class CheckpointManagerTest(unittest.TestCase):
                 [
                     f"{temp_dir}/epoch_1_step_2_loss=0.5",
                     f"{temp_dir}/epoch_2_step_5_loss=0.3",
+                    f"{temp_dir}/epoch_3_eval_step_2_loss=0.2",
+                    f"{temp_dir}/epoch_3_train_step_1_eval_step_5_loss=0.1",
+                    f"{temp_dir}/epoch_3_train_step_5_loss=-0.2",
                     f"{temp_dir}/epoch_0_step_5_loss=-0.3",
                 ],
             )
@@ -269,6 +420,9 @@ class CheckpointManagerTest(unittest.TestCase):
                 [x.path for x in ckpt_manager._ckpt_paths],
                 [
                     f"{temp_dir}/epoch_0_step_5_loss=-0.3",
+                    f"{temp_dir}/epoch_3_train_step_5_loss=-0.2",
+                    f"{temp_dir}/epoch_3_train_step_1_eval_step_5_loss=0.1",
+                    f"{temp_dir}/epoch_3_eval_step_2_loss=0.2",
                     f"{temp_dir}/epoch_2_step_5_loss=0.3",
                     f"{temp_dir}/epoch_1_step_2_loss=0.5",
                 ],
@@ -283,6 +437,42 @@ class CheckpointManagerTest(unittest.TestCase):
                 ),
             )
             self.assertEqual(ckpt_manager._ckpt_paths, [])
+
+        # More intense metric sorting test
+        with tempfile.TemporaryDirectory() as temp_dir:
+            paths = [
+                f"{temp_dir}/epoch_1_train_step_20_val_loss=0.09",
+                f"{temp_dir}/epoch_0_train_step_10_eval_step_53412092_val_loss=10.0",
+                f"{temp_dir}/epoch_4_step_130_val_loss=29.0",
+                f"{temp_dir}/epoch_0_eval_step_2_val_loss=13.0",
+                f"{temp_dir}/epoch_1_train_step_25_val_loss=0.06",
+            ]
+            for path in paths:
+                os.mkdir(path)
+
+            ckpt_manager = CheckpointManager(
+                temp_dir,
+                best_checkpoint_config=BestCheckpointConfig(
+                    monitored_metric="val_loss", mode="min"
+                ),
+                keep_last_n_checkpoints=3,
+            )
+            self.assertEqual(
+                [str(path) for path in ckpt_manager._ckpt_paths],
+                [paths[2], paths[3], paths[1], paths[0], paths[4]],
+            )
+
+            ckpt_manager = CheckpointManager(
+                temp_dir,
+                best_checkpoint_config=BestCheckpointConfig(
+                    monitored_metric="val_loss", mode="max"
+                ),
+                keep_last_n_checkpoints=3,
+            )
+            self.assertEqual(
+                [str(path) for path in ckpt_manager._ckpt_paths],
+                [paths[4], paths[0], paths[1], paths[3], paths[2]],
+            )
 
     @skip_if_not_distributed
     def test_create_checkpoint_manager_distributed(self) -> None:
@@ -380,6 +570,13 @@ class CheckpointManagerTest(unittest.TestCase):
             "foo/epoch_1_step_3",
         )
 
+        self.assertEqual(
+            ckpt_manager.generate_checkpoint_path(
+                1, {Phase.TRAIN: 5, Phase.EVALUATE: 7}
+            ).path,
+            "foo/epoch_1_train_step_5_eval_step_7",
+        )
+
         ckpt_manager._best_checkpoint_config = BestCheckpointConfig(
             monitored_metric="val_loss", mode="min"
         )
@@ -412,7 +609,7 @@ class CheckpointManagerTest(unittest.TestCase):
             ckpt_manager.generate_checkpoint_path(1, 2, MetricData("val_loss", 3.5))
 
     def test_append_checkpoint_by_recency(self) -> None:
-        ckpt_manager = CheckpointManager("foo", keep_last_n_checkpoints=2)
+        ckpt_manager = CheckpointManager("foo", keep_last_n_checkpoints=3)
         ckpt_manager._ckpt_paths = [CheckpointPath("foo", 0, 0)]
 
         # without need to remove old by recency
@@ -422,12 +619,28 @@ class CheckpointManagerTest(unittest.TestCase):
             [CheckpointPath("foo", 0, 0), CheckpointPath("foo", 0, 1)],
         )
 
+        ckpt_manager.append_checkpoint(CheckpointPath("foo", 0, {Phase.TRAIN: 5}))
+        self.assertEqual(
+            ckpt_manager._ckpt_paths,
+            [
+                CheckpointPath("foo", 0, 0),
+                CheckpointPath("foo", 0, 1),
+                CheckpointPath("foo", 0, {Phase.TRAIN: 5}),
+            ],
+        )
+
         # removing old by recency
         with patch("fsspec.implementations.local.LocalFileSystem.rm") as mock_rm:
-            ckpt_manager.append_checkpoint(CheckpointPath("foo", 0, 2))
+            ckpt_manager.append_checkpoint(
+                CheckpointPath("foo", 0, {Phase.EVALUATE: 10})
+            )
             self.assertEqual(
                 ckpt_manager._ckpt_paths,
-                [CheckpointPath("foo", 0, 1), CheckpointPath("foo", 0, 2)],
+                [
+                    CheckpointPath("foo", 0, 1),
+                    CheckpointPath("foo", 0, {Phase.TRAIN: 5}),
+                    CheckpointPath("foo", 0, {Phase.EVALUATE: 10}),
+                ],
             )
             mock_rm.assert_called_once_with("foo/epoch_0_step_0", recursive=True)
 
@@ -597,6 +810,76 @@ class CheckpointUtilsTest(unittest.TestCase):
                 path_2,
             )
 
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path_1 = os.path.join(temp_dir, "epoch_0_train_step_0")
+            os.mkdir(path_1)
+            self._create_snapshot_metadata(path_1)
+            path_2 = os.path.join(temp_dir, "epoch_0_train_step_100_val_loss=0.002")
+            os.mkdir(path_2)
+            self._create_snapshot_metadata(path_2)
+
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_2
+            )
+
+            path_3 = os.path.join(temp_dir, "epoch_0_eval_step_0")
+            os.mkdir(path_3)
+            self._create_snapshot_metadata(path_3)
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_3
+            )
+
+            # Missing metadata file
+            path_4 = os.path.join(temp_dir, "epoch_1_train_step_1")
+            os.mkdir(path_4)
+            self.assertEqual(get_latest_checkpoint_path(temp_dir), path_4)
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_3
+            )
+            self._create_snapshot_metadata(path_4)
+
+            # Ill-formatted name
+            path_5 = os.path.join(temp_dir, "epoch_700")
+            os.mkdir(path_5)
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_4
+            )
+
+            # With both phases
+            path_6 = os.path.join(temp_dir, "epoch_1_train_step_5_eval_step_5")
+            os.mkdir(path_6)
+            self._create_snapshot_metadata(path_6)
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_6
+            )
+
+            path_9 = os.path.join(temp_dir, "epoch_1_train_step_5_eval_step_10")
+            os.mkdir(path_9)
+            self._create_snapshot_metadata(path_9)
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_9
+            )
+
+            path_10 = os.path.join(temp_dir, "epoch_2_train_step_10_eval_step_10")
+            os.mkdir(path_10)
+            self._create_snapshot_metadata(path_10)
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_10
+            )
+
+            path_11 = os.path.join(temp_dir, "epoch_2_train_step_15_eval_step_10")
+            os.mkdir(path_11)
+            self._create_snapshot_metadata(path_11)
+            self.assertEqual(
+                get_latest_checkpoint_path(temp_dir, METADATA_FNAME), path_11
+            )
+
+            # Test legacy path with fewer steps
+
+            # Test legacy path with equal steps
+
+            # Test legacy path with more steps
+
     @skip_if_not_distributed
     def test_latest_checkpoint_path_distributed(self) -> None:
         spawn_multi_process(
@@ -686,7 +969,9 @@ class CheckpointUtilsTest(unittest.TestCase):
             )
 
             # handle "max" mode correctly
-            best_path_3 = os.path.join(temp_dir, "epoch_0_step_100_val_loss=0.1")
+            best_path_3 = os.path.join(
+                temp_dir, "epoch_0_train_step_100_eval_step_25_val_loss=0.1"
+            )
             os.mkdir(best_path_3)
             self.assertEqual(
                 get_best_checkpoint_path(temp_dir, metric_name="val_loss", mode="max"),
@@ -714,11 +999,16 @@ class CheckpointUtilsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             paths = [
                 "epoch_0_step_10",
-                "epoch_1_step_10",
                 "epoch_2_step_10",
-                "epoch_0_step_5",
+                "epoch_0_eval_step_5",
                 "epoch_0_step_6",
-                "epoch_0_step_3",
+                "epoch_0_train_step_3",
+                "epoch_0_step_10_train_loss=13.0",
+                "epoch_34_eval_step_10_val_loss=10.0",
+                "epoch_3_train_step_10_val_loss=5.1",
+                "epoch_1_step_10",
+                "epoch_25_train_step_10_eval_step_15",
+                "epoch_1_train_step_10_eval_step_0_train_loss=10.0",
             ]
             for path in paths[:-1]:
                 os.mkdir(os.path.join(temp_dir, path))
@@ -743,8 +1033,11 @@ class CheckpointUtilsTest(unittest.TestCase):
             )
 
             # check metadata file is correct filtered for
-            # by creating metadata for 3rd path in list
+            # by creating metadata for 3rd and 6th path in list
             with open(os.path.join(temp_dir, paths[2], ".metadata"), "w"):
+                pass
+
+            with open(os.path.join(temp_dir, paths[5], ".metadata"), "w"):
                 pass
 
             self.assertEqual(
@@ -754,7 +1047,7 @@ class CheckpointUtilsTest(unittest.TestCase):
                         temp_dir, metadata_fname=".metadata"
                     )
                 },
-                {os.path.join(temp_dir, paths[2])},
+                {os.path.join(temp_dir, paths[2]), os.path.join(temp_dir, paths[5])},
             )
 
     def test_retrieve_checkpoint_dirpaths_with_metrics(self) -> None:
@@ -763,11 +1056,12 @@ class CheckpointUtilsTest(unittest.TestCase):
         """
         with tempfile.TemporaryDirectory() as temp_dir:
             paths = [
-                "epoch_0_step_10_val_loss=10.0",
+                "epoch_0_train_step_10_val_loss=10.0",
                 "epoch_1_step_10_val_loss=5.0",
-                "epoch_2_step_10",
-                "epoch_0_step_5",
-                "epoch_0_step_6_train_loss=13.0",
+                "epoch_0_train_step_7_eval_step_12_val_loss=12.9",
+                "epoch_2_eval_step_10",
+                "epoch_0_train_step_5",
+                "epoch_0_train_step_6_train_loss=13.0",
             ]
             for path in paths:
                 os.mkdir(os.path.join(temp_dir, path))
@@ -794,7 +1088,7 @@ class CheckpointUtilsTest(unittest.TestCase):
                     )
                 },
                 {
-                    os.path.join(temp_dir, path) for path in paths[:2]
+                    os.path.join(temp_dir, path) for path in paths[:3]
                 },  # since last path is a file
             )
             self.assertEqual(
@@ -861,21 +1155,32 @@ class CheckpointUtilsTest(unittest.TestCase):
         """
         with tempfile.TemporaryDirectory() as temp_dir:
             path1 = os.path.join(temp_dir, "epoch_1_step_20")
-            path2 = os.path.join(temp_dir, "epoch_4_step_130")
+            path2 = os.path.join(temp_dir, "epoch_4_eval_step_130")
             path3 = os.path.join(temp_dir, "epoch_0_step_10")
+            path4 = os.path.join(
+                temp_dir, "epoch_0_train_step_10_eval_step_15_train_loss=13.0"
+            )
+            malformed_path = os.path.join(
+                temp_dir, "epoch_train_0_step_10_val_loss=10.0"
+            )
             os.mkdir(path1)
             os.mkdir(path2)
             os.mkdir(path3)
+            os.mkdir(path4)
+            os.mkdir(malformed_path)
 
             self.assertEqual(
                 {str(x) for x in get_checkpoint_dirpaths(temp_dir)},
-                {path1, path2, path3},
+                {path1, path2, path3, path4},
             )
 
         with tempfile.TemporaryDirectory() as temp_dir:
             path1 = os.path.join(temp_dir, "epoch_1_step_20_val_loss=0.01")
-            path2 = os.path.join(temp_dir, "epoch_4_step_130_val_loss=-0.2")
-            path3 = os.path.join(temp_dir, "epoch_0_step_10_val_loss=0.12")
+            path2 = os.path.join(temp_dir, "epoch_4_train_step_130_val_loss=-0.2")
+            path3 = os.path.join(temp_dir, "epoch_0_eval_step_10_val_loss=0.12")
+            path4 = os.path.join(
+                temp_dir, "epoch_0_train_step_10_eval_step_15_val_loss=13.0"
+            )
             os.mkdir(path1)
             os.mkdir(path2)
             os.mkdir(path3)
