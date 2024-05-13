@@ -8,11 +8,21 @@
 
 import unittest
 
-from torchtnt.framework._test_utils import DummyTrainUnit, get_dummy_train_state
+from torch import nn
+
+from torchtnt.framework._test_utils import (
+    DummyAutoUnit,
+    DummyTrainUnit,
+    get_dummy_eval_state,
+    get_dummy_fit_state,
+    get_dummy_train_state,
+)
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
+    _get_step_phase_mapping,
     _prepare_app_state_for_checkpoint,
 )
+from torchtnt.utils.checkpoint import Phase
 
 
 class CheckpointUtilsTest(unittest.TestCase):
@@ -26,3 +36,20 @@ class CheckpointUtilsTest(unittest.TestCase):
             app_state.keys(),
             ["module", "optimizer", "loss_fn", "train_progress"],
         )
+
+    def test_get_step_phase_mapping(self) -> None:
+        unit = DummyAutoUnit(module=nn.Linear(2, 2))
+        unit.train_progress._num_steps_completed = 5
+        unit.eval_progress._num_steps_completed = 7
+
+        fit_state = get_dummy_fit_state()
+        self.assertEqual(
+            {Phase.TRAIN: 5, Phase.EVALUATE: 7},
+            _get_step_phase_mapping(fit_state, unit),
+        )
+
+        train_state = get_dummy_train_state()
+        self.assertEqual({Phase.TRAIN: 5}, _get_step_phase_mapping(train_state, unit))
+
+        eval_state = get_dummy_eval_state()
+        self.assertEqual({Phase.EVALUATE: 7}, _get_step_phase_mapping(eval_state, unit))
