@@ -33,6 +33,19 @@ def get_dummy_train_state(dataloader: Optional[Iterable[object]] = None) -> Stat
     )
 
 
+def get_dummy_eval_state(dataloader: Optional[Iterable[object]] = None) -> State:
+    return State(
+        entry_point=EntryPoint.EVALUATE,
+        eval_state=PhaseState(
+            dataloader=dataloader or [1, 2, 3, 4],
+            max_epochs=1,
+            max_steps=1,
+            max_steps_per_epoch=1,
+        ),
+        timer=None,
+    )
+
+
 def get_dummy_fit_state() -> State:
     return State(
         entry_point=EntryPoint.FIT,

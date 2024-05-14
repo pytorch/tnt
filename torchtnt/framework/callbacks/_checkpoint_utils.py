@@ -7,12 +7,13 @@
 # pyre-strict
 
 
-from typing import Any, Dict
+from typing import Any, cast, Dict, Union
 
 from pyre_extensions import none_throws
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
-from torchtnt.framework.state import State
-from torchtnt.framework.unit import AppStateMixin
+from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainUnit
+from torchtnt.utils.checkpoint import Phase
 
 from torchtnt.utils.stateful import Stateful
 
@@ -21,6 +22,26 @@ from torchtnt.utils.stateful import Stateful
 _TRAIN_PROGRESS_STATE_KEY = "train_progress"
 _TRAIN_DL_STATE_KEY = "train_dataloader"
 _EVAL_PROGRESS_STATE_KEY = "eval_progress"
+
+
+def _get_step_phase_mapping(
+    state: State, unit: Union[TTrainUnit, TEvalUnit]
+) -> Dict[Phase, int]:
+    """
+    Returns a mapping of phase to step, depending on the entrypoint.
+    For FIT, it always includes train and eval progress.
+    """
+    step_mapping = {}
+
+    if state.entry_point in (EntryPoint.TRAIN, EntryPoint.FIT):
+        train_unit = cast(TTrainUnit, unit)
+        step_mapping[Phase.TRAIN] = train_unit.train_progress.num_steps_completed
+
+    if state.entry_point in (EntryPoint.EVALUATE, EntryPoint.FIT):
+        eval_unit = cast(TEvalUnit, unit)
+        step_mapping[Phase.EVALUATE] = eval_unit.eval_progress.num_steps_completed
+
+    return step_mapping
 
 
 def _prepare_app_state(unit: AppStateMixin) -> Dict[str, Any]:
