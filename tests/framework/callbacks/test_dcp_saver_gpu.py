@@ -62,7 +62,7 @@ class DistributedCheckpointSaverGPUTest(unittest.TestCase):
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
             )
             # get latest checkpoint
-            ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_step_10")
+            ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_train_step_10")
             dcp_cb.restore(ckpt_path, my_new_unit)
             tc.assertEqual(
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()

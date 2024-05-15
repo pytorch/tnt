@@ -14,8 +14,9 @@ from typing import Any, cast, Iterable, Literal, Optional, Union
 import torch.distributed as dist
 from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
+from torchtnt.framework.callbacks._checkpoint_utils import _get_step_phase_mapping
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.state import State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainData, TTrainUnit
 from torchtnt.utils.checkpoint import (
     BestCheckpointConfig,
@@ -158,13 +159,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             True if checkpoint was successfully saved. False otherwise.
         """
         # 1) generate checkpoint name
-        unit = cast(TTrainUnit, unit)
-        num_steps_completed = unit.train_progress.num_steps_completed
-        if state.entry_point == EntryPoint.FIT:
-            eval_unit = cast(TEvalUnit, unit)
-            num_steps_completed += eval_unit.eval_progress.num_steps_completed
-
-        epoch = unit.train_progress.num_epochs_completed
+        epoch = cast(TTrainUnit, unit).train_progress.num_epochs_completed
+        step_mapping = _get_step_phase_mapping(state, unit)
 
         metric_data: Optional[MetricData] = None
         if metric_value := self._get_tracked_metric_value(unit):
@@ -174,7 +170,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             )
 
         checkpoint_path = self._checkpoint_manager.generate_checkpoint_path(
-            epoch, num_steps_completed, metric_data
+            epoch, step_mapping, metric_data
         )
 
         # 2) Determine if we should save checkpoint
@@ -209,7 +205,9 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             checkpoint_path, process_group
         )
 
-    def _get_tracked_metric_value(self, unit: TTrainUnit) -> Optional[float]:
+    def _get_tracked_metric_value(
+        self, unit: Union[TTrainUnit, TEvalUnit]
+    ) -> Optional[float]:
         """
         If the checkpointer has a tracked metric, look the value in the unit using reflection, and cast to float.
 
