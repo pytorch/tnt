@@ -73,6 +73,7 @@
       ~AveragedModel.T_destination
       ~AveragedModel.call_super_init
       ~AveragedModel.dump_patches
+      ~AveragedModel.n_averaged
       ~AveragedModel.training
    
    
