@@ -61,7 +61,9 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 ):
                     cumulative_steps += save_every_n_train_steps
                     expected_paths.append(
-                        os.path.join(temp_dir, f"epoch_{epoch}_step_{cumulative_steps}")
+                        os.path.join(
+                            temp_dir, f"epoch_{epoch}_train_step_{cumulative_steps}"
+                        )
                     )
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
@@ -106,7 +108,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
             # restoring from first checkpoint, has dataloader in manifest
             snapshot_cb.restore(
-                temp_dir + f"/epoch_{0}_step_{save_every_n_train_steps}",
+                temp_dir + f"/epoch_{0}_train_step_{save_every_n_train_steps}",
                 my_unit,
                 train_dataloader=stateful_dataloader,
             )
@@ -117,7 +119,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
 
             with self.assertLogs(level="WARNING") as log:
                 snapshot_cb.restore(
-                    temp_dir + f"/epoch_{1}_step_{max_steps}",
+                    temp_dir + f"/epoch_{1}_train_step_{max_steps}",
                     my_unit,
                     train_dataloader=stateful_dataloader,
                 )
@@ -152,7 +154,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             ) as mock_restore:
                 restored = snapshot_cb.restore_from_latest(temp_dir, my_unit)
                 self.assertIn(
-                    temp_dir + f"/epoch_{max_epochs}_step_{expected_steps_per_epoch}",
+                    temp_dir
+                    + f"/epoch_{max_epochs}_train_step_{expected_steps_per_epoch}",
                     mock_restore.call_args.args,
                 )
                 self.assertTrue(restored)
@@ -178,7 +181,9 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 ):
                     cumulative_steps += save_every_n_train_steps
                     expected_paths.append(
-                        os.path.join(temp_dir, f"epoch_{epoch}_step_{cumulative_steps}")
+                        os.path.join(
+                            temp_dir, f"epoch_{epoch}_train_step_{cumulative_steps}"
+                        )
                     )
             snapshot_cb = TorchSnapshotSaver(
                 temp_dir,
@@ -244,14 +249,14 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 "module2 is absent in both manifest and flattened.",
             ):
                 TorchSnapshotSaver.restore(
-                    path=os.path.join(temp_dir, "epoch_0_step_0"),
+                    path=os.path.join(temp_dir, "epoch_0_train_step_0"),
                     unit=my_unit,
                     strict=True,
                 )
 
             with self.assertLogs(level="WARNING") as log:
                 TorchSnapshotSaver.restore(
-                    path=os.path.join(temp_dir, "epoch_0_step_0"),
+                    path=os.path.join(temp_dir, "epoch_0_train_step_0"),
                     unit=my_unit,
                     strict=False,
                 )
@@ -305,7 +310,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
             )
             tc.assertFalse(module_equal)
             # get latest checkpoint
-            ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_step_10")
+            ckpt_path = os.path.join(temp_dir, f"epoch_{max_epochs}_train_step_10")
             snapshot_cb.restore(ckpt_path, my_new_unit)
 
             assert_state_dict_eq(
