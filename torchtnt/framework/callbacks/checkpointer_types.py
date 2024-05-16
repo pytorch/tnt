@@ -40,9 +40,11 @@ class RestoreOptions:
         restore_eval_progress: Whether to restore the evaluation progress state.
         restore_optimizers: Whether to restore the optimizer states.
         restore_lr_schedulers: Whether to restore the lr scheduler states.
+        strict: Whether to strictly restore app state and the module state dict.
     """
 
     restore_train_progress: bool = True
     restore_eval_progress: bool = True
     restore_optimizers: bool = True
     restore_lr_schedulers: bool = True
+    strict: bool = True
