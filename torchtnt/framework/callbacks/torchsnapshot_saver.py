@@ -341,7 +341,8 @@ class TorchSnapshotSaver(BaseCheckpointer):
 
         knob_options = knob_options or KnobOptions()
         with _override_knobs(knob_options):
-            snapshot.restore(app_state, strict=strict)
+            strict = strict or restore_options.strict
+            snapshot.restore(app_state, strict=restore_options.strict)
         rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
 
 
