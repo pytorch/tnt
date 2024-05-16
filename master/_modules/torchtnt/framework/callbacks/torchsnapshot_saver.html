@@ -748,7 +748,8 @@
 
         <span class="n">knob_options</span> <span class="o">=</span> <span class="n">knob_options</span> <span class="ow">or</span> <span class="n">KnobOptions</span><span class="p">()</span>
         <span class="k">with</span> <span class="n">_override_knobs</span><span class="p">(</span><span class="n">knob_options</span><span class="p">):</span>
-            <span class="n">snapshot</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">app_state</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">)</span>
+            <span class="n">strict</span> <span class="o">=</span> <span class="n">strict</span> <span class="ow">or</span> <span class="n">restore_options</span><span class="o">.</span><span class="n">strict</span>
+            <span class="n">snapshot</span><span class="o">.</span><span class="n">restore</span><span class="p">(</span><span class="n">app_state</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="n">restore_options</span><span class="o">.</span><span class="n">strict</span><span class="p">)</span>
         <span class="n">rank_zero_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Restored snapshot from path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span></div></div>
 
 
