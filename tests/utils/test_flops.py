@@ -136,7 +136,6 @@ class ModuleSummaryTest(unittest.TestCase):
 
     def test_torch_pretrained_module(self) -> None:
         """Make sure FLOPs calculation works for a resnet18."""
-        # pyre-fixme[16]: Module `models` has no attribute `resnet18`.
         mod = models.resnet18()
         inp = torch.randn(1, 3, 224, 224)
         with FlopTensorDispatchMode(mod) as ftdm:
