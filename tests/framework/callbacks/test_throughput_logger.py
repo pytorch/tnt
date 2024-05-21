@@ -32,7 +32,7 @@ from torchtnt.utils.loggers.logger import MetricLogger
 class ThroughputLoggerTest(unittest.TestCase):
     def test_maybe_log_for_step(self) -> None:
         logger = MagicMock(spec=MetricLogger)
-        throughput_logger = ThroughputLogger(logger, {"Batches": 1, "Items": 32}, 1)
+        throughput_logger = ThroughputLogger(logger, {"Batches": 1, "Items": 32})
         phase_state = PhaseState(dataloader=[])
         phase_state.iteration_timer.recorded_durations = {
             "data_wait_time": [1, 4],
@@ -75,7 +75,7 @@ class ThroughputLoggerTest(unittest.TestCase):
 
     def test_maybe_log_for_step_early_return(self) -> None:
         logger = MagicMock(spec=MetricLogger)
-        throughput_logger = ThroughputLogger(logger, {"Batches": 1}, 1)
+        throughput_logger = ThroughputLogger(logger, {"Batches": 1})
         phase_state = PhaseState(dataloader=[])
         recorded_durations_dict = {
             "data_wait_time": [0.0, 4.0],
@@ -101,7 +101,9 @@ class ThroughputLoggerTest(unittest.TestCase):
 
         # step_logging_for % log_every_n_steps != 0
         recorded_durations_dict["data_wait_time"] = [1.0, 2.0]
-        throughput_logger = ThroughputLogger(logger, {"Batches": 1}, 2)
+        throughput_logger = ThroughputLogger(
+            logger, {"Batches": 1}, log_every_n_steps=2
+        )
         throughput_logger._maybe_log_for_step(state, step_logging_for=1)
         logger.log.assert_not_called()
 
@@ -330,17 +332,40 @@ class ThroughputLoggerTest(unittest.TestCase):
             any_order=True,
         )
 
+    def test_warmup_steps(self) -> None:
+        logger = MagicMock(spec=MetricLogger)
+        throughput_logger = ThroughputLogger(
+            logger, {"Batches": 1, "Items": 32}, warmup_steps=1
+        )
+        phase_state = PhaseState(dataloader=[])
+        phase_state.iteration_timer.recorded_durations = {
+            "data_wait_time": [1, 4],
+            "train_iteration_time": [3],
+        }
+        state = State(entry_point=EntryPoint.TRAIN, train_state=phase_state)
+
+        throughput_logger._maybe_log_for_step(state, 1)
+        logger.log.assert_not_called()
+
+        throughput_logger._maybe_log_for_step(state, 2)
+        self.assertEqual(logger.log.call_count, 2)
+
     def test_input_validation(self) -> None:
         logger = MagicMock(spec=MetricLogger)
         with self.assertRaisesRegex(ValueError, "throughput_per_batch cannot be empty"):
-            ThroughputLogger(logger, {}, 1)
+            ThroughputLogger(logger, {})
 
         with self.assertRaisesRegex(
             ValueError, "throughput_per_batch item Batches must be at least 1, got -1"
         ):
-            ThroughputLogger(logger, {"Queries": 8, "Batches": -1}, 1)
+            ThroughputLogger(logger, {"Queries": 8, "Batches": -1})
 
         with self.assertRaisesRegex(
             ValueError, "log_every_n_steps must be at least 1, got 0"
         ):
-            ThroughputLogger(logger, {"Batches": 1}, 0)
+            ThroughputLogger(logger, {"Batches": 1}, log_every_n_steps=0)
+
+        with self.assertRaisesRegex(
+            ValueError, "warmup_steps must be at least 0, got -1"
+        ):
+            ThroughputLogger(logger, {"Batches": 1}, warmup_steps=-1)
