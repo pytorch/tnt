@@ -434,19 +434,36 @@
 <span class="sd">    Args:</span>
 <span class="sd">        logger: Either a :class:`torchtnt.loggers.tensorboard.TensorBoardLogger`</span>
 <span class="sd">            or a :class:`torch.utils.tensorboard.SummaryWriter` instance.</span>
-<span class="sd">        moving_avg_window: an optional int to control the moving average window</span>
-<span class="sd">        log_every_n_steps: an optional int to control the log frequency</span>
+<span class="sd">        moving_avg_window: an int to control the moving average window. Default is 1.</span>
+<span class="sd">        log_every_n_steps: an int to control the log frequency. Default is 1.</span>
+<span class="sd">        warmup_steps: an int to control the number of warmup steps. We will start logging only after the amount of warmup steps were completed. Default is 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">logger</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricLogger</span><span class="p">,</span> <span class="n">SummaryWriter</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
         <span class="n">moving_avg_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">log_every_n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">warmup_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logger</span>
+
+        <span class="k">if</span> <span class="n">moving_avg_window</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;moving_avg_window must be at least 1, got </span><span class="si">{</span><span class="n">moving_avg_window</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">moving_avg_window</span> <span class="o">=</span> <span class="n">moving_avg_window</span>
+
+        <span class="k">if</span> <span class="n">log_every_n_steps</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;log_every_n_steps must be at least 1, got </span><span class="si">{</span><span class="n">log_every_n_steps</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_every_n_steps</span> <span class="o">=</span> <span class="n">log_every_n_steps</span>
+
+        <span class="k">if</span> <span class="n">warmup_steps</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;warmup_steps must be at least 0, got </span><span class="si">{</span><span class="n">warmup_steps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span> <span class="o">=</span> <span class="n">warmup_steps</span>
 
     <span class="nd">@rank_zero_fn</span>
     <span class="k">def</span> <span class="nf">_log_step_metrics</span><span class="p">(</span>
@@ -460,6 +477,9 @@
 <span class="sd">        was configured.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">step_logging_for</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_steps</span><span class="p">:</span>
+            <span class="k">return</span>
+
         <span class="k">if</span> <span class="n">step_logging_for</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_every_n_steps</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span>
 
