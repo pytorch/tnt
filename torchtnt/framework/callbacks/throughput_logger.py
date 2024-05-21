@@ -48,7 +48,8 @@ class ThroughputLogger(Callback):
             For instace, a user can pass in {Batches: 1, Queries: 32} which will visualize two charts -
             one for Batches per second and one for Queries per second.
             As an example, if each of your batches is of type: {data: torch.Size([16, 8, 8]), labels: torch.Size([16,1])}, then you could pass {Queries: 16}.
-        log_every_n_steps: an optional int to control the log frequency.
+        log_every_n_steps: an int to control the log frequency. Default is 1.
+        warmup_steps: an int to control the number of warmup steps. We will start logging only after the amount of warmup steps were completed. Default is 0.
 
     Note:
         The values reported are only for rank 0.
@@ -59,7 +60,9 @@ class ThroughputLogger(Callback):
         self,
         logger: MetricLogger,
         throughput_per_batch: Mapping[str, int],
+        *,
         log_every_n_steps: int = 1,
+        warmup_steps: int = 0,
     ) -> None:
         self._logger = logger
 
@@ -80,6 +83,12 @@ class ThroughputLogger(Callback):
             )
 
         self._log_every_n_steps = log_every_n_steps
+
+        if warmup_steps < 0:
+            raise ValueError(f"warmup_steps must be at least 0, got {warmup_steps}")
+
+        self._warmup_steps = warmup_steps
+
         self._epoch_start_times: Dict[ActivePhase, float] = {}
         self._steps_in_epoch: Dict[ActivePhase, int] = defaultdict(int)
 
@@ -154,6 +163,9 @@ class ThroughputLogger(Callback):
         *,
         is_step_end_hook: bool = True,
     ) -> None:
+        if step_logging_for <= self._warmup_steps:
+            return
+
         if step_logging_for % self._log_every_n_steps != 0:
             return
 
