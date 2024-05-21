@@ -26,7 +26,7 @@ from torchtnt.framework.predict import predict
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.framework.train import _train_impl
 from torchtnt.utils.loggers.logger import MetricLogger
-from torchtnt.utils.timer import TimerProtocol
+from torchtnt.utils.timer import Timer, TimerProtocol
 
 
 class TimeWaitForBatchLoggerTest(unittest.TestCase):
@@ -119,10 +119,28 @@ class TimeWaitForBatchLoggerTest(unittest.TestCase):
             ],
         )
 
-    def test_invalid_log_every_n_steps(self) -> None:
+    def test_warmup_steps(self) -> None:
+        logger = MagicMock(spec=MetricLogger)
+        callback = TimeWaitForBatchLogger(logger=logger, warmup_steps=1)
+        timer = Timer()
+        timer.recorded_durations = {"data_wait_time": [1, 2]}
+
+        # ensure that we don't log for the first step
+        callback._log_step_metrics(timer=timer, label="foo", step=1)
+        logger.log.assert_not_called()
+
+        # second step should log
+        callback._log_step_metrics(timer=timer, label="foo", step=2)
+        self.assertEqual(logger.log.call_count, 1)
+
+    def test_invalid_params(self) -> None:
+        logger_mock = MagicMock(spec=MetricLogger)
         with self.assertRaisesRegex(
             ValueError, "log_every_n_steps must be at least 1, got 0"
         ):
-            TimeWaitForBatchLogger(
-                logger=MagicMock(spec=MetricLogger), log_every_n_steps=0
-            )
+            TimeWaitForBatchLogger(logger=logger_mock, log_every_n_steps=0)
+
+        with self.assertRaisesRegex(
+            ValueError, "warmup_steps must be at least 0, got -1"
+        ):
+            TimeWaitForBatchLogger(logger=logger_mock, warmup_steps=-1)
