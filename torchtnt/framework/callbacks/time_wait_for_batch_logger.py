@@ -25,13 +25,16 @@ class TimeWaitForBatchLogger(Callback):
     Args:
         logger: Either a subclass of :class:`torchtnt.utils.loggers.logger.MetricLogger`
             or a :class:`torch.utils.tensorboard.SummaryWriter` instance.
-        log_every_n_steps: an optional int to control the log frequency
+        log_every_n_steps: an int to control the log frequency. Default is 1.
+        warmup_steps: an int to control the number of warmup steps. We will start logging only after the amount of warmup steps were completed. Default is 0.
     """
 
     def __init__(
         self,
         logger: Union[MetricLogger, SummaryWriter],
+        *,
         log_every_n_steps: int = 1,
+        warmup_steps: int = 0,
     ) -> None:
         self._logger = logger
         if log_every_n_steps < 1:
@@ -39,6 +42,10 @@ class TimeWaitForBatchLogger(Callback):
                 f"log_every_n_steps must be at least 1, got {log_every_n_steps}"
             )
         self._log_every_n_steps = log_every_n_steps
+
+        if warmup_steps < 0:
+            raise ValueError(f"warmup_steps must be at least 0, got {warmup_steps}")
+        self._warmup_steps = warmup_steps
 
     @rank_zero_fn
     def _log_step_metrics(
@@ -48,6 +55,9 @@ class TimeWaitForBatchLogger(Callback):
         label: str,
         step: int,
     ) -> None:
+        if step <= self._warmup_steps:
+            return
+
         if step % self._log_every_n_steps != 0:
             return
 
