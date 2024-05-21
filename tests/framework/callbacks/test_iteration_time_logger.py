@@ -27,6 +27,7 @@ from torchtnt.framework.callbacks.iteration_time_logger import IterationTimeLogg
 from torchtnt.framework.state import EntryPoint, PhaseState, State
 from torchtnt.framework.train import _train_impl, train
 from torchtnt.utils.loggers.logger import MetricLogger
+from torchtnt.utils.timer import Timer
 
 
 class IterationTimeLoggerTest(unittest.TestCase):
@@ -164,3 +165,34 @@ class IterationTimeLoggerTest(unittest.TestCase):
         train(my_unit, dataloader, max_epochs=2, callbacks=[callback])
         # 2 epochs, 6 iterations each, logging every third step
         self.assertEqual(logger.add_scalar.call_count, 4)
+
+    def test_warmup_steps(self) -> None:
+        logger = MagicMock(spec=MetricLogger)
+        callback = IterationTimeLogger(logger=logger, warmup_steps=1)
+        timer = Timer()
+        timer.recorded_durations = {"train_iteration_time": [1, 2]}
+
+        # ensure that we don't log for the first step
+        callback._log_step_metrics("train_iteration_time", timer, 1)
+        logger.log.assert_not_called()
+
+        # second step should log
+        callback._log_step_metrics("train_iteration_time", timer, 2)
+        self.assertEqual(logger.log.call_count, 1)
+
+    def test_invalid_params(self) -> None:
+        logger = MagicMock(spec=MetricLogger)
+        with self.assertRaisesRegex(
+            ValueError, "moving_avg_window must be at least 1, got 0"
+        ):
+            IterationTimeLogger(logger=logger, moving_avg_window=0)
+
+        with self.assertRaisesRegex(
+            ValueError, "log_every_n_steps must be at least 1, got -1"
+        ):
+            IterationTimeLogger(logger=logger, log_every_n_steps=-1)
+
+        with self.assertRaisesRegex(
+            ValueError, "warmup_steps must be at least 0, got -1"
+        ):
+            IterationTimeLogger(logger=logger, warmup_steps=-1)
