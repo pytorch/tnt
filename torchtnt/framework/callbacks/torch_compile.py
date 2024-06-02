@@ -9,7 +9,7 @@
 import logging
 
 try:
-    from torch._inductor.codecache import shutdown_compile_workers
+    from torch._inductor.async_compile import shutdown_compile_workers
 except ImportError:
 
     def shutdown_compile_workers() -> None:
