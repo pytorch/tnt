@@ -46,6 +46,9 @@ class AveragedModel(PyTorchAveragedModel):
         to see what the model, device, and use_buffer arguments entail.
 
         Args:
+            use_buffers: if ``True``, it will compute running averages for
+                both the parameters and the buffers of the model. (default: ``False``)
+                This will update activation statistics for Batch Normalization.
             averaging_method: Whether to use EMA or SWA.
             ema_decay: The exponential decay applied to the averaged parameters. This param
                 is only needed for EMA, and is ignored otherwise (for SWA).

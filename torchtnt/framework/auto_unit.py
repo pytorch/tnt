@@ -84,6 +84,10 @@ class SWAParams:
     Args:
         warmup_steps_or_epochs: number of steps or epochs before starting SWA
         step_or_epoch_update_freq: number of steps or epochs between each SWA update
+        use_buffers: if ``True``, it will compute running averages for
+            both the parameters and the buffers of the model. (default: ``True``)
+            This will update activation statistics for Batch Normalization. This is an
+            alternative to calling `torch.optim.swa_utils.update_bn` post-training.
         averaging_method: whether to use SWA or EMA to average model weights
         ema_decay:  the exponential decay applied to the averaged parameters. This param
             is only needed for EMA, and is ignored otherwise (for SWA).
@@ -101,6 +105,7 @@ class SWAParams:
 
     warmup_steps_or_epochs: int
     step_or_epoch_update_freq: int
+    use_buffers: bool = True
     averaging_method: Literal["ema", "swa"] = "ema"
     ema_decay: float = 0.999
     use_lit: bool = False
@@ -487,7 +492,7 @@ class AutoUnit(
             self.swa_model = AveragedModel(
                 module_for_swa,
                 device=device,
-                use_buffers=True,
+                use_buffers=swa_params.use_buffers,
                 averaging_method=swa_params.averaging_method,
                 ema_decay=swa_params.ema_decay,
                 skip_deepcopy=skip_deepcopy,
