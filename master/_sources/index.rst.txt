@@ -49,6 +49,7 @@ Documentation
       meta/getting_started
       meta/migrating
       meta/migrating_example
+      meta/tss_to_dcp
 
 .. toctree::
    :maxdepth: 1
