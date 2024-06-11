@@ -429,6 +429,9 @@ to see what the model, device, and use_buffer arguments entail.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>use_buffers</strong> – if <code class="docutils literal notranslate"><span class="pre">True</span></code>, it will compute running averages for
+both the parameters and the buffers of the model. (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>)
+This will update activation statistics for Batch Normalization.</li>
 <li><strong>averaging_method</strong> – Whether to use EMA or SWA.</li>
 <li><strong>ema_decay</strong> – The exponential decay applied to the averaged parameters. This param
 is only needed for EMA, and is ignored otherwise (for SWA).</li>

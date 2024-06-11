@@ -453,6 +453,9 @@
 <span class="sd">        to see what the model, device, and use_buffer arguments entail.</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            use_buffers: if ``True``, it will compute running averages for</span>
+<span class="sd">                both the parameters and the buffers of the model. (default: ``False``)</span>
+<span class="sd">                This will update activation statistics for Batch Normalization.</span>
 <span class="sd">            averaging_method: Whether to use EMA or SWA.</span>
 <span class="sd">            ema_decay: The exponential decay applied to the averaged parameters. This param</span>
 <span class="sd">                is only needed for EMA, and is ignored otherwise (for SWA).</span>

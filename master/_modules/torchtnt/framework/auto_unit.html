@@ -491,6 +491,10 @@
 <span class="sd">    Args:</span>
 <span class="sd">        warmup_steps_or_epochs: number of steps or epochs before starting SWA</span>
 <span class="sd">        step_or_epoch_update_freq: number of steps or epochs between each SWA update</span>
+<span class="sd">        use_buffers: if ``True``, it will compute running averages for</span>
+<span class="sd">            both the parameters and the buffers of the model. (default: ``True``)</span>
+<span class="sd">            This will update activation statistics for Batch Normalization. This is an</span>
+<span class="sd">            alternative to calling `torch.optim.swa_utils.update_bn` post-training.</span>
 <span class="sd">        averaging_method: whether to use SWA or EMA to average model weights</span>
 <span class="sd">        ema_decay:  the exponential decay applied to the averaged parameters. This param</span>
 <span class="sd">            is only needed for EMA, and is ignored otherwise (for SWA).</span>
@@ -508,6 +512,7 @@
 
     <span class="n">warmup_steps_or_epochs</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">step_or_epoch_update_freq</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">use_buffers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">averaging_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ema&quot;</span><span class="p">,</span> <span class="s2">&quot;swa&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ema&quot;</span>
     <span class="n">ema_decay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.999</span>
     <span class="n">use_lit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
@@ -894,7 +899,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span> <span class="o">=</span> <span class="n">AveragedModel</span><span class="p">(</span>
                 <span class="n">module_for_swa</span><span class="p">,</span>
                 <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
-                <span class="n">use_buffers</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">use_buffers</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">use_buffers</span><span class="p">,</span>
                 <span class="n">averaging_method</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">averaging_method</span><span class="p">,</span>
                 <span class="n">ema_decay</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">ema_decay</span><span class="p">,</span>
                 <span class="n">skip_deepcopy</span><span class="o">=</span><span class="n">skip_deepcopy</span><span class="p">,</span>
