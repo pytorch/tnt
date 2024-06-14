@@ -47,10 +47,8 @@
       ~AveragedModel.register_full_backward_hook
       ~AveragedModel.register_full_backward_pre_hook
       ~AveragedModel.register_load_state_dict_post_hook
-      ~AveragedModel.register_load_state_dict_pre_hook
       ~AveragedModel.register_module
       ~AveragedModel.register_parameter
-      ~AveragedModel.register_state_dict_post_hook
       ~AveragedModel.register_state_dict_pre_hook
       ~AveragedModel.requires_grad_
       ~AveragedModel.set_extra_state
