@@ -500,6 +500,44 @@ class BaseCheckpointerTest(unittest.TestCase):
                     ],
                 )
 
+    def test_save_on_train_end_on_fit(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 6
+
+        for save_every_n_eval_epochs, expected_last_ckpt in [
+            (None, "epoch_6_train_step_30_eval_step_25"),
+            (2, "epoch_6_train_step_30_eval_step_30"),
+        ]:
+            my_unit = DummyAutoUnit(module=nn.Linear(input_dim, 2))
+            train_dataloader = generate_random_dataloader(
+                dataset_len, input_dim, batch_size
+            )
+            eval_dataloader = generate_random_dataloader(
+                dataset_len, input_dim, batch_size
+            )
+            with tempfile.TemporaryDirectory() as temp_dir:
+                checkpoint_cb = BaseCheckpointSaver(
+                    temp_dir,
+                    save_every_n_epochs=2,
+                    save_every_n_eval_epochs=save_every_n_eval_epochs,
+                )
+                fit(
+                    my_unit,
+                    train_dataloader=train_dataloader,
+                    eval_dataloader=eval_dataloader,
+                    max_epochs=max_epochs,
+                    evaluate_every_n_epochs=1,
+                    callbacks=[checkpoint_cb],
+                )
+                expected_path = os.path.join(temp_dir, expected_last_ckpt)
+                self.assertTrue(os.path.exists(expected_path))
+                self.assertEqual(
+                    checkpoint_cb._checkpoint_manager._ckpt_paths[-1].path,
+                    expected_path,
+                )
+
     @skip_if_not_distributed
     def test_directory_sync_collective(self) -> None:
         spawn_multi_process(

@@ -16,7 +16,7 @@ from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.callbacks._checkpoint_utils import _get_step_phase_mapping
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
-from torchtnt.framework.state import State
+from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainData, TTrainUnit
 from torchtnt.utils.checkpoint import (
     BestCheckpointConfig,
@@ -25,6 +25,7 @@ from torchtnt.utils.checkpoint import (
     get_best_checkpoint_path,
     get_latest_checkpoint_path,
     MetricData,
+    Phase,
 )
 from torchtnt.utils.distributed import PGWrapper
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
@@ -177,12 +178,28 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         if not self._checkpoint_manager.should_save_checkpoint(checkpoint_path):
             return False
 
-        # 2.1) Make sure that last checkpoint does not already exist
-        if hook == "on_train_end" and self._does_checkpoint_exist(
-            checkpoint_path, self._process_group
-        ):
-            rank_zero_warn("Final checkpoint already exists, skipping.", logger=logger)
-            return False
+        if hook == "on_train_end":
+            # 2.1) Make sure that last checkpoint does not already exist
+            if self._does_checkpoint_exist(checkpoint_path, self._process_group):
+                rank_zero_warn(
+                    "Final checkpoint already exists, skipping.", logger=logger
+                )
+                return False
+
+            # 2.2) If doing fit without eval checkpointing, only consider training progress when
+            # checking if last checkpoint exists.
+            if (
+                state.entry_point == EntryPoint.FIT
+                and self._save_every_n_eval_epochs is None
+                and self._checkpoint_manager._ckpt_paths
+                and self._checkpoint_manager._ckpt_paths[-1].step[Phase.TRAIN]
+                == cast(TTrainUnit, unit).train_progress.num_steps_completed
+            ):
+                rank_zero_info(
+                    "Omitting final checkpoint since train progress is unchanged, and eval checkpointing is not configured.",
+                    logger=logger,
+                )
+                return False
 
         # 3) try to save checkpoint
         if not self._checkpoint_impl(
