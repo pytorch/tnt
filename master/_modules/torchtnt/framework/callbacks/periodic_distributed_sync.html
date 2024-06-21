@@ -417,8 +417,8 @@
 
 <span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TPredictUnit</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">barrier</span>
+<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">barrier</span><span class="p">,</span> <span class="n">get_global_rank</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -427,7 +427,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A callback to sync all distributed workers at a given frequency.</span>
 <span class="sd">    Helpful when using distributed without DDP/FSDP but would still like to ensure that the workers are in sync with each other, for example large predict jobs.</span>
-<span class="sd">    Note that only predict is supported at the moment.</span>
+<span class="sd">    Both predict and evaluate are supported.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        sync_every_n_steps: the frequency at which to sync the workers.</span>
@@ -435,11 +435,18 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sync_every_n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sync_every_n_steps</span> <span class="o">=</span> <span class="n">sync_every_n_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_global_rank</span><span class="p">()</span>
 
 <div class="viewcode-block" id="PeriodicDistributedSync.on_predict_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.PeriodicDistributedSync.html#torchtnt.framework.callbacks.PeriodicDistributedSync.on_predict_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">num_steps</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">predict_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="k">if</span> <span class="n">num_steps</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">sync_every_n_steps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Barrier at step </span><span class="si">{</span><span class="n">num_steps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Barrier at step </span><span class="si">{</span><span class="n">num_steps</span><span class="si">}</span><span class="s2"> on rank </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_rank</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">barrier</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PeriodicDistributedSync.on_eval_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.PeriodicDistributedSync.html#torchtnt.framework.callbacks.PeriodicDistributedSync.on_eval_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">num_steps</span> <span class="o">=</span> <span class="n">unit</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
+        <span class="k">if</span> <span class="n">num_steps</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">sync_every_n_steps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Barrier at step </span><span class="si">{</span><span class="n">num_steps</span><span class="si">}</span><span class="s2"> on rank </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_rank</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">barrier</span><span class="p">()</span></div></div>
 </pre></div>
 
