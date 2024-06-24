@@ -490,7 +490,7 @@ specified ema_decay as more updates occur.</li>
 <td>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">float</span></code> datatype.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code>(*args,&nbsp;**kwargs)</td>
-<td>Define the computation performed at every call.</td>
+<td>Forward pass.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_buffer</span></code>(target)</td>
 <td>Return the buffer given by <code class="docutils literal notranslate"><span class="pre">target</span></code> if it exists, otherwise throw an error.</td>
@@ -586,7 +586,7 @@ specified ema_decay as more updates occur.</li>
 <td>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_parameters</span></code>(model)</td>
-<td></td>
+<td>Update model parameters.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">xpu</span></code>([device])</td>
 <td>Move all model parameters and buffers to the XPU.</td>
