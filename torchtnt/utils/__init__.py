@@ -6,6 +6,7 @@
 
 # pyre-strict
 
+from .anomaly_evaluation import IsNaNEvaluator, ThresholdEvaluator
 from .checkpoint import (
     BestCheckpointConfig,
     CheckpointManager,
@@ -88,6 +89,8 @@ from .version import (
 )
 
 __all__ = [
+    "IsNaNEvaluator",
+    "ThresholdEvaluator",
     "CheckpointPath",
     "MetricData",
     "get_best_checkpoint_path",
