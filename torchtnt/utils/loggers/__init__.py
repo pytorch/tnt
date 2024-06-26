@@ -6,6 +6,7 @@
 
 # pyre-strict
 
+from .anomaly_logger import AnomalyLogger, TrackedMetric
 from .csv import CSVLogger
 from .file import FileLogger
 from .in_memory import InMemoryLogger
@@ -17,6 +18,8 @@ from .utils import scalar_to_float
 
 
 __all__ = [
+    "AnomalyLogger",
+    "TrackedMetric",
     "CSVLogger",
     "FileLogger",
     "InMemoryLogger",
