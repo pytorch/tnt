@@ -392,6 +392,33 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         self.assertIsInstance(planner, DummyLoadPlanner)
         self.assertIsInstance(storage_reader, DummyStorageReader)
 
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_restore_allow_partial_loading(self, mock_dist_cp: MagicMock) -> None:
+        my_unit = DummyTrainUnit(input_dim=2)
+        restore_options = RestoreOptions(strict=False)
+        DistributedCheckpointSaver.restore(
+            path="path/to/snapshot",
+            unit=my_unit,
+            restore_options=restore_options,
+        )
+
+        allow_partial_load = mock_dist_cp.load.call_args[1][
+            "planner"
+        ].allow_partial_load
+        self.assertTrue(allow_partial_load)
+
+        restore_options = RestoreOptions(strict=True)
+        DistributedCheckpointSaver.restore(
+            path="path/to/snapshot",
+            unit=my_unit,
+            restore_options=restore_options,
+        )
+
+        allow_partial_load = mock_dist_cp.load.call_args[1][
+            "planner"
+        ].allow_partial_load
+        self.assertFalse(allow_partial_load)
+
 
 class DummyStatefulDataLoader:
     def __init__(self, dataloader: DataLoader) -> None:

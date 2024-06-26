@@ -283,14 +283,16 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             storage_reader: Instance of StorageReader used to perform reads. If this is not specified, it will automatically infer
                             the reader based on the checkpoint_id. If checkpoint_id is also None, an exception will be raised. (Default: ``None``)
         """
-        if planner is None:
-            planner = DefaultLoadPlanner()
+
+        restore_options = restore_options or RestoreOptions()
+        app_state = _prepare_app_state_for_restore(unit, restore_options)
 
         if storage_reader is None:
             storage_reader = Reader(path)
 
-        restore_options = restore_options or RestoreOptions()
-        app_state = _prepare_app_state_for_restore(unit, restore_options)
+        if planner is None:
+            allow_partial_load = not restore_options.strict
+            planner = DefaultLoadPlanner(allow_partial_load=allow_partial_load)
 
         if train_dataloader is not None:
             if not isinstance(train_dataloader, Stateful):
