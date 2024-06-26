@@ -9,7 +9,9 @@
 
 
 import logging
+import math
 from abc import ABC, abstractmethod
+from math import inf
 
 _logger: logging.Logger = logging.getLogger(__name__)
 
@@ -49,3 +51,49 @@ class MetricAnomalyEvaluator(ABC):
         an anomaly detection algorithm.
         """
         pass
+
+
+class ThresholdEvaluator(MetricAnomalyEvaluator):
+    """
+    Evaluates whether a metric value is anomalous based on a predefined threshold.
+    """
+
+    def __init__(
+        self,
+        *,
+        min_val: float = -inf,
+        max_val: float = inf,
+    ) -> None:
+        """
+        Args:
+            min_val: Minimum allowed value. Default value is -inf.
+            max_val: Maximum allowed value. Default value is inf.
+            warmup_steps: Number of steps to ignore before evaluating anomalies. Default value is 0.
+            evaluate_every_n_steps: Step interval to wait in between anomaly evaluations. Default value is 1.
+        """
+        self.min_val = min_val
+        self.max_val = max_val
+        self.curr_val: float = min_val
+
+    def update(self, value: float) -> None:
+        self.curr_val = value
+
+    def is_anomaly(self) -> bool:
+        return not self.min_val <= self.curr_val <= self.max_val
+
+
+class IsNaNEvaluator(MetricAnomalyEvaluator):
+    """
+    Evaluates whether a metric value is NaN.
+    """
+
+    def __init__(
+        self,
+    ) -> None:
+        self.curr_val: float = 0
+
+    def update(self, value: float) -> None:
+        self.curr_val = value
+
+    def is_anomaly(self) -> bool:
+        return math.isnan(self.curr_val)
