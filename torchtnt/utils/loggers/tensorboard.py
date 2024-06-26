@@ -11,22 +11,27 @@ from __future__ import annotations
 
 import atexit
 import logging
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from torch.utils.tensorboard import SummaryWriter
 from torchtnt.utils.distributed import get_global_rank
-from torchtnt.utils.loggers.logger import MetricLogger, Scalar
+from torchtnt.utils.loggers.anomaly_logger import AnomalyLogger, TrackedMetric
+from torchtnt.utils.loggers.logger import Scalar
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class TensorBoardLogger(MetricLogger):
+class TensorBoardLogger(AnomalyLogger):
     """
     Simple logger for TensorBoard.
 
     On construction, the logger creates a new events file that logs
     will be written to.  If the environment variable `RANK` is defined,
     logger will only log if RANK = 0.
+
+    Metrics may be tracked for anomaly detection if they are configured in the
+    optional `tracked_metrics` argument. See :class:`torchtnt.utils.loggers.AnomalyLogger`
+    for more details.
 
     Note:
         If using this logger with distributed training:
@@ -38,6 +43,7 @@ class TensorBoardLogger(MetricLogger):
 
     Args:
         path (str): path to write logs to
+        tracked_metrics: Optional list of TrackedMetric objects to track for anomaly detection.
         *args: Extra positional arguments to pass to SummaryWriter
         **kwargs: Extra keyword arguments to pass to SummaryWriter
 
@@ -49,7 +55,14 @@ class TensorBoardLogger(MetricLogger):
         logger.close()
     """
 
-    def __init__(self: TensorBoardLogger, path: str, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self: TensorBoardLogger,
+        path: str,
+        tracked_metrics: Optional[List[TrackedMetric]] = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(tracked_metrics)
         self._writer: Optional[SummaryWriter] = None
         self._path: str = path
         self._rank: int = get_global_rank()
@@ -99,6 +112,8 @@ class TensorBoardLogger(MetricLogger):
 
         if self._writer:
             self._writer.add_scalar(name, data, global_step=step, new_style=True)
+
+        super().log(name, data, step)
 
     def log_text(self: TensorBoardLogger, name: str, data: str, step: int) -> None:
         """Add text data to summary.

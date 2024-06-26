@@ -11,20 +11,53 @@ from __future__ import annotations
 
 import tempfile
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+from torchtnt.utils.anomaly_evaluation import ThresholdEvaluator
+from torchtnt.utils.loggers.anomaly_logger import TrackedMetric
 
 from torchtnt.utils.loggers.tensorboard import TensorBoardLogger
 
 
 class TensorBoardLoggerTest(unittest.TestCase):
-    def test_log(self: TensorBoardLoggerTest) -> None:
+
+    @patch(
+        "torchtnt.utils.loggers.anomaly_logger.AnomalyLogger.on_anomaly_detected",
+    )
+    def test_log(
+        self: TensorBoardLoggerTest, mock_on_anomaly_detected: MagicMock
+    ) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
-            logger = TensorBoardLogger(path=log_dir)
-            for i in range(5):
-                logger.log("test_log", float(i) ** 2, i)
-            logger.close()
+            logger = TensorBoardLogger(
+                path=log_dir,
+                tracked_metrics=[
+                    TrackedMetric(
+                        name="test_log",
+                        anomaly_evaluators=[
+                            ThresholdEvaluator(min_val=25),
+                        ],
+                        evaluate_every_n_steps=2,
+                        warmup_steps=2,
+                    )
+                ],
+            )
+            warning_container = []
+            with patch(
+                "torchtnt.utils.loggers.anomaly_logger.logging.Logger.warning",
+                side_effect=warning_container.append,
+            ):
+                for i in range(5):
+                    logger.log("test_log", float(i) ** 2, i)
+                logger.close()
+
+            self.assertEqual(
+                warning_container,
+                [
+                    "Found anomaly in metric: test_log, with value: 16.0, using evaluator: ThresholdEvaluator"
+                ],
+            )
+            mock_on_anomaly_detected.assert_called_with("test_log", 16.0, 4)
 
             acc = EventAccumulator(log_dir)
             acc.Reload()
