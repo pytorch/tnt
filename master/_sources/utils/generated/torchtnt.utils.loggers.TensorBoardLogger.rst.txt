@@ -26,6 +26,7 @@
       ~TensorBoardLogger.log_images
       ~TensorBoardLogger.log_scalars
       ~TensorBoardLogger.log_text
+      ~TensorBoardLogger.on_anomaly_detected
    
    
 

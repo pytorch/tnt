@@ -414,11 +414,14 @@
 <h1>torchtnt.utils.loggers.TensorBoardLogger<a class="headerlink" href="#torchtnt-utils-loggers-tensorboardlogger" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">TensorBoardLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/utils/loggers/tensorboard.html#TensorBoardLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><code class="sig-prename descclassname"><span class="pre">torchtnt.utils.loggers.</span></code><code class="sig-name descname"><span class="pre">TensorBoardLogger</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">tracked_metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">TrackedMetric</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/torchtnt/utils/loggers/tensorboard.html#TensorBoardLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple logger for TensorBoard.</p>
 <p>On construction, the logger creates a new events file that logs
 will be written to.  If the environment variable <cite>RANK</cite> is defined,
 logger will only log if RANK = 0.</p>
+<p>Metrics may be tracked for anomaly detection if they are configured in the
+optional <cite>tracked_metrics</cite> argument. See <code class="xref py py-class docutils literal notranslate"><span class="pre">torchtnt.utils.loggers.AnomalyLogger</span></code>
+for more details.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>If using this logger with distributed training:</p>
@@ -435,6 +438,7 @@ logger will only log if RANK = 0.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>path</strong> (<em>str</em>) – path to write logs to</li>
+<li><strong>tracked_metrics</strong> – Optional list of TrackedMetric objects to track for anomaly detection.</li>
 <li><strong>*args</strong> – Extra positional arguments to pass to SummaryWriter</li>
 <li><strong>**kwargs</strong> – Extra keyword arguments to pass to SummaryWriter</li>
 </ul>
@@ -451,14 +455,33 @@ logger will only log if RANK = 0.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.utils.loggers.TensorBoardLogger.__init__">
-<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/loggers/tensorboard.html#TensorBoardLogger.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.__init__" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em><span class="n"><span class="pre">tracked_metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">TrackedMetric</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchtnt/utils/loggers/tensorboard.html#TensorBoardLogger.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.utils.loggers.TensorBoardLogger.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tracked_metrics</strong> – List of metrics to track and evaluate for anomalies. If not provided, no metrics will be tracked.
+Note that a single configuration should be passed for one metric. If it is duplicated, the metric will be ignored
+for anomaly detection.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table border="1" class="autosummary longtable docutils # Necessary for the table generated by autosummary to look decent align-default">
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.loggers.TensorBoardLogger.__init__" title="torchtnt.utils.loggers.TensorBoardLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path,&nbsp;*args,&nbsp;**kwargs)</td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#torchtnt.utils.loggers.TensorBoardLogger.__init__" title="torchtnt.utils.loggers.TensorBoardLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path[,&nbsp;tracked_metrics])</td>
+<td><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">param tracked_metrics:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">List of metrics to track and evaluate for anomalies. If not provided, no metrics will be tracked.</td>
+</tr>
+</tbody>
+</table>
+</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code>()</td>
 <td>Close writer, flushing pending logs to disk.</td>
@@ -495,6 +518,9 @@ logger will only log if RANK = 0.</p>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_text</span></code>(name,&nbsp;data,&nbsp;step)</td>
 <td>Add text data to summary.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_anomaly_detected</span></code>(name,&nbsp;data,&nbsp;step)</td>
+<td>Callback method to be executed when an anomaly in a tracked metric is detected.</td>
 </tr>
 </tbody>
 </table>

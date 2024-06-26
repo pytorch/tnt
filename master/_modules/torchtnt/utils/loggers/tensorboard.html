@@ -418,22 +418,27 @@
 
 <span class="kn">import</span> <span class="nn">atexit</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">torch.utils.tensorboard</span> <span class="kn">import</span> <span class="n">SummaryWriter</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">get_global_rank</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.logger</span> <span class="kn">import</span> <span class="n">MetricLogger</span><span class="p">,</span> <span class="n">Scalar</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.anomaly_logger</span> <span class="kn">import</span> <span class="n">AnomalyLogger</span><span class="p">,</span> <span class="n">TrackedMetric</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.logger</span> <span class="kn">import</span> <span class="n">Scalar</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="TensorBoardLogger"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger">[docs]</a><span class="k">class</span> <span class="nc">TensorBoardLogger</span><span class="p">(</span><span class="n">MetricLogger</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorBoardLogger"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger">[docs]</a><span class="k">class</span> <span class="nc">TensorBoardLogger</span><span class="p">(</span><span class="n">AnomalyLogger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Simple logger for TensorBoard.</span>
 
 <span class="sd">    On construction, the logger creates a new events file that logs</span>
 <span class="sd">    will be written to.  If the environment variable `RANK` is defined,</span>
 <span class="sd">    logger will only log if RANK = 0.</span>
+
+<span class="sd">    Metrics may be tracked for anomaly detection if they are configured in the</span>
+<span class="sd">    optional `tracked_metrics` argument. See :class:`torchtnt.utils.loggers.AnomalyLogger`</span>
+<span class="sd">    for more details.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        If using this logger with distributed training:</span>
@@ -445,6 +450,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        path (str): path to write logs to</span>
+<span class="sd">        tracked_metrics: Optional list of TrackedMetric objects to track for anomaly detection.</span>
 <span class="sd">        *args: Extra positional arguments to pass to SummaryWriter</span>
 <span class="sd">        **kwargs: Extra keyword arguments to pass to SummaryWriter</span>
 
@@ -456,7 +462,14 @@
 <span class="sd">        logger.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TensorBoardLogger.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TensorBoardLogger.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">tracked_metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">TrackedMetric</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">tracked_metrics</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SummaryWriter</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_global_rank</span><span class="p">()</span>
@@ -506,6 +519,8 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">add_scalar</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">global_step</span><span class="o">=</span><span class="n">step</span><span class="p">,</span> <span class="n">new_style</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">log_text</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add text data to summary.</span>
