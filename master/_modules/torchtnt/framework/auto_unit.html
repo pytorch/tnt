@@ -841,6 +841,10 @@
 <span class="sd">        activation_checkpoint_params: params for enabling activation checkpointing</span>
 <span class="sd">        training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.</span>
 <span class="sd">        enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.</span>
+<span class="sd">        loss_backward_retain_graph:  If ``None`` or ``False``, the graph used to compute</span>
+<span class="sd">        the grads will be freed during loss backward pass. Note that in nearly all cases setting</span>
+<span class="sd">        this option to True is not needed and often can be worked around</span>
+<span class="sd">        in a much more efficient way.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.</span>
@@ -870,6 +874,7 @@
         <span class="n">activation_checkpoint_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ActivationCheckpointParams</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">enable_compiled_autograd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">loss_backward_retain_graph</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span>
@@ -933,6 +938,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">enable_compiled_autograd</span> <span class="o">=</span> <span class="n">enable_compiled_autograd</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="o">=</span> <span class="n">training</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_backward_retain_graph</span> <span class="o">=</span> <span class="n">loss_backward_retain_graph</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TLRScheduler</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1027,12 +1033,14 @@
                     <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
                         <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.backward&quot;</span>
                     <span class="p">):</span>
-                        <span class="n">scaled_loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+                        <span class="n">scaled_loss</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span>
+                            <span class="n">retain_graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_backward_retain_graph</span>
+                        <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
                         <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.backward&quot;</span>
                     <span class="p">):</span>
-                        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+                        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">retain_graph</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loss_backward_retain_graph</span><span class="p">)</span>
 
         <span class="n">total_grad_norm</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">should_update_weights</span><span class="p">:</span>
