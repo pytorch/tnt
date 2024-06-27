@@ -434,6 +434,10 @@ class AutoUnit(
         activation_checkpoint_params: params for enabling activation checkpointing
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
         enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.
+        loss_backward_retain_graph:  If ``None`` or ``False``, the graph used to compute
+        the grads will be freed during loss backward pass. Note that in nearly all cases setting
+        this option to True is not needed and often can be worked around
+        in a much more efficient way.
 
     Note:
         Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.
@@ -463,6 +467,7 @@ class AutoUnit(
         activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
         training: bool = True,
         enable_compiled_autograd: bool = False,
+        loss_backward_retain_graph: Optional[bool] = None,
     ) -> None:
         super().__init__(
             module=module,
@@ -526,6 +531,7 @@ class AutoUnit(
 
         self.enable_compiled_autograd = enable_compiled_autograd
         self.training = training
+        self.loss_backward_retain_graph = loss_backward_retain_graph
 
         self.optimizer: Optional[torch.optim.Optimizer] = None
         self.lr_scheduler: Optional[TLRScheduler] = None
@@ -620,12 +626,14 @@ class AutoUnit(
                     with get_timing_context(
                         state, f"{self.__class__.__name__}.backward"
                     ):
-                        scaled_loss.backward()
+                        scaled_loss.backward(
+                            retain_graph=self.loss_backward_retain_graph
+                        )
                 else:
                     with get_timing_context(
                         state, f"{self.__class__.__name__}.backward"
                     ):
-                        loss.backward()
+                        loss.backward(retain_graph=self.loss_backward_retain_graph)
 
         total_grad_norm = None
         if should_update_weights:
