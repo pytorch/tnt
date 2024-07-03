@@ -567,31 +567,34 @@ specified ema_decay as more updates occur.</li>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_extra_state</span></code>(state)</td>
 <td>Set extra state contained in the loaded <cite>state_dict</cite>.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">share_memory</span></code>()</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_submodule</span></code>(target,&nbsp;module)</td>
+<td>Set the submodule given by <code class="docutils literal notranslate"><span class="pre">target</span></code> if it exists, otherwise throw an error.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">share_memory</span></code>()</td>
 <td>See <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.Tensor.share_memory_.html#torch.Tensor.share_memory_" target="_blank" title="(in PyTorch v2.3)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.Tensor.share_memory_()</span></code></a>.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_dict</span></code>(*args[,&nbsp;destination,&nbsp;prefix,&nbsp;...])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_dict</span></code>(*args[,&nbsp;destination,&nbsp;prefix,&nbsp;...])</td>
 <td>Return a dictionary containing references to the whole state of the module.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(*args,&nbsp;**kwargs)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(*args,&nbsp;**kwargs)</td>
 <td>Move and/or cast the parameters and buffers.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_empty</span></code>(*,&nbsp;device[,&nbsp;recurse])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_empty</span></code>(*,&nbsp;device[,&nbsp;recurse])</td>
 <td>Move the parameters and buffers to the specified device without copying storage.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code>([mode])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code>([mode])</td>
 <td>Set the module in training mode.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code>(dst_type)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code>(dst_type)</td>
 <td>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_parameters</span></code>(model)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_parameters</span></code>(model)</td>
 <td>Update model parameters.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">xpu</span></code>([device])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">xpu</span></code>([device])</td>
 <td>Move all model parameters and buffers to the XPU.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero_grad</span></code>([set_to_none])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero_grad</span></code>([set_to_none])</td>
 <td>Reset gradients of all model parameters.</td>
 </tr>
 </tbody>

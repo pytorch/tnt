@@ -925,6 +925,7 @@
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">port</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">timeout_s</span><span class="p">:</span> <span class="nb">int</span>
 
 
 <div class="viewcode-block" id="spawn_multi_process"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.spawn_multi_process.html#torchtnt.utils.distributed.spawn_multi_process">[docs]</a><span class="k">def</span> <span class="nf">spawn_multi_process</span><span class="p">(</span>
@@ -945,6 +946,11 @@
 <span class="sd">        method_args: args for the method</span>
 <span class="sd">        method_kwargs: kwargs for the method</span>
 
+<span class="sd">    Note:</span>
+<span class="sd">        The default timeout used for distributed collectives in the process group is 60 seconds.</span>
+<span class="sd">        This can be overridden by passing a `timeout_s` key in the `method_kwargs`. It will be</span>
+<span class="sd">        extracted before passing to the method call.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        A list, l, where l[i] is the return value of method(*method_args, **methods_kwargs) on rank i</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -957,7 +963,12 @@
         <span class="c1"># https://pytorch.org/docs/stable/multiprocessing.html#torch.multiprocessing.spawn</span>
         <span class="n">_init_pg_and_rank_and_launch_method</span><span class="p">,</span>
         <span class="n">args</span><span class="o">=</span><span class="p">(</span>
-            <span class="n">ProcessGroupSetupParams</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">),</span>
+            <span class="n">ProcessGroupSetupParams</span><span class="p">(</span>
+                <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span>
+                <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span>
+                <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span>
+                <span class="n">timeout_s</span><span class="o">=</span><span class="n">method_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;timeout_s&quot;</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+            <span class="p">),</span>
             <span class="n">mp_output_dict</span><span class="p">,</span>
             <span class="n">method</span><span class="p">,</span>
             <span class="n">method_args</span><span class="p">,</span>
@@ -989,7 +1000,9 @@
         <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span>
         <span class="n">world_size</span><span class="o">=</span><span class="n">pg_setup_params</span><span class="o">.</span><span class="n">world_size</span><span class="p">,</span>
         <span class="n">backend</span><span class="o">=</span><span class="n">pg_setup_params</span><span class="o">.</span><span class="n">backend</span><span class="p">,</span>
-        <span class="n">timeout</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>  <span class="c1"># setting up timeout for distributed collectives</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span>  <span class="c1"># setting up timeout for distributed collectives</span>
+            <span class="n">seconds</span><span class="o">=</span><span class="n">pg_setup_params</span><span class="o">.</span><span class="n">timeout_s</span>
+        <span class="p">),</span>
     <span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># pyre-ignore: spawn_multi_process uses unsafe types to begin with</span>

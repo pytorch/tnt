@@ -52,6 +52,7 @@
       ~AveragedModel.register_state_dict_pre_hook
       ~AveragedModel.requires_grad_
       ~AveragedModel.set_extra_state
+      ~AveragedModel.set_submodule
       ~AveragedModel.share_memory
       ~AveragedModel.state_dict
       ~AveragedModel.to

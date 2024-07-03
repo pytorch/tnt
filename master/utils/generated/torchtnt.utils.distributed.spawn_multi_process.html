@@ -421,7 +421,7 @@ Uses localhost and free port to communicate.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>world_size</strong> – number of processes</li>
 <li><strong>backend</strong> – backend to use. for example, “nccl”, “gloo”, etc</li>
 <li><strong>method</strong> – callable to spawn.</li>
@@ -430,8 +430,19 @@ Uses localhost and free port to communicate.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list, l, where l[i] is the return value of method(<a href="#id1"><span class="problematic" id="id2">*</span></a>method_args, <a href="#id3"><span class="problematic" id="id4">**</span></a>methods_kwargs) on rank i</p>
-</td>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The default timeout used for distributed collectives in the process group is 60 seconds.
+This can be overridden by passing a <cite>timeout_s</cite> key in the <cite>method_kwargs</cite>. It will be
+extracted before passing to the method call.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list, l, where l[i] is the return value of method(<a href="#id1"><span class="problematic" id="id2">*</span></a>method_args, <a href="#id3"><span class="problematic" id="id4">**</span></a>methods_kwargs) on rank i</td>
 </tr>
 </tbody>
 </table>
