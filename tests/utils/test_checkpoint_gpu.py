@@ -24,9 +24,7 @@ class TestCheckpointUtilsGPU(unittest.TestCase):
     @skip_if_not_gpu
     def test_get_checkpoint_dirpaths_distributed(self) -> None:
         spawn_multi_process(
-            2,
-            "nccl",
-            self._test_get_checkpoint_dirpaths,
+            2, "nccl", self._test_get_checkpoint_dirpaths, timeout_s=180
         )
 
     @staticmethod
