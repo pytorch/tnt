@@ -52,6 +52,7 @@ class DistributedGPUTest(unittest.TestCase):
             2,
             "nccl",
             self._test_pg_wrapper_scatter_object_list,
+            timeout_s=180,
         )
 
     @classmethod

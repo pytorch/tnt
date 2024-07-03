@@ -518,6 +518,7 @@ class ProcessGroupSetupParams:
     backend: str
     port: str
     world_size: int
+    timeout_s: int
 
 
 def spawn_multi_process(
@@ -538,6 +539,11 @@ def spawn_multi_process(
         method_args: args for the method
         method_kwargs: kwargs for the method
 
+    Note:
+        The default timeout used for distributed collectives in the process group is 60 seconds.
+        This can be overridden by passing a `timeout_s` key in the `method_kwargs`. It will be
+        extracted before passing to the method call.
+
     Returns:
         A list, l, where l[i] is the return value of method(*method_args, **methods_kwargs) on rank i
     """
@@ -550,7 +556,12 @@ def spawn_multi_process(
         # https://pytorch.org/docs/stable/multiprocessing.html#torch.multiprocessing.spawn
         _init_pg_and_rank_and_launch_method,
         args=(
-            ProcessGroupSetupParams(backend=backend, port=port, world_size=world_size),
+            ProcessGroupSetupParams(
+                backend=backend,
+                port=port,
+                world_size=world_size,
+                timeout_s=method_kwargs.pop("timeout_s", 60),
+            ),
             mp_output_dict,
             method,
             method_args,
@@ -582,7 +593,9 @@ def _init_pg_and_rank_and_launch_method(
         rank=rank,
         world_size=pg_setup_params.world_size,
         backend=pg_setup_params.backend,
-        timeout=timedelta(seconds=60),  # setting up timeout for distributed collectives
+        timeout=timedelta(  # setting up timeout for distributed collectives
+            seconds=pg_setup_params.timeout_s
+        ),
     )
     try:
         # pyre-ignore: spawn_multi_process uses unsafe types to begin with
