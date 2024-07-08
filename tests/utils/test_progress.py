@@ -8,12 +8,10 @@
 # pyre-strict
 
 import unittest
+from typing import Iterable, Iterator
 from unittest.mock import patch
 
-from torchtnt.framework._test_utils import (
-    generate_random_dataloader,
-    generate_random_iterable_dataloader,
-)
+from torchtnt.framework._test_utils import generate_random_dataloader
 
 from torchtnt.utils.progress import (
     estimated_steps_in_epoch,
@@ -274,12 +272,14 @@ class ProgressTest(unittest.TestCase):
             )
 
     def test_estimate_epoch_without_len(self) -> None:
-        dataloader = generate_random_iterable_dataloader(
-            num_samples=10, input_dim=2, batch_size=2
-        )
+        class IterableWithoutLen(Iterable):
+            def __iter__(self) -> Iterator[int]:
+                for _ in range(5):
+                    yield 1
+
         self.assertEqual(
             estimated_steps_in_epoch(
-                dataloader,
+                IterableWithoutLen(),
                 num_steps_completed=0,
                 max_steps=None,
                 max_steps_per_epoch=None,

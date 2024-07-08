@@ -171,6 +171,9 @@ class RandomIterableDataset(IterableDataset):
         for _ in range(self.count):
             yield torch.randn(self.size)
 
+    def __len__(self) -> int:
+        return self.count
+
 
 def generate_random_iterable_dataloader(
     num_samples: int, input_dim: int, batch_size: int
