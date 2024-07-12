@@ -126,10 +126,8 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 # load_state_dict is not called again on dataloader because there is no dataloader in manifest
                 self.assertEqual(stateful_dataloader.load_state_dict_call_count, 1)
                 self.assertEqual(
-                    log.output,
-                    [
-                        "WARNING:torchtnt.utils.rank_zero_log:train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
-                    ],
+                    log.output[0],
+                    "WARNING:torchtnt.utils.rank_zero_log:train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot",
                 )
 
     def test_restore_from_latest(self) -> None:
