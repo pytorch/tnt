@@ -17,6 +17,7 @@ from torchtnt.framework._loop_utils import (
     _is_epoch_done,
     _log_api_usage,
     _maybe_set_distributed_sampler_epoch,
+    _reason_epoch_completed,
     _reset_module_training_mode,
     _set_module_training_mode,
 )
@@ -195,6 +196,7 @@ def _train_epoch_impl(
 
     prev_steps_in_epoch = train_unit.train_progress.num_steps_completed_in_epoch
 
+    stop_iteration_reached = False
     while not (
         state.should_stop
         or _is_epoch_done(
@@ -235,8 +237,16 @@ def _train_epoch_impl(
                 state._active_phase = ActivePhase.TRAIN
 
         except StopIteration:
-            logger.info("Reached end of train dataloader")
+            stop_iteration_reached = True
             break
+
+    epoch_end_reason = _reason_epoch_completed(
+        train_unit.train_progress,
+        train_state.max_steps_per_epoch,
+        train_state.max_steps,
+        stop_iteration_reached,
+    )
+    logger.info(epoch_end_reason)
 
     # Possibly warn about an empty dataloader
     any_steps_completed = (
@@ -247,6 +257,10 @@ def _train_epoch_impl(
     )
     if not any_steps_completed:
         logger.warning("No steps completed during train epoch!")
+    else:
+        logger.info(
+            f"Completed {train_unit.train_progress.num_steps_completed_in_epoch} steps in train epoch {train_unit.train_progress.num_epochs_completed}"
+        )
 
     # set progress counters for the next epoch
     train_unit.train_progress.increment_epoch()

@@ -137,6 +137,7 @@ def _evaluate_impl(
 
     prev_steps_in_epoch = eval_unit.eval_progress.num_steps_completed_in_epoch
 
+    stop_iteration_reached = False
     while not (
         state.should_stop
         or _is_epoch_done(
@@ -162,7 +163,17 @@ def _evaluate_impl(
                 # clear step_output to avoid retaining extra memory
                 eval_state._step_output = None
         except StopIteration:
+            stop_iteration_reached = True
             break
+
+    if stop_iteration_reached:
+        entry_point = "evaluation"
+        if state.entry_point == EntryPoint.FIT:
+            entry_point = "fit"
+        logger.info(f"Reached end of eval dataloader during {entry_point}")
+    logger.info(
+        f"Finished evaluation epoch in {eval_unit.eval_progress.num_steps_completed_in_epoch} steps"
+    )
 
     # Possibly warn about an empty dataloader
     any_steps_completed = (

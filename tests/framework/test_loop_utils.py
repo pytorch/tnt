@@ -20,6 +20,7 @@ from torchtnt.framework._loop_utils import (
     _is_done,
     _is_epoch_done,
     _maybe_set_distributed_sampler_epoch,
+    _reason_epoch_completed,
     _reset_module_training_mode,
     _set_module_training_mode,
 )
@@ -144,3 +145,29 @@ class LoopUtilsTest(unittest.TestCase):
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=200))
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=6, max_steps=None))
         self.assertFalse(_is_epoch_done(p, max_steps_per_epoch=None, max_steps=None))
+
+    def test_log_reason_epoch_completed(self) -> None:
+        p = Progress(
+            num_epochs_completed=2,
+            num_steps_completed=100,
+            num_steps_completed_in_epoch=5,
+        )
+
+        reason = _reason_epoch_completed(
+            p, max_steps_per_epoch=5, max_steps=None, stop_iteration_reached=False
+        )
+        self.assertEqual(
+            reason, "Train epoch 2 ended as max steps per epoch reached: 5"
+        )
+
+        reason = _reason_epoch_completed(
+            p, max_steps_per_epoch=6, max_steps=100, stop_iteration_reached=False
+        )
+        self.assertEqual(reason, "Train epoch 2 ended as max steps reached: 100")
+
+        reason = _reason_epoch_completed(
+            p, max_steps_per_epoch=5, max_steps=None, stop_iteration_reached=True
+        )
+        self.assertEqual(
+            reason, "Train epoch 2 ended as it reached end of train dataloader"
+        )
