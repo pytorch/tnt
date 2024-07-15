@@ -558,7 +558,7 @@
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
         <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">hook</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -592,12 +592,12 @@
                 <span class="c1"># since this is async checkpointed, so in</span>
                 <span class="c1"># future, add logic to set  successful flag</span>
                 <span class="c1"># only when checkpoint is fully written</span>
-                <span class="n">checkpoint_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_async_snapshot</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">app_state</span><span class="p">)</span>
+                <span class="n">checkpoint_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_async_snapshot</span><span class="p">(</span><span class="n">checkpoint_id</span><span class="p">,</span> <span class="n">app_state</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">curr_snapshot_wait</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_wait</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.take_snapshot&quot;</span><span class="p">):</span>
-                <span class="n">checkpoint_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_snapshot</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">app_state</span><span class="p">)</span>
+                <span class="n">checkpoint_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_snapshot</span><span class="p">(</span><span class="n">checkpoint_id</span><span class="p">,</span> <span class="n">app_state</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">checkpoint_success</span>
 
     <span class="k">def</span> <span class="nf">_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
