@@ -424,6 +424,7 @@
     <span class="n">_is_epoch_done</span><span class="p">,</span>
     <span class="n">_log_api_usage</span><span class="p">,</span>
     <span class="n">_maybe_set_distributed_sampler_epoch</span><span class="p">,</span>
+    <span class="n">_reason_epoch_completed</span><span class="p">,</span>
     <span class="n">_reset_module_training_mode</span><span class="p">,</span>
     <span class="n">_set_module_training_mode</span><span class="p">,</span>
 <span class="p">)</span>
@@ -602,6 +603,7 @@
 
     <span class="n">prev_steps_in_epoch</span> <span class="o">=</span> <span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span>
 
+    <span class="n">stop_iteration_reached</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">while</span> <span class="ow">not</span> <span class="p">(</span>
         <span class="n">state</span><span class="o">.</span><span class="n">should_stop</span>
         <span class="ow">or</span> <span class="n">_is_epoch_done</span><span class="p">(</span>
@@ -642,8 +644,16 @@
                 <span class="n">state</span><span class="o">.</span><span class="n">_active_phase</span> <span class="o">=</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span>
 
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Reached end of train dataloader&quot;</span><span class="p">)</span>
+            <span class="n">stop_iteration_reached</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">break</span>
+
+    <span class="n">epoch_end_reason</span> <span class="o">=</span> <span class="n">_reason_epoch_completed</span><span class="p">(</span>
+        <span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="p">,</span>
+        <span class="n">train_state</span><span class="o">.</span><span class="n">max_steps_per_epoch</span><span class="p">,</span>
+        <span class="n">train_state</span><span class="o">.</span><span class="n">max_steps</span><span class="p">,</span>
+        <span class="n">stop_iteration_reached</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">epoch_end_reason</span><span class="p">)</span>
 
     <span class="c1"># Possibly warn about an empty dataloader</span>
     <span class="n">any_steps_completed</span> <span class="o">=</span> <span class="p">(</span>
@@ -654,6 +664,10 @@
     <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">any_steps_completed</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No steps completed during train epoch!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Completed </span><span class="si">{</span><span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span><span class="si">}</span><span class="s2"> steps in train epoch </span><span class="si">{</span><span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 
     <span class="c1"># set progress counters for the next epoch</span>
     <span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">increment_epoch</span><span class="p">()</span>
