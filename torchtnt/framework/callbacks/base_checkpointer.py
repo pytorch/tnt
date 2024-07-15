@@ -203,7 +203,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
         # 3) try to save checkpoint
         if not self._checkpoint_impl(
-            state, unit, checkpoint_path=checkpoint_path.path, hook=hook
+            state, unit, checkpoint_id=checkpoint_path.path, hook=hook
         ):
             return False
 
@@ -299,7 +299,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         state: State,
         unit: AppStateMixin,
         *,
-        checkpoint_path: str,
+        checkpoint_id: str,
         hook: str,
     ) -> bool:
         """
@@ -308,7 +308,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         Args:
             state: current application state
             unit: current unit
-            checkpoint_path: path to save checkpoint
+            checkpoint_id: Checkpoint id to save a checkpoint. It can be a path
             hook: name of callback hook that triggered this function call
 
         Returns:

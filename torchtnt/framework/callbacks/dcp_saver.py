@@ -131,7 +131,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         state: State,
         unit: AppStateMixin,
         *,
-        checkpoint_path: str,
+        checkpoint_id: str,
         hook: str,
         planner: Optional[SavePlanner] = None,
         storage_writer: Optional[StorageWriter] = None,
@@ -156,14 +156,14 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 # future, add logic to set  successful flag
                 # only when checkpoint is fully written
                 checkpoint_success = self._async_save(
-                    checkpoint_path, app_state, planner, storage_writer
+                    checkpoint_id, app_state, planner, storage_writer
                 )
                 if curr_snapshot_wait:
                     self._wait()
         else:
             with get_timing_context(state, f"{self.__class__.__name__}.save"):
                 checkpoint_success = self._save(
-                    checkpoint_path, app_state, planner, storage_writer
+                    checkpoint_id, app_state, planner, storage_writer
                 )
 
         return checkpoint_success

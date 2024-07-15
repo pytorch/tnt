@@ -151,7 +151,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
         state: State,
         unit: AppStateMixin,
         *,
-        checkpoint_path: str,
+        checkpoint_id: str,
         hook: str,
     ) -> bool:
         """
@@ -185,12 +185,12 @@ class TorchSnapshotSaver(BaseCheckpointer):
                 # since this is async checkpointed, so in
                 # future, add logic to set  successful flag
                 # only when checkpoint is fully written
-                checkpoint_success = self._async_snapshot(checkpoint_path, app_state)
+                checkpoint_success = self._async_snapshot(checkpoint_id, app_state)
                 if curr_snapshot_wait:
                     self._wait()
         else:
             with get_timing_context(state, f"{self.__class__.__name__}.take_snapshot"):
-                checkpoint_success = self._sync_snapshot(checkpoint_path, app_state)
+                checkpoint_success = self._sync_snapshot(checkpoint_id, app_state)
         return checkpoint_success
 
     def _wait(self) -> None:

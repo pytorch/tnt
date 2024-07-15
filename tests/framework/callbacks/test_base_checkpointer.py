@@ -74,11 +74,11 @@ class BaseCheckpointSaver(BaseCheckpointer):
         self._latest_checkpoint_path: str = ""
 
     def _checkpoint_impl(
-        self, state: State, unit: AppStateMixin, checkpoint_path: str, hook: str
+        self, state: State, unit: AppStateMixin, checkpoint_id: str, hook: str
     ) -> bool:
-        self._latest_checkpoint_path = checkpoint_path
-        if not os.path.exists(checkpoint_path):
-            os.mkdir(checkpoint_path)
+        self._latest_checkpoint_path = checkpoint_id
+        if not os.path.exists(checkpoint_id):
+            os.mkdir(checkpoint_id)
         return True
 
     @staticmethod
