@@ -143,6 +143,7 @@ def _predict_impl(
 
     prev_steps_in_epoch = predict_unit.predict_progress.num_steps_completed_in_epoch
 
+    stop_iteration_reached = False
     while not (
         state.should_stop
         or _is_epoch_done(
@@ -170,7 +171,14 @@ def _predict_impl(
                 # clear step_output to avoid retaining extra memory
                 predict_state._step_output = None
         except StopIteration:
+            stop_iteration_reached = True
             break
+
+    if stop_iteration_reached:
+        logger.info("Reached end of predict dataloader")
+    logger.info(
+        f"Finished prediction in {predict_unit.predict_progress.num_steps_completed_in_epoch} steps"
+    )
 
     # Possibly warn about an empty dataloader
     any_steps_completed = (

@@ -43,6 +43,27 @@ def _is_epoch_done(
     )
 
 
+def _reason_epoch_completed(
+    progress: Progress,
+    max_steps_per_epoch: Optional[int],
+    max_steps: Optional[int],
+    stop_iteration_reached: bool,
+) -> str:
+    current_epoch = progress.num_epochs_completed
+    if stop_iteration_reached:
+        return (
+            f"Train epoch {current_epoch} ended as it reached end of train dataloader"
+        )
+    elif (
+        max_steps_per_epoch is not None
+        and progress.num_steps_completed_in_epoch >= max_steps_per_epoch
+    ):
+        return f"Train epoch {current_epoch} ended as max steps per epoch reached: {max_steps_per_epoch}"
+    elif max_steps is not None and progress.num_steps_completed >= max_steps:
+        return f"Train epoch {current_epoch} ended as max steps reached: {max_steps}"
+    return f"Unable to determine reason for stopping train epoch {current_epoch}"
+
+
 @runtime_checkable
 class _DistributedSampler(Protocol):
     def set_epoch(self, epoch: int) -> None: ...
