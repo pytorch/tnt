@@ -444,3 +444,36 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         )
 
         return True
+
+    @staticmethod
+    def restore_with_id(
+        checkpoint_id: Union[int, str],
+        unit: AppStateMixin,
+        *,
+        train_dataloader: Optional[Iterable[TTrainData]] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
+        restore_options: Optional[RestoreOptions] = None,
+    ) -> None:
+        """Method to restore checkpoint state from a checkpoint id.
+
+        There are additional flags offered should the user want to skip loading the train and eval progress.
+        By default, the train and eval progress are restored, if applicable.
+
+        This method relies on the user to provide a checkpoint id. This offers flexibility to the users
+        overriding the BaseCheckpointer if they want to use a different way to represent a checkpoint.
+        Default implementation of BaseCheckpointer uses the checkpoint path as id.
+
+        Args:
+            checkpoint_id: Checkpoint ID. It can be the path of the checkpoint as well to restore.
+            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
+            train_dataloader: An optional train dataloader to restore.
+            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+            restore_options: Controls what to filter when restoring the state.
+        """
+        BaseCheckpointer.restore(
+            str(checkpoint_id),
+            unit,
+            train_dataloader=train_dataloader,
+            process_group=process_group,
+            restore_options=restore_options,
+        )

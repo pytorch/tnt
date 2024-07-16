@@ -374,11 +374,49 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         self.assertIsInstance(storage_reader, FsspecReader)
 
     @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_restore_with_id_default_planner_storage_components(
+        self, mock_dist_cp: MagicMock
+    ) -> None:
+        from torch.distributed.checkpoint._fsspec_filesystem import FsspecReader
+
+        my_unit = DummyTrainUnit(input_dim=2)
+        restore_options = RestoreOptions(restore_optimizers=False)
+        DistributedCheckpointSaver.restore_with_id(
+            checkpoint_id="path/to/snapshot",
+            unit=my_unit,
+            restore_options=restore_options,
+        )
+        planner = mock_dist_cp.load.call_args[1]["planner"]
+        storage_reader = mock_dist_cp.load.call_args[1]["storage_reader"]
+
+        self.assertIsInstance(planner, DefaultLoadPlanner)
+        self.assertIsInstance(storage_reader, FsspecReader)
+
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
     def test_restore_planner_storage_components(self, mock_dist_cp: MagicMock) -> None:
         my_unit = DummyTrainUnit(input_dim=2)
         restore_options = RestoreOptions(restore_optimizers=False)
         DistributedCheckpointSaver.restore(
             path="path/to/snapshot",
+            unit=my_unit,
+            restore_options=restore_options,
+            planner=DummyLoadPlanner(),
+            storage_reader=DummyStorageReader(path="path/to/snapshot"),
+        )
+        planner = mock_dist_cp.load.call_args[1]["planner"]
+        storage_reader = mock_dist_cp.load.call_args[1]["storage_reader"]
+
+        self.assertIsInstance(planner, DummyLoadPlanner)
+        self.assertIsInstance(storage_reader, DummyStorageReader)
+
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_restore_with_id_planner_storage_components(
+        self, mock_dist_cp: MagicMock
+    ) -> None:
+        my_unit = DummyTrainUnit(input_dim=2)
+        restore_options = RestoreOptions(restore_optimizers=False)
+        DistributedCheckpointSaver.restore_with_id(
+            checkpoint_id="path/to/snapshot",
             unit=my_unit,
             restore_options=restore_options,
             planner=DummyLoadPlanner(),
