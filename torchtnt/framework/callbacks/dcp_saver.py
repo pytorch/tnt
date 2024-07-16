@@ -266,13 +266,40 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         planner: Optional[LoadPlanner] = None,
         storage_reader: Optional[StorageReader] = None,
     ) -> None:
-        """Utility method to restore dcp checkpoint from a path.
+        """Utility method to restore dcp checkpoint from a path."""
+
+        checkpoint_id = path
+
+        DistributedCheckpointSaver.restore_with_id(
+            checkpoint_id,
+            unit,
+            train_dataloader=train_dataloader,
+            process_group=process_group,
+            restore_options=restore_options,
+            knob_options=knob_options,
+            planner=planner,
+            storage_reader=storage_reader,
+        )
+
+    @staticmethod
+    def restore_with_id(
+        checkpoint_id: Union[int, str],
+        unit: AppStateMixin,
+        *,
+        train_dataloader: Optional[Iterable[TTrainData]] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
+        restore_options: Optional[RestoreOptions] = None,
+        knob_options: Optional[KnobOptions] = None,
+        planner: Optional[LoadPlanner] = None,
+        storage_reader: Optional[StorageReader] = None,
+    ) -> None:
+        """Utility method to restore dcp checkpoint from a checkpoint_id.
 
         There are additional flags offered should the user want to skip loading the train and eval progress.
         By default, the train and eval progress are restored, if applicable.
 
         Args:
-            path: Path of the snapshot to restore.
+            checkpoint_id: Checkpoint id. It can be the path of the snapshot to restore.
             unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
             train_dataloader: An optional train dataloader to restore.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world) Note:
@@ -286,10 +313,13 @@ class DistributedCheckpointSaver(BaseCheckpointer):
 
         restore_options = restore_options or RestoreOptions()
         app_state = _prepare_app_state_for_restore(unit, restore_options)
+        checkpoint_id = str(checkpoint_id)
 
+        # If no storage_reader is provided, default to path based reader
         if storage_reader is None:
-            storage_reader = Reader(path)
+            storage_reader = Reader(checkpoint_id)
 
+        # If no planner is provided, use the default planner
         if planner is None:
             allow_partial_load = not restore_options.strict
             planner = DefaultLoadPlanner(allow_partial_load=allow_partial_load)
@@ -326,7 +356,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         try:
             dcp.load(
                 {"app_state": MultiStateful(app_state)},
-                checkpoint_id=path,
+                checkpoint_id=checkpoint_id,
                 storage_reader=storage_reader,
                 planner=planner,
                 process_group=process_group,
@@ -338,7 +368,9 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 process_group=process_group,
                 planner=planner,
             )
-        rank_zero_info(f"Restored snapshot from path: {path}", logger=logger)
+        rank_zero_info(
+            f"Restored snapshot for checkpoint_id: {checkpoint_id}", logger=logger
+        )
 
     def _does_checkpoint_exist(
         self,
