@@ -36,6 +36,7 @@ class RestoreOptions:
     Options when restoring a snapshot.
 
     Args:
+        restore_modules: Whether to restore the module state dict.
         restore_train_progress: Whether to restore the training progress state.
         restore_eval_progress: Whether to restore the evaluation progress state.
         restore_optimizers: Whether to restore the optimizer states.
@@ -43,6 +44,7 @@ class RestoreOptions:
         strict: Whether to strictly restore app state and the module state dict.
     """
 
+    restore_modules: bool = True
     restore_train_progress: bool = True
     restore_eval_progress: bool = True
     restore_optimizers: bool = True
