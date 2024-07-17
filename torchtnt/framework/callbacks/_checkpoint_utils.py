@@ -78,6 +78,11 @@ def _prepare_app_state_for_restore(
     app_state = _prepare_app_state(unit)
 
     restore_options = restore_options or RestoreOptions()
+
+    if not restore_options.restore_modules:
+        for module_keys in unit.tracked_modules().keys():
+            app_state.pop(module_keys, None)
+
     if not restore_options.restore_train_progress:
         app_state.pop(_TRAIN_PROGRESS_STATE_KEY, None)
 
