@@ -473,7 +473,7 @@ class CheckpointManager:
     def append_checkpoint(self, ckpt: CheckpointPath) -> None:
         """
         This will update the internal state to keep track of the checkpoint. This function should only be called
-        when a checkpoint whose path was returned from `maybe_get_next_checkpoint_path` was successfully created.
+        when a checkpoint whose path was returned from `generate_checkpoint_path` was successfully created.
         If a previous checkpoint should be removed to honor `keep_last_n_checkpoint`, it will be deleted on rank 0.
 
         Args:
