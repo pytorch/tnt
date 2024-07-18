@@ -1045,6 +1045,48 @@ class BaseCheckpointerTest(unittest.TestCase):
                 min_optim, [str(x) for x in metric_cb._checkpoint_manager._ckpt_paths]
             )
 
+    @skip_if_not_distributed
+    def test_directory_path_synced(self) -> None:
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_directory_path_synced,
+        )
+
+    @staticmethod
+    def _test_directory_path_synced() -> None:
+        init_from_env()
+        tc = unittest.TestCase()
+
+        temp_dir = tempfile.mkdtemp() if get_global_rank() == 0 else ""
+        bcs = BaseCheckpointSaver(
+            temp_dir,
+            save_every_n_epochs=1,
+        )
+
+        try:
+            state = get_dummy_train_state()
+            my_train_unit = MyTrainLossUnit()
+
+            if dist.get_rank() == 0:
+                my_train_unit.train_progress._num_epochs_completed = 10
+            else:
+                my_train_unit.train_progress._num_epochs_completed = 3
+
+            bcs.on_train_epoch_end(state, my_train_unit)
+            tc.assertEqual(len(bcs._checkpoint_manager._ckpt_paths), 1)
+            tc.assertEqual(
+                str(bcs._checkpoint_manager._ckpt_paths[0]),
+                os.path.join(bcs.dirpath, "epoch_10_train_step_0"),
+            )
+            tc.assertEqual(
+                os.listdir(bcs.dirpath),
+                ["epoch_10_train_step_0"],
+            )
+        finally:
+            if get_global_rank() == 0:
+                shutil.rmtree(temp_dir)  # delete temp directory
+
 
 class MyValLossUnit(TrainUnit[Batch]):
     def __init__(self) -> None:

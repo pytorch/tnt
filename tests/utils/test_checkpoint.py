@@ -608,6 +608,32 @@ class CheckpointManagerTest(unittest.TestCase):
         ):
             ckpt_manager.generate_checkpoint_path(1, 2, MetricData("val_loss", 3.5))
 
+    @skip_if_not_distributed
+    def test_generate_checkpoint_path_distributed(self) -> None:
+        spawn_multi_process(
+            world_size=2,
+            backend="gloo",
+            method=self._test_generate_checkpoint_path_distributed,
+        )
+
+    @staticmethod
+    def _test_generate_checkpoint_path_distributed() -> None:
+        tc = unittest.TestCase()
+
+        init_from_env()
+
+        ckpt_manager = CheckpointManager("foo")
+
+        if dist.get_rank() == 0:
+            path = ckpt_manager.generate_checkpoint_path(1, 1).path
+        else:
+            path = ckpt_manager.generate_checkpoint_path(3, 41).path
+
+        tc.assertEqual(
+            path,
+            "foo/epoch_1_step_1",
+        )
+
     def test_append_checkpoint_by_recency(self) -> None:
         ckpt_manager = CheckpointManager("foo", keep_last_n_checkpoints=3)
         ckpt_manager._ckpt_paths = [CheckpointPath("foo", 0, 0)]

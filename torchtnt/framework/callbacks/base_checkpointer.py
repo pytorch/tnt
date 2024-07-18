@@ -171,7 +171,10 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             )
 
         checkpoint_path = self._checkpoint_manager.generate_checkpoint_path(
-            epoch, step_mapping, metric_data
+            epoch,
+            step_mapping,
+            metric_data,
+            process_group=self._process_group,
         )
 
         # 2) Determine if we should save checkpoint
