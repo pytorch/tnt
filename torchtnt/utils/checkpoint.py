@@ -400,11 +400,13 @@ class CheckpointManager:
             for _ in range(len(self._ckpt_paths) - keep_last_n_checkpoints):
                 self.remove_checkpoint()
 
+    @rank_zero_read_and_broadcast
     def generate_checkpoint_path(
         self,
         epoch: int,
         step: Union[int, Dict[Phase, int]],
         metric_data: Optional[MetricData] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
     ) -> CheckpointPath:
         """
         Given the current epoch, step, and possibly a metric_data value, determine the path
