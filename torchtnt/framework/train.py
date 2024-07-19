@@ -258,8 +258,9 @@ def _train_epoch_impl(
     if not any_steps_completed:
         logger.warning("No steps completed during train epoch!")
     else:
+        # increment epoch happens after we log, hence we add 1 to the epoch counter
         logger.info(
-            f"Completed {train_unit.train_progress.num_steps_completed_in_epoch} steps in train epoch {train_unit.train_progress.num_epochs_completed}"
+            f"Completed {train_unit.train_progress.num_steps_completed_in_epoch} steps in train epoch {train_unit.train_progress.num_epochs_completed + 1}"
         )
 
     # set progress counters for the next epoch
