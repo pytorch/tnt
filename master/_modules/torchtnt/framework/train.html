@@ -665,8 +665,9 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">any_steps_completed</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No steps completed during train epoch!&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># increment epoch happens after we log, hence we add 1 to the epoch counter</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Completed </span><span class="si">{</span><span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span><span class="si">}</span><span class="s2"> steps in train epoch </span><span class="si">{</span><span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Completed </span><span class="si">{</span><span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span><span class="si">}</span><span class="s2"> steps in train epoch </span><span class="si">{</span><span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
     <span class="c1"># set progress counters for the next epoch</span>
