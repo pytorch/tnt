@@ -140,6 +140,7 @@ def seed(seed: int, deterministic: Optional[Union[str, int]] = None) -> None:
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
 
     if deterministic is not None:
         _log.debug(f"Setting deterministic debug mode to {deterministic}")
@@ -155,3 +156,5 @@ def seed(seed: int, deterministic: Optional[Union[str, int]] = None) -> None:
             torch.backends.cudnn.benchmark = False
             # reference: https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
             os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+        if deterministic_debug_mode == 2:
+            set_float32_precision("highest")

@@ -135,8 +135,8 @@ class TestAutoUnitGPU(unittest.TestCase):
                 return x
 
         # so all ranks start with same initialized weights
-        seed(0)
         device = init_from_env()
+        seed(0)
         my_module = Net()
 
         auto_unit = DummyAutoUnit(
