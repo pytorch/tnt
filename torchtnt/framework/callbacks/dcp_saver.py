@@ -38,7 +38,12 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import get_timing_context
-from torchtnt.utils.checkpoint import BestCheckpointConfig, CheckpointPath
+from torchtnt.utils.checkpoint import (
+    BestCheckpointConfig,
+    CheckpointPath,
+    MetricData,
+    Phase,
+)
 from torchtnt.utils.optimizer import init_optim_state
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import MultiStateful, Stateful
@@ -383,6 +388,24 @@ class DistributedCheckpointSaver(BaseCheckpointer):
 
         return super()._does_checkpoint_exist(
             checkpoint_path=checkpoint_path, process_group=process_group
+        )
+
+    def _generate_checkpoint_path(
+        self,
+        epoch: int,
+        step_mapping: Union[int, Dict[Phase, int]],
+        metric_data: Optional[MetricData] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
+    ) -> CheckpointPath:
+        # if we are still checkpointing, this might cause a collective hang.
+        # so wait here instead
+        self._wait()
+
+        return super()._generate_checkpoint_path(
+            epoch=epoch,
+            step_mapping=step_mapping,
+            metric_data=metric_data,
+            process_group=process_group,
         )
 
     @property
