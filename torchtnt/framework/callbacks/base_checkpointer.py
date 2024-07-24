@@ -9,7 +9,7 @@
 import abc
 import logging
 from datetime import timedelta
-from typing import Any, cast, Iterable, Literal, Optional, Union
+from typing import Any, cast, Dict, Iterable, Literal, Optional, Union
 
 import torch.distributed as dist
 from pyre_extensions import none_throws
@@ -170,7 +170,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
                 value=metric_value,
             )
 
-        checkpoint_path = self._checkpoint_manager.generate_checkpoint_path(
+        checkpoint_path = self._generate_checkpoint_path(
             epoch,
             step_mapping,
             metric_data,
@@ -223,6 +223,20 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         # Only keep this function as a hook for downstream checkpointer
         return self._checkpoint_manager.does_checkpoint_exist(
             checkpoint_path, process_group
+        )
+
+    def _generate_checkpoint_path(
+        self,
+        epoch: int,
+        step_mapping: Union[int, Dict[Phase, int]],
+        metric_data: Optional[MetricData] = None,
+        process_group: Optional[dist.ProcessGroup] = None,
+    ) -> CheckpointPath:
+        return self._checkpoint_manager.generate_checkpoint_path(
+            epoch,
+            step_mapping,
+            metric_data,
+            process_group=process_group,
         )
 
     def _get_tracked_metric_value(
