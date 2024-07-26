@@ -112,7 +112,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             dirpath,
             best_checkpoint_config,
             keep_last_n_checkpoints,
-            metadata_fname=self.metadata_fname,
+            metadata_fnames=[self.metadata_fname] if self.metadata_fname else None,
             process_group=self._process_group,
         )
 
