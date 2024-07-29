@@ -286,3 +286,17 @@ class ProgressTest(unittest.TestCase):
             ),
             float("inf"),
         )
+
+    def test_num_steps_completed_in_prev_epoch(self) -> None:
+        progress = Progress(
+            num_epochs_completed=2,
+            num_steps_completed=8,
+            num_steps_completed_in_epoch=4,
+        )
+        self.assertEqual(progress.num_steps_completed_in_epoch, 4)
+        self.assertEqual(progress.num_steps_completed_in_prev_epoch, 0)
+
+        progress.increment_epoch()
+
+        self.assertEqual(progress.num_steps_completed_in_epoch, 0)
+        self.assertEqual(progress.num_steps_completed_in_prev_epoch, 4)

@@ -22,6 +22,7 @@ class Progress:
         self._num_epochs_completed: int = num_epochs_completed
         self._num_steps_completed: int = num_steps_completed
         self._num_steps_completed_in_epoch: int = num_steps_completed_in_epoch
+        self._num_steps_completed_in_prev_epoch: int = 0
 
     @property
     def num_epochs_completed(self) -> int:
@@ -38,6 +39,11 @@ class Progress:
         """Number of steps completed thus far in epoch."""
         return self._num_steps_completed_in_epoch
 
+    @property
+    def num_steps_completed_in_prev_epoch(self) -> int:
+        """Number of steps completed in the previous completed epoch."""
+        return self._num_steps_completed_in_prev_epoch
+
     def increment_step(self) -> None:
         """Increment the step counts completed and completed within the epoch."""
         self._num_steps_completed += 1
@@ -46,6 +52,7 @@ class Progress:
     def increment_epoch(self) -> None:
         """Increment the epochs completed and resets the steps completed within the epoch."""
         self._num_epochs_completed += 1
+        self._num_steps_completed_in_prev_epoch = self._num_steps_completed_in_epoch
         self._num_steps_completed_in_epoch = 0
 
     def state_dict(self) -> Dict[str, Any]:
