@@ -516,41 +516,47 @@ specified ema_decay as more updates occur.</li>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">modules</span></code>()</td>
 <td>Return an iterator over all modules in the network.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_buffers</span></code>([prefix,&nbsp;recurse,&nbsp;...])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">mtia</span></code>([device])</td>
+<td>Move all model parameters and buffers to the MTIA.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_buffers</span></code>([prefix,&nbsp;recurse,&nbsp;...])</td>
 <td>Return an iterator over module buffers, yielding both the name of the buffer as well as the buffer itself.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_children</span></code>()</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_children</span></code>()</td>
 <td>Return an iterator over immediate children modules, yielding both the name of the module as well as the module itself.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_modules</span></code>([memo,&nbsp;prefix,&nbsp;remove_duplicate])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_modules</span></code>([memo,&nbsp;prefix,&nbsp;remove_duplicate])</td>
 <td>Return an iterator over all modules in the network, yielding both the name of the module as well as the module itself.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_parameters</span></code>([prefix,&nbsp;recurse,&nbsp;...])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">named_parameters</span></code>([prefix,&nbsp;recurse,&nbsp;...])</td>
 <td>Return an iterator over module parameters, yielding both the name of the parameter as well as the parameter itself.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code>([recurse])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code>([recurse])</td>
 <td>Return an iterator over module parameters.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</td>
 <td>Register a backward hook on the module.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_buffer</span></code>(name,&nbsp;tensor[,&nbsp;persistent])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_buffer</span></code>(name,&nbsp;tensor[,&nbsp;persistent])</td>
 <td>Add a buffer to the module.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_hook</span></code>(hook,&nbsp;*[,&nbsp;prepend,&nbsp;...])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_hook</span></code>(hook,&nbsp;*[,&nbsp;prepend,&nbsp;...])</td>
 <td>Register a forward hook on the module.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_pre_hook</span></code>(hook,&nbsp;*[,&nbsp;...])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_forward_pre_hook</span></code>(hook,&nbsp;*[,&nbsp;...])</td>
 <td>Register a forward pre-hook on the module.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_full_backward_hook</span></code>(hook[,&nbsp;prepend])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_full_backward_hook</span></code>(hook[,&nbsp;prepend])</td>
 <td>Register a backward hook on the module.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_full_backward_pre_hook</span></code>(hook[,&nbsp;prepend])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_full_backward_pre_hook</span></code>(hook[,&nbsp;prepend])</td>
 <td>Register a backward pre-hook on the module.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_load_state_dict_post_hook</span></code>(hook)</td>
-<td>Register a post hook to be run after module's <code class="docutils literal notranslate"><span class="pre">load_state_dict</span></code> is called.</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_load_state_dict_post_hook</span></code>(hook)</td>
+<td>Register a post-hook to be run after module's <code class="xref py py-meth docutils literal notranslate"><span class="pre">load_state_dict()</span></code> is called.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_load_state_dict_pre_hook</span></code>(hook)</td>
+<td>Register a pre-hook to be run before module's <code class="xref py py-meth docutils literal notranslate"><span class="pre">load_state_dict()</span></code> is called.</td>
 </tr>
 <tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_module</span></code>(name,&nbsp;module)</td>
 <td>Alias for <code class="xref py py-func docutils literal notranslate"><span class="pre">add_module()</span></code>.</td>
@@ -558,43 +564,46 @@ specified ema_decay as more updates occur.</li>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_parameter</span></code>(name,&nbsp;param)</td>
 <td>Add a parameter to the module.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_state_dict_pre_hook</span></code>(hook)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_state_dict_post_hook</span></code>(hook)</td>
+<td>Register a post-hook for the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.state_dict" target="_blank" title="(in PyTorch v2.4)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">state_dict()</span></code></a> method.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_state_dict_pre_hook</span></code>(hook)</td>
 <td>Register a pre-hook for the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.state_dict" target="_blank" title="(in PyTorch v2.4)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">state_dict()</span></code></a> method.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">requires_grad_</span></code>([requires_grad])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">requires_grad_</span></code>([requires_grad])</td>
 <td>Change if autograd should record operations on parameters in this module.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_extra_state</span></code>(state)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_extra_state</span></code>(state)</td>
 <td>Set extra state contained in the loaded <cite>state_dict</cite>.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_submodule</span></code>(target,&nbsp;module)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_submodule</span></code>(target,&nbsp;module)</td>
 <td>Set the submodule given by <code class="docutils literal notranslate"><span class="pre">target</span></code> if it exists, otherwise throw an error.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">share_memory</span></code>()</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">share_memory</span></code>()</td>
 <td>See <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.Tensor.share_memory_.html#torch.Tensor.share_memory_" target="_blank" title="(in PyTorch v2.4)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.Tensor.share_memory_()</span></code></a>.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_dict</span></code>(*args[,&nbsp;destination,&nbsp;prefix,&nbsp;...])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_dict</span></code>(*args[,&nbsp;destination,&nbsp;prefix,&nbsp;...])</td>
 <td>Return a dictionary containing references to the whole state of the module.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(*args,&nbsp;**kwargs)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(*args,&nbsp;**kwargs)</td>
 <td>Move and/or cast the parameters and buffers.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_empty</span></code>(*,&nbsp;device[,&nbsp;recurse])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_empty</span></code>(*,&nbsp;device[,&nbsp;recurse])</td>
 <td>Move the parameters and buffers to the specified device without copying storage.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code>([mode])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code>([mode])</td>
 <td>Set the module in training mode.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code>(dst_type)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code>(dst_type)</td>
 <td>Casts all parameters and buffers to <code class="xref py py-attr docutils literal notranslate"><span class="pre">dst_type</span></code>.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_parameters</span></code>(model)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_parameters</span></code>(model)</td>
 <td>Update model parameters.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">xpu</span></code>([device])</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">xpu</span></code>([device])</td>
 <td>Move all model parameters and buffers to the XPU.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero_grad</span></code>([set_to_none])</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">zero_grad</span></code>([set_to_none])</td>
 <td>Reset gradients of all model parameters.</td>
 </tr>
 </tbody>

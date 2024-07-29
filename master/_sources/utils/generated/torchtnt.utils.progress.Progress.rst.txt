@@ -31,5 +31,6 @@
       ~Progress.num_epochs_completed
       ~Progress.num_steps_completed
       ~Progress.num_steps_completed_in_epoch
+      ~Progress.num_steps_completed_in_prev_epoch
    
    
