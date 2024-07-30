@@ -326,7 +326,7 @@ class CheckpointManager:
         dirpath: str,
         best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         keep_last_n_checkpoints: Optional[int] = None,
-        metadata_fname: Optional[str] = None,
+        metadata_fnames: Optional[List[str]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
     ) -> None:
         """
@@ -338,7 +338,8 @@ class CheckpointManager:
             dirpath: The base directory path that checkpoints are saved in. This is synced from rank 0 to every other rank upon initialization.
             best_checkpoint_config: Optional configuration for the best checkpoint.
             keep_last_n_checkpoints: Optional number of checkpoints to keep.
-            metadata_fname: Optional name of the metadata file.
+            metadata_fname: Optional names of the metadata files. These are used to verify checkpoint integrity. If more than one is provided, a
+                checkpoint is considered if at least one of them exists.
             process_group: Optional process group to use for distributed training. gloo process groups are known
                 to perform better.
         """
@@ -348,8 +349,12 @@ class CheckpointManager:
 
         self._best_checkpoint_config = best_checkpoint_config
         self._keep_last_n_checkpoints = keep_last_n_checkpoints
-        self._metadata_fname = metadata_fname
         self._pg_wrapper = PGWrapper(process_group)
+
+        if metadata_fnames is None:
+            self._metadata_fnames: List[str] = []
+        else:
+            self._metadata_fnames = metadata_fnames
 
         self._ckpt_paths: List[CheckpointPath] = []
         if not self._keep_last_n_checkpoints:
@@ -361,7 +366,7 @@ class CheckpointManager:
         )
         self._ckpt_paths = get_checkpoint_dirpaths(
             dirpath=dirpath,
-            metadata_fname=self._metadata_fname,
+            metadata_fname=self._metadata_fnames,
             metric_name=metric_name,
             process_group=process_group,
         )
@@ -512,12 +517,13 @@ class CheckpointManager:
         If the checkpointer doesn't have a metadata file, this function will always return False. Check is executed in rank 0, but
         result is broadcasted to all ranks.
         """
-        metadata_fname = self._metadata_fname
-        if not metadata_fname:
+        if not self._metadata_fnames:
             return False
 
         fs, _ = url_to_fs(self.dirpath)
-        return _metadata_exists(fs, ckpt.path, metadata_fname)
+        return any(
+            _metadata_exists(fs, ckpt.path, fname) for fname in self._metadata_fnames
+        )
 
     @staticmethod
     @rank_zero_read_and_broadcast
@@ -542,7 +548,7 @@ class CheckpointManager:
 @rank_zero_read_and_broadcast
 def get_latest_checkpoint_path(
     dirpath: str,
-    metadata_fname: Optional[str] = None,
+    metadata_fname: Optional[Union[str, List[str]]] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> Optional[str]:
     """
@@ -551,6 +557,7 @@ def get_latest_checkpoint_path(
     Args:
         dirpath: parent directory where checkpoints are saved.
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+                    If a list is provided, it will check that at least one of the files is present.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Raises:
@@ -578,7 +585,7 @@ def get_best_checkpoint_path(
     dirpath: str,
     metric_name: str,
     mode: Literal["min", "max"],
-    metadata_fname: Optional[str] = None,
+    metadata_fname: Optional[Union[str, List[str]]] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> Optional[str]:
     """
@@ -592,6 +599,7 @@ def get_best_checkpoint_path(
         metric_name: Name of the metric to use to find the best checkpoint.
         mode: Either 'min' or 'max'. If 'min', finds and loads the lowest value metric checkpoint. If 'max', finds and loads the largest.
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+                    If a list is provided, it will check that at least one of the files is present.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Note:
@@ -614,7 +622,7 @@ def get_best_checkpoint_path(
 @rank_zero_read_and_broadcast
 def get_checkpoint_dirpaths(
     dirpath: str,
-    metadata_fname: Optional[str] = None,
+    metadata_fname: Optional[Union[str, List[str]]] = None,
     metric_name: Optional[str] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> List[CheckpointPath]:
@@ -629,6 +637,7 @@ def get_checkpoint_dirpaths(
     Args:
         dirpath: parent directory where checkpoints are saved.
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+                    If a list is provided, it will check that at least one of the files is present.
         metric_name: fetches all the checkpoint directories containing the metric name only.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
@@ -642,7 +651,7 @@ def get_checkpoint_dirpaths(
 
 def _retrieve_checkpoint_dirpaths(
     dirpath: str,
-    metadata_fname: Optional[str],
+    metadata_fname: Optional[Union[str, List[str]]],
     metric_name: Optional[str] = None,
 ) -> List[CheckpointPath]:
     """
@@ -651,6 +660,7 @@ def _retrieve_checkpoint_dirpaths(
     Args:
         dirpath: parent directory where checkpoints are saved.
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
+            If a list is provided, it will check that at least one of the files is present.
         metric_name: Name of the metric that must exist in checkpoint name.
     """
 
@@ -687,16 +697,21 @@ def _retrieve_checkpoint_dirpaths(
         return candidate_checkpoints
 
     # Iterate through all files and directories in the specified directory
-    # and check if metedata is present or not
+    # and check if metadata is present or not
+    metadata_fnames = (
+        [metadata_fname] if isinstance(metadata_fname, str) else metadata_fname
+    )
     valid_ckpt_dirpaths: List[CheckpointPath] = []
     for candidate in candidate_checkpoints:
-        if not _metadata_exists(fs, candidate.path, metadata_fname):
-            logger.warning(
-                f"Snapshot metadata is missing from {candidate}! Skipping this path"
-            )
+        if any(
+            _metadata_exists(fs, candidate.path, fname) for fname in metadata_fnames
+        ):
+            valid_ckpt_dirpaths.append(candidate)
             continue
 
-        valid_ckpt_dirpaths.append(candidate)
+        logger.warning(
+            f"Snapshot metadata ({metadata_fnames}) missing from {candidate}! Skipping this path"
+        )
 
     return valid_ckpt_dirpaths
 
