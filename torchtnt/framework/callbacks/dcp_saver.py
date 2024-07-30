@@ -9,6 +9,7 @@
 import logging
 import time
 from concurrent.futures import Future
+from datetime import timedelta
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import torch
@@ -273,18 +274,38 @@ class DistributedCheckpointSaver(BaseCheckpointer):
     ) -> None:
         """Utility method to restore dcp checkpoint from a path."""
 
+        # use gloo pg if available
+        gloo_pg_created = False
+        if dist.is_initialized():
+            pg = dist.group.WORLD if process_group is None else process_group
+
+            if dist.get_backend(pg) != dist.Backend.GLOO:
+                rank_zero_info(
+                    "Creating new gloo process group for loading checkpoint."
+                )
+                pg = dist.new_group(
+                    timeout=timedelta(seconds=3600), backend=dist.Backend.GLOO
+                )
+                gloo_pg_created = True
+        else:
+            pg = process_group
+
         checkpoint_id = path
 
         DistributedCheckpointSaver.restore_with_id(
             checkpoint_id,
             unit,
             train_dataloader=train_dataloader,
-            process_group=process_group,
+            process_group=pg,
             restore_options=restore_options,
             knob_options=knob_options,
             planner=planner,
             storage_reader=storage_reader,
         )
+
+        # destroy gloo pg if created, its sole purpose was for checkpoint restore
+        if gloo_pg_created:
+            dist.destroy_process_group(pg)
 
     @staticmethod
     def restore_with_id(
