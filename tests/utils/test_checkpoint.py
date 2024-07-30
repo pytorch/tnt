@@ -1225,6 +1225,40 @@ class CheckpointUtilsTest(unittest.TestCase):
                 [],
             )
 
+    def test_get_checkpoint_dirpaths_with_multiple_metadata_fnames(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path1 = os.path.join(temp_dir, "epoch_1_step_20")
+            os.mkdir(path1)
+
+            path2 = os.path.join(temp_dir, "epoch_4_eval_step_130")
+            os.mkdir(path2)
+
+            with open(os.path.join(path1, ".metadata"), "w"):
+                pass
+
+            with open(os.path.join(path2, ".manifest"), "w"):
+                pass
+
+            self.assertEqual(
+                [
+                    str(x)
+                    for x in get_checkpoint_dirpaths(
+                        temp_dir, metadata_fname=[".metadata"]
+                    )
+                ],
+                [path1],
+            )
+
+            self.assertEqual(
+                {
+                    str(x)
+                    for x in get_checkpoint_dirpaths(
+                        temp_dir, metadata_fname=[".manifest", ".metadata"]
+                    )
+                },
+                {path1, path2},
+            )
+
     def test_metadata_exists(self) -> None:
         app_state = {"module": nn.Linear(2, 2)}
         with tempfile.TemporaryDirectory() as temp_dir:

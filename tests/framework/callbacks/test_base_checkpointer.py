@@ -481,7 +481,7 @@ class BaseCheckpointerTest(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(temp_dir, expected_path)))
 
             with self.assertLogs(level="WARNING") as log:
-                checkpoint_cb._checkpoint_manager._metadata_fname = ".metadata"
+                checkpoint_cb._checkpoint_manager._metadata_fnames = [".metadata"]
                 # create metadata file
                 with open(os.path.join(temp_dir, expected_path, ".metadata"), "w"):
                     pass
