@@ -9,7 +9,7 @@
 import abc
 import logging
 from datetime import timedelta
-from typing import Any, cast, Dict, Iterable, Literal, Optional, Union
+from typing import Any, cast, Dict, Iterable, List, Literal, Optional, Union
 
 import torch.distributed as dist
 from pyre_extensions import none_throws
@@ -43,7 +43,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
     2) ``restore`` which implements restoring the checkpoint given the relevant checkpoint path.
 
     The subclass may override the ``metadata_fname`` attribute to specify the filename of the metadata file that will be written within the checkpoint directory.
-    This will be used by this base class to ensure the integrity of the checkpoint.
+    This will be used by this base class to ensure the integrity of the checkpoint. This is a list because some checkpointers may allow more than one valid
+    ``metadata_fnames``, depending on storage or optimization configurations.
 
     Args:
         dirpath: Parent directory to save checkpoints to.
@@ -67,7 +68,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         checkpoint will be saved, without the metric value in the checkpoint name
     """
 
-    metadata_fname: Optional[str] = None
+    # No metadata file is checked by default. This can be overridden by subclasses.
+    metadata_fnames: List[str] = []
 
     def __init__(
         self,
@@ -112,7 +114,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             dirpath,
             best_checkpoint_config,
             keep_last_n_checkpoints,
-            metadata_fnames=[self.metadata_fname] if self.metadata_fname else None,
+            metadata_fnames=self.metadata_fnames,
             process_group=self._process_group,
         )
 
@@ -385,11 +387,11 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             True if the latest checkpoint directory was found and successfully restored, otherwise False.
         """
         path = get_latest_checkpoint_path(
-            dirpath, metadata_fname=cls.metadata_fname, process_group=process_group
+            dirpath, metadata_fname=cls.metadata_fnames, process_group=process_group
         )
         if path is None:
             logger.info(
-                f"Attempted to restore from the following path but no checkpoint was found: {dirpath=}, {cls.metadata_fname}"
+                f"Attempted to restore from the following path but no checkpoint was found: {dirpath=}, {cls.metadata_fnames}"
             )
             return False
         logger.info(f"Restoring from path: {path}")
@@ -438,7 +440,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             dirpath,
             metric_name=metric_name,
             mode=mode,
-            metadata_fname=cls.metadata_fname,
+            metadata_fname=cls.metadata_fnames,
             process_group=process_group,
         )
 
