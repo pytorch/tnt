@@ -9,7 +9,7 @@
 import logging
 import time
 from concurrent.futures import Future
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import torch
 import torch.distributed as dist
@@ -102,7 +102,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         appropriately. For example, if logging validation accuracy, the unit must be responsible for maintaining the value and resetting it when the epoch ends.
     """
 
-    metadata_fname: Optional[str] = ".metadata"
+    metadata_fnames: List[str] = [".metadata"]
 
     def __init__(
         self,

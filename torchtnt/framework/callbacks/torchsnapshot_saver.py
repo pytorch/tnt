@@ -96,7 +96,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
         appropriately. For example, if logging validation accuracy, the unit must be responsible for maintaining the value and resetting it when the epoch ends.
     """
 
-    metadata_fname: Optional[str] = ".snapshot_metadata"
+    metadata_fnames: List[str] = [".snapshot_metadata"]
 
     def __init__(
         self,
