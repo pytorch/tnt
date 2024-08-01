@@ -455,6 +455,17 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         ].allow_partial_load
         self.assertFalse(allow_partial_load)
 
+    @patch("torch.distributed.destroy_process_group")
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_gloo_pg_restore(
+        self, mock_dist_cp: MagicMock, mock_destroy_process_group: MagicMock
+    ) -> None:
+        my_unit = DummyAutoUnit(module=nn.Linear(2, 3))
+        DistributedCheckpointSaver.restore(path="path/to/snapshot", unit=my_unit)
+        process_group = mock_dist_cp.load.call_args.kwargs["process_group"]
+        self.assertEqual(process_group, None)
+        mock_destroy_process_group.assert_not_called()
+
 
 class DummyStatefulDataLoader:
     def __init__(self, dataloader: DataLoader) -> None:

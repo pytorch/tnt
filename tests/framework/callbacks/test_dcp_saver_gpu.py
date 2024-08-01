@@ -11,8 +11,10 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import MagicMock, patch
 
 import torch
+from torch import distributed as dist, nn
 
 from torchtnt.framework._test_utils import DummyAutoUnit, generate_random_dataloader
 from torchtnt.framework.callbacks.dcp_saver import DistributedCheckpointSaver
@@ -22,6 +24,28 @@ from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 
 
 class DistributedCheckpointSaverGPUTest(unittest.TestCase):
+    @skip_if_not_distributed
+    @skip_if_not_gpu
+    def test_test_gloo_pg_restore(self) -> None:
+        spawn_multi_process(
+            1,
+            "nccl",
+            self._test_gloo_pg_restore,
+        )
+
+    @staticmethod
+    @patch("torch.distributed.destroy_process_group")
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def _test_gloo_pg_restore(
+        mock_dist_cp: MagicMock, mock_destroy_process_group: MagicMock
+    ) -> None:
+        tc = unittest.TestCase()
+        my_unit = DummyAutoUnit(module=nn.Linear(2, 3))
+        DistributedCheckpointSaver.restore(path="path/to/snapshot", unit=my_unit)
+        process_group = mock_dist_cp.load.call_args.kwargs["process_group"]
+        tc.assertEqual(dist.get_backend(process_group), dist.Backend.GLOO, None)
+        mock_destroy_process_group.assert_called_once()
+
     @skip_if_not_distributed
     @skip_if_not_gpu
     def test_save_restore_fsdp(self) -> None:
