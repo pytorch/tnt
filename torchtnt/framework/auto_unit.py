@@ -168,6 +168,7 @@ class _AutoUnitMixin(Generic[TData]):
         precision: Optional[Union[str, torch.dtype]] = None,
         detect_anomaly: Optional[bool] = None,
         torch_compile_params: Optional[TorchCompileParams] = None,
+        enable_prefetch: bool = True,
     ) -> None:
         super().__init__()
 
@@ -189,7 +190,9 @@ class _AutoUnitMixin(Generic[TData]):
 
         # cuda stream to use for moving data to device
         self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
-            torch.cuda.Stream() if self.device.type == "cuda" else None
+            torch.cuda.Stream()
+            if (self.device.type == "cuda" and enable_prefetch)
+            else None
         )
         # dict mapping phase to whether the next batch which has been prefetched for that phase and is ready to be used
         self._phase_to_next_batch: dict[ActivePhase, Optional[TData]] = {
@@ -206,6 +209,7 @@ class _AutoUnitMixin(Generic[TData]):
         }
         # whether the current batch is the last train batch
         self._is_last_batch: bool = False
+        self._enable_prefetch = enable_prefetch
 
     def move_data_to_device(
         self, state: State, data: TData, non_blocking: bool
@@ -253,6 +257,10 @@ class _AutoUnitMixin(Generic[TData]):
             )
 
     def _get_next_batch(self, state: State, data: Iterator[TData]) -> TData:
+        if not self._enable_prefetch:
+            batch = next(data)
+            return self.move_data_to_device(state, batch, non_blocking=False)
+
         active_phase = state.active_phase
         if not self._phase_to_prefetched[active_phase]:
             self._prefetch_next_batch(state, data)
@@ -293,6 +301,7 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
         precision: Optional[Union[str, torch.dtype]] = None,
         torch_compile_params: Optional[TorchCompileParams] = None,
         detect_anomaly: Optional[bool] = None,
+        enable_prefetch: bool = False,
     ) -> None:
         """
         AutoPredictUnit is a convenience for users who are running inference and would like to have certain features handled for them, such as:
@@ -325,6 +334,7 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
             precision=precision,
             torch_compile_params=torch_compile_params,
             detect_anomaly=detect_anomaly,
+            enable_prefetch=enable_prefetch,
         )
         self.module: torch.nn.Module = prepare_module(
             module,
@@ -435,9 +445,10 @@ class AutoUnit(
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
         enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.
         loss_backward_retain_graph:  If ``None`` or ``False``, the graph used to compute
-        the grads will be freed during loss backward pass. Note that in nearly all cases setting
-        this option to True is not needed and often can be worked around
-        in a much more efficient way.
+            the grads will be freed during loss backward pass. Note that in nearly all cases setting
+            this option to True is not needed and often can be worked around
+            in a much more efficient way.
+        enable_prefetch: if True, the data will be prefetched to the device before the next batch is loaded
 
     Note:
         Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.
@@ -468,6 +479,7 @@ class AutoUnit(
         training: bool = True,
         enable_compiled_autograd: bool = False,
         loss_backward_retain_graph: Optional[bool] = None,
+        enable_prefetch: bool = True,
     ) -> None:
         super().__init__(
             module=module,
@@ -475,6 +487,7 @@ class AutoUnit(
             precision=precision,
             detect_anomaly=detect_anomaly,
             torch_compile_params=torch_compile_params,
+            enable_prefetch=enable_prefetch,
         )
 
         if not gradient_accumulation_steps > 0:

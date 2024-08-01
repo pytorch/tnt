@@ -642,6 +642,17 @@ class TestAutoUnit(unittest.TestCase):
             },
         )
 
+    def test_enable_prefetch(self) -> None:
+        data = [1, 2, 3]
+        auto_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2), enable_prefetch=True)
+
+        _ = auto_unit._get_next_batch(get_dummy_train_state(), iter(data))
+        self.assertEqual(auto_unit._phase_to_next_batch[ActivePhase.TRAIN], 2)
+
+        auto_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2), enable_prefetch=False)
+        _ = auto_unit._get_next_batch(get_dummy_train_state(), iter(data))
+        self.assertIsNone(auto_unit._phase_to_next_batch[ActivePhase.TRAIN])
+
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
