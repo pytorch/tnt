@@ -575,6 +575,7 @@
         <span class="n">precision</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">detect_anomaly</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">torch_compile_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TorchCompileParams</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">enable_prefetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
@@ -596,7 +597,9 @@
 
         <span class="c1"># cuda stream to use for moving data to device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">streams</span><span class="o">.</span><span class="n">Stream</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Stream</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Stream</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">and</span> <span class="n">enable_prefetch</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
         <span class="p">)</span>
         <span class="c1"># dict mapping phase to whether the next batch which has been prefetched for that phase and is ready to be used</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">ActivePhase</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TData</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
@@ -613,6 +616,7 @@
         <span class="p">}</span>
         <span class="c1"># whether the current batch is the last train batch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_prefetch</span> <span class="o">=</span> <span class="n">enable_prefetch</span>
 
     <span class="k">def</span> <span class="nf">move_data_to_device</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TData</span><span class="p">,</span> <span class="n">non_blocking</span><span class="p">:</span> <span class="nb">bool</span>
@@ -660,6 +664,10 @@
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TData</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_prefetch</span><span class="p">:</span>
+            <span class="n">batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
         <span class="n">active_phase</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">active_phase</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_next_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
@@ -700,6 +708,7 @@
         <span class="n">precision</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">torch_compile_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TorchCompileParams</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">detect_anomaly</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">enable_prefetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        AutoPredictUnit is a convenience for users who are running inference and would like to have certain features handled for them, such as:</span>
@@ -732,6 +741,7 @@
             <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
             <span class="n">torch_compile_params</span><span class="o">=</span><span class="n">torch_compile_params</span><span class="p">,</span>
             <span class="n">detect_anomaly</span><span class="o">=</span><span class="n">detect_anomaly</span><span class="p">,</span>
+            <span class="n">enable_prefetch</span><span class="o">=</span><span class="n">enable_prefetch</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">prepare_module</span><span class="p">(</span>
             <span class="n">module</span><span class="p">,</span>
@@ -842,9 +852,10 @@
 <span class="sd">        training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.</span>
 <span class="sd">        enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.</span>
 <span class="sd">        loss_backward_retain_graph:  If ``None`` or ``False``, the graph used to compute</span>
-<span class="sd">        the grads will be freed during loss backward pass. Note that in nearly all cases setting</span>
-<span class="sd">        this option to True is not needed and often can be worked around</span>
-<span class="sd">        in a much more efficient way.</span>
+<span class="sd">            the grads will be freed during loss backward pass. Note that in nearly all cases setting</span>
+<span class="sd">            this option to True is not needed and often can be worked around</span>
+<span class="sd">            in a much more efficient way.</span>
+<span class="sd">        enable_prefetch: if True, the data will be prefetched to the device before the next batch is loaded</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.</span>
@@ -875,6 +886,7 @@
         <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">enable_compiled_autograd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">loss_backward_retain_graph</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">enable_prefetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span>
@@ -882,6 +894,7 @@
             <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
             <span class="n">detect_anomaly</span><span class="o">=</span><span class="n">detect_anomaly</span><span class="p">,</span>
             <span class="n">torch_compile_params</span><span class="o">=</span><span class="n">torch_compile_params</span><span class="p">,</span>
+            <span class="n">enable_prefetch</span><span class="o">=</span><span class="n">enable_prefetch</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">gradient_accumulation_steps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
