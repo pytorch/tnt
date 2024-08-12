@@ -32,7 +32,7 @@ class Dummy(AppStateMixin):
         self.lr_scheduler_d = torch.optim.lr_scheduler.StepLR(
             self.optimizer_c, step_size=30, gamma=0.1
         )
-        self.grad_scaler_e = torch.cuda.amp.GradScaler()
+        self.grad_scaler_e = torch.amp.GradScaler("cuda")
         self.optimizer_class_f = torch.optim.SGD
 
 
@@ -218,7 +218,7 @@ class AppStateMixinTest(unittest.TestCase):
                 self.lr_2 = torch.optim.lr_scheduler.StepLR(
                     self.optimizer_placeholder, step_size=50, gamma=0.3
                 )
-                self.grad_scaler_e = torch.cuda.amp.GradScaler()
+                self.grad_scaler_e = torch.amp.GradScaler("cuda")
 
             def tracked_modules(self) -> Dict[str, nn.Module]:
                 ret = super().tracked_modules()
@@ -235,7 +235,7 @@ class AppStateMixinTest(unittest.TestCase):
 
             def tracked_misc_statefuls(self) -> Dict[str, Any]:
                 ret = super().tracked_misc_statefuls()
-                ret["another_scaler"] = torch.cuda.amp.GradScaler()
+                ret["another_scaler"] = torch.amp.GradScaler("cuda")
                 return ret
 
         o = Override()
@@ -266,6 +266,6 @@ class AppStateMixinTest(unittest.TestCase):
         ):
             result = auto_unit._construct_tracked_optimizers_and_schedulers()
 
-        self.assertTrue(isinstance(result["optimizer"], FSDPOptimizerWrapper))
-        self.assertTrue(isinstance(result["optim2"], torch.optim.Optimizer))
-        self.assertTrue(isinstance(result["lr_scheduler"], TLRScheduler))
+        self.assertIsInstance(result["optimizer"], FSDPOptimizerWrapper)
+        self.assertIsInstance(result["optim2"], torch.optim.Optimizer)
+        self.assertIsInstance(result["lr_scheduler"], TLRScheduler)

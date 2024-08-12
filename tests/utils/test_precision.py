@@ -10,7 +10,7 @@
 import unittest
 
 import torch
-from torch.cuda.amp.grad_scaler import GradScaler
+from torch.amp.grad_scaler import GradScaler
 from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
 from torchtnt.utils.precision import (
@@ -49,7 +49,7 @@ class PrecisionTest(unittest.TestCase):
         grad_scaler = get_grad_scaler_from_precision(
             torch.float16, is_fsdp_module=False
         )
-        self.assertTrue(isinstance(grad_scaler, GradScaler))
+        self.assertIsInstance(grad_scaler, GradScaler)
 
         grad_scaler = get_grad_scaler_from_precision(torch.float16, is_fsdp_module=True)
-        self.assertTrue(isinstance(grad_scaler, ShardedGradScaler))
+        self.assertIsInstance(grad_scaler, ShardedGradScaler)

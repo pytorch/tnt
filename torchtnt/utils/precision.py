@@ -10,12 +10,7 @@
 from typing import Mapping, Optional
 
 import torch
-from torch.cuda.amp.grad_scaler import GradScaler as CudaGradScaler
-
-try:
-    from torch.amp.grad_scaler import GradScaler
-except Exception:
-    GradScaler = CudaGradScaler
+from torch.amp.grad_scaler import GradScaler
 
 _DTYPE_STRING_TO_DTYPE_MAPPING: Mapping[str, Optional[torch.dtype]] = {
     "fp16": torch.float16,
@@ -63,5 +58,5 @@ def get_grad_scaler_from_precision(
 
             return ShardedGradScaler()
         else:
-            return CudaGradScaler()
+            return GradScaler("cuda")
     return None
