@@ -242,7 +242,10 @@ class DistributedCheckpointSaver(BaseCheckpointer):
                 storage_writer=storage_writer,
                 planner=planner,
             )
-        except AttributeError:
+        except AttributeError as ex:
+            logger.warning(
+                f"Unable to save checkpoint (will retry saving using deprecated API). Error: {ex}"
+            )
             dcp.save_state_dict(
                 state_dict={"app_state": MultiStateful(app_state)},
                 process_group=self._process_group,
