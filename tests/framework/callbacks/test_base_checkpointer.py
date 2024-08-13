@@ -1084,6 +1084,7 @@ class BaseCheckpointerTest(unittest.TestCase):
                 ["epoch_10_train_step_0"],
             )
         finally:
+            dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
