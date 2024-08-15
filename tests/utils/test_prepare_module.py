@@ -75,6 +75,15 @@ class PrepareModelTest(unittest.TestCase):
                 strategy="foo",
             )
 
+    def test_prepare_module_invalid_strategy(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Unknown strategy received"):
+            prepare_module(
+                module=torch.nn.Linear(2, 2),
+                device=init_from_env(),
+                # pyre-ignore: Incompatible parameter type [6] (intentional to test error raised)
+                strategy={"_strategy_": "DDPStrategy"},
+            )
+
     def test_prepare_noop(self) -> None:
         device = torch.device("cuda")  # Suppose init_from_env returns cuda
 
