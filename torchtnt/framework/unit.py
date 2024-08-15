@@ -341,6 +341,16 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         """
         pass
 
+    def on_checkpoint_save(self, state: State, checkpoint_id: str) -> None:
+        """Hook called after successfully saving a checkpoint.
+
+        Args:
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
+            checkpoint_id: the ID of the checkpoint that was saved. Depending on the storage type, this may be
+                           a path, a URL or a unique identifier.
+        """
+        pass
+
     def get_next_train_batch(
         self,
         state: State,
@@ -444,6 +454,16 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
 
         Args:
             state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.
+        """
+        pass
+
+    def on_checkpoint_save(self, state: State, checkpoint_id: str) -> None:
+        """Hook called after successfully saving a checkpoint.
+
+        Args:
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
+            checkpoint_id: the ID of the checkpoint that was saved. Depending on the storage type, this may be
+                           a path, a URL or a unique identifier.
         """
         pass
 

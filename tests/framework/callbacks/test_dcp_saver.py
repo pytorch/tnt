@@ -10,6 +10,7 @@
 import unittest
 
 from torchtnt.framework.callbacks.dcp_saver import _LATEST_DCP_AVAIL
+from torchtnt.framework.state import State
 
 if not _LATEST_DCP_AVAIL:
     raise unittest.SkipTest("Latest Pytorch is required to run DCP tests")
@@ -51,35 +52,37 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         dataset_len = 10
         batch_size = 2
         max_epochs = 2
-        expected_steps_per_epoch = math.ceil(dataset_len / batch_size)
         save_every_n_train_steps = 2
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
         dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
         expected_paths: List[str] = []
         with tempfile.TemporaryDirectory() as temp_dir:
-            cumulative_steps = 0
-            for epoch in range(max_epochs):
-                for _ in range(
-                    save_every_n_train_steps,
-                    expected_steps_per_epoch + 1,
-                    save_every_n_train_steps,
-                ):
-                    cumulative_steps += save_every_n_train_steps
-                    expected_paths.append(
-                        os.path.join(
-                            temp_dir, f"epoch_{epoch}_train_step_{cumulative_steps}"
-                        )
-                    )
+            expected_paths = [
+                f"{temp_dir}/epoch_0_train_step_2",
+                f"{temp_dir}/epoch_0_train_step_4",
+                f"{temp_dir}/epoch_1_train_step_6",
+                f"{temp_dir}/epoch_1_train_step_8",
+                f"{temp_dir}/epoch_1_train_step_10",
+                f"{temp_dir}/epoch_2_train_step_10",  # extra checkpoint on_train_end
+            ]
             dcp_cb = DistributedCheckpointSaver(
                 temp_dir,
                 save_every_n_train_steps=save_every_n_train_steps,
                 knob_options=KnobOptions(1),
             )
+
+            saved_checkpoint_paths: List[str] = []
+
+            def _checkpoint_save_callback(state: State, checkpoint_id: str) -> None:
+                saved_checkpoint_paths.append(checkpoint_id)
+
+            my_unit.on_checkpoint_save = _checkpoint_save_callback  # pyre-ignore
+
             train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[dcp_cb])
 
             end_num_steps_completed = my_unit.train_progress.num_steps_completed
-            self.assertGreater(len(expected_paths), 0)
+            self.assertEqual(saved_checkpoint_paths, expected_paths)
             dcp_cb.restore(expected_paths[0], my_unit)
             restored_num_steps_completed = my_unit.train_progress.num_steps_completed
             # A snapshot is saved every n steps
