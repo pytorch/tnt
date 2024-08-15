@@ -312,6 +312,11 @@ def prepare_module(
     """
 
     if strategy:
+        if not isinstance(strategy, str) and not isinstance(strategy, Strategy):
+            raise ValueError(
+                f"Unknown strategy received: {strategy}. Expect either str or Strategy dataclass"
+            )
+
         if isinstance(strategy, str):
             strategy = convert_str_to_strategy(strategy)
         if isinstance(strategy, DDPStrategy):
