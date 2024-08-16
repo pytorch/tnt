@@ -748,6 +748,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
+<div class="viewcode-block" id="TrainUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span> <span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after successfully saving a checkpoint.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.</span>
+<span class="sd">            checkpoint_id: the ID of the checkpoint that was saved. Depending on the storage type, this may be</span>
+<span class="sd">                           a path, a URL or a unique identifier.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
 <div class="viewcode-block" id="TrainUnit.get_next_train_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.get_next_train_batch">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_train_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
@@ -851,6 +861,16 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the evaluation run.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="EvalUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span> <span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after successfully saving a checkpoint.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.</span>
+<span class="sd">            checkpoint_id: the ID of the checkpoint that was saved. Depending on the storage type, this may be</span>
+<span class="sd">                           a path, a URL or a unique identifier.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
