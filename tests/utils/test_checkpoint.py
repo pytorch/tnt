@@ -10,7 +10,7 @@ import pickle
 import shutil
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import torch
 
@@ -786,6 +786,43 @@ class CheckpointManagerTest(unittest.TestCase):
             self.assertFalse(os.path.exists(os.path.join(temp_dir, "epoch_0_step_0")))
             self.assertTrue(os.path.exists(os.path.join(temp_dir, "epoch_0_step_1")))
             self.assertEqual(ckpt_manager._ckpt_paths, [CheckpointPath(temp_dir, 0, 1)])
+
+    @patch(
+        "fsspec.implementations.local.LocalFileSystem.rm",
+        side_effect=Exception("OSError: [Errno 2] No such file or directory"),
+    )
+    def test_remove_worst_checkpoint_exception(self, mock_url_to_fs: MagicMock) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            os.mkdir(os.path.join(temp_dir, "epoch_0_train_step_0"))
+            os.mkdir(os.path.join(temp_dir, "epoch_0_train_step_1"))
+
+            ckpt_manager = CheckpointManager(temp_dir, keep_last_n_checkpoints=2)
+
+            log_container = []
+            with patch(
+                "torchtnt.utils.checkpoint.logging.Logger.error", log_container.append
+            ):
+                ckpt_manager.append_checkpoint(
+                    CheckpointPath(temp_dir, 0, {Phase.TRAIN: 2})
+                )
+
+            self.assertEqual(
+                log_container,
+                [
+                    (
+                        f"Failed to remove checkpoint '{temp_dir}/epoch_0_train_step_0' for bookkeeping purposes. "
+                        "Do not use it to restore since it may be corrupted! Exception: OSError: [Errno 2] No such file or directory"
+                    )
+                ],
+            )
+            # Make sure we are not tracking the oldest one anymore, even if it was not deleted
+            self.assertEqual(
+                ckpt_manager._ckpt_paths,
+                [
+                    CheckpointPath(temp_dir, 0, {Phase.TRAIN: 1}),
+                    CheckpointPath(temp_dir, 0, {Phase.TRAIN: 2}),
+                ],
+            )
 
 
 class CheckpointUtilsTest(unittest.TestCase):
