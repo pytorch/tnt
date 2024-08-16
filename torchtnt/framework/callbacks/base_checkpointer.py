@@ -215,6 +215,9 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         # 4) track checkpoint and clean up surplus if needed
         self._checkpoint_manager.append_checkpoint(checkpoint_path)
 
+        # 5) invoke on_checkpoint_save callback on the unit since checkpoint was saved successfully
+        unit.on_checkpoint_save(state, checkpoint_id=checkpoint_path.path)
+
         return True
 
     def _does_checkpoint_exist(
