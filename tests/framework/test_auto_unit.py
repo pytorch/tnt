@@ -62,11 +62,9 @@ class TestAutoUnit(unittest.TestCase):
         )
 
         self.assertEqual(auto_unit.tracked_modules()["module"], my_module)
-        self.assertTrue(
-            isinstance(
-                auto_unit.tracked_misc_statefuls()["grad_scaler"],
-                torch.cuda.amp.GradScaler,
-            )
+        self.assertIsInstance(
+            auto_unit.tracked_misc_statefuls()["grad_scaler"],
+            torch.amp.GradScaler,
         )
         for key in ("module", "optimizer", "lr_scheduler", "grad_scaler"):
             self.assertIn(key, auto_unit.app_state())
