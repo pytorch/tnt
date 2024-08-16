@@ -487,7 +487,7 @@ class CheckpointManager:
             ckpt: The checkpoint to save.
             state: The training state.
         """
-        # Remove oldest checkpoint if needed
+        # Remove oldest/worst checkpoint if needed
         max_ckpts = self._keep_last_n_checkpoints
         if max_ckpts and len(self._ckpt_paths) >= max_ckpts:
             self.remove_checkpoint()
@@ -542,7 +542,15 @@ class CheckpointManager:
         worst_ckpt_path = self._ckpt_paths.pop(0)
         if self._pg_wrapper.get_rank() == 0:
             fs, _ = url_to_fs(self.dirpath)
-            fs.rm(worst_ckpt_path.path, recursive=True)
+            try:
+                fs.rm(worst_ckpt_path.path, recursive=True)
+            except Exception as exc:
+                logger.error(
+                    (
+                        f"Failed to remove checkpoint '{worst_ckpt_path}' for bookkeeping purposes. "
+                        f"Do not use it to restore since it may be corrupted! Exception: {exc}"
+                    )
+                )
 
 
 @rank_zero_read_and_broadcast
