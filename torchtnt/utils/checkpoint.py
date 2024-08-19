@@ -477,6 +477,14 @@ class CheckpointManager:
             self._ckpt_paths[0], mode=best_checkpoint_config.mode
         )
 
+    def get_last_checkpoint(self) -> Optional[CheckpointPath]:
+        """
+        Returns last checkpoint to be added
+        """
+        if len(self._ckpt_paths) == 0:
+            return None
+        return self._ckpt_paths[-1]
+
     def append_checkpoint(self, ckpt: CheckpointPath) -> None:
         """
         This will update the internal state to keep track of the checkpoint. This function should only be called
