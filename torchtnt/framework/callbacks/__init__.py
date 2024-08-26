@@ -22,6 +22,7 @@ from .pytorch_profiler import PyTorchProfiler
 from .slow_rank_detector import SlowRankDetector
 from .system_resources_monitor import SystemResourcesMonitor
 from .tensorboard_parameter_monitor import TensorBoardParameterMonitor
+from .tensorfloat32 import EnableTensorFloat32
 from .throughput_logger import ThroughputLogger
 from .time_limit_interrupter import TimeLimitInterrupter
 from .time_wait_for_batch_logger import TimeWaitForBatchLogger
@@ -34,6 +35,7 @@ __all__ = [
     "BaseCSVWriter",
     "EarlyStopping",
     "EmptyCudaCache",
+    "EnableTensorFloat32",
     "GarbageCollector",
     "IterationTimeLogger",
     "Lambda",
