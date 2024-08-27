@@ -259,7 +259,7 @@ class _AutoUnitMixin(Generic[TData]):
     def _get_next_batch(self, state: State, data: Iterator[TData]) -> TData:
         if not self._enable_prefetch:
             batch = next(data)
-            return self.move_data_to_device(state, batch, non_blocking=False)
+            return self.move_data_to_device(state, batch, non_blocking=True)
 
         active_phase = state.active_phase
         if not self._phase_to_prefetched[active_phase]:
