@@ -206,7 +206,7 @@ class CheckpointPath:
     def newer_than(self, other: "CheckpointPath") -> bool:
         """
         Given another CheckpointPath instance, determine if this checkpoint is strictly newer than the other.
-        Note that recency is determine in terms of the epoch, phase, and number of steps. It is NOT related to
+        Note that recency is determined in terms of the epoch, phase, and number of steps. It is NOT related to
         the timestamp the checkpoint was saved.
 
         Returns:
