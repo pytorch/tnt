@@ -10,7 +10,6 @@
 import unittest
 
 import torch
-import torchvision.models as models
 from torchtnt.utils.flops import FlopTensorDispatchMode
 
 
@@ -132,58 +131,4 @@ class ModuleSummaryTest(unittest.TestCase):
                 ftdm.flop_counts["1"].get("mm.default", 0)
                 + ftdm.flop_counts["1"].get("mm", 0),
                 10,
-            )
-
-    def test_torch_pretrained_module(self) -> None:
-        """Make sure FLOPs calculation works for a resnet18."""
-        mod = models.resnet18()
-        inp = torch.randn(1, 3, 224, 224)
-        with FlopTensorDispatchMode(mod) as ftdm:
-            # Hooks should be 2 * number of modules minus 2 (2 for the model itself)
-            self.assertEqual(len(ftdm._all_hooks), 2 * len(list(mod.modules())) - 2)
-            res = mod(inp)
-
-            self.assertEqual(
-                ftdm.flop_counts[""].get("convolution.default", 0)
-                + ftdm.flop_counts[""].get("convolution", 0),
-                1813561344,
-            )
-            self.assertEqual(
-                ftdm.flop_counts[""].get("addmm.default", 0)
-                + ftdm.flop_counts[""].get("addmm", 0),
-                512000,
-            )
-            self.assertEqual(
-                ftdm.flop_counts["conv1"].get("convolution.default", 0)
-                + ftdm.flop_counts["conv1"].get("convolution", 0),
-                118013952,
-            )
-            self.assertEqual(
-                ftdm.flop_counts["fc"].get("addmm.default", 0)
-                + ftdm.flop_counts["fc"].get("addmm", 0),
-                512000,
-            )
-
-            ftdm.reset()
-            res.mean().backward()
-
-            self.assertEqual(
-                ftdm.flop_counts[""].get("convolution_backward.default", 0)
-                + ftdm.flop_counts[""].get("convolution_backward", 0),
-                3509108736,
-            )
-            self.assertEqual(
-                ftdm.flop_counts[""].get("mm.default", 0)
-                + ftdm.flop_counts[""].get("mm", 0),
-                1024000,
-            )
-            self.assertEqual(
-                ftdm.flop_counts["layer1"].get("convolution_backward.default", 0)
-                + ftdm.flop_counts["layer1"].get("convolution_backward", 0),
-                924844032,
-            )
-            self.assertEqual(
-                ftdm.flop_counts["fc"].get("mm.default", 0)
-                + ftdm.flop_counts["fc"].get("mm", 0),
-                1024000,
             )

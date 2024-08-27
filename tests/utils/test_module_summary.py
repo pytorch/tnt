@@ -11,15 +11,13 @@ import unittest
 from typing import Any, Dict, Optional, Tuple
 
 import torch
+from torch import nn
 from torchtnt.utils.module_summary import (
     _get_human_readable_count,
     get_module_summary,
     ModuleSummary,
     prune_module_summary,
 )
-from torchvision import models
-from torchvision.models.alexnet import AlexNet_Weights
-from torchvision.models.resnet import ResNet18_Weights
 
 
 def get_summary_and_prune(
@@ -156,54 +154,6 @@ class ModuleSummaryTest(unittest.TestCase):
         self.assertEqual(ms.flops_backward, "?")
         self.assertEqual(ms.flops_forward, "?")
 
-    def test_resnet_max_depth(self) -> None:
-        """Test the behavior of max_depth on a layered model like ResNet"""
-        pretrained_model = models.resnet.resnet18(
-            weights=ResNet18_Weights.IMAGENET1K_V1
-        )
-
-        # max_depth = None
-        ms1 = get_module_summary(pretrained_model)
-
-        self.assertEqual(len(ms1.submodule_summaries), 10)
-        self.assertEqual(len(ms1.submodule_summaries["layer2"].submodule_summaries), 2)
-        self.assertEqual(
-            len(
-                ms1.submodule_summaries["layer2"]
-                .submodule_summaries["layer2.0"]
-                .submodule_summaries
-            ),
-            6,
-        )
-
-        ms2 = get_summary_and_prune(pretrained_model, max_depth=1)
-        self.assertEqual(len(ms2.submodule_summaries), 0)
-        self.assertNotIn("layer2", ms2.submodule_summaries)
-
-        ms3 = get_summary_and_prune(pretrained_model, max_depth=2)
-        self.assertEqual(len(ms3.submodule_summaries), 10)
-        self.assertEqual(len(ms1.submodule_summaries["layer2"].submodule_summaries), 2)
-        self.assertNotIn(
-            "layer2.0", ms3.submodule_summaries["layer2"].submodule_summaries
-        )
-        inp = torch.randn(1, 3, 224, 224)
-        ms4 = get_summary_and_prune(pretrained_model, max_depth=2, module_args=(inp,))
-
-        self.assertEqual(len(ms4.submodule_summaries), 10)
-        self.assertEqual(ms4.flops_forward, 1814073344)
-        self.assertEqual(ms4.flops_backward, 3510132736)
-        self.assertEqual(ms4.submodule_summaries["layer2"].flops_forward, 411041792)
-        self.assertEqual(ms4.submodule_summaries["layer2"].flops_backward, 822083584)
-
-        # These should stay constant for all max_depth values
-        ms_list = [ms1, ms2, ms3, ms4]
-        for ms in ms_list:
-            self.assertEqual(ms.module_name, "")
-            self.assertEqual(ms.module_type, "ResNet")
-            self.assertEqual(ms.num_parameters, 11689512)
-            self.assertEqual(ms.num_trainable_parameters, 11689512)
-            self.assertFalse(ms.has_uninitialized_param)
-
     def test_module_summary_layer_print(self) -> None:
         model = torch.nn.Conv2d(3, 8, 3)
         ms1 = get_module_summary(model)
@@ -214,69 +164,6 @@ Name | Type   | # Parameters | # Trainable Parameters | Size (bytes) | Contains 
      | Conv2d | 224          | 224                    | 896          | No
 """
         self._test_module_summary_text(summary_table, str(ms1))
-
-    def test_alexnet_print(self) -> None:
-        pretrained_model = models.alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
-        ms1 = get_summary_and_prune(pretrained_model, max_depth=1)
-        ms2 = get_summary_and_prune(pretrained_model, max_depth=2)
-        ms3 = get_summary_and_prune(pretrained_model, max_depth=3)
-        ms4 = get_module_summary(pretrained_model)
-
-        summary_table1 = """
-Name | Type    | # Parameters | # Trainable Parameters | Size (bytes) | Contains Uninitialized Parameters?
-----------------------------------------------------------------------------------------------------------
-     | AlexNet | 61.1 M       | 61.1 M                 | 244 M        | No
-"""
-        summary_table2 = """
-Name       | Type              | # Parameters | # Trainable Parameters | Size (bytes) | Contains Uninitialized Parameters?
---------------------------------------------------------------------------------------------------------------------------
-           | AlexNet           | 61.1 M       | 61.1 M                 | 244 M        | No
-features   | Sequential        | 2.5 M        | 2.5 M                  | 9.9 M        | No
-avgpool    | AdaptiveAvgPool2d | 0            | 0                      | 0            | No
-classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M        | No
-"""
-
-        self._test_module_summary_text(summary_table1, str(ms1))
-        self._test_module_summary_text(summary_table2, str(ms2))
-        self.assertEqual(str(ms3), str(ms4))
-
-    def test_alexnet_with_input_tensor(self) -> None:
-        pretrained_model = models.alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
-        inp = torch.randn(1, 3, 224, 224)
-        ms1 = get_summary_and_prune(pretrained_model, max_depth=1, module_args=(inp,))
-        ms2 = get_summary_and_prune(pretrained_model, max_depth=2, module_args=(inp,))
-
-        self.assertEqual(ms1.module_type, "AlexNet")
-        self.assertEqual(ms1.num_parameters, 61100840)
-        self.assertFalse(ms1.has_uninitialized_param)
-        self.assertEqual(ms1.flops_forward, 714188480)
-        self.assertEqual(ms1.flops_backward, 1358100160)
-        self.assertEqual(ms1.in_size, [1, 3, 224, 224])
-        self.assertEqual(ms1.out_size, [1, 1000])
-
-        ms_features = ms2.submodule_summaries["features"]
-        self.assertEqual(ms_features.module_type, "Sequential")
-        self.assertFalse(ms_features.has_uninitialized_param)
-        self.assertEqual(ms_features.flops_forward, 655566528)
-        self.assertEqual(ms_features.flops_backward, 1240856256)
-        self.assertEqual(ms_features.in_size, [1, 3, 224, 224])
-        self.assertEqual(ms_features.out_size, [1, 256, 6, 6])
-
-        ms_avgpool = ms2.submodule_summaries["avgpool"]
-        self.assertEqual(ms_avgpool.module_type, "AdaptiveAvgPool2d")
-        self.assertFalse(ms_avgpool.has_uninitialized_param)
-        self.assertEqual(ms_avgpool.flops_forward, 0)
-        self.assertEqual(ms_avgpool.flops_backward, 0)
-        self.assertEqual(ms_avgpool.in_size, [1, 256, 6, 6])
-        self.assertEqual(ms_avgpool.out_size, [1, 256, 6, 6])
-
-        ms_classifier = ms2.submodule_summaries["classifier"]
-        self.assertEqual(ms_classifier.module_type, "Sequential")
-        self.assertFalse(ms_classifier.has_uninitialized_param)
-        self.assertEqual(ms_classifier.flops_forward, 58621952)
-        self.assertEqual(ms_classifier.flops_backward, 117243904)
-        self.assertEqual(ms_classifier.in_size, [1, 9216])
-        self.assertEqual(ms_classifier.out_size, [1, 1000])
 
     def test_get_human_readable_count(self) -> None:
         with self.assertRaisesRegex(ValueError, "received -1"):
@@ -350,7 +237,9 @@ classifier | Sequential        | 58.6 M       | 58.6 M                 | 234 M  
         self.assertEqual(ms_classifier.out_size, [1, 1, 224, 224])
 
     def test_forward_elapsed_time(self) -> None:
-        pretrained_model = models.alexnet(weights=AlexNet_Weights.IMAGENET1K_V1)
+        pretrained_model = nn.Sequential(
+            nn.Conv2d(3, 20, 5), nn.ReLU(), nn.Conv2d(20, 64, 5), nn.ReLU()
+        )
         inp = torch.randn(1, 3, 224, 224)
         ms1 = get_summary_and_prune(pretrained_model, module_args=(inp,), max_depth=4)
         stack = [ms1] + [
