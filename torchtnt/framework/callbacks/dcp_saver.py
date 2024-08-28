@@ -16,6 +16,11 @@ import torch
 import torch.distributed as dist
 from pyre_extensions import none_throws
 from torch.distributed import checkpoint as dcp
+
+from torch.distributed.checkpoint._fsspec_filesystem import (
+    FsspecReader as Reader,
+    FsspecWriter as Writer,
+)
 from torch.distributed.checkpoint.default_planner import (
     DefaultLoadPlanner,
     DefaultSavePlanner,
@@ -45,24 +50,7 @@ from torchtnt.utils.optimizer import init_optim_state
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import MultiStateful, Stateful
 
-
 logger: logging.Logger = logging.getLogger(__name__)
-
-_LATEST_DCP_AVAIL: bool = True
-try:
-    from torch.distributed.checkpoint._fsspec_filesystem import (
-        FsspecReader as Reader,
-        FsspecWriter as Writer,
-    )
-except ModuleNotFoundError:
-    logger.warn(
-        "To use FsspecReader / FsspecWriter, please install latest pytorch version"
-    )
-    _LATEST_DCP_AVAIL = False
-    from torch.distributed.checkpoint import (
-        FileSystemReader as Reader,
-        FileSystemWriter as Writer,
-    )
 
 
 class DistributedCheckpointSaver(BaseCheckpointer):
@@ -248,24 +236,13 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         if storage_writer is None:
             storage_writer = Writer(checkpoint_id, **self.default_writer_options)
 
-        try:
-            dcp.save(
-                state_dict={"app_state": MultiStateful(app_state)},
-                checkpoint_id=checkpoint_id,
-                process_group=self._process_group,
-                storage_writer=storage_writer,
-                planner=planner,
-            )
-        except AttributeError as ex:
-            logger.warning(
-                f"Unable to save checkpoint (will retry saving using deprecated API). Error: {ex}"
-            )
-            dcp.save_state_dict(
-                state_dict={"app_state": MultiStateful(app_state)},
-                process_group=self._process_group,
-                storage_writer=storage_writer,
-                planner=planner,
-            )
+        dcp.save(
+            state_dict={"app_state": MultiStateful(app_state)},
+            checkpoint_id=checkpoint_id,
+            process_group=self._process_group,
+            storage_writer=storage_writer,
+            planner=planner,
+        )
 
         return True
 
@@ -397,21 +374,14 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             if isinstance(optimizer, torch.optim.Optimizer):
                 init_optim_state(optimizer)
 
-        try:
-            dcp.load(
-                {"app_state": MultiStateful(app_state)},
-                checkpoint_id=checkpoint_id,
-                storage_reader=storage_reader,
-                planner=planner,
-                process_group=process_group,
-            )
-        except AttributeError:
-            dcp.load_state_dict(
-                {"app_state": MultiStateful(app_state)},
-                storage_reader=storage_reader,
-                process_group=process_group,
-                planner=planner,
-            )
+        dcp.load(
+            {"app_state": MultiStateful(app_state)},
+            checkpoint_id=checkpoint_id,
+            storage_reader=storage_reader,
+            planner=planner,
+            process_group=process_group,
+        )
+
         rank_zero_info(
             f"Restored snapshot for checkpoint_id: {checkpoint_id}", logger=logger
         )
