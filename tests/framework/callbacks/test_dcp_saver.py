@@ -7,18 +7,11 @@
 
 # pyre-strict
 
-import unittest
-
-from torchtnt.framework.callbacks.dcp_saver import _LATEST_DCP_AVAIL
-from torchtnt.framework.state import State
-
-if not _LATEST_DCP_AVAIL:
-    raise unittest.SkipTest("Latest Pytorch is required to run DCP tests")
-
 import math
 import os
 import shutil
 import tempfile
+import unittest
 from typing import Any, Dict, Iterator, List, Optional
 from unittest import mock
 from unittest.mock import MagicMock, patch
@@ -40,6 +33,8 @@ from torchtnt.framework._test_utils import (
 )
 from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
 from torchtnt.framework.callbacks.dcp_saver import DistributedCheckpointSaver
+
+from torchtnt.framework.state import State
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
 from torchtnt.utils.env import seed
