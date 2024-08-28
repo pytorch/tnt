@@ -39,12 +39,7 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import get_timing_context
-from torchtnt.utils.checkpoint import (
-    BestCheckpointConfig,
-    CheckpointPath,
-    MetricData,
-    Phase,
-)
+from torchtnt.utils.checkpoint import BestCheckpointConfig
 from torchtnt.utils.optimizer import init_optim_state
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import MultiStateful, Stateful
@@ -194,6 +189,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
 
         if self._prev_snapshot is not None:
             if not self._prev_snapshot.done():
+                # TODO this is unreachable at this point, since we are waiting on other functions called before _checkpoint_impl.
                 rank_zero_warn(
                     (
                         "Waiting on previous checkpoint to finish... Consider modifying checkpointing "
@@ -401,36 +397,14 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             f"Restored snapshot for checkpoint_id: {checkpoint_id}", logger=logger
         )
 
-    def _does_checkpoint_exist(
-        self,
-        checkpoint_path: CheckpointPath,
-        process_group: Optional[dist.ProcessGroup] = None,
+    def _generate_checkpoint_and_upkeep(
+        self, state: State, unit: Union[TTrainUnit, TEvalUnit], hook: str
     ) -> bool:
-        # if we are still checkpointing, this might cause a collective hang.
-        # so wait here instead
+        # if we are still checkpointing, this might cause a collective hang, since several
+        # operations in the base class use the process group. So wait here instead.
         self._wait()
 
-        return super()._does_checkpoint_exist(
-            checkpoint_path=checkpoint_path, process_group=process_group
-        )
-
-    def _generate_checkpoint_path(
-        self,
-        epoch: int,
-        step_mapping: Union[int, Dict[Phase, int]],
-        metric_data: Optional[MetricData] = None,
-        process_group: Optional[dist.ProcessGroup] = None,
-    ) -> CheckpointPath:
-        # if we are still checkpointing, this might cause a collective hang.
-        # so wait here instead
-        self._wait()
-
-        return super()._generate_checkpoint_path(
-            epoch=epoch,
-            step_mapping=step_mapping,
-            metric_data=metric_data,
-            process_group=process_group,
-        )
+        return super()._generate_checkpoint_and_upkeep(state, unit, hook)
 
     @property
     def default_writer_options(self) -> Dict[str, Any]:
