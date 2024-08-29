@@ -137,26 +137,38 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         intra_epoch = hook == "on_train_step_end"
         curr_snapshot_wait = hook == "on_train_end"
 
+        if planner is None:
+            planner = DefaultSavePlanner()
+
+        if storage_writer is None:
+            storage_writer = Writer(checkpoint_id, **self.default_writer_options)
+
         app_state = _prepare_app_state_for_checkpoint(state, unit, intra_epoch)
         # TODO: evaluate whether we need to implement the equivalent of torchsnapshot.RNGState()
         if self._async_checkpoint:
             with get_timing_context(state, f"{self.__class__.__name__}.async_save"):
-                # TODO checkpoint is not truly successful
-                # since this is async checkpointed, so in
-                # future, add logic to set  successful flag
-                # only when checkpoint is fully written
-                checkpoint_success = self._async_save(
-                    checkpoint_id, app_state, planner, storage_writer
+                # Redundant check for safety
+                self._wait(log_warning=True)
+                self._prev_snapshot = dcp.async_save(
+                    state_dict={"app_state": MultiStateful(app_state)},
+                    checkpoint_id=checkpoint_id,
+                    process_group=self._process_group,
+                    storage_writer=storage_writer,
+                    planner=planner,
                 )
                 if curr_snapshot_wait:
                     self._wait(log_warning=False)
         else:
             with get_timing_context(state, f"{self.__class__.__name__}.save"):
-                checkpoint_success = self._save(
-                    checkpoint_id, app_state, planner, storage_writer
+                dcp.save(
+                    state_dict={"app_state": MultiStateful(app_state)},
+                    checkpoint_id=checkpoint_id,
+                    process_group=self._process_group,
+                    storage_writer=storage_writer,
+                    planner=planner,
                 )
 
-        return checkpoint_success
+        return True
 
     def _wait(self, log_warning: bool = True) -> None:
         """
@@ -194,57 +206,6 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             f"Waiting on previous checkpoint for {time.monotonic()-t0:.3f} seconds",
             logger=logger,
         )
-
-    def _async_save(
-        self,
-        checkpoint_id: str,
-        app_state: Dict[str, Stateful],
-        planner: Optional[SavePlanner] = None,
-        storage_writer: Optional[StorageWriter] = None,
-    ) -> bool:
-
-        if planner is None:
-            planner = DefaultSavePlanner()
-
-        if storage_writer is None:
-            storage_writer = Writer(checkpoint_id, **self.default_writer_options)
-
-        # Redundant check for safety
-        self._wait(log_warning=True)
-
-        self._prev_snapshot = dcp.async_save(
-            state_dict={"app_state": MultiStateful(app_state)},
-            checkpoint_id=checkpoint_id,
-            process_group=self._process_group,
-            storage_writer=storage_writer,
-            planner=planner,
-        )
-
-        return True
-
-    def _save(
-        self,
-        checkpoint_id: str,
-        app_state: Dict[str, Stateful],
-        planner: Optional[SavePlanner] = None,
-        storage_writer: Optional[StorageWriter] = None,
-    ) -> bool:
-        # Initialize DefaultSavePlanner and FsspecWriter if not provided
-        if planner is None:
-            planner = DefaultSavePlanner()
-
-        if storage_writer is None:
-            storage_writer = Writer(checkpoint_id, **self.default_writer_options)
-
-        dcp.save(
-            state_dict={"app_state": MultiStateful(app_state)},
-            checkpoint_id=checkpoint_id,
-            process_group=self._process_group,
-            storage_writer=storage_writer,
-            planner=planner,
-        )
-
-        return True
 
     def on_exception(
         self,
