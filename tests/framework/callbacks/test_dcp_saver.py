@@ -30,6 +30,7 @@ from torchtnt.framework._test_utils import (
     DummyAutoUnit,
     DummyTrainUnit,
     generate_random_dataloader,
+    get_dummy_train_state,
 )
 from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, RestoreOptions
 from torchtnt.framework.callbacks.dcp_saver import DistributedCheckpointSaver
@@ -306,6 +307,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         save_every_n_train_steps = 1
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
+        state = get_dummy_train_state()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             dcp_cb = DistributedCheckpointSaver(
@@ -314,9 +316,11 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
                 knob_options=KnobOptions(1),
             )
 
-            dcp_cb._save(
+            dcp_cb._checkpoint_impl(
+                state=state,
+                unit=my_unit,
                 checkpoint_id=temp_dir,
-                app_state=my_unit.module.state_dict(),
+                hook="on_train_epoch_end",
             )
 
             planner = mock_dist_cp.save.call_args_list[0][1]["planner"]
@@ -331,6 +335,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         save_every_n_train_steps = 1
 
         my_unit = DummyTrainUnit(input_dim=input_dim)
+        state = get_dummy_train_state()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             dcp_cb = DistributedCheckpointSaver(
@@ -339,9 +344,11 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
                 knob_options=KnobOptions(1),
             )
 
-            dcp_cb._save(
+            dcp_cb._checkpoint_impl(
+                state=state,
+                unit=my_unit,
                 checkpoint_id=temp_dir,
-                app_state=my_unit.module.state_dict(),
+                hook="on_train_epoch_end",
                 planner=DummySavePlanner(),
                 storage_writer=DummyStorageWriter(path=temp_dir),
             )
