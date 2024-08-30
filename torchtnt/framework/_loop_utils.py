@@ -96,14 +96,15 @@ def _set_module_training_mode(
         if _EXPORT_UTILS_AVAIL and model_is_exported(
             module.module if is_ddp else module
         ):
-            if mode:
-                module = torch.ao.quantization.move_exported_model_to_train(
-                    module.module if is_ddp else module
-                )
-            else:
-                module = torch.ao.quantization.move_exported_model_to_eval(
-                    module.module if is_ddp else module
-                )
+            move_fn = (
+                torch.ao.quantization.move_exported_model_to_train
+                if mode
+                else torch.ao.quantization.move_exported_model_to_eval
+            )
+            move_fn(module.module if is_ddp else module)
+            module.training = mode
+            if is_ddp:
+                module.module.training = mode
         else:
             module.train(mode)
 
@@ -118,7 +119,22 @@ def _reset_module_training_mode(
     # returning back to the user
     for name, module in modules.items():
         if name in prior_modes:
-            module.train(prior_modes[name])
+            is_ddp = isinstance(module, DistributedDataParallel)
+
+            if _EXPORT_UTILS_AVAIL and model_is_exported(
+                module.module if is_ddp else module
+            ):
+                move_fn = (
+                    torch.ao.quantization.move_exported_model_to_train
+                    if prior_modes[name]
+                    else torch.ao.quantization.move_exported_model_to_eval
+                )
+                move_fn(module.module if is_ddp else module)
+                module.training = prior_modes[name]
+                if is_ddp:
+                    module.module.training = prior_modes[name]
+            else:
+                module.train(prior_modes[name])
 
 
 def _log_api_usage(entry_point: str) -> None:

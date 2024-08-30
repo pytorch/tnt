@@ -12,6 +12,7 @@ from typing import cast, Dict
 
 import torch
 from torch import distributed as dist, nn
+from torch.ao.quantization.pt2e.export_utils import model_is_exported
 from torch.distributed import launcher
 
 from torch.utils.data import DataLoader
@@ -71,6 +72,47 @@ class LoopUtilsTest(unittest.TestCase):
         }
 
         # set module training mode to False
+        prior_module_train_states = _set_module_training_mode(tracked_modules, False)
+
+        self.assertFalse(module.training)
+        self.assertFalse(loss_fn.training)
+
+        self.assertTrue(prior_module_train_states["module"])
+        self.assertTrue(prior_module_train_states["loss_fn"])
+
+        # set back to True
+        prior_module_train_states = _set_module_training_mode(tracked_modules, True)
+
+        self.assertTrue(module.training)
+        self.assertTrue(loss_fn.training)
+
+        self.assertFalse(prior_module_train_states["module"])
+        self.assertFalse(prior_module_train_states["loss_fn"])
+
+    def test_set_module_training_mode_qat(self) -> None:
+        """
+        Test _set_module_training_mode
+        """
+
+        # define a floating point model
+        class M(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.fc = torch.nn.Linear(4, 4)
+
+            def forward(self, x):
+                x = self.fc(x)
+                return x
+
+        loss_fn = nn.CrossEntropyLoss()
+        module = torch.export.export(M(), (torch.rand(4, 4),)).module()
+
+        tracked_modules: Dict[str, torch.nn.Module] = {
+            "module": module,
+            "loss_fn": loss_fn,
+        }
+
+        self.assertTrue(model_is_exported(module))
         prior_module_train_states = _set_module_training_mode(tracked_modules, False)
 
         self.assertFalse(module.training)
