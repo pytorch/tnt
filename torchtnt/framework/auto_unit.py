@@ -8,6 +8,7 @@
 
 
 import contextlib
+import logging
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
@@ -51,6 +52,8 @@ from torchtnt.utils.prepare_module import (
 )
 from torchtnt.utils.swa import AveragedModel
 from typing_extensions import Literal
+
+_logger: logging.Logger = logging.getLogger(__name__)
 
 
 TData = TypeVar("TData")
@@ -549,6 +552,43 @@ class AutoUnit(
         self.optimizer: Optional[torch.optim.Optimizer] = None
         self.lr_scheduler: Optional[TLRScheduler] = None
         self.swa_scheduler: Optional[SWALR] = None
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if isinstance(value, torch.nn.Module):
+            self._validate_module_attr(name, value)
+
+        super().__setattr__(name, value)
+
+    def _validate_module_attr(self, name: str, module: torch.nn.Module) -> None:
+        """
+        The AutoUnit is designed to manage the input model using the `self.module` attribute,
+        which should not be reassigned. Additionally, if a subclass saves another attribute
+        referencing the same model instance (wrapped or unwrapped), then the same instance will
+        appear two times in the tracked_modules. This is problematic for checkpointing and handling
+        of evaluation/training mode.
+        """
+        # First time the module attribute is set is in the AutoUnit's initialization
+        if not hasattr(self, "module"):
+            return
+
+        # Value of self.module should not be changed after initialization
+        if name == "module":
+            _logger.warning(
+                "The self.module attribute is managed by AutoUnit and is not meant to be reassigned."
+            )
+            return
+
+        # Otherwise, double check that this is not a duplicate reference to the self.module instance
+        managed_modules = [self.module]
+        if isinstance(self.module, DDP) or isinstance(self.module, FSDP):
+            managed_modules.append(self.module.module)
+
+        if any(module is managed_module for managed_module in managed_modules):
+            _logger.error(
+                f"Attribute '{name}' of the custom TNT Unit stores a reference to the model managed"
+                + "by AutoUnit. This is known to cause errors on checkpointing and model training "
+                + "mode. Please remove this attribute and access the existing `self.module` instead."
+            )
 
     @abstractmethod
     def configure_optimizers_and_lr_scheduler(

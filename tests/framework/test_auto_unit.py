@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 import torch
 
 from pyre_extensions import none_throws, ParameterSpecification as ParamSpec
+from torch import nn
 
 from torch.distributed import GradBucket
 from torchtnt.framework._test_utils import (
@@ -39,7 +40,7 @@ from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import DDPStrategy
+from torchtnt.utils.prepare_module import DDPStrategy, FSDPStrategy
 from torchtnt.utils.progress import Progress
 from torchtnt.utils.swa import _AVERAGED_MODEL_AVAIL
 from torchtnt.utils.test_utils import skip_if_not_distributed
@@ -293,6 +294,95 @@ class TestAutoUnit(unittest.TestCase):
                 module=my_module,
             )
             self.assertEqual(configure_optimizers_and_lr_scheduler_mock.call_count, 1)
+
+    @skip_if_not_distributed
+    def test_module_attr_duplicate_reference_validation(self) -> None:
+        spawn_multi_process(
+            2,
+            "gloo",
+            self._test_module_attr_duplicate_reference_validation,
+        )
+
+    @staticmethod
+    def _test_module_attr_duplicate_reference_validation() -> None:
+        error_msg = (
+            "Attribute '{name}' of the custom TNT Unit stores a reference to the model managed"
+            "by AutoUnit. This is known to cause errors on checkpointing and model training "
+            "mode. Please remove this attribute and access the existing `self.module` instead."
+        )
+
+        # Unit that stores unwrapped module
+        class ChildUnit(AutoUnit):
+            def __init__(self, module, strategy):
+                super().__init__(module=module, strategy=strategy)
+                self._module = self.module.module if strategy else self.module
+
+            def compute_loss(
+                self, state: State, data: Batch
+            ) -> Tuple[torch.Tensor, torch.Tensor]:
+                return torch.Tensor([1]), torch.Tensor([1])
+
+            def configure_optimizers_and_lr_scheduler(
+                self, module: torch.nn.Module
+            ) -> Tuple[torch.optim.Optimizer, TLRScheduler]:
+                return MagicMock(), MagicMock()
+
+        # Test with two levels of inheritance
+        class GrandchildUnit(DummyAutoUnit):
+            def __init__(self, module, strategy):
+                super().__init__(module=module, strategy=strategy)
+                self._module = module
+
+        # Test duplicated references to module
+        test_cases = [
+            (DummyAutoUnit, None, False),
+            (ChildUnit, None, True),
+            (ChildUnit, FSDPStrategy(), True),
+            (ChildUnit, DDPStrategy(), True),
+            (GrandchildUnit, None, True),
+        ]
+        for unit_type, strategy, expect_error in test_cases:
+            module = nn.Linear(2, 2)
+            error_container = []
+            with patch(
+                "torchtnt.framework.auto_unit.logging.Logger.error",
+                side_effect=error_container.append,
+            ):
+                unit = unit_type(module=module, strategy=strategy)
+
+            tc = unittest.TestCase()
+            expected_errors = [error_msg.format(name="_module")] if expect_error else []
+            tc.assertEqual(error_container, expected_errors)
+            tc.assertIs(module, unit.module.module if strategy else unit.module)
+
+    def test_module_attr_reassignment_validation(self) -> None:
+        # Test reassignment of module attribute
+        class ReassigningUnit1(DummyAutoUnit):
+            def __init__(self, module):
+                super().__init__(module=module)
+                self.module = module
+
+        class ReassigningUnit2(DummyAutoUnit):
+            def __init__(self, module):
+                super().__init__(module=module)
+                self.configure_model()
+
+            def configure_model(self):
+                self.module = torch.nn.Linear(3, 3)
+
+        for unit_type in (ReassigningUnit1, ReassigningUnit2):
+            module = nn.Linear(2, 2)
+            warning_container = []
+            with patch(
+                "torchtnt.framework.auto_unit.logging.Logger.warning",
+                side_effect=warning_container.append,
+            ):
+                unit_type(module=module)
+
+                expected_warnings = [
+                    "The self.module attribute is managed by AutoUnit and is not meant to be reassigned."
+                ]
+                self.assertEqual(warning_container, expected_warnings)
 
     @skip_if_not_distributed
     def test_auto_unit_ddp(self) -> None:
