@@ -10,7 +10,7 @@
 import math
 import unittest
 from typing import Tuple
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import torch
 from torch import nn
@@ -20,9 +20,12 @@ from torchtnt.framework.fit import fit
 from torchtnt.framework.state import ActivePhase, State
 from torchtnt.framework.unit import EvalUnit, TrainUnit, TTrainUnit
 from torchtnt.utils.timer import Timer
+from torchtnt.utils.version import is_torch_version_geq
 
 
 class FitTest(unittest.TestCase):
+    TORCH_VERSION_GEQ_2_5_0: bool = is_torch_version_geq("2.5.0")
+
     def test_fit_evaluate_every_n_epochs(self) -> None:
         """
         Test fit entry point with evaluate_every_n_epochs=1
@@ -346,6 +349,41 @@ class FitTest(unittest.TestCase):
             "eval progress: completed epochs: 0, completed steps: 2, completed steps in current epoch: 2.:\nfoo",
             log.output,
         )
+
+    @unittest.skipUnless(TORCH_VERSION_GEQ_2_5_0, "test requires PyTorch 2.5.0+")
+    @patch(
+        "torch.multiprocessing._get_thread_name", side_effect=["foo", "trainer_main"]
+    )
+    @patch("torch.multiprocessing._set_thread_name")
+    def test_fit_set_thread_name(
+        self, mock_set_thread_name: MagicMock, mock_get_thread_name: MagicMock
+    ) -> None:
+        """
+        Test fit entry point with evaluate_every_n_epochs=1
+        """
+        input_dim = 2
+        train_dataset_len = 10
+        eval_dataset_len = 10
+        batch_size = 1
+
+        my_unit = DummyFitUnit(input_dim=input_dim)
+
+        train_dataloader = generate_random_dataloader(
+            train_dataset_len, input_dim, batch_size
+        )
+        eval_dataloader = generate_random_dataloader(
+            eval_dataset_len, input_dim, batch_size
+        )
+
+        fit(
+            my_unit,
+            train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
+            max_epochs=1,
+            evaluate_every_n_epochs=1,
+        )
+        self.assertEqual(mock_get_thread_name.call_count, 2)
+        mock_set_thread_name.assert_called_once()
 
 
 class UnitWithError(TrainUnit[int], EvalUnit[int]):
