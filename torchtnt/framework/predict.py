@@ -24,6 +24,7 @@ from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TPredictData, TPredictUnit
 from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.timer import get_timer_summary, TimerProtocol
+from torchtnt.utils.version import is_torch_version_geq
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -170,6 +171,21 @@ def _predict_impl(
 
                 # clear step_output to avoid retaining extra memory
                 predict_state._step_output = None
+
+            if (
+                predict_unit.predict_progress.num_steps_completed_in_epoch
+                - prev_steps_in_epoch
+                == 5
+            ):
+                # Set the trainer thread name to improve debuggability. We do it after
+                # 5 iterations to make sure that all the processes or thread pools
+                # spawned / forked from the current process have already been created
+                # and the trainer_main characterizes only the CPU thread that runs the
+                # forward pass and schedules GPU work.
+                if is_torch_version_geq("2.5.0"):
+                    if torch.multiprocessing._get_thread_name() != "trainer_main":
+                        torch.multiprocessing._set_thread_name("trainer_main")
+
         except StopIteration:
             stop_iteration_reached = True
             break
