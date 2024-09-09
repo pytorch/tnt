@@ -431,6 +431,7 @@
 <span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TPredictData</span><span class="p">,</span> <span class="n">TPredictUnit</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">get_timing_context</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">get_timer_summary</span><span class="p">,</span> <span class="n">TimerProtocol</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="n">is_torch_version_geq</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -577,6 +578,21 @@
 
                 <span class="c1"># clear step_output to avoid retaining extra memory</span>
                 <span class="n">predict_state</span><span class="o">.</span><span class="n">_step_output</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">predict_unit</span><span class="o">.</span><span class="n">predict_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span>
+                <span class="o">-</span> <span class="n">prev_steps_in_epoch</span>
+                <span class="o">==</span> <span class="mi">5</span>
+            <span class="p">):</span>
+                <span class="c1"># Set the trainer thread name to improve debuggability. We do it after</span>
+                <span class="c1"># 5 iterations to make sure that all the processes or thread pools</span>
+                <span class="c1"># spawned / forked from the current process have already been created</span>
+                <span class="c1"># and the trainer_main characterizes only the CPU thread that runs the</span>
+                <span class="c1"># forward pass and schedules GPU work.</span>
+                <span class="k">if</span> <span class="n">is_torch_version_geq</span><span class="p">(</span><span class="s2">&quot;2.5.0&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">_get_thread_name</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;trainer_main&quot;</span><span class="p">:</span>
+                        <span class="n">torch</span><span class="o">.</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">_set_thread_name</span><span class="p">(</span><span class="s2">&quot;trainer_main&quot;</span><span class="p">)</span>
+
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
             <span class="n">stop_iteration_reached</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">break</span>
