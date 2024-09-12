@@ -47,6 +47,37 @@ METADATA_FNAME: str = ".metadata"
 
 
 class CheckpointPathTest(unittest.TestCase):
+
+    def test_create_checkpoint_path(self) -> None:
+        # phase-naive and metric-naive
+        ckpt = CheckpointPath("foo", epoch=0, step=1)
+        self.assertEqual(ckpt.path, "foo/epoch_0_step_1")
+
+        # phase-aware and metric-naive
+        ckpt = CheckpointPath("foo", epoch=0, step={Phase.TRAIN: 1})
+        self.assertEqual(ckpt.path, "foo/epoch_0_train_step_1")
+
+        # phase-aware and metric-aware
+        ckpt = CheckpointPath(
+            "foo",
+            epoch=0,
+            step={Phase.TRAIN: 1, Phase.EVALUATE: 1},
+            metric_data=MetricData("foo", 1.0),
+        )
+        self.assertEqual(ckpt.path, "foo/epoch_0_train_step_1_eval_step_1_foo=1.0")
+
+        # nan metric value
+        with self.assertRaisesRegex(
+            ValueError,
+            "Value of monitored metric 'foo' can't be NaN in CheckpointPath.",
+        ):
+            CheckpointPath(
+                "foo",
+                epoch=0,
+                step={Phase.TRAIN: 1, Phase.EVALUATE: 1},
+                metric_data=MetricData("foo", float("nan")),
+            )
+
     def test_from_str(self) -> None:
         # invalid paths
         malformed_paths = [

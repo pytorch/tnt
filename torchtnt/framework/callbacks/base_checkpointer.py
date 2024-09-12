@@ -8,6 +8,7 @@
 
 import abc
 import logging
+import math
 from datetime import timedelta
 from typing import Any, cast, Iterable, List, Literal, Optional, Union
 
@@ -255,6 +256,12 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
                     f"Unable to convert monitored metric {monitored_metric_name} to a float. Please ensure the value "
                     "can be converted to float and is not a multi-element tensor value."
                 ) from e
+
+        if metric_value_f and math.isnan(metric_value_f):
+            logger.error(
+                f"Monitored metric '{monitored_metric_name}' is NaN. Will not be included in checkpoint path, nor tracked for optimality."
+            )
+            return None
 
         return metric_value_f
 

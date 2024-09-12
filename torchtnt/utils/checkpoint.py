@@ -7,6 +7,7 @@
 # pyre-strict
 import bisect
 import logging
+import math
 import os
 import re
 from dataclasses import dataclass
@@ -104,6 +105,11 @@ class CheckpointPath:
         self.step: Dict[Phase, int] = (
             step if isinstance(step, dict) else {Phase.NONE: step}
         )
+
+        if metric_data and math.isnan(metric_data.value):
+            raise ValueError(
+                f"Value of monitored metric '{metric_data.name}' can't be NaN in CheckpointPath."
+            )
 
     @classmethod
     def from_str(cls, checkpoint_path: str) -> "CheckpointPath":
