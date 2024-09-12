@@ -230,38 +230,18 @@ class DistributedCheckpointSaver(BaseCheckpointer):
     ) -> None:
         """Utility method to restore dcp checkpoint from a path."""
 
-        # use gloo pg if available
-        gloo_pg_created = False
-        if dist.is_initialized():
-            pg = dist.group.WORLD if process_group is None else process_group
-
-            if dist.get_backend(pg) != dist.Backend.GLOO:
-                rank_zero_info(
-                    "Creating new gloo process group for loading checkpoint."
-                )
-                pg = dist.new_group(
-                    timeout=timedelta(seconds=3600), backend=dist.Backend.GLOO
-                )
-                gloo_pg_created = True
-        else:
-            pg = process_group
-
         checkpoint_id = path
 
         DistributedCheckpointSaver.restore_with_id(
             checkpoint_id,
             unit,
             train_dataloader=train_dataloader,
-            process_group=pg,
+            process_group=process_group,
             restore_options=restore_options,
             knob_options=knob_options,
             planner=planner,
             storage_reader=storage_reader,
         )
-
-        # destroy gloo pg if created, its sole purpose was for checkpoint restore
-        if gloo_pg_created:
-            dist.destroy_process_group(pg)
 
     @staticmethod
     def restore_with_id(
@@ -284,14 +264,31 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             checkpoint_id: Checkpoint id. It can be the path of the snapshot to restore.
             unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
             train_dataloader: An optional train dataloader to restore.
-            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world) Note:
-                If torch.distributed is available and a process group is initialized, dcp assumes the intention is to save/load checkpoints in distributed fashion.
+            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+                            If not Gloo, a Gloo process group is created.
+                            Note: If torch.distributed is available and a process group is initialized, dcp assumes the intention is to save/load checkpoints in distributed fashion.
             restore_options: Controls what to  filter when restoring the state.
             knob_options: Additional keyword options for StorageWriter and StorageReader
             planner: Instance of LoadPlanner. If this is not specificed, the default planner will be used. (Default: ``None``)
             storage_reader: Instance of StorageReader used to perform reads. If this is not specified, it will automatically infer
                             the reader based on the checkpoint_id. If checkpoint_id is also None, an exception will be raised. (Default: ``None``)
         """
+
+        # use gloo pg if available
+        gloo_pg_created = False
+        if dist.is_initialized():
+            pg = dist.group.WORLD if process_group is None else process_group
+
+            if dist.get_backend(pg) != dist.Backend.GLOO:
+                rank_zero_info(
+                    "Creating new gloo process group for loading checkpoint."
+                )
+                pg = dist.new_group(
+                    timeout=timedelta(seconds=3600), backend=dist.Backend.GLOO
+                )
+                gloo_pg_created = True
+        else:
+            pg = process_group
 
         restore_options = restore_options or RestoreOptions()
         app_state = _prepare_app_state_for_restore(unit, restore_options)
@@ -340,12 +337,16 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             checkpoint_id=checkpoint_id,
             storage_reader=storage_reader,
             planner=planner,
-            process_group=process_group,
+            process_group=pg,
         )
 
         rank_zero_info(
             f"Restored snapshot for checkpoint_id: {checkpoint_id}", logger=logger
         )
+
+        # destroy gloo pg if created, its sole purpose was for checkpoint restore
+        if gloo_pg_created:
+            dist.destroy_process_group(pg)
 
     def _generate_checkpoint_and_upkeep(
         self, state: State, unit: Union[TTrainUnit, TEvalUnit], hook: str
