@@ -36,7 +36,7 @@ ProgressDict = Dict[str, Progress]
 class MultiStateful:
     """
     Wrapper for multiple stateful objects. Necessary because we might have multiple nn.Modules or multiple optimizers,
-    but save/load_checkpoint APIs may only accepts one stateful object.
+    but save/load_checkpoint APIs may only accept one stateful object.
 
     Stores state_dict as a dict of state_dicts.
     """
@@ -55,3 +55,20 @@ class MultiStateful:
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         for k in state_dict:
             self.stateful_objs[k].load_state_dict(state_dict[k])
+
+
+@runtime_checkable
+class MetricStateful(Protocol):
+    """
+    Defines the interfaces for metric objects that can be saved and loaded from checkpoints.
+    This conforms to the API exposed by major metric libraries like torcheval.
+    """
+
+    def update(self, *_: Any, **__: Any) -> None: ...
+
+    # pyre-ignore[3]: Metric computation may return any type depending on the implementation
+    def compute(self) -> Any: ...
+
+    def state_dict(self) -> Dict[str, Any]: ...
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None: ...
