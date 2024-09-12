@@ -919,6 +919,23 @@ class BaseCheckpointerTest(unittest.TestCase):
         ):
             val_loss = val_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
 
+        val_loss_unit.val_loss = float("nan")  # Test nan metric value
+        error_container = []
+        with patch(
+            "torchtnt.framework.callbacks.base_checkpointer.logging.Logger.error",
+            side_effect=error_container.append,
+        ):
+            val_loss = val_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+
+        self.assertEqual(
+            [
+                "Monitored metric 'val_loss' is NaN. Will not be included in checkpoint path, nor tracked for optimality."
+            ],
+            error_container,
+        )
+        self.assertIsNone(val_loss)
+
+        # test with mismatched monitored metric
         train_loss_ckpt_cb = BaseCheckpointSaver(
             dirpath="checkpoint",
             best_checkpoint_config=BestCheckpointConfig("train_loss", "max"),
