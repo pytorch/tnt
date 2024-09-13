@@ -1339,6 +1339,26 @@ class CheckpointUtilsTest(unittest.TestCase):
             os.remove(os.path.join(dirpath, SNAPSHOT_METADATA_FNAME))
             self.assertFalse(_metadata_exists(fs, dirpath, SNAPSHOT_METADATA_FNAME))
 
+    def test_does_checkpoint_metadata_exist(self) -> None:
+        app_state = {"module": nn.Linear(2, 2)}
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dirpath = os.path.join(temp_dir, "checkpoint")
+            Snapshot.take(dirpath, app_state=app_state)
+
+            self.assertTrue(
+                CheckpointManager.does_checkpoint_metadata_exist(
+                    dirpath, SNAPSHOT_METADATA_FNAME
+                )
+            )
+
+            os.remove(os.path.join(dirpath, SNAPSHOT_METADATA_FNAME))
+            self.assertFalse(
+                CheckpointManager.does_checkpoint_metadata_exist(
+                    dirpath, SNAPSHOT_METADATA_FNAME
+                )
+            )
+
 
 class MyValLossUnit(TrainUnit[Batch]):
     def __init__(self) -> None:

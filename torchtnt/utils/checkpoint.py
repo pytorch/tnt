@@ -540,6 +540,18 @@ class CheckpointManager:
         )
 
     @staticmethod
+    def does_checkpoint_metadata_exist(
+        checkpoint_path: str,
+        metadata_fname: str,
+    ) -> bool:
+        """
+        Checking whether a checkpoint metadata file exists in the directory.
+        If the checkpointer has that metadata file, this function will returns True. Returns False otherwise.
+        """
+        fs, _ = url_to_fs(checkpoint_path)
+        return _metadata_exists(fs, checkpoint_path, metadata_fname)
+
+    @staticmethod
     @rank_zero_read_and_broadcast
     def _sync_dirpath_to_all_ranks(
         dirpath: str, process_group: Optional[dist.ProcessGroup] = None
