@@ -429,7 +429,7 @@
 <span class="kn">from</span> <span class="nn">torchtnt.utils.lr_scheduler</span> <span class="kn">import</span> <span class="n">TLRScheduler</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.prepare_module</span> <span class="kn">import</span> <span class="n">_is_fsdp_module</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.progress</span> <span class="kn">import</span> <span class="n">Progress</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">Stateful</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">MetricStateful</span><span class="p">,</span> <span class="n">Stateful</span>
 
 
 <span class="n">_logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -458,6 +458,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lr_schedulers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Progress</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricStateful</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># catch-all for miscellaneous statefuls</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># TODO: include other known statefuls</span>
@@ -474,6 +475,7 @@
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">tracked_lr_schedulers</span><span class="p">(),</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">tracked_progress</span><span class="p">(),</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">tracked_misc_statefuls</span><span class="p">(),</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">tracked_metrics</span><span class="p">(),</span>
         <span class="p">}</span>
         <span class="k">return</span> <span class="n">app_state</span>
 
@@ -490,6 +492,9 @@
 
     <span class="k">def</span> <span class="nf">tracked_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Progress</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span>
+
+    <span class="k">def</span> <span class="nf">tracked_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricStateful</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span>
 
     <span class="k">def</span> <span class="nf">tracked_misc_statefuls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span>
@@ -511,6 +516,10 @@
             <span class="n">_progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_progress&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_progress</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">_progress</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;_metrics&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="n">_metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_metrics&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_metrics</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">if</span> <span class="s2">&quot;_misc_statefuls&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
             <span class="n">_misc_statefuls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_misc_statefuls&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_misc_statefuls</span><span class="p">:</span>
@@ -535,12 +544,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_optimizers</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_lr_schedulers</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">tracked_objects</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+        <span class="c1"># Check first for metrics since some libraries subclass nn.Module as well</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">MetricStateful</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_attr</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_metrics&quot;</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_attr</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_modules&quot;</span><span class="p">))</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_attr</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_optimizers&quot;</span><span class="p">))</span>
@@ -570,6 +583,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_optimizers</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_lr_schedulers</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
@@ -583,6 +597,8 @@
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lr_schedulers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span><span class="p">:</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span><span class="p">:</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
