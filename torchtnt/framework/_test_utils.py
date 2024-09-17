@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Iterable, Iterator, Optional, Tuple
+from typing import Iterable, Iterator, List, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
@@ -114,6 +114,42 @@ class DummyTrainUnit(TrainUnit[Batch]):
         self.optimizer.zero_grad()
 
         return loss, outputs
+
+
+class DummyMultiOptimUnit(TrainUnit[Batch]):
+    def __init__(self, input_dim: int) -> None:
+        super().__init__()
+        # initialize module, loss_fn, & optimizer
+
+        self.modules: List[nn.Module] = [nn.Linear(input_dim, 2) for _ in range(6)]
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.optims = [
+            torch.optim.SGD,
+            torch.optim.Adam,
+            torch.optim.AdamW,
+            torch.optim.Adadelta,
+            torch.optim.NAdam,
+            torch.optim.RMSprop,
+        ]
+        self.applied_optims: List[torch.optim.Optimizer] = []
+        for module, optim in zip(self.modules, self.optims):
+            self.applied_optims.append(optim(module.parameters(), lr=0.1))
+
+    def train_step(
+        self, state: State, data: Batch
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        inputs, targets = data
+
+        outputs = [module(inputs) for module in self.modules]
+        losses = [self.loss_fn(output, targets) for output in outputs]
+        loss = torch.stack(losses).sum()
+        loss.backward()
+
+        for optim in self.applied_optims:
+            optim.step()
+            optim.zero_grad()
+
+        return loss, outputs[0]
 
 
 class DummyFitUnit(TrainUnit[Batch], EvalUnit[Batch]):
