@@ -28,6 +28,7 @@ from torch.utils.data import DataLoader
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
+    DummyMultiOptimUnit,
     DummyTrainUnit,
     generate_random_dataloader,
     get_dummy_train_state,
@@ -470,6 +471,24 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         process_group = mock_dist_cp.load.call_args.kwargs["process_group"]
         self.assertEqual(process_group, None)
         mock_destroy_process_group.assert_not_called()
+
+    def test_save_restore_multi_optimizers(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+        max_epochs = 1
+
+        my_unit = DummyMultiOptimUnit(input_dim=input_dim)
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dcp_cb = DistributedCheckpointSaver(
+                temp_dir,
+                knob_options=KnobOptions(1),
+            )
+            train(my_unit, dataloader, max_epochs=max_epochs, callbacks=[dcp_cb])
+
+            my_unit_clone = DummyMultiOptimUnit(input_dim=input_dim)
+            dcp_cb.restore_from_latest(temp_dir, my_unit_clone)
 
 
 class DummyStatefulDataLoader:
