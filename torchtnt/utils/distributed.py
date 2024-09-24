@@ -8,12 +8,14 @@
 # pyre-strict
 
 
+import logging
 import os
 import tempfile
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import wraps
-from typing import Any, Callable, cast, Dict, List, Optional, TypeVar, Union
+from typing import Any, Callable, cast, Dict, Generator, List, Optional, TypeVar, Union
 
 import torch
 import torch.nn.functional as F
@@ -27,6 +29,8 @@ T = TypeVar("T")
 DistObjList = Union[List[T], List[None]]
 TParams = ParameterSpecification("TParams")
 TReturn = TypeVar("TReturn")
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class PGWrapper:
@@ -641,3 +645,43 @@ def rank_zero_read_and_broadcast(
         return cast(T, val)
 
     return wrapper
+
+
+@contextmanager
+def get_or_create_gloo_pg(
+    candidate_pg: Optional[dist.ProcessGroup] = None,
+) -> Generator[Optional[dist.ProcessGroup], None, None]:
+    """
+    Context manager to ensure that a gloo process group is used for the contained operations. First checks if the
+    WORLD process group, or the provided candidate process group, is already gloo-based. In case it is, that is returned.
+    Otherwise, a new gloo process group will be created and returned. Upon exiting the context, if a new process group
+    was created, it will be destroyed.
+
+    Note: If the distributed environment is not initialized, this context manager will return None and will be no-op.
+
+    Args:
+        candidate_pg: Optional process group to check if it is gloo-based. If None, the WORLD process group will be checked.
+    """
+    gloo_pg_created = False
+
+    if not dist.is_initialized():
+        logger.info("Not in a distributed environment, gloo process group not created")
+        pg = None
+
+    else:
+        pg = candidate_pg or dist.group.WORLD
+        if dist.get_backend(pg) != dist.Backend.GLOO:
+            logger.info("Creating temporary gloo process group")
+            pg = dist.new_group(
+                timeout=timedelta(seconds=3600), backend=dist.Backend.GLOO
+            )
+            gloo_pg_created = True
+
+    try:
+        yield pg
+
+    finally:
+        # Cleanup temporary gloo pg if it was created
+        if gloo_pg_created:
+            dist.destroy_process_group(pg)
+            logger.info("Destroyed temporary gloo process group")
