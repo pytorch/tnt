@@ -410,21 +410,21 @@
               
   <div class="section" id="checkpointing">
 <h1>Checkpointing<a class="headerlink" href="#checkpointing" title="Permalink to this heading">¶</a></h1>
-<p>TorchTNT offers checkpointing via the <a class="reference internal" href="framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver" title="torchtnt.framework.callbacks.TorchSnapshotSaver"><code class="xref py py-class docutils literal notranslate"><span class="pre">TorchSnapshotSaver</span></code></a> which uses <a class="reference external" href="https://pytorch.org/torchsnapshot/main/" target="_blank">TorchSnapshot</a> under the hood.</p>
+<p>TorchTNT offers checkpointing via <code class="xref py py-class docutils literal notranslate"><span class="pre">DistributedCheckpointSaver</span></code> which uses <a class="reference external" href="https://github.com/pytorch/pytorch/tree/main/torch/distributed/checkpoint" target="_blank">DCP</a> under the hood.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">unit</span> <span class="o">=</span> <span class="n">MyUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
-<span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+<span class="n">dcp</span> <span class="o">=</span> <span class="n">DistributedCheckpointSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_train_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="c1"># loads latest checkpoint, if it exists</span>
 <span class="k">if</span> <span class="n">latest_checkpoint_dir</span><span class="p">:</span>
-    <span class="n">tss</span><span class="o">.</span><span class="n">restore_from_latest</span><span class="p">(</span><span class="n">your_dirpath_here</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">train_dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">)</span>
+    <span class="n">dcp</span><span class="o">.</span><span class="n">restore_from_latest</span><span class="p">(</span><span class="n">your_dirpath_here</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">train_dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">)</span>
 <span class="n">train</span><span class="p">(</span>
     <span class="n">unit</span><span class="p">,</span>
     <span class="n">dataloader</span><span class="p">,</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tss</span><span class="p">]</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">dcp</span><span class="p">]</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -439,7 +439,7 @@
 <span class="p">)</span>
 <span class="n">module</span> <span class="o">=</span> <span class="n">prepare_fsdp</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">fsdp_strategy</span><span class="p">)</span>
 <span class="n">unit</span> <span class="o">=</span> <span class="n">MyUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
-<span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+<span class="n">dcp</span> <span class="o">=</span> <span class="n">DistributedCheckpointSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="p">)</span>
@@ -447,7 +447,7 @@
     <span class="n">unit</span><span class="p">,</span>
     <span class="n">dataloader</span><span class="p">,</span>
     <span class="c1"># checkpointer callback will use state dict type specified in FSDPStrategy</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tss</span><span class="p">]</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">dcp</span><span class="p">]</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -456,14 +456,14 @@
 <span class="n">module</span> <span class="o">=</span> <span class="n">FSDP</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="o">....</span><span class="p">)</span>
 <span class="n">FSDP</span><span class="o">.</span><span class="n">set_state_dict_type</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">StateDictType</span><span class="o">.</span><span class="n">SHARDED_STATE_DICT</span><span class="p">)</span>
 <span class="n">unit</span> <span class="o">=</span> <span class="n">MyUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
-<span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+<span class="n">dcp</span> <span class="o">=</span> <span class="n">DistributedCheckpointSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">train</span><span class="p">(</span>
     <span class="n">unit</span><span class="p">,</span>
     <span class="n">dataloader</span><span class="p">,</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tss</span><span class="p">]</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">dcp</span><span class="p">]</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -471,7 +471,7 @@
 <div class="section" id="finetuning">
 <h2>Finetuning<a class="headerlink" href="#finetuning" title="Permalink to this heading">¶</a></h2>
 <p>When finetuning your models, you can pass RestoreOptions to avoid loading optimizers and learning rate schedulers like so:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dcp</span> <span class="o">=</span> <span class="n">DistributedCheckpointSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_train_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
     <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
@@ -479,7 +479,7 @@
 
 <span class="c1"># loads latest checkpoint, if it exists</span>
 <span class="k">if</span> <span class="n">latest_checkpoint_dir</span><span class="p">:</span>
-    <span class="n">tss</span><span class="o">.</span><span class="n">restore_from_latest</span><span class="p">(</span>
+    <span class="n">dcp</span><span class="o">.</span><span class="n">restore_from_latest</span><span class="p">(</span>
         <span class="n">your_dirpath_here</span><span class="p">,</span>
         <span class="n">your_unit</span><span class="p">,</span>
         <span class="n">train_dataloader</span><span class="o">=</span><span class="n">dataloader</span><span class="p">,</span>
@@ -493,7 +493,7 @@
 <p>Sometimes it may be helpful to keep track of how models perform. This can be done via the BestCheckpointConfig param:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">unit</span> <span class="o">=</span> <span class="n">MyUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">)</span>
-<span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+<span class="n">dcp</span> <span class="o">=</span> <span class="n">DistributedCheckpointSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">best_checkpoint_config</span><span class="o">=</span><span class="n">BestCheckpointConfig</span><span class="p">(</span>
@@ -505,17 +505,17 @@
 <span class="n">train</span><span class="p">(</span>
     <span class="n">unit</span><span class="p">,</span>
     <span class="n">dataloader</span><span class="p">,</span>
-    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">tss</span><span class="p">]</span>
+    <span class="n">callbacks</span><span class="o">=</span><span class="p">[</span><span class="n">dcp</span><span class="p">]</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 <p>By specifying the monitored metric to be “train_loss”, the checkpointer will expect the <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a> to have a “train_loss” attribute at the time of checkpointing, and it will cast this value to a float and append the value to the checkpoint path name. This attribute is expected to be computed and kept up to date appropriately in the unit by the user.</p>
 <p>Later on, the best checkpoint can be loaded via</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TorchSnapshotSaver</span><span class="o">.</span><span class="n">restore_from_best</span><span class="p">(</span><span class="n">your_dirpath_here</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="s2">&quot;train_loss&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DistributedCheckpointSaver</span><span class="o">.</span><span class="n">restore_from_best</span><span class="p">(</span><span class="n">your_dirpath_here</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">metric_name</span><span class="o">=</span><span class="s2">&quot;train_loss&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;min&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If you’d like to monitor a validation metric (say validation loss after each eval epoch during <a class="reference internal" href="framework/fit.html#torchtnt.framework.fit.fit" title="torchtnt.framework.fit.fit"><code class="xref py py-func docutils literal notranslate"><span class="pre">fit()</span></code></a>), you can use the <cite>save_every_n_eval_epochs</cite> flag instead, like so</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dcp</span> <span class="o">=</span> <span class="n">DistributedCheckpointSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_eval_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">best_checkpoint_config</span><span class="o">=</span><span class="n">BestCheckpointConfig</span><span class="p">(</span>
@@ -526,7 +526,7 @@
 </pre></div>
 </div>
 <p>And to save only the top three performing models, you can use the existing <cite>keep_last_n_checkpoints</cite> flag like so</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tss</span> <span class="o">=</span> <span class="n">TorchSnapshotSaver</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dcp</span> <span class="o">=</span> <span class="n">DistributedCheckpointSaver</span><span class="p">(</span>
     <span class="n">dirpath</span><span class="o">=</span><span class="n">your_dirpath_here</span><span class="p">,</span>
     <span class="n">save_every_n_eval_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">keep_last_n_checkpoints</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
