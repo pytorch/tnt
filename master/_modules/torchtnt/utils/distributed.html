@@ -415,12 +415,14 @@
 <span class="c1"># pyre-strict</span>
 
 
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
@@ -434,6 +436,8 @@
 <span class="n">DistObjList</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="kc">None</span><span class="p">]]</span>
 <span class="n">TParams</span> <span class="o">=</span> <span class="n">ParameterSpecification</span><span class="p">(</span><span class="s2">&quot;TParams&quot;</span><span class="p">)</span>
 <span class="n">TReturn</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TReturn&quot;</span><span class="p">)</span>
+
+<span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="PGWrapper"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.PGWrapper.html#torchtnt.utils.distributed.PGWrapper">[docs]</a><span class="k">class</span> <span class="nc">PGWrapper</span><span class="p">:</span>
@@ -1048,6 +1052,46 @@
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">wrapper</span>
+
+
+<span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">get_or_create_gloo_pg</span><span class="p">(</span>
+    <span class="n">candidate_pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Context manager to ensure that a gloo process group is used for the contained operations. First checks if the</span>
+<span class="sd">    WORLD process group, or the provided candidate process group, is already gloo-based. In case it is, that is returned.</span>
+<span class="sd">    Otherwise, a new gloo process group will be created and returned. Upon exiting the context, if a new process group</span>
+<span class="sd">    was created, it will be destroyed.</span>
+
+<span class="sd">    Note: If the distributed environment is not initialized, this context manager will return None and will be no-op.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        candidate_pg: Optional process group to check if it is gloo-based. If None, the WORLD process group will be checked.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gloo_pg_created</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dist</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Not in a distributed environment, gloo process group not created&quot;</span><span class="p">)</span>
+        <span class="n">pg</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pg</span> <span class="o">=</span> <span class="n">candidate_pg</span> <span class="ow">or</span> <span class="n">dist</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">WORLD</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dist</span><span class="o">.</span><span class="n">Backend</span><span class="o">.</span><span class="n">GLOO</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating temporary gloo process group&quot;</span><span class="p">)</span>
+            <span class="n">pg</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">new_group</span><span class="p">(</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">3600</span><span class="p">),</span> <span class="n">backend</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">Backend</span><span class="o">.</span><span class="n">GLOO</span>
+            <span class="p">)</span>
+            <span class="n">gloo_pg_created</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">pg</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># Cleanup temporary gloo pg if it was created</span>
+        <span class="k">if</span> <span class="n">gloo_pg_created</span><span class="p">:</span>
+            <span class="n">dist</span><span class="o">.</span><span class="n">destroy_process_group</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Destroyed temporary gloo process group&quot;</span><span class="p">)</span>
 </pre></div>
 
              </article>
