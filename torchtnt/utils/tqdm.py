@@ -49,7 +49,7 @@ def create_progress_bar(
         desc=f"{desc} {current_epoch}",
         total=total,
         initial=num_steps_completed,
-        bar_format="{l_bar}{bar}{r_bar}\n",
+        bar_format="{l_bar}{bar}{r_bar}",
         file=file,
     )
 
