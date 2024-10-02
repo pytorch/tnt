@@ -49,7 +49,7 @@ def _reason_epoch_completed(
     max_steps: Optional[int],
     stop_iteration_reached: bool,
 ) -> str:
-    current_epoch = progress.num_epochs_completed
+    current_epoch = progress.num_epochs_completed + 1
     if stop_iteration_reached:
         return (
             f"Train epoch {current_epoch} ended as it reached end of train dataloader"

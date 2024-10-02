@@ -199,17 +199,17 @@ class LoopUtilsTest(unittest.TestCase):
             p, max_steps_per_epoch=5, max_steps=None, stop_iteration_reached=False
         )
         self.assertEqual(
-            reason, "Train epoch 2 ended as max steps per epoch reached: 5"
+            reason, "Train epoch 3 ended as max steps per epoch reached: 5"
         )
 
         reason = _reason_epoch_completed(
             p, max_steps_per_epoch=6, max_steps=100, stop_iteration_reached=False
         )
-        self.assertEqual(reason, "Train epoch 2 ended as max steps reached: 100")
+        self.assertEqual(reason, "Train epoch 3 ended as max steps reached: 100")
 
         reason = _reason_epoch_completed(
             p, max_steps_per_epoch=5, max_steps=None, stop_iteration_reached=True
         )
         self.assertEqual(
-            reason, "Train epoch 2 ended as it reached end of train dataloader"
+            reason, "Train epoch 3 ended as it reached end of train dataloader"
         )
