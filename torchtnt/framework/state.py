@@ -13,6 +13,7 @@ from enum import auto, Enum
 from typing import Generic, Iterable, Optional, TypeVar
 
 from pyre_extensions import none_throws
+from torchtnt.utils.checkpoint import Phase
 
 from torchtnt.utils.timer import BoundedTimer, TimerProtocol
 
@@ -61,6 +62,17 @@ class ActivePhase(Enum):
     TRAIN = auto()
     EVALUATE = auto()
     PREDICT = auto()
+
+    def into_phase(self) -> Phase:
+        """Converts the active phase to the corresponding phase."""
+        if self == ActivePhase.TRAIN:
+            return Phase.TRAIN
+        elif self == ActivePhase.EVALUATE:
+            return Phase.EVALUATE
+        elif self == ActivePhase.PREDICT:
+            return Phase.PREDICT
+        else:
+            raise AssertionError("Should match an ActivePhase")
 
 
 class PhaseState(Generic[TData, TStepOutput]):
