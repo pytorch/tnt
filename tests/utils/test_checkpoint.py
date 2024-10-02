@@ -66,6 +66,32 @@ class CheckpointPathTest(unittest.TestCase):
         )
         self.assertEqual(ckpt.path, "foo/epoch_0_train_step_1_eval_step_1_foo=1.0")
 
+        # evaluation only
+        ckpt = CheckpointPath(
+            "foo",
+            epoch=0,
+            step={Phase.EVALUATE: 1},
+        )
+        self.assertEqual(ckpt.path, "foo/epoch_0_eval_step_1")
+
+        # prediction only
+        ckpt = CheckpointPath(
+            "foo",
+            epoch=0,
+            step={Phase.PREDICT: 1},
+        )
+        self.assertEqual(ckpt.path, "foo/epoch_0_predict_step_1")
+
+        # all phases - not expected but should work
+        ckpt = CheckpointPath(
+            "foo",
+            epoch=0,
+            step={Phase.TRAIN: 1, Phase.EVALUATE: 1, Phase.PREDICT: 1},
+        )
+        self.assertEqual(
+            ckpt.path, "foo/epoch_0_train_step_1_eval_step_1_predict_step_1"
+        )
+
         # nan metric value
         with self.assertRaisesRegex(
             ValueError,
@@ -90,6 +116,8 @@ class CheckpointPathTest(unittest.TestCase):
             "foo/epoch_2.6_step_23",
             "foo/epoch_3_pred_step_3",
             "foo/epoch_3__step_3",
+            "foo/epoch_2_predict_step_2_eval_step_1",
+            "foo/epoch_2_predict_step_3.2",
         ]
         for path in malformed_paths:
             with self.assertRaisesRegex(
@@ -111,6 +139,15 @@ class CheckpointPathTest(unittest.TestCase):
                 ),
             ),
             (
+                "foo/epoch_14_step_3_train_loss=15.0",
+                CheckpointPath(
+                    "foo",
+                    epoch=14,
+                    step={Phase.NONE: 3},
+                    metric_data=MetricData("train_loss", 15.0),
+                ),
+            ),
+            (
                 "foo/epoch_14_step_3_loss=-27.35",
                 CheckpointPath(
                     "foo", epoch=14, step=3, metric_data=MetricData("loss", -27.35)
@@ -120,6 +157,23 @@ class CheckpointPathTest(unittest.TestCase):
                 "/foo/epoch_14_step_3_loss=-27.35",
                 CheckpointPath(
                     "/foo", epoch=14, step=3, metric_data=MetricData("loss", -27.35)
+                ),
+            ),
+            (
+                "foo/epoch_2_eval_step_23",
+                CheckpointPath("foo", epoch=2, step={Phase.EVALUATE: 23}),
+            ),
+            (
+                "foo/epoch_14_predict_step_5",
+                CheckpointPath("foo", epoch=14, step={Phase.PREDICT: 5}),
+            ),
+            (
+                "foo/epoch_14_train_step_3_eval_loss=0.1",
+                CheckpointPath(
+                    "foo",
+                    epoch=14,
+                    step={Phase.TRAIN: 3},
+                    metric_data=MetricData("eval_loss", 0.1),
                 ),
             ),
             (
@@ -265,6 +319,12 @@ class CheckpointPathTest(unittest.TestCase):
         self.assertTrue(eval_only > multiphase_1)
         self.assertTrue(eval_only < multiphase_2)
         self.assertTrue(multiphase_2 < multiphase_3)
+
+        predict_1 = CheckpointPath("foo", epoch=3, step={Phase.PREDICT: 10})
+        predict_2 = CheckpointPath("foo", epoch=4, step={Phase.PREDICT: 10})
+        predict_3 = CheckpointPath("foo", epoch=4, step={Phase.PREDICT: 20})
+        self.assertTrue(predict_1 < predict_2)
+        self.assertTrue(predict_2 < predict_3)
 
     def test_compare_by_optimality(self) -> None:
         # not both metric aware

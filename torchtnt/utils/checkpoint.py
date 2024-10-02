@@ -53,6 +53,7 @@ class Phase(Enum):
     NONE = 0  # Only used for backwards compatibility
     TRAIN = 1
     EVALUATE = 2
+    PREDICT = 3
 
 
 @total_ordering
@@ -81,7 +82,7 @@ class CheckpointPath:
     )
 
     PHASE_AWARE_REGEX: Pattern = re.compile(
-        r"^(.+)epoch_(\d+)(?:_train_step_(\d+))?(?:_eval_step_(\d+))?(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
+        r"^(.+)epoch_(\d+)(?:_train_step_(\d+))?(?:_eval_step_(\d+))?(?:_predict_step_(\d+))?(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
     )
 
     def __init__(
@@ -142,8 +143,9 @@ class CheckpointPath:
         Raises:
             ValueError: If the path is malformed (either non-parsable, or contains wrong data types)
         """
-        is_phase_aware = (
-            "train_step" in checkpoint_path or "eval_step" in checkpoint_path
+        is_phase_aware = any(
+            phase in checkpoint_path
+            for phase in ["train_step", "eval_step", "predict_step"]
         )
         regex = self.PHASE_AWARE_REGEX if is_phase_aware else self.PHASE_NAIVE_REGEX
         path_match = regex.match(checkpoint_path)
@@ -155,13 +157,22 @@ class CheckpointPath:
         try:
             step_mapping: Dict[Phase, int] = {}
             if is_phase_aware:
-                dirpath, epoch, train_steps, eval_steps, metric_name, metric_value = (
-                    path_match.groups()
-                )
+                (
+                    dirpath,
+                    epoch,
+                    train_steps,
+                    eval_steps,
+                    predict_steps,
+                    metric_name,
+                    metric_value,
+                ) = path_match.groups()
+
                 if train_steps is not None:
                     step_mapping[Phase.TRAIN] = int(train_steps)
                 if eval_steps is not None:
                     step_mapping[Phase.EVALUATE] = int(eval_steps)
+                if predict_steps is not None:
+                    step_mapping[Phase.PREDICT] = int(predict_steps)
 
             else:
                 dirpath, epoch, naive_steps, metric_name, metric_value = (
@@ -200,6 +211,8 @@ class CheckpointPath:
                 name += f"_train_step_{self.step[Phase.TRAIN]}"
             if Phase.EVALUATE in self.step:
                 name += f"_eval_step_{self.step[Phase.EVALUATE]}"
+            if Phase.PREDICT in self.step:
+                name += f"_predict_step_{self.step[Phase.PREDICT]}"
 
         if self.metric_data:
             name += f"_{self.metric_data.name}={self.metric_data.value}"
@@ -240,9 +253,13 @@ class CheckpointPath:
         # Otherwise, compare first by eval and then train steps
         return self._get_phase_steps() > other._get_phase_steps()
 
-    def _get_phase_steps(self) -> Tuple[int, int]:
-        """Tuple with the phase steps ordered by phase priority in comparison (first eval, then train)."""
-        return self.step.get(Phase.EVALUATE, 0), self.step.get(Phase.TRAIN, 0)
+    def _get_phase_steps(self) -> Tuple[int, ...]:
+        """Tuple with the phase steps ordered by phase priority in comparison (predict, eval, train)."""
+        return (
+            self.step.get(Phase.PREDICT, 0),
+            self.step.get(Phase.EVALUATE, 0),
+            self.step.get(Phase.TRAIN, 0),
+        )
 
     def more_optimal_than(
         self, other: "CheckpointPath", mode: Literal["min", "max"]
