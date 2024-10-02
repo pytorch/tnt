@@ -15,6 +15,7 @@ from torchtnt.framework import ActivePhase
 
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
+    DummyEvalUnit,
     DummyMeanMetric,
     DummyTrainUnit,
     generate_dummy_stateful_dataloader,
@@ -60,6 +61,24 @@ class CheckpointUtilsTest(unittest.TestCase):
                 "loss_fn",
                 "train_progress",
                 "train_dataloader",
+                "mean_metric",
+            ],
+        )
+
+        # Test evaluate intra-epoch checkpoint
+        my_unit = DummyEvalUnit(input_dim=2)
+        my_unit.mean_metric = DummyMeanMetric()  # pyre-ignore[16]
+        state = get_dummy_eval_state()
+        stateful_dl = generate_dummy_stateful_dataloader(1, 1, 1)
+        state._active_phase = ActivePhase.EVALUATE
+        none_throws(state.eval_state)._dataloader = stateful_dl
+
+        app_state = _prepare_app_state_for_checkpoint(state, my_unit, intra_epoch=True)
+        self.assertCountEqual(
+            app_state.keys(),
+            [
+                "eval_progress",
+                "eval_dataloader",
                 "mean_metric",
             ],
         )
