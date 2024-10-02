@@ -9,7 +9,10 @@
 
 import unittest
 
+from torchtnt.framework import ActivePhase
+
 from torchtnt.framework.state import _check_loop_condition, PhaseState
+from torchtnt.utils.checkpoint import Phase
 
 
 class StateTest(unittest.TestCase):
@@ -39,3 +42,13 @@ class StateTest(unittest.TestCase):
             ValueError, "Invalid value provided for evaluate_every_n_epochs"
         ):
             PhaseState(dataloader=[], evaluate_every_n_epochs=-2)
+
+    def test_active_phase_into_phase(self) -> None:
+        active_phase = ActivePhase.TRAIN
+        self.assertEqual(active_phase.into_phase(), Phase.TRAIN)
+
+        eval_phase = ActivePhase.EVALUATE
+        self.assertEqual(eval_phase.into_phase(), Phase.EVALUATE)
+
+        predict_phase = ActivePhase.PREDICT
+        self.assertEqual(predict_phase.into_phase(), Phase.PREDICT)
