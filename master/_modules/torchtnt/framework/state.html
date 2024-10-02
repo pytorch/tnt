@@ -420,6 +420,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 <span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.checkpoint</span> <span class="kn">import</span> <span class="n">Phase</span>
 
 <span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">BoundedTimer</span><span class="p">,</span> <span class="n">TimerProtocol</span>
 
@@ -468,6 +469,17 @@
     <span class="n">TRAIN</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
     <span class="n">EVALUATE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
     <span class="n">PREDICT</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">into_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Phase</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts the active phase to the corresponding phase.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Phase</span><span class="o">.</span><span class="n">TRAIN</span>
+        <span class="k">elif</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Phase</span><span class="o">.</span><span class="n">EVALUATE</span>
+        <span class="k">elif</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Phase</span><span class="o">.</span><span class="n">PREDICT</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Should match an ActivePhase&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="PhaseState"><a class="viewcode-back" href="../../../framework/state.html#torchtnt.framework.state.PhaseState">[docs]</a><span class="k">class</span> <span class="nc">PhaseState</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">TData</span><span class="p">,</span> <span class="n">TStepOutput</span><span class="p">]):</span>
