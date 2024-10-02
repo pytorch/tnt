@@ -24,8 +24,10 @@ _PHASE_DL_STATE_KEY_MAPPING: Dict[Phase, str] = {
     Phase.PREDICT: "predict_dataloader",
 }
 _TRAIN_DL_STATE_KEY = "train_dataloader"
+
 _TRAIN_PROGRESS_STATE_KEY = "train_progress"
 _EVAL_PROGRESS_STATE_KEY = "eval_progress"
+_PREDICT_PROGRESS_STATE_KEY = "predict_progress"
 
 
 def _get_step_phase_mapping(
@@ -56,6 +58,30 @@ def _prepare_app_state(unit: AppStateMixin) -> Dict[str, Any]:
     return app_state
 
 
+def _remove_app_state_keys(
+    unit: AppStateMixin,
+    app_state: Dict[str, Any],
+    *,
+    remove_modules: bool = False,
+    remove_optimizers: bool = False,
+    remove_lr_schedulers: bool = False,
+) -> None:
+    if remove_modules:
+        # remove all module keys from app_state
+        for module_keys in unit.tracked_modules().keys():
+            app_state.pop(module_keys, None)
+
+    if remove_optimizers:
+        # remove all optimizer keys from app_state
+        for optim_keys in unit.tracked_optimizers().keys():
+            app_state.pop(optim_keys, None)
+
+    if remove_lr_schedulers:
+        # remove all lr scheduler keys from app_state
+        for lr_scheduler_keys in unit.tracked_lr_schedulers().keys():
+            app_state.pop(lr_scheduler_keys, None)
+
+
 def _prepare_app_state_for_checkpoint(
     state: State, unit: AppStateMixin, intra_epoch: bool
 ) -> Dict[str, Stateful]:
@@ -63,6 +89,16 @@ def _prepare_app_state_for_checkpoint(
     Prepares the application state for checkpointing.
     """
     app_state = _prepare_app_state(unit)
+
+    if state.entry_point in [EntryPoint.EVALUATE, EntryPoint.PREDICT]:
+        # Since model parameters are fixed, remove them from checkpoint.
+        _remove_app_state_keys(
+            unit,
+            app_state,
+            remove_modules=True,
+            remove_optimizers=True,
+            remove_lr_schedulers=True,
+        )
 
     # for intra-epoch checkpointing, include dataloader state of the current phase
     phase_dl = state.active_phase_state().dataloader
@@ -85,24 +121,21 @@ def _prepare_app_state_for_restore(
 
     restore_options = restore_options or RestoreOptions()
 
-    if not restore_options.restore_modules:
-        for module_keys in unit.tracked_modules().keys():
-            app_state.pop(module_keys, None)
-
     if not restore_options.restore_train_progress:
         app_state.pop(_TRAIN_PROGRESS_STATE_KEY, None)
 
     if not restore_options.restore_eval_progress:
         app_state.pop(_EVAL_PROGRESS_STATE_KEY, None)
 
-    if not restore_options.restore_optimizers:
-        # remove all optimizer keys from app_state
-        for optim_keys in unit.tracked_optimizers().keys():
-            app_state.pop(optim_keys, None)
+    if not restore_options.restore_predict_progress:
+        app_state.pop(_PREDICT_PROGRESS_STATE_KEY, None)
 
-    if not restore_options.restore_lr_schedulers:
-        # remove all lr scheduler keys from app_state
-        for lr_scheduler_keys in unit.tracked_lr_schedulers().keys():
-            app_state.pop(lr_scheduler_keys, None)
+    _remove_app_state_keys(
+        unit,
+        app_state,
+        remove_modules=not restore_options.restore_modules,
+        remove_optimizers=not restore_options.restore_optimizers,
+        remove_lr_schedulers=not restore_options.restore_lr_schedulers,
+    )
 
     return app_state
