@@ -9,7 +9,6 @@
 
 from typing import Any, cast, Dict, Union
 
-from pyre_extensions import none_throws
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainUnit
@@ -19,8 +18,13 @@ from torchtnt.utils.stateful import Stateful
 
 
 # keys for use when checkpointing
-_TRAIN_PROGRESS_STATE_KEY = "train_progress"
+_PHASE_DL_STATE_KEY_MAPPING: Dict[Phase, str] = {
+    Phase.TRAIN: "train_dataloader",
+    Phase.EVALUATE: "eval_dataloader",
+    Phase.PREDICT: "predict_dataloader",
+}
 _TRAIN_DL_STATE_KEY = "train_dataloader"
+_TRAIN_PROGRESS_STATE_KEY = "train_progress"
 _EVAL_PROGRESS_STATE_KEY = "eval_progress"
 
 
@@ -60,11 +64,13 @@ def _prepare_app_state_for_checkpoint(
     """
     app_state = _prepare_app_state(unit)
 
-    # for intra-epoch checkpointing, include dataloader states
-    train_state = none_throws(state.train_state)
-    train_dl = train_state.dataloader
-    if intra_epoch and isinstance(train_dl, Stateful):
-        app_state[_TRAIN_DL_STATE_KEY] = train_dl
+    # for intra-epoch checkpointing, include dataloader state of the current phase
+    phase_dl = state.active_phase_state().dataloader
+    if intra_epoch and isinstance(phase_dl, Stateful):
+        dataloader_state_key = _PHASE_DL_STATE_KEY_MAPPING[
+            state.active_phase.into_phase()
+        ]
+        app_state[dataloader_state_key] = phase_dl
 
     return app_state
 

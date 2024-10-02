@@ -7,7 +7,7 @@
 
 # pyre-strict
 
-from typing import Iterable, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
 
 import torch
 from torch import nn, Tensor
@@ -236,3 +236,51 @@ class DummyAutoUnit(AutoUnit[Batch]):
             my_optimizer, gamma=0.9
         )
         return my_optimizer, my_lr_scheduler
+
+
+class DummyStatefulDataLoader:
+    """Dummy Dataloader that implements state_dict and load_state_dict"""
+
+    def __init__(self, dataloader: DataLoader) -> None:
+        self.dataloader = dataloader
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {"current_batch": 1}
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        return None
+
+    def __iter__(self) -> Iterator[object]:
+        return iter(self.dataloader)
+
+
+def generate_dummy_stateful_dataloader(
+    num_samples: int, input_dim: int, batch_size: int
+) -> DummyStatefulDataLoader:
+    return DummyStatefulDataLoader(
+        DataLoader(
+            dataset=RandomIterableDataset(input_dim, num_samples),
+            batch_size=batch_size,
+        )
+    )
+
+
+class DummyMeanMetric:
+    def __init__(self) -> None:
+        super().__init__()
+        self.sum: float = 0.0
+        self.count: int = 0
+
+    def update(self, value: float) -> None:
+        self.sum += value
+        self.count += 1
+
+    def compute(self) -> float:
+        return self.sum / self.count if self.count > 0 else 0.0
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {"sum": self.sum, "count": self.count}
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        self.sum = state_dict["sum"]
+        self.count = state_dict["count"]
