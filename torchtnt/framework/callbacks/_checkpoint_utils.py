@@ -11,7 +11,7 @@ from typing import Any, cast, Dict, Union
 
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.state import EntryPoint, State
-from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainUnit
+from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils.checkpoint import Phase
 
 from torchtnt.utils.stateful import Stateful
@@ -31,7 +31,7 @@ _PREDICT_PROGRESS_STATE_KEY = "predict_progress"
 
 
 def _get_step_phase_mapping(
-    state: State, unit: Union[TTrainUnit, TEvalUnit]
+    state: State, unit: Union[TTrainUnit, TEvalUnit, TPredictUnit]
 ) -> Dict[Phase, int]:
     """
     Returns a mapping of phase to step, depending on the entrypoint.
@@ -47,7 +47,30 @@ def _get_step_phase_mapping(
         eval_unit = cast(TEvalUnit, unit)
         step_mapping[Phase.EVALUATE] = eval_unit.eval_progress.num_steps_completed
 
+    if state.entry_point == EntryPoint.PREDICT:
+        predict_unit = cast(TPredictUnit, unit)
+        step_mapping[Phase.PREDICT] = predict_unit.predict_progress.num_steps_completed
+
     return step_mapping
+
+
+def _get_epoch(state: State, unit: Union[TTrainUnit, TEvalUnit, TPredictUnit]) -> int:
+    """
+    Returns the epoch depending on the entrypoint. For FIT, it always returns the train epoch.
+    """
+    if state.entry_point in (EntryPoint.TRAIN, EntryPoint.FIT):
+        train_unit = cast(TTrainUnit, unit)
+        return train_unit.train_progress.num_epochs_completed
+
+    elif state.entry_point == EntryPoint.PREDICT:
+        predict_unit = cast(TPredictUnit, unit)
+        return predict_unit.predict_progress.num_epochs_completed
+
+    elif state.entry_point == EntryPoint.EVALUATE:
+        eval_unit = cast(TEvalUnit, unit)
+        return eval_unit.eval_progress.num_epochs_completed
+
+    raise ValueError(f"Unknown entrypoint: {state.entry_point}")
 
 
 def _prepare_app_state(unit: AppStateMixin) -> Dict[str, Any]:

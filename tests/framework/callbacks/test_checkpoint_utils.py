@@ -21,10 +21,12 @@ from torchtnt.framework._test_utils import (
     generate_dummy_stateful_dataloader,
     get_dummy_eval_state,
     get_dummy_fit_state,
+    get_dummy_predict_state,
     get_dummy_train_state,
 )
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
+    _get_epoch,
     _get_step_phase_mapping,
     _prepare_app_state_for_checkpoint,
 )
@@ -87,6 +89,7 @@ class CheckpointUtilsTest(unittest.TestCase):
         unit = DummyAutoUnit(module=nn.Linear(2, 2))
         unit.train_progress._num_steps_completed = 5
         unit.eval_progress._num_steps_completed = 7
+        unit.predict_progress._num_steps_completed = 9
 
         fit_state = get_dummy_fit_state()
         self.assertEqual(
@@ -99,3 +102,26 @@ class CheckpointUtilsTest(unittest.TestCase):
 
         eval_state = get_dummy_eval_state()
         self.assertEqual({Phase.EVALUATE: 7}, _get_step_phase_mapping(eval_state, unit))
+
+        predict_state = get_dummy_predict_state()
+        self.assertEqual(
+            {Phase.PREDICT: 9}, _get_step_phase_mapping(predict_state, unit)
+        )
+
+    def test_get_epoch(self) -> None:
+        unit = DummyAutoUnit(module=nn.Linear(2, 2))
+        unit.train_progress._num_epochs_completed = 1
+        unit.eval_progress._num_epochs_completed = 2
+        unit.predict_progress._num_epochs_completed = 3
+
+        fit_state = get_dummy_fit_state()
+        self.assertEqual(1, _get_epoch(fit_state, unit))
+
+        train_state = get_dummy_train_state()
+        self.assertEqual(1, _get_epoch(train_state, unit))
+
+        eval_state = get_dummy_eval_state()
+        self.assertEqual(2, _get_epoch(eval_state, unit))
+
+        predict_state = get_dummy_predict_state()
+        self.assertEqual(3, _get_epoch(predict_state, unit))
