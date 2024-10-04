@@ -539,21 +539,18 @@ class CheckpointManager:
             # No metric tracked, most recents goes last
             self._ckpt_paths.append(ckpt)
 
-    @rank_zero_read_and_broadcast
     def does_checkpoint_exist(
-        self, ckpt: CheckpointPath, process_group: Optional[dist.ProcessGroup] = None
+        self,
+        ckpt: CheckpointPath,
+        process_group: Optional[dist.ProcessGroup] = None,
     ) -> bool:
         """
         Checking whether a checkpoint already exists by verifying whether the optional metadata file is present in the directory.
         If the checkpointer doesn't have a metadata file, this function will always return False. Check is executed in rank 0, but
         result is broadcasted to all ranks.
         """
-        if not self._metadata_fnames:
-            return False
-
-        fs, _ = url_to_fs(self.dirpath)
-        return any(
-            _metadata_exists(fs, ckpt.path, fname) for fname in self._metadata_fnames
+        return does_checkpoint_exist(
+            ckpt.path, self._metadata_fnames, process_group=process_group
         )
 
     @staticmethod
@@ -594,6 +591,33 @@ class CheckpointManager:
                         f"Do not use it to restore since it may be corrupted! Exception: {exc}"
                     )
                 )
+
+
+@rank_zero_read_and_broadcast
+def does_checkpoint_exist(
+    ckpt_path: str,
+    metadata_fname: Union[str, List[str]],
+    process_group: Optional[dist.ProcessGroup] = None,
+) -> bool:
+    """
+    Checking whether a checkpoint already exists by verifying whether the optional metadata file is present in the directory.
+    Will return False if the metadata_fname is None. Check is executed in rank 0, but
+    result is broadcasted to all ranks.
+
+    Args:
+        ckpt: The checkpoint to check.
+        metadata_fname: File to check for existence. If a list is provided, it will check that at least one of the files is present.
+        process_group: Optional process group on which the ranks will communicate on. By default, the entire world is used.
+    """
+    if not metadata_fname:
+        return False
+    else:
+        metadata_fnames = (
+            [metadata_fname] if isinstance(metadata_fname, str) else metadata_fname
+        )
+
+    fs, _ = url_to_fs(ckpt_path)
+    return any(_metadata_exists(fs, ckpt_path, fname) for fname in metadata_fnames)
 
 
 @rank_zero_read_and_broadcast

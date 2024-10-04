@@ -29,6 +29,7 @@ from torchtnt.utils.checkpoint import (
     BestCheckpointConfig,
     CheckpointManager,
     CheckpointPath,
+    does_checkpoint_exist,
     get_best_checkpoint_path,
     get_checkpoint_dirpaths,
     get_latest_checkpoint_path,
@@ -1416,6 +1417,27 @@ class CheckpointUtilsTest(unittest.TestCase):
             self.assertFalse(
                 CheckpointManager.does_checkpoint_metadata_exist(
                     dirpath, SNAPSHOT_METADATA_FNAME
+                )
+            )
+
+    def test_does_checkpoint_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            ckpt_1 = os.path.join(temp_dir, "checkpoint_1")
+            os.mkdir(ckpt_1)
+
+            self.assertFalse(does_checkpoint_exist(ckpt_1, metadata_fname=None))
+
+            with open(os.path.join(ckpt_1, ".metadata"), "w"):
+                pass
+
+            self.assertFalse(does_checkpoint_exist(ckpt_1, metadata_fname="manifest"))
+            self.assertTrue(does_checkpoint_exist(ckpt_1, metadata_fname=".metadata"))
+            self.assertTrue(
+                does_checkpoint_exist(ckpt_1, metadata_fname=["manifest", ".metadata"])
+            )
+            self.assertFalse(
+                does_checkpoint_exist(
+                    ckpt_1, metadata_fname=["manifest", ".state_dict_info"]
                 )
             )
 
