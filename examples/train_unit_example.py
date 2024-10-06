@@ -175,5 +175,9 @@ def get_args(argv: List[str]) -> Namespace:
     return parser.parse_args(argv)
 
 
-if __name__ == "__main__":
+def invoke_main() -> None:
     main(sys.argv[1:])
+
+
+if __name__ == "__main__":
+    invoke_main()  # pragma: no cover
