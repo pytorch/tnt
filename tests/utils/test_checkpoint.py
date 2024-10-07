@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # pyre-strict
+import math
 import os
 import pickle
 import shutil
@@ -178,6 +179,42 @@ class CheckpointPathTest(unittest.TestCase):
                 ),
             ),
             (
+                "foo/epoch_14_train_step_3_eval_loss=inf",
+                CheckpointPath(
+                    "foo",
+                    epoch=14,
+                    step={Phase.TRAIN: 3},
+                    metric_data=MetricData("eval_loss", math.inf),
+                ),
+            ),
+            (
+                "foo/epoch_14_train_step_3_eval_loss=-inf",
+                CheckpointPath(
+                    "foo",
+                    epoch=14,
+                    step={Phase.TRAIN: 3},
+                    metric_data=MetricData("eval_loss", -math.inf),
+                ),
+            ),
+            (
+                "foo/epoch_14_step_3_eval_loss=inf",
+                CheckpointPath(
+                    "foo",
+                    epoch=14,
+                    step=3,
+                    metric_data=MetricData("eval_loss", math.inf),
+                ),
+            ),
+            (
+                "foo/epoch_14_step_3_eval_loss=-inf",
+                CheckpointPath(
+                    "foo",
+                    epoch=14,
+                    step=3,
+                    metric_data=MetricData("eval_loss", -math.inf),
+                ),
+            ),
+            (
                 "foo/bar/epoch_23_step_31_mean_loss_squared=0.0",
                 CheckpointPath(
                     "foo/bar/",
@@ -244,6 +281,18 @@ class CheckpointPathTest(unittest.TestCase):
             parsed_ckpt = CheckpointPath.from_str(path)
             self.assertEqual(parsed_ckpt, expected_ckpt)
             self.assertEqual(parsed_ckpt.path, path)
+
+        nan_paths = [
+            "foo/epoch_14_train_step_3_eval_loss=nan",
+            "foo/epoch_14_step_3_eval_loss=nan",
+        ]
+        for path in nan_paths:
+            with self.assertRaisesRegex(
+                ValueError,
+                f"Invalid data types found in checkpoint path: {path}.",
+            ):
+                CheckpointPath.from_str(path)
+            # print(math.isnan(CheckpointPath.from_str(path).metric_data.value))
 
         # with a trailing slash
         ckpt = CheckpointPath.from_str("foo/epoch_0_step_1/")

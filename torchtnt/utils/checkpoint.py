@@ -78,12 +78,26 @@ class CheckpointPath:
     """
 
     PHASE_NAIVE_REGEX: Pattern = re.compile(
-        r"^(.+)epoch_(\d+)_step_(\d+)(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
+        r"^(.+)epoch_(\d+)_step_(\d+)(?:_(\w+)=(-?\d+\.?\d*|-?inf|nan))?\/?$"
     )
 
     PHASE_AWARE_REGEX: Pattern = re.compile(
-        r"^(.+)epoch_(\d+)(?:_train_step_(\d+))?(?:_eval_step_(\d+))?(?:_predict_step_(\d+))?(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
+        r"^(.+)epoch_(\d+)(?:_train_step_(\d+))?(?:_eval_step_(\d+))?(?:_predict_step_(\d+))?(?:_(\w+)=(-?\d+\.?\d*|-?inf|nan))?\/?$"
     )
+
+    _metric_data: Optional[MetricData] = None
+
+    @property
+    def metric_data(self) -> Optional[MetricData]:
+        return self._metric_data
+
+    @metric_data.setter
+    def metric_data(self, metric_data: Optional[MetricData]) -> None:
+        if metric_data and math.isnan(metric_data.value):
+            raise ValueError(
+                f"Value of monitored metric '{metric_data.name}' can't be NaN in CheckpointPath."
+            )
+        self._metric_data = metric_data
 
     def __init__(
         self,
@@ -106,11 +120,6 @@ class CheckpointPath:
         self.step: Dict[Phase, int] = (
             step if isinstance(step, dict) else {Phase.NONE: step}
         )
-
-        if metric_data and math.isnan(metric_data.value):
-            raise ValueError(
-                f"Value of monitored metric '{metric_data.name}' can't be NaN in CheckpointPath."
-            )
 
     @classmethod
     def from_str(cls, checkpoint_path: str) -> "CheckpointPath":
