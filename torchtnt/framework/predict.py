@@ -20,6 +20,7 @@ from torchtnt.framework._loop_utils import (
     _set_module_training_mode,
 )
 from torchtnt.framework.callback import Callback
+from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
 from torchtnt.framework.state import ActivePhase, EntryPoint, PhaseState, State
 from torchtnt.framework.unit import TPredictData, TPredictUnit
 from torchtnt.framework.utils import get_timing_context
@@ -80,7 +81,10 @@ def predict(
         call on_predict_end on unit first and then callbacks
     """
     _log_api_usage("predict")
-    callback_handler = CallbackHandler(callbacks or [])
+    callbacks = callbacks or []
+    callback_handler = CallbackHandler(callbacks)
+    checkpoint_cb_exists = any(isinstance(cb, BaseCheckpointer) for cb in callbacks)
+
     state = State(
         entry_point=EntryPoint.PREDICT,
         predict_state=PhaseState(
@@ -90,7 +94,13 @@ def predict(
         timer=timer,
     )
     try:
-        _predict_impl(state, predict_unit, callback_handler)
+        # all_gather using inference_mode with gloo backend is not supported. Since this collective
+        # is necessary for checkpointing, we need to use torch.no_grad instead.
+        # TODO: remove this once all_gather is supported in inference_mode.
+        inference_ctx = torch.no_grad if checkpoint_cb_exists else torch.inference_mode
+        with inference_ctx():
+            _predict_impl(state, predict_unit, callback_handler)
+
         logger.info("Finished predict")
         if state.timer:
             logger.info(get_timer_summary(state.timer))
@@ -104,7 +114,6 @@ def predict(
         raise e
 
 
-@torch.inference_mode()
 def _predict_impl(
     state: State,
     predict_unit: TPredictUnit,
