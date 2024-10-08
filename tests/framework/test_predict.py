@@ -8,14 +8,15 @@
 # pyre-strict
 
 import unittest
-from typing import Any, Iterator, Mapping, Tuple
-from unittest.mock import MagicMock
+from typing import Any, cast, Iterator, List, Mapping, Tuple
+from unittest.mock import MagicMock, patch
 
 import torch
 from torch import nn
 
 from torchtnt.framework._test_utils import DummyPredictUnit, generate_random_dataloader
 from torchtnt.framework.callback import Callback
+from torchtnt.framework.callbacks.dcp_saver import DistributedCheckpointSaver
 
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
@@ -222,6 +223,24 @@ class PredictTest(unittest.TestCase):
             "completed epochs: 0, completed steps: 3, completed steps in current epoch: 3.:\nfoo",
             log.output,
         )
+
+    def test_predict_ckpt_autograd_mode(
+        self,
+    ) -> None:
+        """
+        Verify that the pytorch autograd mode used depends on having a checkpoint callback in predict.
+        """
+        unit = DummyPredictUnit(2)
+        dataloader = generate_random_dataloader(10, 2, 2)
+        dcp_saver = DistributedCheckpointSaver(dirpath="dummy_dirpath")
+
+        for callbacks, mock_autograd_mode in [
+            ([], "torch.inference_mode"),
+            ([dcp_saver], "torch.no_grad"),
+        ]:
+            with patch(mock_autograd_mode) as mock_autograd_mode:
+                predict(unit, dataloader, callbacks=cast(List[Callback], callbacks))
+                mock_autograd_mode.assert_called_once()
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
