@@ -10,7 +10,7 @@ from typing import Literal
 
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
-from torchtnt.framework.unit import AppStateMixin, TTrainUnit
+from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainUnit
 from torchtnt.utils.distributed import get_global_rank, sync_bool
 from torchtnt.utils.early_stop_checker import EarlyStopChecker
 
@@ -23,6 +23,7 @@ class EarlyStopping(Callback):
         monitored_attr: The attribute to monitor on the unit. Must be a float or tensor attribute on the unit.
         early_stop_checker: a :class:`~torchtnt.utils.early_stop_checker.EarlyStopChecker` to use for checking whether to stop early.
         interval: The interval to check the monitored attribute. Must be one of "step" or "epoch".
+        phase: The phase to check the monitored attribute. Must be one of "train" or "eval".
 
     Note:
         If doing distributed training, this callback checks the metric value only on rank 0
@@ -33,26 +34,46 @@ class EarlyStopping(Callback):
         monitored_attr: str,
         early_stop_checker: EarlyStopChecker,
         interval: Literal["step", "epoch"] = "epoch",
+        phase: Literal["train", "eval"] = "train",
         interval_freq: int = 1,
     ) -> None:
         self._monitored_attr = monitored_attr
         self._esc = early_stop_checker
         self._interval = interval
         self._interval_freq = interval_freq
+        self._phase = phase
 
         self._rank: int = get_global_rank()
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
         if (
-            self._interval == "step"
+            self._phase == "train"
+            and self._interval == "step"
             and unit.train_progress.num_steps_completed % self._interval_freq == 0
         ):
             self._maybe_stop(state, unit)
 
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         if (
-            self._interval == "epoch"
+            self._phase == "train"
+            and self._interval == "epoch"
             and unit.train_progress.num_epochs_completed % self._interval_freq == 0
+        ):
+            self._maybe_stop(state, unit)
+
+    def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
+        if (
+            self._phase == "eval"
+            and self._interval == "step"
+            and unit.eval_progress.num_steps_completed % self._interval_freq == 0
+        ):
+            self._maybe_stop(state, unit)
+
+    def on_eval_epoch_end(self, state: State, unit: TEvalUnit) -> None:
+        if (
+            self._phase == "eval"
+            and self._interval == "epoch"
+            and unit.eval_progress.num_epochs_completed % self._interval_freq == 0
         ):
             self._maybe_stop(state, unit)
 

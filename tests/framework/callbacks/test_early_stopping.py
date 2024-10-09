@@ -10,11 +10,15 @@ import unittest
 from typing import cast, Literal
 from unittest.mock import MagicMock, patch
 
-from torchtnt.framework._test_utils import Batch, get_dummy_train_state
+from torchtnt.framework._test_utils import (
+    Batch,
+    get_dummy_eval_state,
+    get_dummy_train_state,
+)
 
 from torchtnt.framework.callbacks.early_stopping import EarlyStopping
 from torchtnt.framework.state import State
-from torchtnt.framework.unit import TrainUnit
+from torchtnt.framework.unit import EvalUnit, TrainUnit
 
 from torchtnt.utils.early_stop_checker import EarlyStopChecker
 
@@ -131,6 +135,48 @@ class EarlyStoppingTest(unittest.TestCase):
         esc.on_train_step_end(state, unit)
         _maybe_stop.assert_called_once()
 
+    @patch("torchtnt.framework.callbacks.early_stopping.EarlyStopping._maybe_stop")
+    def test_phase(self, _maybe_stop: MagicMock) -> None:
+        early_stop_checker = EarlyStopChecker(
+            mode="min",
+            patience=2,
+            min_delta=0.0,
+        )
+        esc = EarlyStopping(
+            monitored_attr="eval_loss",
+            early_stop_checker=early_stop_checker,
+            interval="epoch",
+            interval_freq=2,
+            phase="eval",
+        )
+
+        state = get_dummy_eval_state()
+        unit = MyEvalLossUnit()
+
+        unit.eval_progress.increment_epoch()
+        esc.on_eval_epoch_end(state, unit)
+        _maybe_stop.assert_not_called()
+        unit.eval_progress.increment_epoch()
+        esc.on_eval_epoch_end(state, unit)
+        _maybe_stop.assert_called_once()
+
+        _maybe_stop.reset_mock()
+
+        esc = EarlyStopping(
+            monitored_attr="eval_loss",
+            early_stop_checker=early_stop_checker,
+            interval="step",
+            interval_freq=2,
+            phase="eval",
+        )
+
+        unit.eval_progress.increment_step()
+        esc.on_eval_step_end(state, unit)
+        _maybe_stop.assert_not_called()
+        unit.eval_progress.increment_step()
+        esc.on_eval_step_end(state, unit)
+        _maybe_stop.assert_called_once()
+
 
 class MyTrainLossUnit(TrainUnit[Batch]):
     def __init__(self) -> None:
@@ -138,4 +184,13 @@ class MyTrainLossUnit(TrainUnit[Batch]):
         self.train_loss = 0.01
 
     def train_step(self, state: State, data: Batch) -> None:
+        return None
+
+
+class MyEvalLossUnit(EvalUnit[Batch]):
+    def __init__(self) -> None:
+        super().__init__()
+        self.eval_loss = 0.01
+
+    def eval_step(self, state: State, data: Batch) -> None:
         return None
