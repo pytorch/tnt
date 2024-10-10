@@ -270,6 +270,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
         storage_options: Optional[Dict[str, Any]] = None,
         knob_options: Optional[KnobOptions] = None,
         strict: bool = True,
+        **kwargs: Any,
     ) -> None:
         """Utility method to restore snapshot state from a path.
 
@@ -279,7 +280,7 @@ class TorchSnapshotSaver(BaseCheckpointer):
         Args:
             path: Path of the snapshot to restore.
             unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
-            train_dataloader: An optional train dataloader to restore.
+            train_dataloader: An optional train dataloader to restore. Note that restoring from predict or evaluate dataloaders is not supported for TorchSnapshotSaver.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
             restore_options: Controls what to  filter when restoring the state.
             storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot <https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot>`_. See each storage plugin's documentation for customizations.

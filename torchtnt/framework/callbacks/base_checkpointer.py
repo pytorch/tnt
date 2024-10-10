@@ -410,6 +410,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         train_dataloader: Optional[Iterable[TTrainData]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
+        **kwargs: Any,
     ) -> None:
         """Method to restore checkpoint state from a path.
 
@@ -419,7 +420,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         Args:
             path: Path of the checkpoint to restore.
             unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
-            train_dataloader: An optional train dataloader to restore.
+            train_dataloader: An optional train dataloader to restore. Can only be used when restoring from a train or fit checkpoint.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
             restore_options: Controls what to filter when restoring the state.
         """
@@ -538,6 +539,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         train_dataloader: Optional[Iterable[TTrainData]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
+        **kwargs: Any,
     ) -> None:
         """Method to restore checkpoint state from a checkpoint id.
 
@@ -561,4 +563,5 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             train_dataloader=train_dataloader,
             process_group=process_group,
             restore_options=restore_options,
+            **kwargs,
         )
