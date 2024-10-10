@@ -145,7 +145,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
                 self.assertEqual(stateful_dataloader.load_state_dict_call_count, 1)
                 self.assertEqual(
                     log.output[0],
-                    "WARNING:torchtnt.utils.rank_zero_log:train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot",
+                    "WARNING:torchtnt.framework.callbacks.dcp_saver:dataloader (train) was passed to `restore` but no dataloader exists in checkpoint metadata.",
                 )
 
     def test_restore_from_latest(self) -> None:
@@ -500,7 +500,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             my_unit_clone = DummyMultiOptimUnit(input_dim=input_dim)
             dcp_cb.restore_from_latest(temp_dir, my_unit_clone)
 
-    def test_save_predict(self) -> None:
+    def test_save_restore_predict(self) -> None:
         input_dim = 2
         dataset_len = 10
         batch_size = 2
@@ -537,19 +537,51 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             ckpt_path = none_throws(get_latest_checkpoint_path(temp_dir))
             self.assertEqual(ckpt_path, os.path.join(temp_dir, expected_ckpts[-1]))
 
+            expected_keys = [
+                "predict_progress",
+                "predict_dataloader",
+                "output_mean",
+            ]
+
             storage_reader = FsspecReader(ckpt_path)
             metadata = storage_reader.read_metadata()
             self.assertCountEqual(
                 # Get base keys after the app_state wrapper
                 {key.split(".")[1] for key in metadata.state_dict_metadata.keys()},
-                [
-                    "predict_progress",
-                    "predict_dataloader",
-                    "output_mean",
-                ],
+                expected_keys,
             )
 
-    def test_save_evaluate(self) -> None:
+            # Now make sure that the same exact keys are used when restoring
+            with patch("torchtnt.framework.callbacks.dcp_saver.dcp.load") as mock_load:
+                DistributedCheckpointSaver.restore(
+                    ckpt_path, my_unit, predict_dataloader=dataloader
+                )
+                self.assertCountEqual(
+                    [*mock_load.call_args[0][0]["app_state"].state_dict().keys()],
+                    expected_keys,
+                )
+
+            # Double check that the module parameters are not overwritten when loading cktp
+            my_unit = DummyPredictUnit(input_dim=input_dim)
+            my_unit.module.weight.data.fill_(0.0)
+            my_unit.module.bias.data.fill_(1.0)
+
+            DistributedCheckpointSaver.restore(
+                ckpt_path, my_unit, predict_dataloader=dataloader
+            )
+
+            self.assertTrue(
+                torch.allclose(
+                    my_unit.module.weight.data, torch.zeros(input_dim, input_dim)
+                )
+            )
+            self.assertTrue(
+                torch.allclose(
+                    my_unit.module.bias.data, torch.ones(input_dim, input_dim)
+                )
+            )
+
+    def test_save_restore_evaluate(self) -> None:
         input_dim = 2
         dataset_len = 10
         batch_size = 2
@@ -580,18 +612,49 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             ckpt_path = none_throws(get_latest_checkpoint_path(temp_dir))
             self.assertEqual(ckpt_path, os.path.join(temp_dir, expected_ckpts[-1]))
 
+            expected_keys = [
+                "eval_progress",
+                "eval_dataloader",
+            ]
             storage_reader = FsspecReader(ckpt_path)
             metadata = storage_reader.read_metadata()
             self.assertCountEqual(
                 # Get base keys after the app_state wrapper
                 {key.split(".")[1] for key in metadata.state_dict_metadata.keys()},
-                [
-                    "eval_progress",
-                    "eval_dataloader",
-                ],
+                expected_keys,
             )
 
-    def test_save_fit_eval_every_n_epochs(self) -> None:
+            # Now make sure that the same exact keys are used when restoring
+            with patch("torchtnt.framework.callbacks.dcp_saver.dcp.load") as mock_load:
+                DistributedCheckpointSaver.restore(
+                    ckpt_path, my_unit, eval_dataloader=dataloader
+                )
+                self.assertCountEqual(
+                    [*mock_load.call_args[0][0]["app_state"].state_dict().keys()],
+                    expected_keys,
+                )
+
+            # Double check that the module parameters are not overwritten when loading cktp
+            my_unit = DummyEvalUnit(input_dim=input_dim)
+            my_unit.module.weight.data.fill_(0.0)
+            my_unit.module.bias.data.fill_(1.0)
+
+            DistributedCheckpointSaver.restore(
+                ckpt_path, my_unit, predict_dataloader=dataloader
+            )
+
+            self.assertTrue(
+                torch.allclose(
+                    my_unit.module.weight.data, torch.zeros(input_dim, input_dim)
+                )
+            )
+            self.assertTrue(
+                torch.allclose(
+                    my_unit.module.bias.data, torch.ones(input_dim, input_dim)
+                )
+            )
+
+    def test_save_restore_fit_eval_every_n_epochs(self) -> None:
         input_dim = 2
         dataset_len = 10
         batch_size = 2
@@ -625,32 +688,51 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             )
 
             generated_ckpts = os.listdir(temp_dir)
-            expected_ckpts = [
-                "epoch_0_train_step_2_eval_step_0",
-                "epoch_0_train_step_4_eval_step_0",
-                "epoch_1_train_step_5_eval_step_2",
-                "epoch_1_train_step_5_eval_step_4",
-            ]
-            self.assertCountEqual(generated_ckpts, expected_ckpts)
+            expected_ckpts_to_dl_mapping: Dict[str, str] = {
+                "epoch_0_train_step_2_eval_step_0": "train_dataloader",
+                "epoch_0_train_step_4_eval_step_0": "train_dataloader",
+                "epoch_1_train_step_5_eval_step_2": "eval_dataloader",
+                "epoch_1_train_step_5_eval_step_4": "eval_dataloader",
+            }
+            self.assertCountEqual(
+                generated_ckpts, [*expected_ckpts_to_dl_mapping.keys()]
+            )
 
-            expected_dataloader = ["train_dataloader"] * 2 + ["eval_dataloader"] * 2
-            for ckpt_path, dl_key in zip(expected_ckpts, expected_dataloader):
-                storage_reader = FsspecReader(os.path.join(temp_dir, ckpt_path))
+            expected_keys = [
+                "module",  # Both train and eval checkpoints save full app_state in fit
+                "optimizer",
+                "lr_scheduler",
+                "train_progress",
+                "eval_progress",
+                "predict_progress",  # included because of AutoUnit
+                "output_mean",
+            ]
+
+            for ckpt_path, dl_key in expected_ckpts_to_dl_mapping.items():
+                full_ckpt_path = os.path.join(temp_dir, ckpt_path)
+                expected_keys_with_dl = expected_keys + [dl_key]
+                storage_reader = FsspecReader(full_ckpt_path)
                 metadata = storage_reader.read_metadata()
                 self.assertCountEqual(
                     # Get base keys after the app_state wrapper
                     {key.split(".")[1] for key in metadata.state_dict_metadata.keys()},
-                    [
-                        "module",  # Both train and eval checkpoints save full app_state in fit
-                        "optimizer",
-                        "lr_scheduler",
-                        "train_progress",
-                        "eval_progress",
-                        "predict_progress",  # included because of AutoUnit
-                        dl_key,
-                        "output_mean",
-                    ],
+                    expected_keys_with_dl,
                 )
+
+                # Now make sure that the same exact keys are used when restoring
+                with patch(
+                    "torchtnt.framework.callbacks.dcp_saver.dcp.load"
+                ) as mock_load:
+                    DistributedCheckpointSaver.restore(
+                        full_ckpt_path,
+                        my_unit,
+                        train_dataloader=train_dataloader,
+                        eval_dataloader=eval_dataloader,
+                    )
+                    self.assertCountEqual(
+                        [*mock_load.call_args[0][0]["app_state"].state_dict().keys()],
+                        expected_keys_with_dl,
+                    )
 
     def test_save_fit_eval_every_n_steps(self) -> None:
         input_dim = 2
@@ -710,23 +792,41 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
                 generated_ckpts, [*expected_ckpts_to_dl_mapping.keys()]
             )
 
+            expected_keys = [
+                "module",  # Both train and eval checkpoints save full app_state in fit
+                "optimizer",
+                "lr_scheduler",
+                "train_progress",
+                "eval_progress",
+                "predict_progress",  # included because of AutoUnit
+                "output_mean",
+            ]
+
             for ckpt_path, expected_dls in expected_ckpts_to_dl_mapping.items():
-                storage_reader = FsspecReader(os.path.join(temp_dir, ckpt_path))
+                expected_keys_with_dls = [*expected_keys, *expected_dls]
+                full_ckpt_path = os.path.join(temp_dir, ckpt_path)
+                storage_reader = FsspecReader(full_ckpt_path)
                 metadata = storage_reader.read_metadata()
                 self.assertCountEqual(
                     # Get base keys after the app_state wrapper
                     {key.split(".")[1] for key in metadata.state_dict_metadata.keys()},
-                    [
-                        "module",  # Both train and eval checkpoints save full app_state in fit
-                        "optimizer",
-                        "lr_scheduler",
-                        "train_progress",
-                        "eval_progress",
-                        "predict_progress",  # included because of AutoUnit
-                        "output_mean",
-                        *expected_dls,
-                    ],
+                    expected_keys_with_dls,
                 )
+
+                # Now make sure that the same exact keys are used when restoring
+                with patch(
+                    "torchtnt.framework.callbacks.dcp_saver.dcp.load"
+                ) as mock_load:
+                    DistributedCheckpointSaver.restore(
+                        full_ckpt_path,
+                        my_unit,
+                        train_dataloader=train_dataloader,
+                        eval_dataloader=eval_dataloader,
+                    )
+                    self.assertCountEqual(
+                        [*mock_load.call_args[0][0]["app_state"].state_dict().keys()],
+                        expected_keys_with_dls,
+                    )
 
 
 class DummyStatefulDataLoader:

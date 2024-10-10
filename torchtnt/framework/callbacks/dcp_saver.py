@@ -9,7 +9,7 @@
 import logging
 import time
 from concurrent.futures import Future
-from typing import Any, Dict, Iterable, List, Optional, Union
+from typing import Any, cast, Dict, Iterable, List, Optional, Union
 
 import torch.distributed as dist
 from pyre_extensions import none_throws
@@ -27,9 +27,9 @@ from torch.distributed.checkpoint.planner import LoadPlanner, SavePlanner
 from torch.distributed.checkpoint.storage import StorageReader, StorageWriter
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
+    _PHASE_DL_STATE_KEY_MAPPING,
     _prepare_app_state_for_checkpoint,
     _prepare_app_state_for_restore,
-    _TRAIN_DL_STATE_KEY,
 )
 
 from torchtnt.framework.callbacks.base_checkpointer import BaseCheckpointer
@@ -45,12 +45,18 @@ from torchtnt.framework.unit import (
     TTrainUnit,
 )
 from torchtnt.framework.utils import get_timing_context
-from torchtnt.utils.checkpoint import BestCheckpointConfig
+from torchtnt.utils.checkpoint import BestCheckpointConfig, CheckpointPath, Phase
 from torchtnt.utils.distributed import get_or_create_gloo_pg
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.stateful import MultiStateful, Stateful
 
+from typing_extensions import TypeAlias
+
 logger: logging.Logger = logging.getLogger(__name__)
+
+TDataloader: TypeAlias = Union[
+    Iterable[TTrainData], Iterable[TEvalData], Iterable[TPredictData]
+]
 
 
 class DistributedCheckpointSaver(BaseCheckpointer):
@@ -58,11 +64,22 @@ class DistributedCheckpointSaver(BaseCheckpointer):
     A callback which periodically saves the application state during training using `Distributed Checkpoint <https://pytorch.org/docs/stable/distributed.checkpoint.html>`_.
 
     This callback supplements the application state provided by :class:`torchtnt.unit.AppStateMixin`
-    with the train progress, and train dataloader (if applicable).
+    with the progress, and active dataloaders (if applicable).
 
-    If used with :func:`torchtnt.framework.fit`, this class will also save the evaluation progress state.
+    The keys saved in a checkpoint will vary depending on the entrypoint used.
+        - :func:`torchtnt.framework.train`: Save model weights along with other Statefuls, train_progress, and train_dataloader if saving within an epoch.
+        - :func:`torchtnt.framework.fit`: Save model weights along with other Statefuls, train_progress, eval_progress. In this case both train_dataloader and eval_dataloader
+            may be saved depending on the `evaluate_every_n_steps` configuration.
+        - :func:`torchtnt.framework.evaluate`: Save only metrics and miscellaneous Statefuls, excluding model weights since they will not change. Save eval_progress and eval_dataloader.
+        - :func:`torchtnt.framework.predict`: Save only metrics and miscellaneous Statefuls, excluding model weights since they will not change. Save predict_progress and predict_dataloader.
 
-    Checkpoints will be saved under ``dirpath/epoch_{epoch}_step_{step}`` where step is the *total* number of training steps completed across all epochs.
+    When restoring from a checkpoint, the following is assumed:
+        - If resuming from train or fit, the module parameters are restored, along with the progress and any other statefuls.
+            The train_dataloader and evaluate_dataloader are restored if they are present in the checkpoint.
+        - If resuming from evaluate or predict, the module parameters are not restored. Instead, it's expected that users will load them within their units.
+            In this case only the progress, metrics, and dataloaders are loaded.
+
+    Checkpoints will be saved under ``dirpath/epoch_{epoch}_<phase>_step_{step}`` where step is the *total* number of training steps completed across all epochs.
 
     Args:
         dirpath: Parent directory to save snapshots to.
@@ -291,9 +308,29 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             storage_reader: Instance of StorageReader used to perform reads. If this is not specified, it will automatically infer
                             the reader based on the checkpoint_id. If checkpoint_id is also None, an exception will be raised. (Default: ``None``)
         """
-        restore_options = restore_options or RestoreOptions()
-        app_state = _prepare_app_state_for_restore(unit, restore_options)
         checkpoint_id = str(checkpoint_id)
+        restore_options = restore_options or RestoreOptions()
+
+        try:
+            checkpoint_path = CheckpointPath.from_str(checkpoint_id)
+        except ValueError:
+            checkpoint_path = None
+
+        # For evaluation and prediction checkpoints, don't load model parameters
+        if (
+            checkpoint_path
+            and checkpoint_path._is_phase_aware()
+            and Phase.TRAIN not in checkpoint_path.step
+        ):
+            logger.info(
+                f"Will not restore model parameters, optimizers, or lr schedulers from {checkpoint_id}, "
+                + "since it is a prediction or evaluation checkpoint."
+            )
+            restore_options.restore_modules = False
+            restore_options.restore_optimizers = False
+            restore_options.restore_lr_schedulers = False
+
+        app_state = _prepare_app_state_for_restore(unit, restore_options)
 
         # If no storage_reader is provided, default to path based reader
         if storage_reader is None:
@@ -304,25 +341,15 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             allow_partial_load = not restore_options.strict
             planner = DefaultLoadPlanner(allow_partial_load=allow_partial_load)
 
-        if train_dataloader is not None:
-            if not isinstance(train_dataloader, Stateful):
-                rank_zero_warn(
-                    "train_dataloader was passed to `restore` but the dataloader does not implement the Stateful protocol to load states"
-                )
-            else:
-                # request to restore the dataloader state only if
-                # the persisted snapshot state includes the dataloader entry
-                metadata = storage_reader.read_metadata()
-
-                for key in metadata.state_dict_metadata.keys():
-                    if _TRAIN_DL_STATE_KEY in key:
-                        app_state[_TRAIN_DL_STATE_KEY] = train_dataloader
-                        break
-
-                if _TRAIN_DL_STATE_KEY not in app_state:
-                    rank_zero_warn(
-                        "train_dataloader was passed to `restore` but no train dataloader exists in the Snapshot"
-                    )
+        # Add the dataloader to the app state using the correct key if it exists
+        DistributedCheckpointSaver._maybe_add_dataloader_to_app_state(
+            app_state,
+            checkpoint_path,
+            storage_reader,
+            train_dataloader,
+            eval_dataloader,
+            predict_dataloader,
+        )
 
         with get_or_create_gloo_pg(candidate_pg=process_group) as pg:
             dcp.load(
@@ -336,6 +363,67 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         rank_zero_info(
             f"Restored snapshot for checkpoint_id: {checkpoint_id}", logger=logger
         )
+
+    @staticmethod
+    def _maybe_add_dataloader_to_app_state(
+        app_state: Dict[str, Stateful],
+        checkpoint_path: Optional[CheckpointPath],
+        storage_reader: StorageReader,
+        train_dataloader: Optional[Iterable[TTrainData]] = None,
+        eval_dataloader: Optional[Iterable[TEvalData]] = None,
+        predict_dataloader: Optional[Iterable[TPredictData]] = None,
+    ) -> Dict[str, Stateful]:
+        """
+        Appends the dataloader state to the application state.
+        """
+        dataloaders = {
+            Phase.TRAIN: train_dataloader,
+            Phase.EVALUATE: eval_dataloader,
+            Phase.PREDICT: predict_dataloader,
+        }
+
+        # Consider only the dataloaders passed by the user, and only if they are Stateful
+        ignore_phases = set()
+        for phase, dl in dataloaders.items():
+            if dl is None:
+                ignore_phases.add(phase)
+
+            elif not isinstance(dl, Stateful):
+                logger.warn(
+                    f"dataloader for {phase} phase was passed to `restore` but it does not implement the Stateful protocol to load states"
+                )
+                ignore_phases.add(phase)
+
+        candidate_dataloaders = {
+            phase: dl for phase, dl in dataloaders.items() if phase not in ignore_phases
+        }
+
+        if not candidate_dataloaders:
+            return app_state
+
+        # check if any of the candidate phases has a dataloader saved in the checkpoint. If so, include
+        # it in the app state. More than one dataloader may be present if using fit.
+        metadata = storage_reader.read_metadata()
+        for key in metadata.state_dict_metadata.keys():
+            for phase in candidate_dataloaders.keys():
+                if (dl_key := _PHASE_DL_STATE_KEY_MAPPING[phase]) in key:
+                    if dl_key not in app_state:
+                        app_state[dl_key] = cast(
+                            Stateful, none_throws(candidate_dataloaders[phase])
+                        )
+                        logger.info(f"Restoring dataloader with key: {dl_key}")
+
+        if dl_missing_in_ckpt := [
+            phase
+            for phase in candidate_dataloaders.keys()
+            if _PHASE_DL_STATE_KEY_MAPPING[phase] not in app_state
+        ]:
+            logger.warn(
+                f"dataloader ({','.join(str(k) for k in dl_missing_in_ckpt)}) was passed to `restore` "
+                "but no dataloader exists in checkpoint metadata."
+            )
+
+        return app_state
 
     def _generate_checkpoint_and_upkeep(
         self, state: State, unit: Union[TTrainUnit, TEvalUnit, TPredictUnit], hook: str

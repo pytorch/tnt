@@ -55,6 +55,9 @@ class Phase(Enum):
     EVALUATE = 2
     PREDICT = 3
 
+    def __str__(self) -> str:
+        return self.name.lower()
+
 
 @total_ordering
 class CheckpointPath:
