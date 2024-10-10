@@ -9,8 +9,10 @@
 
 from typing import Any, cast, Dict, Union
 
+from pyre_extensions import none_throws
+
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
-from torchtnt.framework.state import EntryPoint, State
+from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TPredictUnit, TTrainUnit
 from torchtnt.utils.checkpoint import Phase
 
@@ -123,13 +125,27 @@ def _prepare_app_state_for_checkpoint(
             remove_lr_schedulers=True,
         )
 
+    if not intra_epoch:
+        return app_state
+
     # for intra-epoch checkpointing, include dataloader state of the current phase
-    phase_dl = state.active_phase_state().dataloader
-    if intra_epoch and isinstance(phase_dl, Stateful):
-        dataloader_state_key = _PHASE_DL_STATE_KEY_MAPPING[
-            state.active_phase.into_phase()
-        ]
-        app_state[dataloader_state_key] = phase_dl
+    active_dataloaders = {state.active_phase: state.active_phase_state().dataloader}
+
+    # Special case for FIT where eval is executed every n steps. We also need to save
+    # the train dataloader state. In this case, train epoch wouldn't be incremented yet.
+    if (
+        state.entry_point == EntryPoint.FIT
+        and state.active_phase == ActivePhase.EVALUATE
+        and cast(TTrainUnit, unit).train_progress.num_steps_completed_in_epoch != 0
+    ):
+        active_dataloaders[ActivePhase.TRAIN] = none_throws(
+            state.train_state
+        ).dataloader
+
+    for active_phase, dl in active_dataloaders.items():
+        if isinstance(dl, Stateful):
+            dl_key = _PHASE_DL_STATE_KEY_MAPPING[active_phase.into_phase()]
+            app_state[dl_key] = dl
 
     return app_state
 

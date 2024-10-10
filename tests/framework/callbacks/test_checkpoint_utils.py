@@ -16,6 +16,7 @@ from torchtnt.framework import ActivePhase
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
     DummyEvalUnit,
+    DummyFitUnit,
     DummyMeanMetric,
     DummyTrainUnit,
     generate_dummy_stateful_dataloader,
@@ -82,6 +83,33 @@ class CheckpointUtilsTest(unittest.TestCase):
                 "eval_progress",
                 "eval_dataloader",
                 "mean_metric",
+            ],
+        )
+
+        # Test evaluate intra-epoch within train epoch on FIT (evaluate_every_n_steps)
+        my_unit = DummyFitUnit(input_dim=2)
+        my_unit.train_progress.increment_step()  # Simulate at least one step in each phase
+        my_unit.eval_progress.increment_step()
+
+        state = get_dummy_fit_state()
+        state._active_phase = ActivePhase.EVALUATE
+
+        train_dl = generate_dummy_stateful_dataloader(1, 1, 1)
+        eval_dl = generate_dummy_stateful_dataloader(1, 1, 1)
+        none_throws(state.train_state)._dataloader = train_dl
+        none_throws(state.eval_state)._dataloader = eval_dl
+
+        app_state = _prepare_app_state_for_checkpoint(state, my_unit, intra_epoch=True)
+        self.assertCountEqual(
+            app_state.keys(),
+            [
+                "module",
+                "optimizer",
+                "loss_fn",
+                "train_progress",
+                "eval_progress",
+                "train_dataloader",
+                "eval_dataloader",
             ],
         )
 
