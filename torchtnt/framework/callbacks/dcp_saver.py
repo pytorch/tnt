@@ -65,8 +65,10 @@ class DistributedCheckpointSaver(BaseCheckpointer):
     Args:
         dirpath: Parent directory to save snapshots to.
         save_every_n_train_steps: Frequency of steps with which to save snapshots during the train epoch. If None, no intra-epoch snapshots are generated.
-        save_every_n_epochs: Frequency of epochs with which to save snapshots during training. If None, no end-of-epoch snapshots are generated.
+        save_every_n_epochs: Frequency of epochs with which to save checkpoints during training. If None, no end-of-epoch checkpoints are generated.
         save_every_n_eval_epochs: Frequency of evaluation epochs with which to save checkpoints during training. Use this if wanting to save checkpoints after every eval epoch during fit.
+        save_every_n_eval_steps: Frequency of evaluation steps with which to save checkpoints during training. Use this if wanting to save checkpoints during evaluate.
+        save_every_n_predict_steps: Frequency of prediction steps with which to save checkpoints during training. Use this if wanting to save checkpoints during using predict entrypoint.
         keep_last_n_checkpoints: Number of most recent checkpoints to keep. If None, all checkpoints are kept. If an excess of existing checkpoints are present, the oldest ones will be deleted to clean the difference. If best checkpoint config is enabled, this param will manage the top n checkpoints instead.
         best_checkpoint_config: Configuration for saving the best checkpoint based on a monitored metric. The metric is read off the attribute of the unit prior to checkpoint.
         process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
@@ -93,7 +95,9 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         *,
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
+        save_every_n_eval_steps: Optional[int] = None,
         save_every_n_eval_epochs: Optional[int] = None,
+        save_every_n_predict_steps: Optional[int] = None,
         keep_last_n_checkpoints: Optional[int] = None,
         best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         process_group: Optional[dist.ProcessGroup] = None,
@@ -104,7 +108,9 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             dirpath=dirpath,
             save_every_n_train_steps=save_every_n_train_steps,
             save_every_n_epochs=save_every_n_epochs,
+            save_every_n_eval_steps=save_every_n_eval_steps,
             save_every_n_eval_epochs=save_every_n_eval_epochs,
+            save_every_n_predict_steps=save_every_n_predict_steps,
             keep_last_n_checkpoints=keep_last_n_checkpoints,
             best_checkpoint_config=best_checkpoint_config,
             process_group=process_group,
@@ -129,10 +135,12 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             "on_train_epoch_end",
             "on_train_end",
             "on_eval_epoch_end",
+            "on_eval_step_end",
+            "on_predict_step_end",
         ]:
             raise RuntimeError(f"Unexpected hook encountered '{hook}'")
 
-        intra_epoch = hook == "on_train_step_end"
+        intra_epoch = "step_end" in hook
         curr_snapshot_wait = hook == "on_train_end"
 
         if planner is None:
