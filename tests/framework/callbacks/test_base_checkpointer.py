@@ -14,7 +14,7 @@ import shutil
 import tempfile
 import time
 import unittest
-from typing import cast, Iterable, List, Optional
+from typing import Any, cast, Iterable, List, Optional
 from unittest.mock import MagicMock, patch
 
 import torch
@@ -42,7 +42,14 @@ from torchtnt.framework.predict import predict
 from torchtnt.framework.state import ActivePhase, State
 
 from torchtnt.framework.train import train
-from torchtnt.framework.unit import AppStateMixin, TrainUnit, TTrainData, TTrainUnit
+from torchtnt.framework.unit import (
+    AppStateMixin,
+    TEvalData,
+    TPredictData,
+    TrainUnit,
+    TTrainData,
+    TTrainUnit,
+)
 from torchtnt.utils.checkpoint import BestCheckpointConfig, get_latest_checkpoint_path
 from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
 from torchtnt.utils.env import init_from_env
@@ -94,10 +101,13 @@ class BaseCheckpointSaver(BaseCheckpointer):
         unit: AppStateMixin,
         *,
         train_dataloader: Optional[Iterable[TTrainData]] = None,
+        eval_dataloader: Optional[Iterable[TEvalData]] = None,
+        predict_dataloader: Optional[Iterable[TPredictData]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
         msg: str = "",
         restored_checkpoint_path: Optional[List[str]] = None,
+        **kwargs: Any,
     ) -> None:
         if restored_checkpoint_path is not None:
             if len(restored_checkpoint_path):

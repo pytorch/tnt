@@ -37,7 +37,9 @@ from torchtnt.framework.callbacks.checkpointer_types import KnobOptions, Restore
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import (
     AppStateMixin,
+    TEvalData,
     TEvalUnit,
+    TPredictData,
     TPredictUnit,
     TTrainData,
     TTrainUnit,
@@ -228,11 +230,14 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         unit: AppStateMixin,
         *,
         train_dataloader: Optional[Iterable[TTrainData]] = None,
+        eval_dataloader: Optional[Iterable[TEvalData]] = None,
+        predict_dataloader: Optional[Iterable[TPredictData]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
         knob_options: Optional[KnobOptions] = None,
         planner: Optional[LoadPlanner] = None,
         storage_reader: Optional[StorageReader] = None,
+        **kwargs: Any,
     ) -> None:
         """Utility method to restore dcp checkpoint from a path."""
 
@@ -242,6 +247,8 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             checkpoint_id,
             unit,
             train_dataloader=train_dataloader,
+            eval_dataloader=eval_dataloader,
+            predict_dataloader=predict_dataloader,
             process_group=process_group,
             restore_options=restore_options,
             knob_options=knob_options,
@@ -255,11 +262,14 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         unit: AppStateMixin,
         *,
         train_dataloader: Optional[Iterable[TTrainData]] = None,
+        eval_dataloader: Optional[Iterable[TEvalData]] = None,
+        predict_dataloader: Optional[Iterable[TPredictData]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
         knob_options: Optional[KnobOptions] = None,
         planner: Optional[LoadPlanner] = None,
         storage_reader: Optional[StorageReader] = None,
+        **kwargs: Any,
     ) -> None:
         """Utility method to restore dcp checkpoint from a checkpoint_id.
 
@@ -269,7 +279,9 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         Args:
             checkpoint_id: Checkpoint id. It can be the path of the snapshot to restore.
             unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.
-            train_dataloader: An optional train dataloader to restore.
+            train_dataloader: An optional train dataloader to restore. Can only be used when restoring from a train or fit checkpoint.
+            eval_dataloader: An optional eval dataloader to restore. Can only be used when restoring from an eval or fit checkpoint.
+            predict_dataloader: An optional predict dataloader to restore. Can only be used when restoring from a predict checkpoint.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
                             If not Gloo, a Gloo process group is created.
                             Note: If torch.distributed is available and a process group is initialized, dcp assumes the intention is to save/load checkpoints in distributed fashion.
