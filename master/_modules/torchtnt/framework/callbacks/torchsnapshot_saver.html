@@ -677,6 +677,7 @@
         <span class="n">storage_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">knob_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">KnobOptions</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Utility method to restore snapshot state from a path.</span>
 
@@ -686,7 +687,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            path: Path of the snapshot to restore.</span>
 <span class="sd">            unit: An instance of :class:`~torchtnt.framework.unit.TrainUnit`, :class:`~torchtnt.framework.unit.EvalUnit`, or :class:`~torchtnt.framework.unit.PredictUnit` containing states to restore.</span>
-<span class="sd">            train_dataloader: An optional train dataloader to restore.</span>
+<span class="sd">            train_dataloader: An optional train dataloader to restore. Note that restoring from predict or evaluate dataloaders is not supported for TorchSnapshotSaver.</span>
 <span class="sd">            process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)</span>
 <span class="sd">            restore_options: Controls what to  filter when restoring the state.</span>
 <span class="sd">            storage_options: Additional keyword options for the storage plugin to use, to be passed to `torchsnapshot.Snapshot &lt;https://pytorch.org/torchsnapshot/stable/api_reference.html#torchsnapshot.Snapshot&gt;`_. See each storage plugin&#39;s documentation for customizations.</span>

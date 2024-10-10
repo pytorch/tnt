@@ -780,6 +780,25 @@ Below is a simple example of a user’s subclass of <a class="reference internal
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.on_checkpoint_save">
+<code class="sig-name descname"><span class="pre">on_checkpoint_save</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em>, <em><span class="n"><span class="pre">checkpoint_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/unit.html#PredictUnit.on_checkpoint_save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.on_checkpoint_save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook called after successfully saving a checkpoint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>state</strong> – a <a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><code class="xref py py-class docutils literal notranslate"><span class="pre">State</span></code></a> object containing metadata about the training run.</li>
+<li><strong>checkpoint_id</strong> – the ID of the checkpoint that was saved. Depending on the storage type, this may be
+a path, a URL or a unique identifier.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.framework.unit.PredictUnit.on_predict_end">
 <code class="sig-name descname"><span class="pre">on_predict_end</span></code><span class="sig-paren">(</span><em><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="state.html#torchtnt.framework.state.State" title="torchtnt.framework.state.State"><span class="pre">State</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/unit.html#PredictUnit.on_predict_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.unit.PredictUnit.on_predict_end" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hook called after prediction ends.</p>
