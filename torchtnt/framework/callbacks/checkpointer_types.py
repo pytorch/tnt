@@ -25,9 +25,9 @@ class KnobOptions:
     # use a more conservative number of concurrent IO operations per rank in Checkpointing
     # the default value of 16 is too bandwidth hungry for most users
     max_per_rank_io_concurrency: Optional[int] = None
-    # This is a no-op and for future use. This would enable storage efficiency optimizations:
+    # This would enable storage efficiency optimizations (model store):
     # e.g. Compression, Batching, Quantization etc.
-    enable_storage_optimization: bool = False
+    enable_storage_optimization: bool = True
 
 
 @dataclass
