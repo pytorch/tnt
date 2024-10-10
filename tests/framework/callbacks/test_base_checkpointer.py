@@ -25,6 +25,7 @@ from torchtnt.framework._test_utils import (
     Batch,
     DummyAutoUnit,
     DummyFitUnit,
+    DummyPredictUnit,
     DummyTrainUnit,
     generate_random_dataloader,
     get_dummy_fit_state,
@@ -35,7 +36,9 @@ from torchtnt.framework.callbacks.base_checkpointer import (
 )
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
 from torchtnt.framework.callbacks.lambda_callback import Lambda
+from torchtnt.framework.evaluate import evaluate
 from torchtnt.framework.fit import fit
+from torchtnt.framework.predict import predict
 from torchtnt.framework.state import ActivePhase, State
 
 from torchtnt.framework.train import train
@@ -57,7 +60,9 @@ class BaseCheckpointSaver(BaseCheckpointer):
         *,
         save_every_n_train_steps: Optional[int] = None,
         save_every_n_epochs: Optional[int] = None,
+        save_every_n_eval_steps: Optional[int] = None,
         save_every_n_eval_epochs: Optional[int] = None,
+        save_every_n_predict_steps: Optional[int] = None,
         keep_last_n_checkpoints: Optional[int] = None,
         best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         process_group: Optional[dist.ProcessGroup] = None,
@@ -66,7 +71,9 @@ class BaseCheckpointSaver(BaseCheckpointer):
             dirpath,
             save_every_n_train_steps=save_every_n_train_steps,
             save_every_n_epochs=save_every_n_epochs,
+            save_every_n_eval_steps=save_every_n_eval_steps,
             save_every_n_eval_epochs=save_every_n_eval_epochs,
+            save_every_n_predict_steps=save_every_n_predict_steps,
             keep_last_n_checkpoints=keep_last_n_checkpoints,
             best_checkpoint_config=best_checkpoint_config,
             process_group=process_group,
@@ -242,6 +249,83 @@ class BaseCheckpointerTest(unittest.TestCase):
                 f"epoch_0_train_step_{15}_eval_step_{10}",
                 checkpointer._latest_checkpoint_path,
             )
+
+    @patch.object(BaseCheckpointSaver, "_checkpoint_impl")
+    def test_save_eval_entrypoint(self, mock_checkpoint_impl: MagicMock) -> None:
+        my_unit = DummyFitUnit(input_dim=2)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            checkpointer = BaseCheckpointSaver(
+                temp_dir,
+                save_every_n_eval_steps=2,
+                best_checkpoint_config=BestCheckpointConfig(
+                    monitored_metric="val_loss", mode="min"
+                ),
+                keep_last_n_checkpoints=1,
+            )
+
+            ckpt_container: List[str] = []
+
+            def _checkpoint_impl_side_effect(
+                state: State, unit: AppStateMixin, checkpoint_id: str, hook: str
+            ) -> bool:
+                ckpt_container.append(checkpoint_id)
+                return True
+
+            mock_checkpoint_impl.side_effect = _checkpoint_impl_side_effect
+
+            eval_dataloader = generate_random_dataloader(10, 2, 1)
+
+            warning_container: List[str] = []
+            with patch(
+                "torchtnt.framework.callbacks.base_checkpointer.logging.Logger.warning",
+                side_effect=warning_container.append,
+            ):
+                evaluate(my_unit, eval_dataloader, callbacks=[checkpointer])
+
+            # Verify that checkpoint optimality tracking was disabled
+            self.assertIn(
+                "Disabling best_checkpoint_config, since it is not supported for eval or predict entrypoints.",
+                warning_container,
+            )
+            self.assertIn(
+                "Disabling keep_last_n_checkpoints, since is not supported for eval or predict entrypoints.",
+                warning_container,
+            )
+
+            # Make sure that the correct checkpoints were saved, without tracked metrics
+            expected_ckpts = [
+                f"{temp_dir}/epoch_0_eval_step_{i*2}" for i in range(1, 6)
+            ]
+            self.assertEqual(ckpt_container, expected_ckpts)
+
+    @patch.object(BaseCheckpointSaver, "_checkpoint_impl")
+    def test_save_predict_entrypoint(self, mock_checkpoint_impl: MagicMock) -> None:
+        my_unit = DummyPredictUnit(input_dim=2)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            checkpointer = BaseCheckpointSaver(
+                temp_dir,
+                save_every_n_predict_steps=1,
+            )
+
+            ckpt_container: List[str] = []
+
+            def _checkpoint_impl_side_effect(
+                state: State, unit: AppStateMixin, checkpoint_id: str, hook: str
+            ) -> bool:
+                ckpt_container.append(checkpoint_id)
+                return True
+
+            mock_checkpoint_impl.side_effect = _checkpoint_impl_side_effect
+
+            predict_dataloader = generate_random_dataloader(10, 2, 1)
+
+            predict(my_unit, predict_dataloader, callbacks=[checkpointer])
+
+            # Make sure that the correct checkpoints were saved
+            expected_ckpts = [
+                f"{temp_dir}/epoch_0_predict_step_{i}" for i in range(1, 11)
+            ]
+            self.assertEqual(ckpt_container, expected_ckpts)
 
     @unittest.mock.patch("sys.stdout", new_callable=io.StringIO)
     def test_restore_from_latest(self, mock_stdout: MagicMock) -> None:

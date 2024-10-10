@@ -586,6 +586,16 @@ class PredictUnit(
         """
         pass
 
+    def on_checkpoint_save(self, state: State, checkpoint_id: str) -> None:
+        """Hook called after successfully saving a checkpoint.
+
+        Args:
+            state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
+            checkpoint_id: the ID of the checkpoint that was saved. Depending on the storage type, this may be
+                           a path, a URL or a unique identifier.
+        """
+        pass
+
     def on_predict_end(self, state: State) -> None:
         """Hook called after prediction ends.
 

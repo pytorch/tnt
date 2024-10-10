@@ -318,7 +318,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         )
 
     def _generate_checkpoint_and_upkeep(
-        self, state: State, unit: Union[TTrainUnit, TEvalUnit], hook: str
+        self, state: State, unit: Union[TTrainUnit, TEvalUnit, TPredictUnit], hook: str
     ) -> bool:
         # if we are still checkpointing, this might cause a collective hang, since several
         # operations in the base class use the process group. So wait here instead.
