@@ -919,7 +919,7 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">swa_model</span> <span class="o">=</span> <span class="n">AveragedModel</span><span class="p">(</span>
                 <span class="n">module_for_swa</span><span class="p">,</span>
-                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
                 <span class="n">use_buffers</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">use_buffers</span><span class="p">,</span>
                 <span class="n">averaging_method</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">averaging_method</span><span class="p">,</span>
                 <span class="n">ema_decay</span><span class="o">=</span><span class="n">swa_params</span><span class="o">.</span><span class="n">ema_decay</span><span class="p">,</span>
