@@ -512,7 +512,7 @@ class AutoUnit(
 
             self.swa_model = AveragedModel(
                 module_for_swa,
-                device=device,
+                device=self.device,
                 use_buffers=swa_params.use_buffers,
                 averaging_method=swa_params.averaging_method,
                 ema_decay=swa_params.ema_decay,
