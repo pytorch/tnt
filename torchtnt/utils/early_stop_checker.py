@@ -143,7 +143,7 @@ class EarlyStopChecker:
         self._patience_count = state_dict["patience_count"]
         self._best_value = state_dict["best_value"]
 
-    def check(self, val: Union[torch.Tensor, float]) -> bool:
+    def check(self, val: Union[torch.Tensor, float, int]) -> bool:
         """
         Check the current value of a metric and determine whether to stop or not.
 
@@ -158,12 +158,15 @@ class EarlyStopChecker:
             ValueError:
                 If `val` is a tensor that does not contain 1 element.
         """
-        if type(val) is float:
-            val = torch.tensor([val])
+        if isinstance(val, float) or isinstance(val, int):
+            val = torch.tensor([float(val)])
         if val.numel() != 1:
             raise ValueError(
                 f"Expected tensor with only 1 element, but input has number of elements = {val.numel()}"
             )
+
+        # Ensure tensor dim=1 and dtype=float32 for consistent shape in state_dict save/load paths
+        val = val.float().reshape(1)
 
         should_stop = False
         message = "No stopping conditions were satisfied."

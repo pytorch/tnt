@@ -376,3 +376,34 @@ class EarlyStopCheckerTest(unittest.TestCase):
         self.assertIsNone(es2.divergence_threshold)
         self.assertEqual(es2._mode_func, torch.gt)
         self.assertEqual(es2._mode_char, ">")
+
+    def test_check_input_validation(self) -> None:
+        es = EarlyStopChecker("min", 3)
+        self.assertEqual(es._best_value.size(), torch.Size([1]))
+        self.assertEqual(es._best_value.dtype, torch.float32)
+
+        es.check(5)
+        self.assertEqual(es._best_value, torch.tensor([5.0]))
+        self.assertEqual(es._best_value.size(), torch.Size([1]))
+        self.assertEqual(es._best_value.dtype, torch.float32)
+
+        es.check(4.0)
+        self.assertEqual(es._best_value, torch.tensor([4.0]))
+        self.assertEqual(es._best_value.size(), torch.Size([1]))
+        self.assertEqual(es._best_value.dtype, torch.float32)
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Expected tensor with only 1 element, but input has number of elements = 2",
+        ):
+            es.check(torch.tensor([3, 2]))
+
+        es.check(torch.tensor([1]))
+        self.assertEqual(es._best_value, torch.tensor([1.0]))
+        self.assertEqual(es._best_value.size(), torch.Size([1]))
+        self.assertEqual(es._best_value.dtype, torch.float32)
+
+        es.check(torch.tensor(0))
+        self.assertEqual(es._best_value, torch.tensor([0.0]))
+        self.assertEqual(es._best_value.size(), torch.Size([1]))
+        self.assertEqual(es._best_value.dtype, torch.float32)
