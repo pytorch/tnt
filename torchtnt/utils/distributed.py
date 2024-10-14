@@ -7,7 +7,6 @@
 
 # pyre-strict
 
-
 import logging
 import os
 import tempfile
@@ -19,15 +18,14 @@ from typing import Any, Callable, cast, Dict, Generator, List, Optional, TypeVar
 
 import torch
 import torch.nn.functional as F
-from pyre_extensions import ParameterSpecification
 from torch import distributed as dist, multiprocessing, Tensor
 from torch.distributed.elastic.utils.distributed import get_free_port
-from typing_extensions import Literal
+from typing_extensions import Literal, ParamSpec
 
 
 T = TypeVar("T")
 DistObjList = Union[List[T], List[None]]
-TParams = ParameterSpecification("TParams")
+TParams = ParamSpec("TParams")
 TReturn = TypeVar("TReturn")
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -344,7 +342,9 @@ def all_gather_tensors(
 TReturn = TypeVar("TReturn")
 
 
-def rank_zero_fn(fn: Callable[..., TReturn]) -> Callable[..., Optional[TReturn]]:
+def rank_zero_fn(
+    fn: Callable[TParams, TReturn]
+) -> Callable[TParams, Optional[TReturn]]:
     """Function that can be used as a decorator to enable a function to be called on global rank 0 only.
 
     Note:
@@ -369,7 +369,7 @@ def rank_zero_fn(fn: Callable[..., TReturn]) -> Callable[..., Optional[TReturn]]
     """
 
     @wraps(fn)
-    def wrapped_fn(*args: Any, **kwargs: Any) -> Optional[TReturn]:
+    def wrapped_fn(*args: TParams.args, **kwargs: TParams.kwargs) -> Optional[TReturn]:
         if get_global_rank() == 0:
             return fn(*args, **kwargs)
         return None
@@ -610,8 +610,8 @@ def _init_pg_and_rank_and_launch_method(
 
 
 def rank_zero_read_and_broadcast(
-    func: Callable[..., T],
-) -> Callable[..., T]:
+    func: Callable[TParams, TReturn],
+) -> Callable[TParams, TReturn]:
     """
     Decorator that ensures a function is only executed by rank 0 and returns the result to all ranks.
 
@@ -619,10 +619,11 @@ def rank_zero_read_and_broadcast(
         By default will use the global process group. To use a custom process group, `process_group` must be an arg to the function and passed as a keyword argument.
     """
 
-    def wrapper(*args: Any, **kwargs: Any) -> T:
+    @wraps(func)
+    def wrapper(*args: TParams.args, **kwargs: TParams.kwargs) -> TReturn:
         ret = None
         rank = get_global_rank()
-        process_group = kwargs.pop("process_group", None)
+        process_group = kwargs.pop("process_group", None)  # pyre-ignore[16]
 
         # Do all filesystem reads from rank 0 only
         if rank == 0:
@@ -632,7 +633,7 @@ def rank_zero_read_and_broadcast(
         if not (dist.is_available() and dist.is_initialized()):
             # we cast here to avoid type errors, since it is
             # guaranteed the return value is of type T
-            return cast(T, ret)
+            return cast(TReturn, ret)
 
         # Otherwise, broadcast result from rank 0 to all ranks
         pg = PGWrapper(process_group)
@@ -642,7 +643,7 @@ def rank_zero_read_and_broadcast(
 
         # we cast here to avoid type errors, since it is
         # guaranteed the return value is of type T
-        return cast(T, val)
+        return cast(TReturn, val)
 
     return wrapper
 

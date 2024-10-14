@@ -56,7 +56,9 @@ class TestCheckpointUtilsGPU(unittest.TestCase):
             tc.assertIsNone(temp_dir)
 
         ckpt_dirpaths = get_checkpoint_dirpaths(
-            temp_dir, process_group=dist.group.WORLD
+            # pyre-fixme[6]: For 1st argument expected `str` but got `Optional[str]`.
+            temp_dir,
+            process_group=dist.group.WORLD,
         )
 
         # Broadcast temp_dir to verify successful execution
