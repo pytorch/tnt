@@ -20,7 +20,7 @@ from torchtnt.framework.callbacks._checkpoint_utils import (
     _get_step_phase_mapping,
 )
 from torchtnt.framework.callbacks.checkpointer_types import RestoreOptions
-from torchtnt.framework.state import ActivePhase, EntryPoint, State
+from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import (
     AppStateMixin,
     TEvalUnit,
@@ -193,12 +193,10 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         epoch = _get_epoch(state, unit)
         step_mapping = _get_step_phase_mapping(state, unit)
 
-        # 1.1) append metric data only for train checkpoints, if best_checkpoint_config is defined
+        # 1.1) append metric data only if best_checkpoint_config is defined
         metric_data: Optional[MetricData] = None
-        if (
-            self._best_checkpoint_config
-            and state.active_phase == ActivePhase.TRAIN
-            and (metric_value := self._get_tracked_metric_value(cast(TTrainUnit, unit)))
+        if self._best_checkpoint_config and (
+            metric_value := self._get_tracked_metric_value(cast(TTrainUnit, unit))
         ):
             metric_data = MetricData(
                 name=none_throws(self._best_checkpoint_config).monitored_metric,
