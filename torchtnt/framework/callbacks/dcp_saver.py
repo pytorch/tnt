@@ -95,7 +95,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         knob_options: Additional keyword options for StorageWriter. <https://pytorch.org/docs/stable/distributed.checkpoint.html#torch.distributed.checkpoint.StorageWriter/>
 
     Note:
-        If torch.distributed is available and a process group is initialized, dcp assumes the intention is to save/load checkpoints in distributed fashion.
+        If torch.distributed is available, there should be a process group is initialized. In this case DCP assumes the intention is to save/load checkpoints in distributed fashion.
         Additionally, a gloo process group must be initialized for async_checkpoint. For workloads that require nccl, the recommended initialization is 'cpu:gloo,cuda:nccl'
 
     Note:

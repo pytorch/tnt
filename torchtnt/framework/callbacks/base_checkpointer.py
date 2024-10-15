@@ -36,7 +36,7 @@ from torchtnt.utils.checkpoint import (
     MetricData,
     Phase,
 )
-from torchtnt.utils.distributed import PGWrapper
+from torchtnt.utils.distributed import get_world_size, PGWrapper
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -54,6 +54,9 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
     The subclass may override the ``metadata_fname`` attribute to specify the filename of the metadata file that will be written within the checkpoint directory.
     This will be used by this base class to ensure the integrity of the checkpoint. This is a list because some checkpointers may allow more than one valid
     ``metadata_fnames``, depending on storage or optimization configurations.
+
+    If running in a distributed environment, the default process group should be initialized prior to instantiating this Callback. This is done automatically if
+    using `AutoUnit`, which should be instantiated first.
 
     Args:
         dirpath: Parent directory to save checkpoints to.
@@ -96,6 +99,13 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         best_checkpoint_config: Optional[BestCheckpointConfig] = None,
         process_group: Optional[dist.ProcessGroup] = None,
     ) -> None:
+        if get_world_size() > 1 and not dist.is_initialized():
+            raise RuntimeError(
+                "Running in a distributed environment without default process group initialized. "
+                "Call `torch.distributed.init_process_group` before initializing this callback. "
+                "Using `AutoUnit` will do this automatically."
+            )
+
         if save_every_n_train_steps is not None and save_every_n_train_steps <= 0:
             raise ValueError(
                 f"Invalid value passed for save_every_n_train_steps. Expected to receive either None or positive number, but received {save_every_n_train_steps}"

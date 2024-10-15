@@ -122,6 +122,10 @@ class BaseCheckpointerTest(unittest.TestCase):
     cuda_available: bool = torch.cuda.is_available()
     distributed_available: bool = torch.distributed.is_available()
 
+    def tearDown(self) -> None:
+        # needed for github test, to reset WORLD_SIZE env var
+        os.environ.pop("WORLD_SIZE", None)
+
     def test_save_every_n_train_steps(self) -> None:
         input_dim = 2
         dataset_len = 10
@@ -1198,6 +1202,17 @@ class BaseCheckpointerTest(unittest.TestCase):
             dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
+
+    def test_dist_not_initialized(self) -> None:
+        """
+        Tests that BaseCheckpointSaver cannot be initialized without dist being initialized
+        if world size > 1
+        """
+        os.environ["WORLD_SIZE"] = "2"
+        with self.assertRaisesRegex(
+            RuntimeError, "Running in a distributed environment"
+        ):
+            BaseCheckpointSaver("foo")
 
 
 class MyValLossUnit(TrainUnit[Batch]):
