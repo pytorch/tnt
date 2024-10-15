@@ -102,6 +102,8 @@ class CheckpointPath:
             step: The step number of this checkpoint. This may be an integer for a phase-naive checkpoint. To
                 create a phase-aware path, a dict can be used to map each phase to its step number.
             metric_data: Optional data about the metric being tracked. Should contain both metric name and value.
+                Note that NaN and inf values are not allowed, since the signal an error in a computation and
+                optimality comparisons will not work correctly.
         """
         self.dirpath: str = dirpath.rstrip("/")
         self.epoch = epoch
@@ -113,6 +115,11 @@ class CheckpointPath:
         if metric_data and math.isnan(metric_data.value):
             raise ValueError(
                 f"Value of monitored metric '{metric_data.name}' can't be NaN in CheckpointPath."
+            )
+
+        if metric_data and math.isinf(metric_data.value):
+            raise ValueError(
+                f"Value of monitored metric '{metric_data.name}' can't be inf in CheckpointPath."
             )
 
     @classmethod

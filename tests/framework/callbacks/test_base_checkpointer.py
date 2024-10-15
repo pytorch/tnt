@@ -1029,6 +1029,21 @@ class BaseCheckpointerTest(unittest.TestCase):
         )
         self.assertIsNone(val_loss)
 
+        # test infinite metric values
+        for inf_val in [float("inf"), -float("inf")]:
+            val_loss_unit.val_loss = inf_val
+            error_container = []
+            with patch(
+                "torchtnt.framework.callbacks.base_checkpointer.logging.Logger.error",
+                side_effect=error_container.append,
+            ):
+                val_loss = val_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+
+            self.assertIn(
+                "Monitored metric 'val_loss' is inf. Will not be included in checkpoint path, nor tracked for optimality.",
+                error_container,
+            )
+
         # test with mismatched monitored metric
         train_loss_ckpt_cb = BaseCheckpointSaver(
             dirpath="checkpoint",
