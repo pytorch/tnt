@@ -105,6 +105,18 @@ class CheckpointPathTest(unittest.TestCase):
                 metric_data=MetricData("foo", float("nan")),
             )
 
+        # inf metric value
+        with self.assertRaisesRegex(
+            ValueError,
+            "Value of monitored metric 'foo' can't be inf in CheckpointPath.",
+        ):
+            CheckpointPath(
+                "foo",
+                epoch=0,
+                step={Phase.TRAIN: 1, Phase.EVALUATE: 1},
+                metric_data=MetricData("foo", float("inf")),
+            )
+
     def test_from_str(self) -> None:
         # invalid paths
         malformed_paths = [

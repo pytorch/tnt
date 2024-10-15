@@ -293,6 +293,12 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             )
             return None
 
+        if metric_value_f and math.isinf(metric_value_f):
+            logger.error(
+                f"Monitored metric '{monitored_metric_name}' is inf. Will not be included in checkpoint path, nor tracked for optimality."
+            )
+            return None
+
         return metric_value_f
 
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
