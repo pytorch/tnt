@@ -47,7 +47,7 @@ from torchtnt.framework.predict import predict
 
 from torchtnt.framework.state import State
 from torchtnt.framework.train import train
-from torchtnt.utils.checkpoint import get_latest_checkpoint_path
+from torchtnt.utils.checkpoint import BestCheckpointConfig, get_latest_checkpoint_path
 from torchtnt.utils.distributed import get_global_rank, spawn_multi_process
 from torchtnt.utils.env import seed
 from torchtnt.utils.test_utils import skip_if_not_distributed
@@ -587,6 +587,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         batch_size = 2
 
         my_unit = DummyEvalUnit(input_dim=input_dim)
+        my_unit.loss = 0.1  # pyre-ignore[16]: Add new attribute for testing
 
         dataloader = generate_dummy_stateful_dataloader(
             dataset_len, input_dim, batch_size
@@ -597,10 +598,12 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
                 temp_dir,
                 knob_options=KnobOptions(1),
                 save_every_n_eval_steps=2,
+                best_checkpoint_config=BestCheckpointConfig(monitored_metric="loss"),
             )
 
             evaluate(my_unit, dataloader, callbacks=[dcp_cb])
 
+            # For pure evaluation, the metric value should not be included
             generated_ckpts = os.listdir(temp_dir)
             expected_ckpts = [
                 "epoch_0_eval_step_2",
@@ -661,6 +664,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
 
         my_unit = DummyAutoUnit(module=nn.Linear(input_dim, 2))
         my_unit.output_mean = DummyMeanMetric()
+        my_unit.loss = 0.1
 
         train_dataloader = generate_dummy_stateful_dataloader(
             dataset_len, input_dim, batch_size
@@ -676,6 +680,7 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
                 knob_options=KnobOptions(1),
                 save_every_n_train_steps=2,
                 save_every_n_eval_steps=2,
+                best_checkpoint_config=BestCheckpointConfig(monitored_metric="loss"),
             )
 
             fit(
@@ -688,11 +693,13 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             )
 
             generated_ckpts = os.listdir(temp_dir)
-            expected_ckpts_to_dl_mapping: Dict[str, str] = {
-                "epoch_0_train_step_2_eval_step_0": "train_dataloader",
-                "epoch_0_train_step_4_eval_step_0": "train_dataloader",
-                "epoch_1_train_step_5_eval_step_2": "eval_dataloader",
-                "epoch_1_train_step_5_eval_step_4": "eval_dataloader",
+            # Since we are using FIT, the metric value should be included
+            expected_ckpts_to_dl_mapping: Dict[str, Optional[str]] = {
+                "epoch_0_train_step_2_eval_step_0_loss=0.1": "train_dataloader",
+                "epoch_0_train_step_4_eval_step_0_loss=0.1": "train_dataloader",
+                "epoch_1_train_step_5_eval_step_2_loss=0.1": "eval_dataloader",
+                "epoch_1_train_step_5_eval_step_4_loss=0.1": "eval_dataloader",
+                "epoch_1_train_step_5_eval_step_5_loss=0.1": None,
             }
             self.assertCountEqual(
                 generated_ckpts, [*expected_ckpts_to_dl_mapping.keys()]
@@ -710,7 +717,10 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
 
             for ckpt_path, dl_key in expected_ckpts_to_dl_mapping.items():
                 full_ckpt_path = os.path.join(temp_dir, ckpt_path)
-                expected_keys_with_dl = expected_keys + [dl_key]
+                expected_keys_with_dl = list(expected_keys)
+                if dl_key:
+                    expected_keys_with_dl.append(dl_key)
+
                 storage_reader = FsspecReader(full_ckpt_path)
                 metadata = storage_reader.read_metadata()
                 self.assertCountEqual(
