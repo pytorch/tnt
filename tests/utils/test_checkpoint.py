@@ -1425,6 +1425,8 @@ class CheckpointUtilsTest(unittest.TestCase):
             ckpt_1 = os.path.join(temp_dir, "checkpoint_1")
             os.mkdir(ckpt_1)
 
+            # pyre-fixme[6]: For 2nd argument expected `Union[List[str], str]` but
+            #  got `None`.
             self.assertFalse(does_checkpoint_exist(ckpt_1, metadata_fname=None))
 
             with open(os.path.join(ckpt_1, ".metadata"), "w"):
