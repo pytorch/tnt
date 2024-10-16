@@ -297,39 +297,3 @@ class DummyMeanMetric:
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         self.sum = state_dict["sum"]
         self.count = state_dict["count"]
-
-
-class DummyStatefulConfig:
-    def __init__(
-        self,
-        storage_path: str,
-        lazy_loading: bool,
-        num_workers_per_gpu: int,
-        max_batch_length: int,
-    ) -> None:
-        self.storage_path = storage_path
-        self.lazy_loading = lazy_loading
-        self.num_workers_per_gpu = num_workers_per_gpu
-        self.max_batch_length = max_batch_length
-
-    def state_dict(self) -> Dict[str, Any]:
-        return {
-            "storage_path": self.storage_path,
-            "data": {
-                "lazy_loading": self.lazy_loading,
-                "train": {
-                    "num_workers_per_gpu": self.num_workers_per_gpu,
-                    "dynamic_batch_config": {
-                        "max_batch_length": self.max_batch_length,
-                    },
-                },
-            },
-        }
-
-    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
-        self.storage_path = state_dict["storage_path"]
-        self.lazy_loading = state_dict["data"]["lazy_loading"]
-        self.num_workers_per_gpu = state_dict["data"]["train"]["num_workers_per_gpu"]
-        self.max_batch_length = state_dict["data"]["train"]["dynamic_batch_config"][
-            "max_batch_length"
-        ]
