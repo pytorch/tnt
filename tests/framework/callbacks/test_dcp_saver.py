@@ -54,6 +54,10 @@ from torchtnt.utils.test_utils import skip_if_not_distributed
 
 
 class DistributedCheckpointSaverTest(unittest.TestCase):
+    def tearDown(self) -> None:
+        # needed for github test, to reset WORLD_SIZE env var
+        os.environ.pop("WORLD_SIZE", None)
+
     def test_save_restore(self) -> None:
         input_dim = 2
         dataset_len = 10
