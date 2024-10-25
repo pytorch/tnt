@@ -287,14 +287,19 @@ class CheckpointPath:
             True if this checkpoint is more optimal than the other, otherwise False.
 
         Note: This expects that both checkpoints are metric-aware, and that they are tracking the same metric.
+              If one of these is not metric aware, the one which is metric aware will be chosen. If both are
+              not metric aware, the newer one will be chosen.
         """
 
-        assert (
-            self.metric_data and other.metric_data
-        ), f"Attempted to compare optimality of non metric-aware checkpoints: {self} and {other}"
+        if self.metric_data and not other.metric_data:
+            return True
+        elif other.metric_data and not self.metric_data:
+            return False
+        elif not self.metric_data and not other.metric_data:
+            return self.newer_than(other)
 
         assert (
-            self.metric_data.name == other.metric_data.name
+            none_throws(self.metric_data).name == none_throws(other.metric_data).name
         ), f"Attempted to compare optimality of checkpoints tracking different metrics: {self} and {other}"
 
         if mode == "min":

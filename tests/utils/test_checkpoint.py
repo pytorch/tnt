@@ -340,28 +340,19 @@ class CheckpointPathTest(unittest.TestCase):
         self.assertTrue(predict_2 < predict_3)
 
     def test_compare_by_optimality(self) -> None:
-        # not both metric aware
-        ckpt1 = CheckpointPath("foo", epoch=0, step=1)
-        ckpt2 = CheckpointPath("foo", epoch=1, step={Phase.TRAIN: 5})
-        ckpt3 = CheckpointPath(
+        ckpt1 = CheckpointPath(
             "foo", epoch=1, step=1, metric_data=MetricData("bar", 1.0)
         )
-        for ckpt in (ckpt2, ckpt3):
-            with self.assertRaisesRegex(
-                AssertionError,
-                "Attempted to compare optimality of non metric-aware checkpoints",
-            ):
-                ckpt1.more_optimal_than(ckpt, mode="min")
 
         # tracking different metrics
-        ckpt4 = CheckpointPath(
+        ckpt2 = CheckpointPath(
             "foo", epoch=1, step=1, metric_data=MetricData("baz", 1.0)
         )
         with self.assertRaisesRegex(
             AssertionError,
             "Attempted to compare optimality of checkpoints tracking different metrics",
         ):
-            ckpt3.more_optimal_than(ckpt4, mode="min")
+            ckpt1.more_optimal_than(ckpt2, mode="min")
 
         smaller = CheckpointPath(
             "foo", epoch=0, step=1, metric_data=MetricData("foo", 1.0)
@@ -376,6 +367,18 @@ class CheckpointPathTest(unittest.TestCase):
         self.assertFalse(smaller.more_optimal_than(larger, mode="max"))
         self.assertTrue(smaller.more_optimal_than(larger, mode="min"))
         self.assertFalse(larger.more_optimal_than(smaller, mode="min"))
+
+    def test_compare_by_optimality_nan(self) -> None:
+        ckpt1 = CheckpointPath("foo", epoch=0, step=1)
+        ckpt2 = CheckpointPath(
+            "foo", epoch=9, step=2, metric_data=MetricData("foo", 1.0)
+        )
+        self.assertTrue(ckpt2.more_optimal_than(ckpt1, mode="min"))
+        self.assertFalse(ckpt1.more_optimal_than(ckpt2, mode="min"))
+
+        ckpt3 = CheckpointPath("foo", epoch=0, step=2)
+        self.assertTrue(ckpt3.more_optimal_than(ckpt1, mode="min"))
+        self.assertFalse(ckpt1.more_optimal_than(ckpt3, mode="min"))
 
     def test_pickling(self) -> None:
         for path in (
