@@ -19,7 +19,9 @@ T = TypeVar("T")
 
 @contextmanager
 def get_timing_context(
-    state: State, event_name: str
+    state: State,
+    event_name: str,
+    # pyre-fixme[24]: Generic type `ContextManager` expects 1 type parameter.
 ) -> Generator[Tuple[ContextManager, ContextManager], None, None]:
     """
     Returns a context manager that records an event to a :class:`~torchtnt.utils.timer.Timer` and to PyTorch Profiler.

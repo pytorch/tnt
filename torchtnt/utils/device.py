@@ -99,6 +99,7 @@ def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any
             }
         )
     elif is_dataclass(data) and not isinstance(data, type):
+        # pyre-fixme[45]: Cannot instantiate protocol `DataclassInstance`.
         new_data_class = type(data)(
             **{
                 field.name: copy_data_to_device(
@@ -117,9 +118,13 @@ def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any
                         getattr(data, field.name), device, *args, **kwargs
                     ),
                 )
+        # pyre-fixme[7]: Expected `T` but got `DataclassInstance`.
         return new_data_class
     elif isinstance(data, _CopyableData):
+        # pyre-fixme[7]: Expected `T` but got `_CopyableData`.
         return data.to(device, *args, **kwargs)
+    # pyre-fixme[7]: Expected `T` but got `Union[Type[DataclassInstance],
+    #  DataclassInstance]`.
     return data
 
 

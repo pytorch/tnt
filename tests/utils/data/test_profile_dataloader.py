@@ -11,6 +11,8 @@ import unittest
 from typing import Iterator
 
 import torch
+
+# pyre-fixme[21]: Could not find name `ProfilerActivity` in `torch.profiler`.
 from torch.profiler import ProfilerActivity
 from torchtnt.utils.data.profile_dataloader import profile_dataloader
 from torchtnt.utils.env import init_from_env
@@ -67,6 +69,7 @@ def _get_torch_profiler() -> torch.profiler.profile:
         active=1,
     )
     return torch.profiler.profile(
+        # pyre-fixme[16]: Module `profiler` has no attribute `ProfilerActivity`.
         activities=[ProfilerActivity.CPU],
         schedule=profiler_schedule,
     )
