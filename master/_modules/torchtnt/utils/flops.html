@@ -543,6 +543,7 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">cast</span><span class="p">(</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span> <span class="n">output_mask</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
         <span class="n">grad_weight_shape</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="c1"># pyre-fixme[58]: `+` is not supported for operand types `int` and `Number`.</span>
         <span class="n">flop_count</span> <span class="o">+=</span> <span class="n">_conv_flop_count</span><span class="p">(</span>
             <span class="nb">list</span><span class="p">(</span><span class="n">_transpose_shape</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)),</span>
             <span class="nb">list</span><span class="p">(</span><span class="n">grad_out_shape</span><span class="p">),</span>

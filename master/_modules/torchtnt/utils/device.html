@@ -506,6 +506,7 @@
             <span class="p">}</span>
         <span class="p">)</span>
     <span class="k">elif</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="c1"># pyre-fixme[45]: Cannot instantiate protocol `DataclassInstance`.</span>
         <span class="n">new_data_class</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)(</span>
             <span class="o">**</span><span class="p">{</span>
                 <span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">copy_data_to_device</span><span class="p">(</span>
@@ -524,9 +525,13 @@
                         <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="n">device</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
                     <span class="p">),</span>
                 <span class="p">)</span>
+        <span class="c1"># pyre-fixme[7]: Expected `T` but got `DataclassInstance`.</span>
         <span class="k">return</span> <span class="n">new_data_class</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">_CopyableData</span><span class="p">):</span>
+        <span class="c1"># pyre-fixme[7]: Expected `T` but got `_CopyableData`.</span>
         <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c1"># pyre-fixme[7]: Expected `T` but got `Union[Type[DataclassInstance],</span>
+    <span class="c1">#  DataclassInstance]`.</span>
     <span class="k">return</span> <span class="n">data</span></div>
 
 
