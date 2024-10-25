@@ -136,6 +136,7 @@ def _conv_backward_flop_jit(
         )
     if cast(Tuple[bool], output_mask)[1]:
         grad_weight_shape = outputs[1].shape
+        # pyre-fixme[58]: `+` is not supported for operand types `int` and `Number`.
         flop_count += _conv_flop_count(
             list(_transpose_shape(x_shape)),
             list(grad_out_shape),

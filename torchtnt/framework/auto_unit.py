@@ -670,6 +670,8 @@ class AutoUnit(
 
                 def maybe_enable_compiled_autograd(
                     val: bool,
+                    # pyre-fixme[24]: Generic type `ContextManager` expects 1 type
+                    #  parameter.
                 ) -> ContextManager:
                     return contextlib.nullcontext()
 
