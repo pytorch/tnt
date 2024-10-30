@@ -658,6 +658,13 @@ def get_latest_checkpoint_path(
         gloo process groups are recommended over nccl.
     """
 
+    return _get_latest_checkpoint_path(dirpath, metadata_fname)
+
+
+def _get_latest_checkpoint_path(
+    dirpath: str,
+    metadata_fname: Optional[Union[str, List[str]]] = None,
+) -> Optional[str]:
     candidate_dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname)
     if not candidate_dirpaths:
         return None
