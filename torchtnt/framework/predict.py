@@ -147,9 +147,10 @@ def _predict_impl(
             predict_unit.on_predict_epoch_start(state)
         callback_handler.on_predict_epoch_start(state, predict_unit)
 
+    callback_handler.on_predict_dataloader_iter_creation_start(state, predict_unit)
     with get_timing_context(state, "predict.iter(dataloader)"):
         data_iter = iter(predict_state.dataloader)
-    step_input = data_iter
+    callback_handler.on_predict_dataloader_iter_creation_end(state, predict_unit)
 
     prev_steps_in_epoch = predict_unit.predict_progress.num_steps_completed_in_epoch
 
@@ -166,6 +167,7 @@ def _predict_impl(
             with get_timing_context(
                 state, "predict.next(data_iter)"
             ), predict_state.iteration_timer.time("data_wait_time"):
+                callback_handler.on_predict_get_next_batch_start(state, predict_unit)
                 step_input = predict_unit.get_next_predict_batch(state, data_iter)
                 callback_handler.on_predict_get_next_batch_end(state, predict_unit)
 

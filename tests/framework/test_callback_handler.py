@@ -46,6 +46,19 @@ class DummyCallback(Callback):
     def on_train_epoch_start(self, state: State, unit: TTrainUnit) -> None:
         self.called_hooks.add("on_train_epoch_start")
 
+    def on_train_dataloader_iter_creation_start(
+        self, state: State, unit: TTrainUnit
+    ) -> None:
+        self.called_hooks.add("on_train_dataloader_iter_creation_start")
+
+    def on_train_dataloader_iter_creation_end(
+        self, state: State, unit: TTrainUnit
+    ) -> None:
+        self.called_hooks.add("on_train_dataloader_iter_creation_end")
+
+    def on_train_get_next_batch_start(self, state: State, unit: TTrainUnit) -> None:
+        self.called_hooks.add("on_train_get_next_batch_start")
+
     def on_train_get_next_batch_end(self, state: State, unit: TTrainUnit) -> None:
         self.called_hooks.add("on_train_get_next_batch_end")
 
@@ -67,6 +80,19 @@ class DummyCallback(Callback):
     def on_eval_epoch_start(self, state: State, unit: TEvalUnit) -> None:
         self.called_hooks.add("on_eval_epoch_start")
 
+    def on_eval_dataloader_iter_creation_start(
+        self, state: State, unit: TEvalUnit
+    ) -> None:
+        self.called_hooks.add("on_eval_dataloader_iter_creation_start")
+
+    def on_eval_dataloader_iter_creation_end(
+        self, state: State, unit: TEvalUnit
+    ) -> None:
+        self.called_hooks.add("on_eval_dataloader_iter_creation_end")
+
+    def on_eval_get_next_batch_start(self, state: State, unit: TEvalUnit) -> None:
+        self.called_hooks.add("on_eval_get_next_batch_start")
+
     def on_eval_get_next_batch_end(self, state: State, unit: TEvalUnit) -> None:
         self.called_hooks.add("on_eval_get_next_batch_end")
 
@@ -84,6 +110,19 @@ class DummyCallback(Callback):
 
     def on_predict_start(self, state: State, unit: TPredictUnit) -> None:
         self.called_hooks.add("on_predict_start")
+
+    def on_predict_dataloader_iter_creation_start(
+        self, state: State, unit: TPredictUnit
+    ) -> None:
+        self.called_hooks.add("on_predict_dataloader_iter_creation_start")
+
+    def on_predict_dataloader_iter_creation_end(
+        self, state: State, unit: TPredictUnit
+    ) -> None:
+        self.called_hooks.add("on_predict_dataloader_iter_creation_end")
+
+    def on_predict_get_next_batch_start(self, state: State, unit: TPredictUnit) -> None:
+        self.called_hooks.add("on_predict_get_next_batch_start")
 
     def on_predict_epoch_start(self, state: State, unit: TPredictUnit) -> None:
         self.called_hooks.add("on_predict_epoch_start")
@@ -129,6 +168,15 @@ class CallbackHandlerTest(unittest.TestCase):
         cb_handler.on_train_epoch_start(state, unit)
         self.assertIn("on_train_epoch_start", called_hooks)
 
+        cb_handler.on_train_dataloader_iter_creation_start(state, unit)
+        self.assertIn("on_train_dataloader_iter_creation_start", called_hooks)
+
+        cb_handler.on_train_dataloader_iter_creation_end(state, unit)
+        self.assertIn("on_train_dataloader_iter_creation_end", called_hooks)
+
+        cb_handler.on_train_get_next_batch_start(state, unit)
+        self.assertIn("on_train_get_next_batch_start", called_hooks)
+
         cb_handler.on_train_get_next_batch_end(state, unit)
         self.assertIn("on_train_get_next_batch_end", called_hooks)
 
@@ -153,6 +201,15 @@ class CallbackHandlerTest(unittest.TestCase):
 
         cb_handler.on_eval_epoch_start(state, unit)
         self.assertIn("on_eval_epoch_start", called_hooks)
+
+        cb_handler.on_eval_dataloader_iter_creation_start(state, unit)
+        self.assertIn("on_eval_dataloader_iter_creation_start", called_hooks)
+
+        cb_handler.on_eval_dataloader_iter_creation_end(state, unit)
+        self.assertIn("on_eval_dataloader_iter_creation_end", called_hooks)
+
+        cb_handler.on_eval_get_next_batch_start(state, unit)
+        self.assertIn("on_eval_get_next_batch_start", called_hooks)
 
         cb_handler.on_eval_get_next_batch_end(state, unit)
         self.assertIn("on_eval_get_next_batch_end", called_hooks)
@@ -179,6 +236,15 @@ class CallbackHandlerTest(unittest.TestCase):
         cb_handler.on_predict_epoch_start(state, unit)
         self.assertIn("on_predict_epoch_start", called_hooks)
 
+        cb_handler.on_predict_dataloader_iter_creation_start(state, unit)
+        self.assertIn("on_predict_dataloader_iter_creation_start", called_hooks)
+
+        cb_handler.on_predict_dataloader_iter_creation_end(state, unit)
+        self.assertIn("on_predict_dataloader_iter_creation_end", called_hooks)
+
+        cb_handler.on_predict_get_next_batch_start(state, unit)
+        self.assertIn("on_predict_get_next_batch_start", called_hooks)
+
         cb_handler.on_predict_get_next_batch_end(state, unit)
         self.assertIn("on_predict_get_next_batch_end", called_hooks)
 
@@ -202,6 +268,9 @@ class CallbackHandlerTest(unittest.TestCase):
         remaining_callback_hooks = (
             "on_train_start",
             "on_train_epoch_start",
+            "on_train_dataloader_iter_creation_start",
+            "on_train_dataloader_iter_creation_end",
+            "on_train_get_next_batch_start",
             "on_train_get_next_batch_end",
             "on_train_step_start",
             "on_train_step_end",
@@ -209,6 +278,9 @@ class CallbackHandlerTest(unittest.TestCase):
             "on_train_end",
             "on_eval_start",
             "on_eval_epoch_start",
+            "on_eval_dataloader_iter_creation_start",
+            "on_eval_dataloader_iter_creation_end",
+            "on_eval_get_next_batch_start",
             "on_eval_get_next_batch_end",
             "on_eval_step_start",
             "on_eval_step_end",
@@ -216,6 +288,9 @@ class CallbackHandlerTest(unittest.TestCase):
             "on_eval_end",
             "on_predict_start",
             "on_predict_epoch_start",
+            "on_predict_dataloader_iter_creation_start",
+            "on_predict_dataloader_iter_creation_end",
+            "on_predict_get_next_batch_start",
             "on_predict_get_next_batch_end",
             "on_predict_step_start",
             "on_predict_step_end",

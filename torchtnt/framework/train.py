@@ -192,8 +192,10 @@ def _train_epoch_impl(
         train_state.dataloader, train_unit.train_progress.num_epochs_completed
     )
 
+    callback_handler.on_train_dataloader_iter_creation_start(state, train_unit)
     with get_timing_context(state, "train.iter(dataloader)"):
         data_iter = iter(train_state.dataloader)
+    callback_handler.on_train_dataloader_iter_creation_end(state, train_unit)
 
     prev_steps_in_epoch = train_unit.train_progress.num_steps_completed_in_epoch
 
@@ -210,6 +212,7 @@ def _train_epoch_impl(
             with get_timing_context(
                 state, "train.next(data_iter)"
             ), train_state.iteration_timer.time("data_wait_time"):
+                callback_handler.on_train_get_next_batch_start(state, train_unit)
                 step_input = train_unit.get_next_train_batch(state, data_iter)
                 callback_handler.on_train_get_next_batch_end(state, train_unit)
 
