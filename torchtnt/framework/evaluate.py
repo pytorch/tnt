@@ -132,9 +132,10 @@ def _evaluate_impl(
         eval_unit.on_eval_epoch_start(state)
         callback_handler.on_eval_epoch_start(state, eval_unit)
 
+    callback_handler.on_eval_dataloader_iter_creation_start(state, eval_unit)
     with get_timing_context(state, "evaluate.iter(dataloader)"):
         data_iter = iter(eval_state.dataloader)
-    step_input = data_iter
+    callback_handler.on_eval_dataloader_iter_creation_end(state, eval_unit)
 
     prev_steps_in_epoch = eval_unit.eval_progress.num_steps_completed_in_epoch
 
@@ -151,6 +152,7 @@ def _evaluate_impl(
             with get_timing_context(
                 state, "evaluate.next(data_iter)"
             ), eval_state.iteration_timer.time("data_wait_time"):
+                callback_handler.on_eval_get_next_batch_start(state, eval_unit)
                 step_input = eval_unit.get_next_eval_batch(state, data_iter)
                 callback_handler.on_eval_get_next_batch_end(state, eval_unit)
 

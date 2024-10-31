@@ -82,6 +82,15 @@ class Lambda(Callback):
         ] = None,
         on_train_start: Optional[Callable[[State, TTrainUnit], None]] = None,
         on_train_epoch_start: Optional[Callable[[State, TTrainUnit], None]] = None,
+        on_train_dataloader_iter_creation_start: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
+        on_train_dataloader_iter_creation_end: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
+        on_train_get_next_batch_start: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
         on_train_get_next_batch_end: Optional[
             Callable[[State, TTrainUnit], None]
         ] = None,
@@ -91,6 +100,15 @@ class Lambda(Callback):
         on_train_end: Optional[Callable[[State, TTrainUnit], None]] = None,
         on_eval_start: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_epoch_start: Optional[Callable[[State, TEvalUnit], None]] = None,
+        on_eval_dataloader_iter_creation_start: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
+        on_eval_dataloader_iter_creation_end: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
+        on_eval_get_next_batch_start: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
         on_eval_get_next_batch_end: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_step_start: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_eval_step_end: Optional[Callable[[State, TEvalUnit], None]] = None,
@@ -98,6 +116,15 @@ class Lambda(Callback):
         on_eval_end: Optional[Callable[[State, TEvalUnit], None]] = None,
         on_predict_start: Optional[Callable[[State, TPredictUnit], None]] = None,
         on_predict_epoch_start: Optional[Callable[[State, TPredictUnit], None]] = None,
+        on_predict_dataloader_iter_creation_start: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
+        on_predict_dataloader_iter_creation_end: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
+        on_predict_get_next_batch_start: Optional[
+            Callable[[State, TTrainUnit], None]
+        ] = None,
         on_predict_get_next_batch_end: Optional[
             Callable[[State, TPredictUnit], None]
         ] = None,
