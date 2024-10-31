@@ -599,8 +599,10 @@
         <span class="n">train_state</span><span class="o">.</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span>
     <span class="p">)</span>
 
+    <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_train_dataloader_iter_creation_start</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">train_unit</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s2">&quot;train.iter(dataloader)&quot;</span><span class="p">):</span>
         <span class="n">data_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">train_state</span><span class="o">.</span><span class="n">dataloader</span><span class="p">)</span>
+    <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_train_dataloader_iter_creation_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">train_unit</span><span class="p">)</span>
 
     <span class="n">prev_steps_in_epoch</span> <span class="o">=</span> <span class="n">train_unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span>
 
@@ -617,6 +619,7 @@
             <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
                 <span class="n">state</span><span class="p">,</span> <span class="s2">&quot;train.next(data_iter)&quot;</span>
             <span class="p">),</span> <span class="n">train_state</span><span class="o">.</span><span class="n">iteration_timer</span><span class="o">.</span><span class="n">time</span><span class="p">(</span><span class="s2">&quot;data_wait_time&quot;</span><span class="p">):</span>
+                <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_train_get_next_batch_start</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">train_unit</span><span class="p">)</span>
                 <span class="n">step_input</span> <span class="o">=</span> <span class="n">train_unit</span><span class="o">.</span><span class="n">get_next_train_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">)</span>
                 <span class="n">callback_handler</span><span class="o">.</span><span class="n">on_train_get_next_batch_end</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">train_unit</span><span class="p">)</span>
 
