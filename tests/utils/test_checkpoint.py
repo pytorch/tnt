@@ -1422,18 +1422,10 @@ class CheckpointUtilsTest(unittest.TestCase):
             dirpath = os.path.join(temp_dir, "checkpoint")
             Snapshot.take(dirpath, app_state=app_state)
 
-            self.assertTrue(
-                CheckpointManager.does_checkpoint_metadata_exist(
-                    dirpath, SNAPSHOT_METADATA_FNAME
-                )
-            )
+            self.assertTrue(does_checkpoint_exist(dirpath, SNAPSHOT_METADATA_FNAME))
 
             os.remove(os.path.join(dirpath, SNAPSHOT_METADATA_FNAME))
-            self.assertFalse(
-                CheckpointManager.does_checkpoint_metadata_exist(
-                    dirpath, SNAPSHOT_METADATA_FNAME
-                )
-            )
+            self.assertFalse(does_checkpoint_exist(dirpath, SNAPSHOT_METADATA_FNAME))
 
     def test_does_checkpoint_exist(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -366,6 +366,7 @@ class CheckpointManager:
         keep_last_n_checkpoints: Optional[int] = None,
         metadata_fnames: Optional[List[str]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
+        file_system: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:
         """
         Initialize a checkpoint manager. If a `keep_last_n_checkpoints` value is provided, this will read the
@@ -388,6 +389,11 @@ class CheckpointManager:
         self._best_checkpoint_config = best_checkpoint_config
         self._keep_last_n_checkpoints = keep_last_n_checkpoints
         self._pg_wrapper = PGWrapper(process_group)
+
+        if file_system is None:
+            file_system, _ = url_to_fs(self.dirpath)
+
+        self._file_system: fsspec.AbstractFileSystem = file_system
 
         if metadata_fnames is None:
             self._metadata_fnames: List[str] = []
@@ -568,8 +574,8 @@ class CheckpointManager:
             ckpt.path, self._metadata_fnames, process_group=process_group
         )
 
-    @staticmethod
     def does_checkpoint_metadata_exist(
+        self,
         checkpoint_path: str,
         metadata_fname: str,
     ) -> bool:
@@ -577,8 +583,7 @@ class CheckpointManager:
         Checking whether a checkpoint metadata file exists in the directory.
         If the checkpointer has that metadata file, this function will returns True. Returns False otherwise.
         """
-        fs, _ = url_to_fs(checkpoint_path)
-        return _metadata_exists(fs, checkpoint_path, metadata_fname)
+        return _metadata_exists(self._file_system, checkpoint_path, metadata_fname)
 
     @staticmethod
     @rank_zero_read_and_broadcast
@@ -596,9 +601,8 @@ class CheckpointManager:
         """
         worst_ckpt_path = self._ckpt_paths.pop(0)
         if self._pg_wrapper.get_rank() == 0:
-            fs, _ = url_to_fs(self.dirpath)
             try:
-                fs.rm(worst_ckpt_path.path, recursive=True)
+                self._file_system.rm(worst_ckpt_path.path, recursive=True)
             except Exception as exc:
                 logger.error(
                     (
@@ -612,6 +616,7 @@ class CheckpointManager:
 def does_checkpoint_exist(
     ckpt_path: str,
     metadata_fname: Union[str, List[str]],
+    file_system: Optional[fsspec.AbstractFileSystem] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> bool:
     """
@@ -622,6 +627,8 @@ def does_checkpoint_exist(
     Args:
         ckpt: The checkpoint to check.
         metadata_fname: File to check for existence. If a list is provided, it will check that at least one of the files is present.
+        file_system: If a custom file system should be used to fetch the checkpoint directories. Otherwise, fsspec will be
+            used to match the file system of the dirpath.
         process_group: Optional process group on which the ranks will communicate on. By default, the entire world is used.
     """
     if not metadata_fname:
@@ -631,7 +638,10 @@ def does_checkpoint_exist(
             [metadata_fname] if isinstance(metadata_fname, str) else metadata_fname
         )
 
-    fs, _ = url_to_fs(ckpt_path)
+    fs = file_system
+    if fs is None:
+        fs, _ = url_to_fs(ckpt_path)
+
     return any(_metadata_exists(fs, ckpt_path, fname) for fname in metadata_fnames)
 
 
@@ -639,6 +649,7 @@ def does_checkpoint_exist(
 def get_latest_checkpoint_path(
     dirpath: str,
     metadata_fname: Optional[Union[str, List[str]]] = None,
+    file_system: Optional[fsspec.AbstractFileSystem] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> Optional[str]:
     """
@@ -648,6 +659,8 @@ def get_latest_checkpoint_path(
         dirpath: parent directory where checkpoints are saved.
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
                     If a list is provided, it will check that at least one of the files is present.
+        file_system: If a custom file system should be used to fetch the checkpoint directories. Otherwise, fsspec will be
+            used to match the file system of the dirpath.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Raises:
@@ -658,14 +671,17 @@ def get_latest_checkpoint_path(
         gloo process groups are recommended over nccl.
     """
 
-    return _get_latest_checkpoint_path(dirpath, metadata_fname)
+    return _get_latest_checkpoint_path(dirpath, metadata_fname, file_system)
 
 
 def _get_latest_checkpoint_path(
     dirpath: str,
     metadata_fname: Optional[Union[str, List[str]]] = None,
+    file_system: Optional[fsspec.AbstractFileSystem] = None,
 ) -> Optional[str]:
-    candidate_dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname)
+    candidate_dirpaths = _retrieve_checkpoint_dirpaths(
+        dirpath, metadata_fname, file_system=file_system
+    )
     if not candidate_dirpaths:
         return None
 
@@ -683,6 +699,7 @@ def get_best_checkpoint_path(
     metric_name: str,
     mode: Literal["min", "max"],
     metadata_fname: Optional[Union[str, List[str]]] = None,
+    file_system: Optional[fsspec.AbstractFileSystem] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> Optional[str]:
     """
@@ -697,6 +714,8 @@ def get_best_checkpoint_path(
         mode: Either 'min' or 'max'. If 'min', finds and loads the lowest value metric checkpoint. If 'max', finds and loads the largest.
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
                     If a list is provided, it will check that at least one of the files is present.
+        file_system: If a custom file system should be used to fetch the checkpoint directories. Otherwise, fsspec will be
+            used to match the file system of the dirpath.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Note:
@@ -704,7 +723,9 @@ def get_best_checkpoint_path(
         gloo process groups are recommended over nccl.
     """
 
-    dirpaths = _retrieve_checkpoint_dirpaths(dirpath, metadata_fname, metric_name)
+    dirpaths = _retrieve_checkpoint_dirpaths(
+        dirpath, metadata_fname, metric_name, file_system=file_system
+    )
     if not dirpaths:
         return None
 
@@ -721,6 +742,7 @@ def get_checkpoint_dirpaths(
     dirpath: str,
     metadata_fname: Optional[Union[str, List[str]]] = None,
     metric_name: Optional[str] = None,
+    file_system: Optional[fsspec.AbstractFileSystem] = None,
     process_group: Optional[dist.ProcessGroup] = None,
 ) -> List[CheckpointPath]:
     """
@@ -736,6 +758,8 @@ def get_checkpoint_dirpaths(
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
                     If a list is provided, it will check that at least one of the files is present.
         metric_name: fetches all the checkpoint directories containing the metric name only.
+        file_system: If a custom file system should be used to fetch the checkpoint directories. Otherwise, fsspec will be
+            used to match the file system of the dirpath.
         process_group: the process group on which the ranks will communicate on. default: ``None`` (the entire world)
 
     Note:
@@ -743,13 +767,16 @@ def get_checkpoint_dirpaths(
         gloo process groups are recommended over nccl.
     """
 
-    return _retrieve_checkpoint_dirpaths(dirpath, metadata_fname, metric_name)
+    return _retrieve_checkpoint_dirpaths(
+        dirpath, metadata_fname, metric_name, file_system=file_system
+    )
 
 
 def _retrieve_checkpoint_dirpaths(
     dirpath: str,
     metadata_fname: Optional[Union[str, List[str]]],
     metric_name: Optional[str] = None,
+    file_system: Optional[fsspec.AbstractFileSystem] = None,
 ) -> List[CheckpointPath]:
     """
     Given a parent directory where checkpoints are saved, return the unsorted checkpoint subdirectories
@@ -759,9 +786,12 @@ def _retrieve_checkpoint_dirpaths(
         metadata_fname: Checks if metadata file is present in checkpoint, disregards if it does not exist.
             If a list is provided, it will check that at least one of the files is present.
         metric_name: Name of the metric that must exist in checkpoint name.
+        file_system: If a custom file system should be used to fetch the checkpoint directories. Otherwise, fsspec will be
+            used to match the file system of the dirpath.
     """
-
-    fs, _ = url_to_fs(dirpath)
+    fs = file_system
+    if fs is None:
+        fs, _ = url_to_fs(dirpath)
 
     if not fs.exists(dirpath):
         logger.warning(f"Input dirpath doesn't exist: {dirpath}")

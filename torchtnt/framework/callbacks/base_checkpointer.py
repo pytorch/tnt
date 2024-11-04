@@ -12,6 +12,8 @@ import math
 from datetime import timedelta
 from typing import Any, cast, Iterable, List, Literal, Optional, Union
 
+import fsspec
+
 import torch.distributed as dist
 from pyre_extensions import none_throws
 from torchtnt.framework.callback import Callback
@@ -449,6 +451,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         train_dataloader: Optional[Iterable[TTrainData]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
+        file_system: Optional[fsspec.AbstractFileSystem] = None,
         **kwargs: Any,
     ) -> bool:
         """
@@ -463,12 +466,17 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             train_dataloader: An optional train dataloader to restore.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
             restore_options: Controls what to  filter when restoring the state.
+            file_system: If a custom file system should be used to fetch the checkpoint directories. Otherwise, fsspec will be
+                used to match the file system of the dirpath.
 
         Returns:
             True if the latest checkpoint directory was found and successfully restored, otherwise False.
         """
         path = get_latest_checkpoint_path(
-            dirpath, metadata_fname=cls.metadata_fnames, process_group=process_group
+            dirpath,
+            metadata_fname=cls.metadata_fnames,
+            process_group=process_group,
+            file_system=file_system,
         )
         if path is None:
             logger.info(
@@ -497,6 +505,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
         train_dataloader: Optional[Iterable[TTrainData]] = None,
         process_group: Optional[dist.ProcessGroup] = None,
         restore_options: Optional[RestoreOptions] = None,
+        file_system: Optional[fsspec.AbstractFileSystem] = None,
         **kwargs: Any,
     ) -> bool:
         """
@@ -512,6 +521,8 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             mode: Either 'min' or 'max'. If 'min', finds and loads the lowest value metric checkpoint. If 'max', finds and loads the largest.
             train_dataloader: An optional train dataloader to restore.
             process_group: The process group on which the ranks will communicate on. default: ``None`` (the entire world)
+            file_system: If a custom file system should be used to fetch the checkpoint directories. Otherwise, fsspec will be
+                used to match the file system of the dirpath.
             restore_options: Controls what to  filter when restoring the state.
 
         Returns:
@@ -522,6 +533,7 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
             metric_name=metric_name,
             mode=mode,
             metadata_fname=cls.metadata_fnames,
+            file_system=file_system,
             process_group=process_group,
         )
 
