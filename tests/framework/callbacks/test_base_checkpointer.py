@@ -760,23 +760,32 @@ class BaseCheckpointerTest(unittest.TestCase):
             )
 
     def test_best_checkpoint_attr_missing(self) -> None:
-        bcs = BaseCheckpointSaver(
-            "foo",
-            save_every_n_epochs=1,
-            best_checkpoint_config=BestCheckpointConfig(
-                monitored_metric="train_loss",
-                mode="min",
-            ),
-        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            bcs = BaseCheckpointSaver(
+                temp_dir,
+                save_every_n_epochs=1,
+                best_checkpoint_config=BestCheckpointConfig(
+                    monitored_metric="train_loss",
+                    mode="min",
+                ),
+            )
 
-        state = get_dummy_train_state()
-        my_val_unit = MyValLossUnit()
+            state = get_dummy_train_state()
+            my_val_unit = MyValLossUnit()
 
-        with self.assertRaisesRegex(
-            RuntimeError,
-            "Unit does not have attribute train_loss, unable to retrieve metric to checkpoint.",
-        ):
-            bcs.on_train_epoch_end(state, my_val_unit)
+            error_container = []
+            with patch(
+                "torchtnt.framework.callbacks.base_checkpointer.logging.Logger.error",
+                side_effect=error_container.append,
+            ):
+                bcs.on_train_epoch_end(state, my_val_unit)
+
+            self.assertIn(
+                "Unit does not have attribute train_loss, unable to retrieve metric to checkpoint. Will not be included in checkpoint path, nor tracked for optimality.",
+                error_container,
+            )
+
+            self.assertTrue(os.path.exists(f"{temp_dir}/epoch_0_train_step_0"))
 
     def test_best_checkpoint_no_top_k(self) -> None:
         """
@@ -1008,14 +1017,19 @@ class BaseCheckpointerTest(unittest.TestCase):
 
         # pyre-ignore
         val_loss_unit.val_loss = "hola"  # Test weird metric value
-        with self.assertRaisesRegex(
-            RuntimeError,
-            (
-                "Unable to convert monitored metric val_loss to a float. Please ensure the value "
-                "can be converted to float and is not a multi-element tensor value."
-            ),
+        error_container = []
+        with patch(
+            "torchtnt.framework.callbacks.base_checkpointer.logging.Logger.error",
+            side_effect=error_container.append,
         ):
             val_loss = val_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+
+        self.assertIn(
+            "Unable to convert monitored metric val_loss to a float: could not convert string to float: 'hola'. "
+            "Please ensure the value can be converted to float and is not a multi-element tensor value. Will not be "
+            "included in checkpoint path, nor tracked for optimality.",
+            error_container,
+        )
 
         val_loss_unit.val_loss = float("nan")  # Test nan metric value
         error_container = []
@@ -1053,11 +1067,18 @@ class BaseCheckpointerTest(unittest.TestCase):
             dirpath="checkpoint",
             best_checkpoint_config=BestCheckpointConfig("train_loss", "max"),
         )
-        with self.assertRaisesRegex(
-            RuntimeError,
-            "Unit does not have attribute train_loss, unable to retrieve metric to checkpoint.",
+        error_container = []
+        with patch(
+            "torchtnt.framework.callbacks.base_checkpointer.logging.Logger.error",
+            side_effect=error_container.append,
         ):
             val_loss = train_loss_ckpt_cb._get_tracked_metric_value(val_loss_unit)
+
+        self.assertIn(
+            "Unit does not have attribute train_loss, unable to retrieve metric to checkpoint. "
+            "Will not be included in checkpoint path, nor tracked for optimality.",
+            error_container,
+        )
 
         ckpt_cb = BaseCheckpointSaver(
             dirpath="checkpoint",
