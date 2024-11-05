@@ -285,19 +285,23 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
         monitored_metric_name = self._best_checkpoint_config.monitored_metric
         if not hasattr(unit, monitored_metric_name):
-            raise RuntimeError(
-                f"Unit does not have attribute {monitored_metric_name}, unable to retrieve metric to checkpoint."
+            logger.error(
+                f"Unit does not have attribute {monitored_metric_name}, unable to retrieve metric to checkpoint. "
+                "Will not be included in checkpoint path, nor tracked for optimality."
             )
+            return None
 
         metric_value_f = None
         if (metric_value := getattr(unit, monitored_metric_name)) is not None:
             try:
                 metric_value_f = float(metric_value)
-            except ValueError as e:
-                raise RuntimeError(
-                    f"Unable to convert monitored metric {monitored_metric_name} to a float. Please ensure the value "
-                    "can be converted to float and is not a multi-element tensor value."
-                ) from e
+            except ValueError as exc:
+                logger.error(
+                    f"Unable to convert monitored metric {monitored_metric_name} to a float: {exc}. Please ensure the value "
+                    "can be converted to float and is not a multi-element tensor value. Will not be included in checkpoint path, "
+                    "nor tracked for optimality."
+                )
+                return None
 
         if metric_value_f and math.isnan(metric_value_f):
             logger.error(
