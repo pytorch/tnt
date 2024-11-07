@@ -361,7 +361,8 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             )
 
         rank_zero_info(
-            f"Restored snapshot for checkpoint_id: {checkpoint_id}", logger=logger
+            f"Restored the checkpoint with checkpoint_id: {checkpoint_id}",
+            logger=logger,
         )
 
     @staticmethod
