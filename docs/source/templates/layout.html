@@ -8,5 +8,11 @@
         <a href="https://www.internalfb.com/intern/staticdocs/torchtnt/">https://www.internalfb.com/intern/staticdocs/torchtnt/</a>
       </p>
     </div>
+  {% elif fbcode %}
+    <div id="redirect-banner" style="display: none">
+      <p>
+        Using TorchTNT directly is discouraged. Instead please use Mitra, a training framework built on top of TorchTNT
+      </p>
+    </div>
   {% endif %}
 {%- endblock %}
