@@ -12,4 +12,6 @@
 #redirect-banner > p {
     margin: 0.8rem;
     text-align: center;
+    font-weight: bold;
+    color: red;
 }
