@@ -14,6 +14,7 @@ from unittest.mock import Mock
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
+from torchtnt.utils.event_handlers import log_interval
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -124,6 +125,7 @@ class CallbackHandler:
         for cb in callbacks:
             cb.on_exception(state, unit, exc)
 
+    @log_interval("on_train_start", {"category": "callback_handler"})
     def on_train_start(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_start"
         callbacks = self._callbacks.get(fn_name, [])
@@ -176,12 +178,14 @@ class CallbackHandler:
         for cb in callbacks:
             cb.on_train_step_end(state, unit)
 
+    @log_interval("on_train_epoch_end", {"category": "callback_handler"})
     def on_train_epoch_end(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_epoch_end"
         callbacks = self._callbacks.get(fn_name, [])
         for cb in callbacks:
             cb.on_train_epoch_end(state, unit)
 
+    @log_interval("on_train_end", {"category": "callback_handler"})
     def on_train_end(self, state: State, unit: TTrainUnit) -> None:
         fn_name = "on_train_end"
         callbacks = self._callbacks.get(fn_name, [])
