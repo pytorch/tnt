@@ -314,7 +314,7 @@ def prepare_module(
     if strategy:
         if not isinstance(strategy, str) and not isinstance(strategy, Strategy):
             raise ValueError(
-                f"Unknown strategy received: {strategy}. Expect either str or Strategy dataclass"
+                f"Unknown strategy received: {strategy}. Expect either str (one of 'ddp', 'fsdp', or 'noop') or Strategy dataclass"
             )
 
         if isinstance(strategy, str):
