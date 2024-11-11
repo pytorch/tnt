@@ -9,8 +9,6 @@
 import unittest
 
 import torch
-
-from torch.distributed._composable import fully_shard
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -93,7 +91,7 @@ class PrepareModelGPUTest(unittest.TestCase):
         model = FSDP(torch.nn.Linear(1, 1, device=device))
         assert _is_fsdp_module(model)
         model = torch.nn.Linear(1, 1, device=device)
-        fully_shard(model)
+        model = FSDP(model)
         assert _is_fsdp_module(model)
 
     @skip_if_not_distributed
