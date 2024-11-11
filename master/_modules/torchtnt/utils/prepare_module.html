@@ -721,7 +721,7 @@
     <span class="k">if</span> <span class="n">strategy</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">Strategy</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Unknown strategy received: </span><span class="si">{</span><span class="n">strategy</span><span class="si">}</span><span class="s2">. Expect either str or Strategy dataclass&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Unknown strategy received: </span><span class="si">{</span><span class="n">strategy</span><span class="si">}</span><span class="s2">. Expect either str (one of &#39;ddp&#39;, &#39;fsdp&#39;, or &#39;noop&#39;) or Strategy dataclass&quot;</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
