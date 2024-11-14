@@ -11,6 +11,8 @@ import time
 from concurrent.futures import Future
 from typing import Any, cast, Dict, Iterable, List, Optional, Union
 
+import torch
+
 import torch.distributed as dist
 from pyre_extensions import none_throws
 from torch.distributed import checkpoint as dcp
@@ -24,6 +26,16 @@ from torch.distributed.checkpoint.default_planner import (
     DefaultSavePlanner,
 )
 from torch.distributed.checkpoint.planner import LoadPlanner, SavePlanner
+
+try:
+    from torch.distributed.checkpoint.state_dict import _init_optim_state
+except ImportError:
+
+    def noop(_: Any) -> None:
+        return None
+
+    _init_optim_state = noop
+
 from torch.distributed.checkpoint.storage import StorageReader, StorageWriter
 
 from torchtnt.framework.callbacks._checkpoint_utils import (
@@ -350,6 +362,15 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             eval_dataloader,
             predict_dataloader,
         )
+
+        # necessary for loading optimizers since states are initialized lazy
+        for obj in app_state.values():
+            # sometimes optimizers are actually held in a wrapper which handles calling
+            # state_dict and load_state_dict, sa is the case for
+            # `torchtnt.utils.prepare_module.FSDPOptimizerWrapper`, this handles that case.
+            optimizer = getattr(obj, "optimizer", obj)
+            if isinstance(optimizer, torch.optim.Optimizer):
+                _init_optim_state(optimizer)
 
         with get_or_create_gloo_pg(candidate_pg=process_group) as pg:
             dcp.load(

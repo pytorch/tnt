@@ -146,7 +146,9 @@ class DummyMultiOptimUnit(TrainUnit[Batch]):
         ]
         self.applied_optims: List[torch.optim.Optimizer] = []
         for module, optim in zip(self.modules, self.optims):
-            self.applied_optims.append(optim(module.parameters(), lr=0.1))
+            o = optim(module.parameters(), lr=0.1)
+            self.applied_optims.append(o)
+            setattr(self, f"optimizer_{optim.__name__}", o)
 
     def train_step(
         self, state: State, data: Batch
