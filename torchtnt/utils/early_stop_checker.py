@@ -180,7 +180,7 @@ class EarlyStopChecker:
         improvement_threshold = self.min_delta
         if self._threshold_mode == "rel":
             base_val = self._best_value if torch.isfinite(self._best_value) else 0.0
-            improvement_threshold = self.min_delta * base_val
+            improvement_threshold = self.min_delta.to(val.device) * base_val
 
         improvement_threshold = improvement_threshold.to(val.device)
 
