@@ -259,9 +259,12 @@ class EarlyStopChecker:
         """Formats a log message that informs the user about an improvement in the monitored score."""
         if torch.isfinite(self._best_value):
             improvement = (
-                torch.abs(self._best_value - val)
+                torch.abs(self._best_value.to(val.device) - val)
                 if self.threshold_mode == "abs"
-                else torch.abs((self._best_value - val) / (1.0 * self._best_value))
+                else torch.abs(
+                    (self._best_value.to(val.device) - val)
+                    / (1.0 * self._best_value.to(val.device))
+                )
             )
             msg = (
                 f"Metric improved by {self.threshold_mode} {improvement} >="
