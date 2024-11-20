@@ -187,12 +187,18 @@ class DistributedTest(unittest.TestCase):
         self.assertNotIsInstance(batch_norm, torch.nn.SyncBatchNorm)
         self.assertTrue(
             torch.equal(
-                batch_norm.running_mean, none_throws(original_batchnorm.running_mean)
+                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                #  `Union[Tensor, Module]`.
+                batch_norm.running_mean,
+                none_throws(original_batchnorm.running_mean),
             )
         )
         self.assertTrue(
             torch.equal(
-                batch_norm.running_var, none_throws(original_batchnorm.running_var)
+                # pyre-fixme[6]: For 1st argument expected `Tensor` but got
+                #  `Union[Tensor, Module]`.
+                batch_norm.running_var,
+                none_throws(original_batchnorm.running_var),
             )
         )
 
