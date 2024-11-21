@@ -638,6 +638,7 @@ class AutoUnit(
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
         # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
         maybe_no_sync = (
+            # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
             module.no_sync()
             if not should_update_weights
             and (isinstance(module, DDP) or _is_fsdp_module(module))
