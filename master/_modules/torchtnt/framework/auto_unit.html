@@ -1045,6 +1045,7 @@
         <span class="c1"># https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync</span>
         <span class="c1"># https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync</span>
         <span class="n">maybe_no_sync</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="c1"># pyre-fixme[29]: `Union[Tensor, Module]` is not a function.</span>
             <span class="n">module</span><span class="o">.</span><span class="n">no_sync</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">should_update_weights</span>
             <span class="ow">and</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">DDP</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">))</span>
