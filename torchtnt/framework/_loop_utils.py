@@ -94,16 +94,23 @@ def _set_module_training_mode(
         is_ddp = isinstance(module, DistributedDataParallel)
 
         if _EXPORT_UTILS_AVAIL and model_is_exported(
-            module.module if is_ddp else module
+            # pyre-fixme[6]: For 1st argument expected `Module` but got
+            #  `Union[Module, Tensor]`.
+            module.module
+            if is_ddp
+            else module
         ):
             move_fn = (
                 torch.ao.quantization.move_exported_model_to_train
                 if mode
                 else torch.ao.quantization.move_exported_model_to_eval
             )
+            # pyre-fixme[6]: For 1st argument expected `GraphModule` but got
+            #  `Union[Module, Tensor]`.
             move_fn(module.module if is_ddp else module)
             module.training = mode
             if is_ddp:
+                # pyre-fixme[16]: `Tensor` has no attribute `training`.
                 module.module.training = mode
         else:
             module.train(mode)
@@ -122,16 +129,23 @@ def _reset_module_training_mode(
             is_ddp = isinstance(module, DistributedDataParallel)
 
             if _EXPORT_UTILS_AVAIL and model_is_exported(
-                module.module if is_ddp else module
+                # pyre-fixme[6]: For 1st argument expected `Module` but got
+                #  `Union[Module, Tensor]`.
+                module.module
+                if is_ddp
+                else module
             ):
                 move_fn = (
                     torch.ao.quantization.move_exported_model_to_train
                     if prior_modes[name]
                     else torch.ao.quantization.move_exported_model_to_eval
                 )
+                # pyre-fixme[6]: For 1st argument expected `GraphModule` but got
+                #  `Union[Module, Tensor]`.
                 move_fn(module.module if is_ddp else module)
                 module.training = prior_modes[name]
                 if is_ddp:
+                    # pyre-fixme[16]: `Tensor` has no attribute `training`.
                     module.module.training = prior_modes[name]
             else:
                 module.train(prior_modes[name])
