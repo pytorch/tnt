@@ -8,7 +8,17 @@
 
 from dataclasses import asdict, dataclass
 from functools import partial
-from typing import Any, Callable, cast, Dict, Iterable, Optional, Union
+from typing import (
+    Any,
+    Callable,
+    cast,
+    ContextManager,
+    Dict,
+    Iterable,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import torch
 import torch.distributed as dist
@@ -165,6 +175,8 @@ class ActivationCheckpointParams:
     checkpoint_impl: CheckpointImpl
     check_fn: Callable[[torch.nn.Module], bool] = lambda _: True
     auto_wrap_policy: Optional[Callable[[torch.nn.Module, bool, int], bool]] = None
+    # pyre-fixme[24]: Generic type `Callable` expects 2 type parameters.
+    context_fn: Optional[Callable[[], Tuple[ContextManager, ContextManager]]] = None
 
 
 def prepare_ddp(
@@ -357,9 +369,14 @@ def prepare_module(
         checkpoint_impl = activation_checkpoint_params.checkpoint_impl
         check_fn = activation_checkpoint_params.check_fn
         auto_wrap_policy = activation_checkpoint_params.auto_wrap_policy
+        context_fn = activation_checkpoint_params.context_fn
+        additional_params = {}
+        if context_fn:
+            additional_params["context_fn"] = context_fn
         custom_checkpoint_wrapper = partial(
             checkpoint_wrapper,
             checkpoint_impl=checkpoint_impl,
+            **additional_params,
         )
         apply_activation_checkpointing(
             module,
