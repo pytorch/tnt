@@ -105,7 +105,7 @@ class LoopUtilsTest(unittest.TestCase):
                 return x
 
         loss_fn = nn.CrossEntropyLoss()
-        module = torch.export.export(M(), (torch.rand(4, 4),)).module()
+        module = torch.export.export(M(), (torch.rand(4, 4),), strict=True).module()
 
         tracked_modules: Dict[str, torch.nn.Module] = {
             "module": module,
