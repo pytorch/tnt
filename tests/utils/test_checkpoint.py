@@ -251,6 +251,15 @@ class CheckpointPathTest(unittest.TestCase):
                     metric_data=MetricData("mean_loss_squared", 0.0),
                 ),
             ),
+            (
+                "foo/bar/epoch_1_train_step_2_eval_step_3_eval_loss=6.486097566010406e+18",
+                CheckpointPath(
+                    "foo/bar/",
+                    epoch=1,
+                    step={Phase.TRAIN: 2, Phase.EVALUATE: 3},
+                    metric_data=MetricData("eval_loss", 6.486097566010406e18),
+                ),
+            ),
         ]
         for path, expected_ckpt in valid_paths:
             parsed_ckpt = CheckpointPath.from_str(path)

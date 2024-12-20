@@ -80,12 +80,14 @@ class CheckpointPath:
     - phase-aware and metric-aware- <dirpath>/epoch_<epoch>_train_step_<train_step>_eval_step_<eval_step>_<metric_name>=<metric_value>
     """
 
+    _FLOAT_REGEX: str = r"-?\d+\.?\d*(?:e[\+\-]\d+)?"
+
     PHASE_NAIVE_REGEX: Pattern = re.compile(
-        r"^(.+)epoch_(\d+)_step_(\d+)(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
+        rf"^(.+)epoch_(\d+)_step_(\d+)(?:_(\w+)=({_FLOAT_REGEX}))?\/?$"
     )
 
     PHASE_AWARE_REGEX: Pattern = re.compile(
-        r"^(.+)epoch_(\d+)(?:_train_step_(\d+))?(?:_eval_step_(\d+))?(?:_predict_step_(\d+))?(?:_(\w+)=(-?\d+\.?\d*))?\/?$"
+        rf"^(.+)epoch_(\d+)(?:_train_step_(\d+))?(?:_eval_step_(\d+))?(?:_predict_step_(\d+))?(?:_(\w+)=({_FLOAT_REGEX}))?\/?$"
     )
 
     def __init__(
