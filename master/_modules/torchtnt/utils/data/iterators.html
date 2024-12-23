@@ -501,6 +501,15 @@
     <span class="c1"># used with RandomizedBatchSampler</span>
     <span class="n">WRAP_AROUND_UNTIL_KILLED</span> <span class="o">=</span> <span class="s2">&quot;WRAP_AROUND_UNTIL_KILLED&quot;</span>
 
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StoppingMechanism</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Enable comparison betwen string and instances of StoppingMechanism</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="n">other</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">RoundRobin</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
