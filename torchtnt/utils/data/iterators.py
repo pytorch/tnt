@@ -94,6 +94,15 @@ class StoppingMechanism(Enum):
     # used with RandomizedBatchSampler
     WRAP_AROUND_UNTIL_KILLED = "WRAP_AROUND_UNTIL_KILLED"
 
+    def __eq__(self, other: Union[str, StoppingMechanism]) -> bool:
+        """
+        Enable comparison betwen string and instances of StoppingMechanism
+        """
+        if isinstance(other, str):
+            return self.value == other
+
+        return super().__eq__(other)
+
 
 @dataclass
 class RoundRobin(DataIterationStrategy):
