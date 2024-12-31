@@ -440,7 +440,7 @@
 <span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">ActivePhase</span><span class="p">,</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">State</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">EvalUnit</span><span class="p">,</span> <span class="n">PredictUnit</span><span class="p">,</span> <span class="n">TPredictData</span><span class="p">,</span> <span class="n">TrainUnit</span>
 <span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">get_timing_context</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.device</span> <span class="kn">import</span> <span class="n">copy_data_to_device</span><span class="p">,</span> <span class="n">record_data_in_stream</span>
+<span class="kn">from</span> <span class="nn">torchtnt.utils.device</span> <span class="kn">import</span> <span class="n">copy_data_to_device</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.env</span> <span class="kn">import</span> <span class="n">init_from_env</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.lr_scheduler</span> <span class="kn">import</span> <span class="n">TLRScheduler</span>
 <span class="kn">from</span> <span class="nn">torchtnt.utils.precision</span> <span class="kn">import</span> <span class="p">(</span>
@@ -598,6 +598,12 @@
             <span class="n">enabled</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
+        <span class="c1"># main stream responsible for computation on the device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">streams</span><span class="o">.</span><span class="n">Stream</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">current_stream</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">and</span> <span class="n">enable_prefetch</span><span class="p">)</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
         <span class="c1"># cuda stream to use for moving data to device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">streams</span><span class="o">.</span><span class="n">Stream</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Stream</span><span class="p">()</span>
@@ -622,7 +628,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_enable_prefetch</span> <span class="o">=</span> <span class="n">enable_prefetch</span>
 
     <span class="k">def</span> <span class="nf">move_data_to_device</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TData</span><span class="p">,</span> <span class="n">non_blocking</span><span class="p">:</span> <span class="nb">bool</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">TData</span><span class="p">,</span>
+        <span class="n">non_blocking</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TData</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``/``eval_step``/``predict_step``.</span>
@@ -637,8 +646,18 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            A batch of data which is on the device</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            If overriding, ensure that tensors are recorded on the compute stream to avoid the cuda cache allocator from</span>
+<span class="sd">            overwriting the underlying data before the compute stream has a chance to use it. If using `copy_data_to_device`,</span>
+<span class="sd">            you can pass `stream_to_record=self._default_stream` as an argument.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">copy_data_to_device</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="n">non_blocking</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">copy_data_to_device</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="n">non_blocking</span><span class="o">=</span><span class="n">non_blocking</span><span class="p">,</span>
+            <span class="n">stream_to_record</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_stream</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_prefetch_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prefetch the next batch on a separate CUDA stream.&quot;&quot;&quot;</span>
@@ -663,7 +682,9 @@
             <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">phase</span><span class="si">}</span><span class="s2">.move_data_to_device&quot;</span>
         <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_next_batch</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_data_to_device</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span> <span class="n">next_batch</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="n">non_blocking</span>
+                <span class="n">state</span><span class="p">,</span>
+                <span class="n">next_batch</span><span class="p">,</span>
+                <span class="n">non_blocking</span><span class="o">=</span><span class="n">non_blocking</span><span class="p">,</span>
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">TData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TData</span><span class="p">:</span>
@@ -687,13 +708,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_phase_to_prefetched</span><span class="p">[</span><span class="n">active_phase</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_batch</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">raise</span> <span class="ne">StopIteration</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.record_data_in_stream&quot;</span>
-            <span class="p">):</span>
-                <span class="c1"># record the batch in the current stream</span>
-                <span class="n">record_data_in_stream</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">current_stream</span><span class="p">())</span>
 
         <span class="c1"># prefetch the next batch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_next_batch</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
