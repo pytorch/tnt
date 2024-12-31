@@ -13,7 +13,7 @@ import shutil
 import subprocess
 from collections import defaultdict
 from dataclasses import fields, is_dataclass
-from typing import Any, Dict, Mapping, TypeVar
+from typing import Any, Dict, Mapping, Optional, TypeVar
 
 import torch
 from typing_extensions import Protocol, runtime_checkable, TypedDict
@@ -56,12 +56,20 @@ def _is_named_tuple(x: T) -> bool:
     return isinstance(x, tuple) and hasattr(x, "_asdict") and hasattr(x, "_fields")
 
 
-def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any) -> T:
+def copy_data_to_device(
+    data: T,
+    device: torch.device,
+    stream_to_record: Optional[torch.cuda.Stream] = None,
+    *args: Any,
+    **kwargs: Any,
+) -> T:
     """Function that recursively copies data to a torch.device.
 
     Args:
         data: The data to copy to device
         device: The device to which the data should be copied
+        stream_to_record: The CUDA stream to which the data should be recorded. Useful if this function is called
+            on side stream, and the data is expected to be used on the main stream.
         args: positional arguments that will be passed to the `to` call
         kwargs: keyword arguments that will be passed to the `to` call
 
@@ -116,7 +124,10 @@ def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any
         return new_data_class
     elif hasattr(data, "to"):
         # pyre-ignore Undefined attribute [16]: `Variable[T]` has no attribute `to`
-        return data.to(device, *args, **kwargs)
+        gpu_data = data.to(device, *args, **kwargs)
+        if stream_to_record is not None and hasattr(gpu_data, "record_stream"):
+            gpu_data.record_stream(stream_to_record)
+        return gpu_data
 
     return data
 
