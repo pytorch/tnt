@@ -33,7 +33,7 @@ from torchtnt.framework._unit_utils import _step_requires_iterator
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
 from torchtnt.framework.utils import get_timing_context
-from torchtnt.utils.device import copy_data_to_device, record_data_in_stream
+from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.precision import (
@@ -191,6 +191,12 @@ class _AutoUnitMixin(Generic[TData]):
             enabled=self.precision is not None,
         )
 
+        # main stream responsible for computation on the device
+        self._default_stream: Optional[torch.cuda.streams.Stream] = (
+            torch.cuda.current_stream()
+            if (self.device.type == "cuda" and enable_prefetch)
+            else None
+        )
         # cuda stream to use for moving data to device
         self._prefetch_stream: Optional[torch.cuda.streams.Stream] = (
             torch.cuda.Stream()
@@ -215,7 +221,10 @@ class _AutoUnitMixin(Generic[TData]):
         self._enable_prefetch = enable_prefetch
 
     def move_data_to_device(
-        self, state: State, data: TData, non_blocking: bool
+        self,
+        state: State,
+        data: TData,
+        non_blocking: bool,
     ) -> TData:
         """
         The user can override this method with custom code to copy data to device. This will be called at the start of every ``train_step``/``eval_step``/``predict_step``.
@@ -230,8 +239,18 @@ class _AutoUnitMixin(Generic[TData]):
 
         Returns:
             A batch of data which is on the device
+
+        Note:
+            If overriding, ensure that tensors are recorded on the compute stream to avoid the cuda cache allocator from
+            overwriting the underlying data before the compute stream has a chance to use it. If using `copy_data_to_device`,
+            you can pass `stream_to_record=self._default_stream` as an argument.
         """
-        return copy_data_to_device(data, self.device, non_blocking=non_blocking)
+        return copy_data_to_device(
+            data,
+            self.device,
+            non_blocking=non_blocking,
+            stream_to_record=self._default_stream,
+        )
 
     def _prefetch_next_batch(self, state: State, data_iter: Iterator[TData]) -> None:
         """Prefetch the next batch on a separate CUDA stream."""
@@ -256,7 +275,9 @@ class _AutoUnitMixin(Generic[TData]):
             state, f"{self.__class__.__name__}.{phase}.move_data_to_device"
         ):
             self._phase_to_next_batch[active_phase] = self.move_data_to_device(
-                state, next_batch, non_blocking=non_blocking
+                state,
+                next_batch,
+                non_blocking=non_blocking,
             )
 
     def _get_next_batch(self, state: State, data: Iterator[TData]) -> TData:
@@ -280,13 +301,6 @@ class _AutoUnitMixin(Generic[TData]):
             self._phase_to_prefetched[active_phase] = False
             self._is_last_batch = False
             raise StopIteration
-
-        if self._prefetch_stream:
-            with get_timing_context(
-                state, f"{self.__class__.__name__}.record_data_in_stream"
-            ):
-                # record the batch in the current stream
-                record_data_in_stream(batch, torch.cuda.current_stream())
 
         # prefetch the next batch
         self._prefetch_next_batch(state, data)
