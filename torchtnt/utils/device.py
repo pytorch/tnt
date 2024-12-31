@@ -52,13 +52,6 @@ T = TypeVar("T")
 TSelf = TypeVar("TSelf")
 
 
-@runtime_checkable
-class _CopyableData(Protocol):
-    def to(self: TSelf, device: torch.device, *args: Any, **kwargs: Any) -> TSelf:
-        """Copy data to the specified device"""
-        ...
-
-
 def _is_named_tuple(x: T) -> bool:
     return isinstance(x, tuple) and hasattr(x, "_asdict") and hasattr(x, "_fields")
 
@@ -76,31 +69,33 @@ def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any
         The data on the correct device
     """
 
-    # Redundant isinstance(data, tuple) check is required here to make pyre happy
-    if _is_named_tuple(data) and isinstance(data, tuple):
-        return type(data)(
-            **copy_data_to_device(data._asdict(), device, *args, **kwargs)
-        )
-    elif isinstance(data, (list, tuple)):
-        return type(data)(copy_data_to_device(e, device, *args, **kwargs) for e in data)
-    elif isinstance(data, defaultdict):
-        return type(data)(
+    data_type = type(data)
+    if issubclass(data_type, defaultdict):
+        return data_type(
             data.default_factory,
             {
                 k: copy_data_to_device(v, device, *args, **kwargs)
                 for k, v in data.items()
             },
         )
-    elif isinstance(data, Mapping):
-        return type(data)(
+    elif issubclass(data_type, dict):
+        return data_type(
             {
                 k: copy_data_to_device(v, device, *args, **kwargs)
                 for k, v in data.items()
             }
         )
-    elif is_dataclass(data) and not isinstance(data, type):
-        # pyre-fixme[45]: Cannot instantiate protocol `DataclassInstance`.
-        new_data_class = type(data)(
+    elif issubclass(data_type, list):
+        return data_type(copy_data_to_device(e, device, *args, **kwargs) for e in data)
+    elif issubclass(data_type, tuple):
+        if hasattr(data, "_asdict") and hasattr(data, "_fields"):
+            return data_type(
+                **copy_data_to_device(data._asdict(), device, *args, **kwargs)
+            )
+        return data_type(copy_data_to_device(e, device, *args, **kwargs) for e in data)
+    # checking for __dataclass_fields__ is official way to check if data is a dataclass
+    elif hasattr(data, "__dataclass_fields__"):
+        new_data_class = data_type(
             **{
                 field.name: copy_data_to_device(
                     getattr(data, field.name), device, *args, **kwargs
@@ -118,13 +113,11 @@ def copy_data_to_device(data: T, device: torch.device, *args: Any, **kwargs: Any
                         getattr(data, field.name), device, *args, **kwargs
                     ),
                 )
-        # pyre-fixme[7]: Expected `T` but got `DataclassInstance`.
         return new_data_class
-    elif isinstance(data, _CopyableData):
-        # pyre-fixme[7]: Expected `T` but got `_CopyableData`.
+    elif hasattr(data, "to"):
+        # pyre-ignore Undefined attribute [16]: `Variable[T]` has no attribute `to`
         return data.to(device, *args, **kwargs)
-    # pyre-fixme[7]: Expected `T` but got `Union[Type[DataclassInstance],
-    #  DataclassInstance]`.
+
     return data
 
 
