@@ -26,6 +26,7 @@ from torch.distributed.checkpoint.default_planner import (
     DefaultSavePlanner,
 )
 from torch.distributed.checkpoint.planner import LoadPlanner, SavePlanner
+from torchtnt.framework.state import EntryPoint
 
 try:
     from torch.distributed.checkpoint.state_dict import _init_optim_state
@@ -171,7 +172,12 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         ]:
             raise RuntimeError(f"Unexpected hook encountered '{hook}'")
 
-        intra_epoch = "step_end" in hook
+        # intra epoch when checkpointing during "_step_end" hook OR
+        # when checkpointing during "on_eval_epoch_end" hook and the entry point is fit
+        # since it is still intra epoch with respect to the train epoch
+        intra_epoch = "step_end" in hook or (
+            "on_eval_epoch_end" == hook and state.entry_point == EntryPoint.FIT
+        )
         curr_snapshot_wait = hook == "on_train_end"
 
         if planner is None:
