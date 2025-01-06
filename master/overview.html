@@ -452,7 +452,7 @@
 <div class="section" id="organizing-your-model-code">
 <h3>Organizing your model code<a class="headerlink" href="#organizing-your-model-code" title="Permalink to this heading">¶</a></h3>
 <p>The Unit concept represents the primary place to organize your model code in TorchTNT. There are three types of units: <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.TrainUnit" title="torchtnt.framework.unit.TrainUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainUnit</span></code></a>, <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.EvalUnit" title="torchtnt.framework.unit.EvalUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">EvalUnit</span></code></a>, and <a class="reference internal" href="framework/unit.html#torchtnt.framework.unit.PredictUnit" title="torchtnt.framework.unit.PredictUnit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PredictUnit</span></code></a>. These interfaces are mutually exclusive and can be combined as needed, e.g. in the case of fitting (interleaving training and evaluation).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyExampleUnit</span><span class="p">(</span><span class="n">TrainUnit</span><span class="p">,</span> <span class="n">PredictUnit</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyExampleUnit</span><span class="p">(</span><span class="n">TrainUnit</span><span class="p">,</span> <span class="n">PredictUnit</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Basic implemention of a unit, subclassing the train and predict interface</span>
 
@@ -463,7 +463,7 @@
 <span class="sd">        log_every_n_steps: frequency to log stats</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
@@ -481,7 +481,7 @@
 
     <span class="c1"># train_step is a method which is invoked by TorchTNT trainer</span>
     <span class="c1"># here we implement the training part of our task</span>
-    <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">copy_data_to_device</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
 
@@ -506,7 +506,7 @@
                 <span class="p">{</span><span class="s2">&quot;train_loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span> <span class="s2">&quot;train_accuracy&quot;</span><span class="p">:</span> <span class="n">acc</span><span class="p">},</span> <span class="n">step_count</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># compute and log the metric at the end of the epoch</span>
         <span class="n">step_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span>
         <span class="n">acc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
@@ -515,7 +515,7 @@
         <span class="c1"># reset the metric at the end of every epoch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">accuracy</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">predict_step</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">PredictBatch</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="n">copy_data_to_device</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
@@ -549,8 +549,8 @@
 <li>torch.compile</li>
 <li>and more!</li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyUnit</span><span class="p">(</span><span class="n">AutoUnit</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MyUnit</span><span class="p">(</span><span class="n">AutoUnit</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
@@ -579,14 +579,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">train_accuracy</span> <span class="o">=</span> <span class="n">train_accuracy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_every_n_steps</span> <span class="o">=</span> <span class="n">log_every_n_steps</span>
 
-    <span class="k">def</span> <span class="nf">configure_optimizers_and_lr_scheduler</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configure_optimizers_and_lr_scheduler</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TLRScheduler</span><span class="p">]]:</span>
         <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adadelta</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">)</span>
         <span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">StepLR</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">step_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">lr_scheduler</span>
 
-    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_loss</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
         <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">data</span>
@@ -596,7 +596,7 @@
 
         <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span>
 
-    <span class="k">def</span> <span class="nf">on_train_step_end</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_step_end</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
         <span class="n">data</span><span class="p">:</span> <span class="n">Batch</span><span class="p">,</span>
@@ -611,7 +611,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tb_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;accuracy&quot;</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tb_logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;loss&quot;</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_train_epoch_end</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="c1"># reset the metric every epoch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_accuracy</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
@@ -621,27 +621,27 @@
 <div class="section" id="callbacks">
 <h3>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this heading">¶</a></h3>
 <p>Callbacks are the mechanism to inject additional functionality within the train/eval/predict loops at specified hooks. Callbacks are the recommended way to checkpoint, do progress monitoring with, etc. TorchTNT has several built-in callbacks. See the <a class="reference internal" href="framework/callbacks.html#torchtnt.framework.callback.Callback" title="torchtnt.framework.callback.Callback"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callback</span></code></a> page for more details.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callback</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
 
-<span class="k">class</span> <span class="nc">PrintingCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PrintingCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting training&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending training&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting evaluation&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending evaluation&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting prediction&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ending prediction&quot;</span><span class="p">)</span>
 </pre></div>
 </div>

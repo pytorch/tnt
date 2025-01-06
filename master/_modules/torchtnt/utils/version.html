@@ -414,21 +414,21 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
 
-<span class="kn">import</span> <span class="nn">pkg_resources</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">packaging.version</span> <span class="kn">import</span> <span class="n">Version</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pkg_resources</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">packaging.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">Version</span>
 
 
-<div class="viewcode-block" id="is_windows"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.version.is_windows.html#torchtnt.utils.version.is_windows">[docs]</a><span class="k">def</span> <span class="nf">is_windows</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="is_windows"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.version.is_windows.html#torchtnt.utils.version.is_windows">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_windows</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Is the current program running in the Windows operating system?</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span></div>
 
 
-<div class="viewcode-block" id="get_python_version"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.version.get_python_version.html#torchtnt.utils.version.get_python_version">[docs]</a><span class="k">def</span> <span class="nf">get_python_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Version</span><span class="p">:</span>
+<div class="viewcode-block" id="get_python_version"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.version.get_python_version.html#torchtnt.utils.version.get_python_version">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_python_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Version</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the current runtime Python version as a Version.</span>
 
@@ -441,7 +441,7 @@
     <span class="k">return</span> <span class="n">Version</span><span class="p">(</span><span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">())</span></div>
 
 
-<div class="viewcode-block" id="get_torch_version"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.version.get_torch_version.html#torchtnt.utils.version.get_torch_version">[docs]</a><span class="k">def</span> <span class="nf">get_torch_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Version</span><span class="p">:</span>
+<div class="viewcode-block" id="get_torch_version"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.version.get_torch_version.html#torchtnt.utils.version.get_torch_version">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_torch_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Version</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the PyTorch version for the current runtime environment as a Version.</span>
 
@@ -458,12 +458,12 @@
             <span class="c1"># try pkg_resources to infer version</span>
             <span class="n">pkg_version</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="n">pkg_resources</span><span class="o">.</span><span class="n">get_distribution</span><span class="p">(</span><span class="s2">&quot;torch&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">TypeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;PyTorch version could not be detected automatically.&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;PyTorch version could not be detected automatically.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
     <span class="k">return</span> <span class="n">pkg_version</span></div>
 
 
-<span class="k">def</span> <span class="nf">is_torch_version_geq</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_torch_version_geq</span><span class="p">(</span><span class="n">version</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">get_torch_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">Version</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
 </pre></div>
 

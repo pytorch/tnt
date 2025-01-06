@@ -427,7 +427,7 @@
 </tbody>
 </table>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.distributed</span> <span class="kn">import</span> <span class="n">launcher</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">launcher</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">launch_config</span> <span class="o">=</span> <span class="n">get_pet_launch_config</span><span class="p">(</span><span class="n">nproc</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">launcher</span><span class="o">.</span><span class="n">elastic_launch</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">launch_config</span><span class="p">,</span> <span class="n">entrypoint</span><span class="o">=</span><span class="n">train</span><span class="p">)()</span>
 </pre></div>

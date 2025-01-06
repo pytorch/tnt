@@ -414,13 +414,13 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">perf_counter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
     <span class="n">Generator</span><span class="p">,</span>
@@ -432,13 +432,13 @@
     <span class="n">Tuple</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
-<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.distributed_c10d</span> <span class="kn">import</span> <span class="n">Work</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">PGWrapper</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.distributed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dist</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.distributed_c10d</span><span class="w"> </span><span class="kn">import</span> <span class="n">Work</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">PGWrapper</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -447,7 +447,7 @@
 
 
 <div class="viewcode-block" id="log_elapsed_time"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.log_elapsed_time.html#torchtnt.utils.timer.log_elapsed_time">[docs]</a><span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">log_elapsed_time</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">log_elapsed_time</span><span class="p">(</span>
     <span class="n">action_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cuda_sync</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Utility to measure and log elapsed time for a given event.</span>
@@ -477,7 +477,7 @@
 
 
 <div class="viewcode-block" id="TimerProtocol"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.TimerProtocol.html#torchtnt.utils.timer.TimerProtocol">[docs]</a><span class="nd">@runtime_checkable</span>
-<span class="k">class</span> <span class="nc">TimerProtocol</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TimerProtocol</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Defines a Timer Protocol with `time` and `reset` methods and an attribute `recorded_durations` for storing timings.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -485,7 +485,7 @@
     <span class="n">recorded_durations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span>
 
     <span class="nd">@contextmanager</span>
-    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A context manager for timing a code block.</span>
 
@@ -494,15 +494,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span>
 
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A method to reset the state of the Timer.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
 
-<div class="viewcode-block" id="Timer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.Timer.html#torchtnt.utils.timer.Timer">[docs]</a><span class="k">class</span> <span class="nc">Timer</span><span class="p">(</span><span class="n">TimerProtocol</span><span class="p">):</span>
-<div class="viewcode-block" id="Timer.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.Timer.html#torchtnt.utils.timer.Timer.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Timer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.Timer.html#torchtnt.utils.timer.Timer">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Timer</span><span class="p">(</span><span class="n">TimerProtocol</span><span class="p">):</span>
+<div class="viewcode-block" id="Timer.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.Timer.html#torchtnt.utils.timer.Timer.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">cuda_sync</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -533,7 +533,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">recorded_durations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
 
     <span class="nd">@contextmanager</span>
-    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">action_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -556,14 +556,14 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">action_name</span><span class="si">}</span><span class="s2"> took </span><span class="si">{</span><span class="n">interval_time</span><span class="si">}</span><span class="s2"> seconds.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recorded_durations</span><span class="p">[</span><span class="n">action_name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">interval_time</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reset the recorded_durations to an empty list</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">recorded_durations</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BoundedTimer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.BoundedTimer.html#torchtnt.utils.timer.BoundedTimer">[docs]</a><span class="k">class</span> <span class="nc">BoundedTimer</span><span class="p">(</span><span class="n">Timer</span><span class="p">):</span>
+<div class="viewcode-block" id="BoundedTimer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.BoundedTimer.html#torchtnt.utils.timer.BoundedTimer">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">BoundedTimer</span><span class="p">(</span><span class="n">Timer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A Timer class which implements TimerProtocol and stores timings in a dictionary `recorded_durations`.</span>
 
@@ -576,7 +576,7 @@
 <span class="sd">            be removed. This range is applied per action.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="BoundedTimer.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.BoundedTimer.html#torchtnt.utils.timer.BoundedTimer.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="BoundedTimer.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.BoundedTimer.html#torchtnt.utils.timer.BoundedTimer.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">lower_bound</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="k">assert</span> <span class="n">lower_bound</span> <span class="o">&lt;</span> <span class="n">upper_bound</span>
@@ -584,7 +584,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">=</span> <span class="n">upper_bound</span></div>
 
     <span class="nd">@contextmanager</span>
-    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">action_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -592,7 +592,7 @@
             <span class="k">yield</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_apply_bounds</span><span class="p">(</span><span class="n">action_name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_apply_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Keep &#39;lower_bound&#39; most recent samples, if at or over upper bound</span>
         <span class="n">n_samples</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">recorded_durations</span><span class="p">[</span><span class="n">action_name</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">&lt;=</span> <span class="n">n_samples</span><span class="p">:</span>
@@ -601,7 +601,7 @@
             <span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_get_total_time</span><span class="p">(</span><span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_total_time</span><span class="p">(</span><span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="n">total_time</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">durations</span> <span class="ow">in</span> <span class="n">timer</span><span class="o">.</span><span class="n">recorded_durations</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">array_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">durations</span><span class="p">)</span>
@@ -611,7 +611,7 @@
     <span class="k">return</span> <span class="n">total_time</span>
 
 
-<span class="k">def</span> <span class="nf">_make_report</span><span class="p">(</span><span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">_TABLE_DATA</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_report</span><span class="p">(</span><span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">_TABLE_DATA</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
     <span class="n">total_time</span> <span class="o">=</span> <span class="n">_get_total_time</span><span class="p">(</span><span class="n">timer</span><span class="p">)</span>
     <span class="n">report</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">(</span>
@@ -628,7 +628,7 @@
     <span class="k">return</span> <span class="n">report</span><span class="p">,</span> <span class="n">total_calls</span><span class="p">,</span> <span class="n">total_time</span>
 
 
-<div class="viewcode-block" id="get_timer_summary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_timer_summary.html#torchtnt.utils.timer.get_timer_summary">[docs]</a><span class="k">def</span> <span class="nf">get_timer_summary</span><span class="p">(</span><span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="get_timer_summary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_timer_summary.html#torchtnt.utils.timer.get_timer_summary">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_timer_summary</span><span class="p">(</span><span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a timer, generate a summary of all the recorded actions.</span>
 
 <span class="sd">    Args:</span>
@@ -647,7 +647,7 @@
     <span class="n">max_key</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">timer</span><span class="o">.</span><span class="n">recorded_durations</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
     <span class="c1"># pyre-fixme[53]: Captured variable `max_key` is not annotated.</span>
-    <span class="k">def</span> <span class="nf">log_row</span><span class="p">(</span><span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_calls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">per</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_row</span><span class="p">(</span><span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_calls</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">per</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">row</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sep</span><span class="si">}</span><span class="s2">|  </span><span class="si">{</span><span class="n">action</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">max_key</span><span class="si">}</span><span class="s2">s</span><span class="si">}</span><span class="se">\t</span><span class="s2">|  </span><span class="si">{</span><span class="n">mean</span><span class="si">:</span><span class="s2">&lt;15</span><span class="si">}</span><span class="se">\t</span><span class="s2">|&quot;</span>
         <span class="n">row</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">num_calls</span><span class="si">:</span><span class="s2">&lt;15</span><span class="si">}</span><span class="se">\t</span><span class="s2">|  </span><span class="si">{</span><span class="n">total</span><span class="si">:</span><span class="s2">&lt;15</span><span class="si">}</span><span class="se">\t</span><span class="s2">|  </span><span class="si">{</span><span class="n">per</span><span class="si">:</span><span class="s2">&lt;15</span><span class="si">}</span><span class="se">\t</span><span class="s2">|&quot;</span>
         <span class="k">return</span> <span class="n">row</span>
@@ -692,7 +692,7 @@
     <span class="k">return</span> <span class="n">output_string</span></div>
 
 
-<div class="viewcode-block" id="get_durations_histogram"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_durations_histogram.html#torchtnt.utils.timer.get_durations_histogram">[docs]</a><span class="k">def</span> <span class="nf">get_durations_histogram</span><span class="p">(</span>
+<div class="viewcode-block" id="get_durations_histogram"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_durations_histogram.html#torchtnt.utils.timer.get_durations_histogram">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_durations_histogram</span><span class="p">(</span>
     <span class="n">recorded_durations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
     <span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
@@ -713,7 +713,7 @@
     <span class="k">return</span> <span class="n">_compute_percentiles</span><span class="p">(</span><span class="n">recorded_durations</span><span class="p">,</span> <span class="n">percentiles</span><span class="o">=</span><span class="n">percentiles</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_synced_durations_histogram"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_synced_durations_histogram.html#torchtnt.utils.timer.get_synced_durations_histogram">[docs]</a><span class="k">def</span> <span class="nf">get_synced_durations_histogram</span><span class="p">(</span>
+<div class="viewcode-block" id="get_synced_durations_histogram"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_synced_durations_histogram.html#torchtnt.utils.timer.get_synced_durations_histogram">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_synced_durations_histogram</span><span class="p">(</span>
     <span class="n">recorded_durations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
     <span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
     <span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -736,7 +736,7 @@
     <span class="k">return</span> <span class="n">get_durations_histogram</span><span class="p">(</span><span class="n">synced_durations</span><span class="p">,</span> <span class="n">percentiles</span><span class="o">=</span><span class="n">percentiles</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_synced_timer_histogram"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_synced_timer_histogram.html#torchtnt.utils.timer.get_synced_timer_histogram">[docs]</a><span class="k">def</span> <span class="nf">get_synced_timer_histogram</span><span class="p">(</span>
+<div class="viewcode-block" id="get_synced_timer_histogram"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_synced_timer_histogram.html#torchtnt.utils.timer.get_synced_timer_histogram">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_synced_timer_histogram</span><span class="p">(</span>
     <span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">,</span>
     <span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
     <span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -759,7 +759,7 @@
     <span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_sync_durations</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_sync_durations</span><span class="p">(</span>
     <span class="n">recorded_durations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dist</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">()):</span>
@@ -780,7 +780,7 @@
     <span class="k">return</span> <span class="n">ret</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_percentiles</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_percentiles</span><span class="p">(</span>
     <span class="n">durations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
@@ -789,7 +789,7 @@
     <span class="k">return</span> <span class="n">ret</span>
 
 
-<span class="k">def</span> <span class="nf">_compute_percentile</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_percentile</span><span class="p">(</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">timings</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
@@ -814,13 +814,13 @@
     <span class="k">return</span> <span class="n">ret</span>
 
 
-<span class="k">def</span> <span class="nf">_validate_percentiles</span><span class="p">(</span><span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_percentiles</span><span class="p">(</span><span class="n">percentiles</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">percentiles</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Percentile must be between 0 and 100. Got </span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_recorded_durations_table"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_recorded_durations_table.html#torchtnt.utils.timer.get_recorded_durations_table">[docs]</a><span class="k">def</span> <span class="nf">get_recorded_durations_table</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="get_recorded_durations_table"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.get_recorded_durations_table.html#torchtnt.utils.timer.get_recorded_durations_table">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_recorded_durations_table</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function to generate recorded duration time in tabular format</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -842,7 +842,7 @@
     <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">tabulate_output</span></div>
 
 
-<div class="viewcode-block" id="FullSyncPeriodicTimer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.FullSyncPeriodicTimer.html#torchtnt.utils.timer.FullSyncPeriodicTimer">[docs]</a><span class="k">class</span> <span class="nc">FullSyncPeriodicTimer</span><span class="p">:</span>
+<div class="viewcode-block" id="FullSyncPeriodicTimer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.FullSyncPeriodicTimer.html#torchtnt.utils.timer.FullSyncPeriodicTimer">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">FullSyncPeriodicTimer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Measures time (resets if given interval elapses) on rank 0</span>
 <span class="sd">    and propagates result to other ranks.</span>
@@ -850,14 +850,14 @@
 <span class="sd">    in order to avoid blocking of a training process.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="FullSyncPeriodicTimer.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.FullSyncPeriodicTimer.html#torchtnt.utils.timer.FullSyncPeriodicTimer.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">,</span> <span class="n">cpu_pg</span><span class="p">:</span> <span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="FullSyncPeriodicTimer.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.timer.FullSyncPeriodicTimer.html#torchtnt.utils.timer.FullSyncPeriodicTimer.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">interval</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">,</span> <span class="n">cpu_pg</span><span class="p">:</span> <span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span> <span class="o">=</span> <span class="n">interval</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cpu_pg</span> <span class="o">=</span> <span class="n">cpu_pg</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prev_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_tensor</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prev_work</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Work</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">curr_time</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
 
@@ -876,7 +876,7 @@
 
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="nf">wait_remaining_work</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wait_remaining_work</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev_work</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prev_work</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span></div>
 </pre></div>

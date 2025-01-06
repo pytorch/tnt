@@ -414,19 +414,19 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">pickle</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">get_global_rank</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.fsspec</span> <span class="kn">import</span> <span class="n">get_filesystem</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_global_rank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.fsspec</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_filesystem</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="is_out_of_cpu_memory"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.is_out_of_cpu_memory.html#torchtnt.utils.oom.is_out_of_cpu_memory">[docs]</a><span class="k">def</span> <span class="nf">is_out_of_cpu_memory</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="is_out_of_cpu_memory"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.is_out_of_cpu_memory.html#torchtnt.utils.oom.is_out_of_cpu_memory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_out_of_cpu_memory</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the exception is related to CPU OOM&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span>
@@ -435,7 +435,7 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="is_out_of_cuda_memory"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.is_out_of_cuda_memory.html#torchtnt.utils.oom.is_out_of_cuda_memory">[docs]</a><span class="k">def</span> <span class="nf">is_out_of_cuda_memory</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="is_out_of_cuda_memory"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.is_out_of_cuda_memory.html#torchtnt.utils.oom.is_out_of_cuda_memory">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_out_of_cuda_memory</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the exception is related to CUDA OOM&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span>
@@ -447,22 +447,22 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="is_out_of_memory_error"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.is_out_of_memory_error.html#torchtnt.utils.oom.is_out_of_memory_error">[docs]</a><span class="k">def</span> <span class="nf">is_out_of_memory_error</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="is_out_of_memory_error"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.is_out_of_memory_error.html#torchtnt.utils.oom.is_out_of_memory_error">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_out_of_memory_error</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if an exception is due to an OOM based on error message&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">is_out_of_cpu_memory</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_out_of_cuda_memory</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_bytes_to_mb_gb</span><span class="p">(</span><span class="n">num_bytes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_bytes_to_mb_gb</span><span class="p">(</span><span class="n">num_bytes</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">num_bytes</span> <span class="o">&lt;</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">num_bytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2"> MB&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">num_bytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2"> GB&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">_oom_observer</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_oom_observer</span><span class="p">(</span>
     <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">],</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
-    <span class="k">def</span> <span class="nf">oom_logger</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">oom_logger</span><span class="p">(</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">],</span>
         <span class="n">alloc</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">device_alloc</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -482,7 +482,7 @@
     <span class="k">return</span> <span class="n">oom_logger</span>
 
 
-<div class="viewcode-block" id="log_memory_snapshot"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.log_memory_snapshot.html#torchtnt.utils.oom.log_memory_snapshot">[docs]</a><span class="k">def</span> <span class="nf">log_memory_snapshot</span><span class="p">(</span><span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="log_memory_snapshot"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.log_memory_snapshot.html#torchtnt.utils.oom.log_memory_snapshot">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">log_memory_snapshot</span><span class="p">(</span><span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Writes the memory snapshots to the provided ``output_dir``.</span>
 <span class="sd">    For more information, see this `blog post &lt;https://zdevito.github.io/2022/08/16/memory-snapshots.html&gt;`_ .</span>
 
@@ -509,7 +509,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to log memory snapshot to </span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_dump_snapshot</span><span class="p">(</span><span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">snapshot</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_dump_snapshot</span><span class="p">(</span><span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">snapshot</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">fs</span> <span class="o">=</span> <span class="n">get_filesystem</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span>
     <span class="n">fs</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">with</span> <span class="n">fs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="s2">&quot;snapshot.pickle&quot;</span><span class="p">),</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -520,7 +520,7 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">_memory_viz</span><span class="o">.</span><span class="n">segment_plot</span><span class="p">(</span><span class="n">snapshot</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="attach_oom_observer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.attach_oom_observer.html#torchtnt.utils.oom.attach_oom_observer">[docs]</a><span class="k">def</span> <span class="nf">attach_oom_observer</span><span class="p">(</span><span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">trace_max_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="attach_oom_observer"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.oom.attach_oom_observer.html#torchtnt.utils.oom.attach_oom_observer">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">attach_oom_observer</span><span class="p">(</span><span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">trace_max_entries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Attaches a function to record the PyTorch memory snapshot when an out of memory error occurs.</span>
 
 <span class="sd">    For more information, see this `blog post &lt;https://zdevito.github.io/2022/08/16/memory-snapshots.html&gt;`_ .</span>

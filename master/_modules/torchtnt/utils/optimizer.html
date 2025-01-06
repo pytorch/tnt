@@ -414,12 +414,12 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
 
-<div class="viewcode-block" id="init_optim_state"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.optimizer.init_optim_state.html#torchtnt.utils.optimizer.init_optim_state">[docs]</a><span class="k">def</span> <span class="nf">init_optim_state</span><span class="p">(</span><span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="init_optim_state"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.optimizer.init_optim_state.html#torchtnt.utils.optimizer.init_optim_state">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">init_optim_state</span><span class="p">(</span><span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize optimizer states by calling step() with zero grads. This is necessary because some optimizers like AdamW</span>
 <span class="sd">    initialize some states in their state_dicts lazily, only after calling step() for the first time. Certain checkpointing</span>
@@ -446,7 +446,7 @@
     <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">extract_lr_from_optimizer</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_lr_from_optimizer</span><span class="p">(</span>
     <span class="n">optim</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -463,7 +463,7 @@
     <span class="k">return</span> <span class="n">lr_stats</span>
 
 
-<span class="k">def</span> <span class="nf">_get_deduped_name</span><span class="p">(</span><span class="n">seen_keys</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_deduped_name</span><span class="p">(</span><span class="n">seen_keys</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_keys</span><span class="p">:</span>
         <span class="n">seen_keys</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 

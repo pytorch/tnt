@@ -413,14 +413,14 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sized</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sized</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
 
 
-<div class="viewcode-block" id="Progress"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.Progress.html#torchtnt.utils.progress.Progress">[docs]</a><span class="k">class</span> <span class="nc">Progress</span><span class="p">:</span>
+<div class="viewcode-block" id="Progress"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.Progress.html#torchtnt.utils.progress.Progress">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Progress</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to track progress during the loop. Includes state_dict/load_state_dict for convenience for checkpointing.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Progress.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.Progress.html#torchtnt.utils.progress.Progress.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Progress.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.Progress.html#torchtnt.utils.progress.Progress.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">num_epochs_completed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">num_steps_completed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
@@ -432,37 +432,37 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_prev_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_epochs_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_epochs_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of epochs completed thus far in loop.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_epochs_completed</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_steps_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_steps_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of steps completed thus far in loop.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_steps_completed_in_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_steps_completed_in_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of steps completed thus far in epoch.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_epoch</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_steps_completed_in_prev_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_steps_completed_in_prev_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of steps completed in the previous completed epoch.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_prev_epoch</span>
 
-    <span class="k">def</span> <span class="nf">increment_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Increment the step counts completed and completed within the epoch.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_epoch</span> <span class="o">+=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="nf">increment_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">increment_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Increment the epochs completed and resets the steps completed within the epoch.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_epochs_completed</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_prev_epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_epoch</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_epoch</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a state_dict of a Progress instance in accordance with Stateful protocol.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;num_epochs_completed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_epochs_completed</span><span class="p">,</span>
@@ -470,17 +470,17 @@
             <span class="s2">&quot;num_steps_completed_in_epoch&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_epoch</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Restores a Progress instance from a state_dict in accordance with Stateful protocol.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_epochs_completed</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;num_epochs_completed&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;num_steps_completed&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_steps_completed_in_epoch</span> <span class="o">=</span> <span class="n">state_dict</span><span class="p">[</span><span class="s2">&quot;num_steps_completed_in_epoch&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">get_progress_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_progress_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;completed epochs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_epochs_completed</span><span class="si">}</span><span class="s2">, completed steps: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps_completed</span><span class="si">}</span><span class="s2">, completed steps in current epoch: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span><span class="si">}</span><span class="s2">.&quot;</span></div>
 
 
-<div class="viewcode-block" id="estimated_steps_in_epoch"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.estimated_steps_in_epoch.html#torchtnt.utils.progress.estimated_steps_in_epoch">[docs]</a><span class="k">def</span> <span class="nf">estimated_steps_in_epoch</span><span class="p">(</span>
+<div class="viewcode-block" id="estimated_steps_in_epoch"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.estimated_steps_in_epoch.html#torchtnt.utils.progress.estimated_steps_in_epoch">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">estimated_steps_in_epoch</span><span class="p">(</span>
     <span class="n">dataloader</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">num_steps_completed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -505,7 +505,7 @@
     <span class="k">return</span> <span class="n">total</span></div>
 
 
-<div class="viewcode-block" id="estimated_steps_in_loop"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.estimated_steps_in_loop.html#torchtnt.utils.progress.estimated_steps_in_loop">[docs]</a><span class="k">def</span> <span class="nf">estimated_steps_in_loop</span><span class="p">(</span>
+<div class="viewcode-block" id="estimated_steps_in_loop"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.estimated_steps_in_loop.html#torchtnt.utils.progress.estimated_steps_in_loop">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">estimated_steps_in_loop</span><span class="p">(</span>
     <span class="n">dataloader</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">max_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
@@ -540,7 +540,7 @@
     <span class="k">return</span> <span class="n">total_steps</span> <span class="ow">or</span> <span class="n">max_steps</span></div>
 
 
-<div class="viewcode-block" id="estimated_steps_in_fit"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.estimated_steps_in_fit.html#torchtnt.utils.progress.estimated_steps_in_fit">[docs]</a><span class="k">def</span> <span class="nf">estimated_steps_in_fit</span><span class="p">(</span>
+<div class="viewcode-block" id="estimated_steps_in_fit"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.progress.estimated_steps_in_fit.html#torchtnt.utils.progress.estimated_steps_in_fit">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">estimated_steps_in_fit</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">train_dataloader</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
     <span class="n">eval_dataloader</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>

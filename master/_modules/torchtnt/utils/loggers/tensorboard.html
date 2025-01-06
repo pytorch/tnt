@@ -414,21 +414,21 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">atexit</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">atexit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">torch.utils.tensorboard</span> <span class="kn">import</span> <span class="n">SummaryWriter</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">get_global_rank</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.anomaly_logger</span> <span class="kn">import</span> <span class="n">AnomalyLogger</span><span class="p">,</span> <span class="n">TrackedMetric</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.logger</span> <span class="kn">import</span> <span class="n">Scalar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.tensorboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">SummaryWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_global_rank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.loggers.anomaly_logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnomalyLogger</span><span class="p">,</span> <span class="n">TrackedMetric</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.loggers.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">Scalar</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="TensorBoardLogger"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger">[docs]</a><span class="k">class</span> <span class="nc">TensorBoardLogger</span><span class="p">(</span><span class="n">AnomalyLogger</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorBoardLogger"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">TensorBoardLogger</span><span class="p">(</span><span class="n">AnomalyLogger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Simple logger for TensorBoard.</span>
 
@@ -462,7 +462,7 @@
 <span class="sd">        logger.close()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TensorBoardLogger.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="TensorBoardLogger.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.TensorBoardLogger.html#torchtnt.utils.loggers.TensorBoardLogger.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">tracked_metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">TrackedMetric</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -487,14 +487,14 @@
         <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">writer</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SummaryWriter</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">writer</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SummaryWriter</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span>
 
-    <span class="k">def</span> <span class="nf">log_dict</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_dict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">],</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add multiple scalar values to TensorBoard.</span>
@@ -508,7 +508,7 @@
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">payload</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Scalar</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Scalar</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add scalar data to TensorBoard.</span>
 
 <span class="sd">        Args:</span>
@@ -522,7 +522,7 @@
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_text</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_text</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add text data to summary.</span>
 
 <span class="sd">        Args:</span>
@@ -534,7 +534,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">global_step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_hparams</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_hparams</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="n">hparams</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">],</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Scalar</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add hyperparameter data to TensorBoard.</span>
@@ -547,7 +547,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">add_hparams</span><span class="p">(</span><span class="n">hparams</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_image</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_image</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add image data to TensorBoard.</span>
 
 
@@ -559,7 +559,7 @@
         <span class="k">if</span> <span class="n">writer</span><span class="p">:</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">add_image</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_images</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_images</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add batched image data to summary.</span>
 
 <span class="sd">        Args:</span>
@@ -570,7 +570,7 @@
         <span class="k">if</span> <span class="n">writer</span><span class="p">:</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">add_images</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_figure</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_figure</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add matplotlib figure to TensorBoard.</span>
 
 <span class="sd">        Args:</span>
@@ -581,7 +581,7 @@
         <span class="k">if</span> <span class="n">writer</span><span class="p">:</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">add_figure</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_audio</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_audio</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add audio data to TensorBoard.</span>
 
 <span class="sd">        Args:</span>
@@ -592,7 +592,7 @@
         <span class="k">if</span> <span class="n">writer</span><span class="p">:</span>
             <span class="n">writer</span><span class="o">.</span><span class="n">add_audio</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_scalars</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_scalars</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span>
         <span class="n">main_tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">tag_scalar_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
@@ -616,7 +616,7 @@
                 <span class="n">walltime</span><span class="o">=</span><span class="n">walltime</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_histogram</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add histogram to TensorBoard.</span>
 
 <span class="sd">        Args:</span>
@@ -626,13 +626,13 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">add_histogram</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Writes pending logs to disk.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">TensorBoardLogger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Close writer, flushing pending logs to disk.</span>
 <span class="sd">        Logs cannot be written after `close` is called.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

@@ -414,22 +414,22 @@
 <span class="c1"># pyre-strict</span>
 
 
-<span class="kn">import</span> <span class="nn">inspect</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework._unit_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework._unit_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_find_optimizers_for_module</span><span class="p">,</span>
     <span class="n">_step_requires_iterator</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.lr_scheduler</span> <span class="kn">import</span> <span class="n">TLRScheduler</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.prepare_module</span> <span class="kn">import</span> <span class="n">_is_fsdp_module</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.progress</span> <span class="kn">import</span> <span class="n">Progress</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">MetricStateful</span><span class="p">,</span> <span class="n">Stateful</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">TLRScheduler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.prepare_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">_is_fsdp_module</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">Progress</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.stateful</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricStateful</span><span class="p">,</span> <span class="n">Stateful</span>
 
 
 <span class="n">_logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -440,20 +440,20 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">_remove_from_dicts</span><span class="p">(</span><span class="n">name_to_remove</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">dicts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_remove_from_dicts</span><span class="p">(</span><span class="n">name_to_remove</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">dicts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dicts</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name_to_remove</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">name_to_remove</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">AppStateMixin</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AppStateMixin</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A mixin to track modules, optimizers, and LR schedulers to simplify checkpointing object states.</span>
 <span class="sd">    This can be easily extended to cover types that conform to the Stateful protocol.</span>
 <span class="sd">    The logic here is adapted from torch.nn.Module&#39;s handling to register states for buffers, parameters, and modules.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lr_schedulers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
@@ -463,7 +463,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># TODO: include other known statefuls</span>
 
-    <span class="k">def</span> <span class="nf">app_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">app_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Join together all of the tracked stateful entities to simplify registration of snapshottable states&quot;&quot;&quot;</span>
         <span class="c1"># TODO: refine with Stateful typehint</span>
         <span class="c1"># TODO: Should we split this into app_state_to_load and app_state_to_save</span>
@@ -479,27 +479,27 @@
         <span class="p">}</span>
         <span class="k">return</span> <span class="n">app_state</span>
 
-    <span class="k">def</span> <span class="nf">tracked_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tracked_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span>
 
-    <span class="k">def</span> <span class="nf">tracked_optimizers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tracked_optimizers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizers</span>
 
-    <span class="k">def</span> <span class="nf">tracked_lr_schedulers</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tracked_lr_schedulers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lr_schedulers</span>
 
-    <span class="k">def</span> <span class="nf">tracked_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Progress</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tracked_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Progress</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_progress</span>
 
-    <span class="k">def</span> <span class="nf">tracked_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricStateful</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tracked_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricStateful</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span>
 
-    <span class="k">def</span> <span class="nf">tracked_misc_statefuls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tracked_misc_statefuls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_misc_statefuls</span>
 
-    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
         <span class="k">if</span> <span class="s2">&quot;_modules&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
             <span class="n">_modules</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_modules&quot;</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_modules</span><span class="p">:</span>
@@ -527,7 +527,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_update_attr</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_update_attr</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
@@ -549,7 +549,7 @@
         <span class="p">)</span>
         <span class="n">tracked_objects</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Check first for metrics since some libraries subclass nn.Module as well</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">MetricStateful</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_attr</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;_metrics&quot;</span><span class="p">))</span>
@@ -588,7 +588,7 @@
                 <span class="p">)</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">:</span>
             <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modules</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizers</span><span class="p">:</span>
@@ -604,7 +604,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__delattr__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_construct_tracked_optimizers_and_schedulers</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_construct_tracked_optimizers_and_schedulers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -629,7 +629,7 @@
 
         <span class="k">return</span> <span class="n">tracked_optimizers_and_schedulers</span>
 
-    <span class="k">def</span> <span class="nf">_construct_tracked_optimizers</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_construct_tracked_optimizers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -659,8 +659,8 @@
         <span class="k">return</span> <span class="n">tracked_optimizers</span>
 
 
-<span class="k">class</span> <span class="nc">_OnExceptionMixin</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">on_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_OnExceptionMixin</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">exc</span><span class="p">:</span> <span class="ne">BaseException</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
 
 
@@ -669,7 +669,7 @@
 <span class="n">TPredictData</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TPredictData&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="TrainUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit">[docs]</a><span class="k">class</span> <span class="nc">TrainUnit</span><span class="p">(</span><span class="n">AppStateMixin</span><span class="p">,</span> <span class="n">_OnExceptionMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="TrainUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">TrainUnit</span><span class="p">(</span><span class="n">AppStateMixin</span><span class="p">,</span> <span class="n">_OnExceptionMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The TrainUnit is an interface that can be used to organize your training logic. The core of it is the ``train_step`` which</span>
 <span class="sd">    is an abstract method where you can define the code you want to run each iteration of the dataloader.</span>
@@ -716,11 +716,11 @@
 <span class="sd">      train_unit = MyTrainUnit(module=..., optimizer=..., lr_scheduler=...)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span> <span class="o">=</span> <span class="n">Progress</span><span class="p">()</span>
 
-<div class="viewcode-block" id="TrainUnit.on_train_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TrainUnit.on_train_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called before training starts.</span>
 
 <span class="sd">        Args:</span>
@@ -728,7 +728,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="TrainUnit.on_train_epoch_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_epoch_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TrainUnit.on_train_epoch_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_epoch_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called before a train epoch starts.</span>
 
 <span class="sd">        Args:</span>
@@ -738,7 +738,7 @@
 
 <div class="viewcode-block" id="TrainUnit.train_step"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.train_step">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="c1"># pyre-fixme[3]: Return annotation cannot be `Any`.</span>
-    <span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TTrainData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TTrainData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Core required method for user to implement. This method will be called at each iteration of the</span>
 <span class="sd">        train dataloader, and can return any data the user wishes.</span>
 
@@ -748,7 +748,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
-<div class="viewcode-block" id="TrainUnit.on_train_epoch_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TrainUnit.on_train_epoch_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_epoch_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after a train epoch ends.</span>
 
 <span class="sd">        Args:</span>
@@ -756,7 +756,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="TrainUnit.on_train_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TrainUnit.on_train_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_train_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after training ends.</span>
 
 <span class="sd">        Args:</span>
@@ -764,7 +764,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="TrainUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span> <span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TrainUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after successfully saving a checkpoint.</span>
 
 <span class="sd">        Args:</span>
@@ -774,7 +774,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="TrainUnit.get_next_train_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.get_next_train_batch">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_train_batch</span><span class="p">(</span>
+<div class="viewcode-block" id="TrainUnit.get_next_train_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.TrainUnit.get_next_train_batch">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_next_train_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
         <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
@@ -797,7 +797,7 @@
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">TTrainData</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">))</span></div></div>
 
 
-<div class="viewcode-block" id="EvalUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit">[docs]</a><span class="k">class</span> <span class="nc">EvalUnit</span><span class="p">(</span><span class="n">AppStateMixin</span><span class="p">,</span> <span class="n">_OnExceptionMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="EvalUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">EvalUnit</span><span class="p">(</span><span class="n">AppStateMixin</span><span class="p">,</span> <span class="n">_OnExceptionMixin</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">],</span> <span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The EvalUnit is an interface that can be used to organize your evaluation logic. The core of it is the ``eval_step`` which</span>
 <span class="sd">    is an abstract method where you can define the code you want to run each iteration of the dataloader.</span>
@@ -830,11 +830,11 @@
 <span class="sd">      eval_unit = MyEvalUnit(module=...)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eval_progress</span> <span class="o">=</span> <span class="n">Progress</span><span class="p">()</span>
 
-<div class="viewcode-block" id="EvalUnit.on_eval_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="EvalUnit.on_eval_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called before evaluation starts.</span>
 
 <span class="sd">        Args:</span>
@@ -842,7 +842,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="EvalUnit.on_eval_epoch_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_epoch_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="EvalUnit.on_eval_epoch_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_epoch_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called before a new eval epoch starts.</span>
 
 <span class="sd">        Args:</span>
@@ -852,7 +852,7 @@
 
 <div class="viewcode-block" id="EvalUnit.eval_step"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.eval_step">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="c1"># pyre-fixme[3]: Return annotation cannot be `Any`.</span>
-    <span class="k">def</span> <span class="nf">eval_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TEvalData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TEvalData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Core required method for user to implement. This method will be called at each iteration of the</span>
 <span class="sd">        eval dataloader, and can return any data the user wishes.</span>
@@ -864,7 +864,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
-<div class="viewcode-block" id="EvalUnit.on_eval_epoch_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="EvalUnit.on_eval_epoch_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_epoch_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after an eval epoch ends.</span>
 
 <span class="sd">        Args:</span>
@@ -872,7 +872,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="EvalUnit.on_eval_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="EvalUnit.on_eval_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_eval_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after evaluation ends.</span>
 
 <span class="sd">        Args:</span>
@@ -880,7 +880,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="EvalUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span> <span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="EvalUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after successfully saving a checkpoint.</span>
 
 <span class="sd">        Args:</span>
@@ -890,7 +890,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="EvalUnit.get_next_eval_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.get_next_eval_batch">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_eval_batch</span><span class="p">(</span>
+<div class="viewcode-block" id="EvalUnit.get_next_eval_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.EvalUnit.get_next_eval_batch">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_next_eval_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
         <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>
@@ -913,7 +913,7 @@
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="n">TEvalData</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">))</span></div></div>
 
 
-<div class="viewcode-block" id="PredictUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit">[docs]</a><span class="k">class</span> <span class="nc">PredictUnit</span><span class="p">(</span>
+<div class="viewcode-block" id="PredictUnit"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">PredictUnit</span><span class="p">(</span>
     <span class="n">AppStateMixin</span><span class="p">,</span>
     <span class="n">_OnExceptionMixin</span><span class="p">,</span>
     <span class="n">Generic</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">],</span>
@@ -951,11 +951,11 @@
 <span class="sd">      predict_unit = MyPredictUnit(module=...)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_progress</span> <span class="o">=</span> <span class="n">Progress</span><span class="p">()</span>
 
-<div class="viewcode-block" id="PredictUnit.on_predict_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="PredictUnit.on_predict_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called before prediction starts.</span>
 
 <span class="sd">        Args:</span>
@@ -963,7 +963,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PredictUnit.on_predict_epoch_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_epoch_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="PredictUnit.on_predict_epoch_start"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_epoch_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_epoch_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called before a predict epoch starts.</span>
 
 <span class="sd">        Args:</span>
@@ -973,7 +973,7 @@
 
 <div class="viewcode-block" id="PredictUnit.predict_step"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.predict_step">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="c1"># pyre-fixme[3]: Return annotation cannot be `Any`.</span>
-    <span class="k">def</span> <span class="nf">predict_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TPredictData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TPredictData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Core required method for user to implement. This method will be called at each iteration of the</span>
 <span class="sd">        predict dataloader, and can return any data the user wishes.</span>
@@ -985,7 +985,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="o">...</span></div>
 
-<div class="viewcode-block" id="PredictUnit.on_predict_epoch_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_epoch_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="PredictUnit.on_predict_epoch_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_epoch_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after a predict epoch ends.</span>
 
 <span class="sd">        Args:</span>
@@ -993,7 +993,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PredictUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span> <span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="PredictUnit.on_checkpoint_save"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_checkpoint_save">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_checkpoint_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">checkpoint_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after successfully saving a checkpoint.</span>
 
 <span class="sd">        Args:</span>
@@ -1003,7 +1003,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PredictUnit.on_predict_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="PredictUnit.on_predict_end"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.on_predict_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook called after prediction ends.</span>
 
 <span class="sd">        Args:</span>
@@ -1011,7 +1011,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="PredictUnit.get_next_predict_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.get_next_predict_batch">[docs]</a>    <span class="k">def</span> <span class="nf">get_next_predict_batch</span><span class="p">(</span>
+<div class="viewcode-block" id="PredictUnit.get_next_predict_batch"><a class="viewcode-back" href="../../../framework/unit.html#torchtnt.framework.unit.PredictUnit.get_next_predict_batch">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_next_predict_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
         <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">object</span><span class="p">],</span>

@@ -413,14 +413,14 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">deque</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">perf_counter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">DefaultDict</span><span class="p">,</span>
@@ -433,13 +433,13 @@
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch.nn.parameter</span> <span class="kn">import</span> <span class="n">UninitializedParameter</span>
-<span class="kn">from</span> <span class="nn">torch.utils._pytree</span> <span class="kn">import</span> <span class="n">PyTree</span><span class="p">,</span> <span class="n">tree_flatten</span>
-<span class="kn">from</span> <span class="nn">torch.utils.hooks</span> <span class="kn">import</span> <span class="n">RemovableHandle</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.flops</span> <span class="kn">import</span> <span class="n">FlopTensorDispatchMode</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.parameter</span><span class="w"> </span><span class="kn">import</span> <span class="n">UninitializedParameter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils._pytree</span><span class="w"> </span><span class="kn">import</span> <span class="n">PyTree</span><span class="p">,</span> <span class="n">tree_flatten</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.hooks</span><span class="w"> </span><span class="kn">import</span> <span class="n">RemovableHandle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.flops</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlopTensorDispatchMode</span>
 
-<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
 <span class="n">_ATTRIB_TO_COL_HEADER</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;module_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Name&quot;</span><span class="p">,</span>
@@ -466,7 +466,7 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">_ModuleSummaryData</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_ModuleSummaryData</span><span class="p">:</span>
     <span class="c1"># mapping to store forward flops</span>
     <span class="n">flops_forward</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DefaultDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DefaultDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="c1"># mapping to store backward flops</span>
@@ -479,7 +479,7 @@
     <span class="n">forward_elapsed_times_ms</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ModuleSummary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.ModuleSummary.html#torchtnt.utils.module_summary.ModuleSummary">[docs]</a><span class="k">class</span> <span class="nc">ModuleSummary</span><span class="p">:</span>
+<div class="viewcode-block" id="ModuleSummary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.ModuleSummary.html#torchtnt.utils.module_summary.ModuleSummary">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">ModuleSummary</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Summary of module and its submodules. It collects the following information:</span>
 
@@ -496,7 +496,7 @@
 <span class="sd">    - Forward elapsed time in ms (&quot;?&quot; meaning not calculated)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ModuleSummary.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.ModuleSummary.html#torchtnt.utils.module_summary.ModuleSummary.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="ModuleSummary.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.ModuleSummary.html#torchtnt.utils.module_summary.ModuleSummary.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_module_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_module_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_parameters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
@@ -513,7 +513,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_forward_time_elapsed_ms</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">_UNKNOWN_SIZE</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">submodule_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;ModuleSummary&quot;</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submodule_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;ModuleSummary&quot;</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A Dict with the names of submodules as keys and corresponding :class:`~ModuleSummary`</span>
 <span class="sd">        objects as values. These can be traversed for visualization.</span>
@@ -521,17 +521,17 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_submodule_summaries</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">module_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">module_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the name of this module&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_name</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">module_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">module_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the type of this module.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_type</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the total number of parameters in this module.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_uninitialized_param</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -541,7 +541,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_parameters</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">num_trainable_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">num_trainable_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the total number of trainable parameters (requires_grad=True)</span>
 <span class="sd">        in this module.</span>
@@ -554,7 +554,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_trainable_parameters</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">flops_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">TUnknown</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flops_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">TUnknown</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the total FLOPs for forward calculation using this module.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_uninitialized_param</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -564,7 +564,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flops_forward</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">flops_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">TUnknown</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flops_backward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">TUnknown</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the total FLOPs for backward calculation using this module.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_uninitialized_param</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -574,22 +574,22 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flops_backward</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">in_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">in_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the input size of the module&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_size</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">out_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">out_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the output size of the module&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_out_size</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">forward_elapsed_time_ms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward_elapsed_time_ms</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the forward time of the module in ms.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_time_elapsed_ms</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">size_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">size_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the total estimated size in bytes of a module.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_uninitialized_param</span><span class="p">:</span>
             <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
@@ -599,24 +599,24 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size_bytes</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">has_uninitialized_param</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_uninitialized_param</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns if a parameter in this module is uninitialized&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_uninitialized_param</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">get_summary_table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_clean_flops</span><span class="p">(</span><span class="n">flop</span><span class="p">:</span> <span class="n">DefaultDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DefaultDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_clean_flops</span><span class="p">(</span><span class="n">flop</span><span class="p">:</span> <span class="n">DefaultDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DefaultDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">sub_flop</span> <span class="ow">in</span> <span class="n">flop</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">opr</span> <span class="ow">in</span> <span class="n">sub_flop</span><span class="p">:</span>
             <span class="n">sub_flop</span><span class="p">[</span><span class="n">opr</span><span class="p">]</span> <span class="o">=</span> <span class="n">sub_flop</span><span class="p">[</span><span class="n">opr</span><span class="p">]</span> <span class="o">//</span> <span class="n">N</span>
 
 
-<span class="k">def</span> <span class="nf">_get_module_flops_and_activation_sizes</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_module_flops_and_activation_sizes</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="c1"># pyre-fixme</span>
     <span class="n">module_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -691,14 +691,14 @@
     <span class="k">return</span> <span class="n">module_summary_data</span>
 
 
-<span class="k">def</span> <span class="nf">_has_uninitialized_param</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_uninitialized_param</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">UninitializedParameter</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<span class="k">def</span> <span class="nf">_has_tensor</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PyTree</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_tensor</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PyTree</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="n">flattened_list</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tree_flatten</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">flattened_list</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ele</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
@@ -706,7 +706,7 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<div class="viewcode-block" id="get_module_summary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.get_module_summary.html#torchtnt.utils.module_summary.get_module_summary">[docs]</a><span class="k">def</span> <span class="nf">get_module_summary</span><span class="p">(</span>
+<div class="viewcode-block" id="get_module_summary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.get_module_summary.html#torchtnt.utils.module_summary.get_module_summary">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_module_summary</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="c1"># pyre-fixme</span>
     <span class="n">module_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -751,7 +751,7 @@
     <span class="k">return</span> <span class="n">_generate_module_summary</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">module_summary_data</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_generate_module_summary</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_module_summary</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">module_summary_data</span><span class="p">:</span> <span class="n">_ModuleSummaryData</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModuleSummary</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -824,7 +824,7 @@
     <span class="k">return</span> <span class="n">module_summary</span>
 
 
-<div class="viewcode-block" id="get_summary_table"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.get_summary_table.html#torchtnt.utils.module_summary.get_summary_table">[docs]</a><span class="k">def</span> <span class="nf">get_summary_table</span><span class="p">(</span>
+<div class="viewcode-block" id="get_summary_table"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.get_summary_table.html#torchtnt.utils.module_summary.get_summary_table">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_summary_table</span><span class="p">(</span>
     <span class="n">module_summary</span><span class="p">:</span> <span class="n">ModuleSummary</span><span class="p">,</span> <span class="n">human_readable_nums</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -879,7 +879,7 @@
         <span class="n">summary_table</span> <span class="o">+=</span> <span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
     <span class="c1"># Add disclaims for FLOPs:</span>
     <span class="k">if</span> <span class="s2">&quot;flops_forward&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stop_attr</span> <span class="ow">or</span> <span class="s2">&quot;flops_backward&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stop_attr</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">torchtnt.utils.flops</span> <span class="kn">import</span> <span class="n">flop_mapping</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.flops</span><span class="w"> </span><span class="kn">import</span> <span class="n">flop_mapping</span>
 
         <span class="n">used_operators</span> <span class="o">=</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
             <span class="p">[</span>
@@ -899,7 +899,7 @@
     <span class="k">return</span> <span class="n">summary_table</span></div>
 
 
-<div class="viewcode-block" id="prune_module_summary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.prune_module_summary.html#torchtnt.utils.module_summary.prune_module_summary">[docs]</a><span class="k">def</span> <span class="nf">prune_module_summary</span><span class="p">(</span><span class="n">module_summary</span><span class="p">:</span> <span class="n">ModuleSummary</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="prune_module_summary"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.module_summary.prune_module_summary.html#torchtnt.utils.module_summary.prune_module_summary">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">prune_module_summary</span><span class="p">(</span><span class="n">module_summary</span><span class="p">:</span> <span class="n">ModuleSummary</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Prune the module summaries that are deeper than max_depth in the module</span>
 <span class="sd">    summary tree. The ModuleSummary object is prunned inplace.</span>
@@ -922,7 +922,7 @@
         <span class="n">prune_module_summary</span><span class="p">(</span><span class="n">submodule_summary</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_unpack_attributes</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_unpack_attributes</span><span class="p">(</span>
     <span class="n">module_summaries</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ModuleSummary</span><span class="p">],</span>
     <span class="n">unpacked_attribs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">col_widths</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
@@ -995,7 +995,7 @@
         <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_get_human_readable_count</span><span class="p">(</span><span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_human_readable_count</span><span class="p">(</span><span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Abbreviates an integer number with K, M, B, T for thousands, millions, billions and trillions, respectively.</span>
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; _get_human_readable_count(123)</span>
@@ -1046,7 +1046,7 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">number</span><span class="si">:</span><span class="s2">,.1f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">_parse_batch_shape</span><span class="p">(</span><span class="n">batch</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_batch_shape</span><span class="p">(</span><span class="n">batch</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
@@ -1057,25 +1057,25 @@
     <span class="k">return</span> <span class="n">_UNKNOWN_SIZE</span>
 
 
-<span class="k">class</span> <span class="nc">_HookType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_HookType</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="n">FORWARD_PRE_HOOK</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">FORWARD_HOOK</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">BACKWARD_PRE_HOOK</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">BACKWARD_HOOK</span> <span class="o">=</span> <span class="mi">4</span>
 
 
-<span class="k">def</span> <span class="nf">_activation_size_hook</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_activation_size_hook</span><span class="p">(</span>
     <span class="n">activation_sizes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
         <span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">Union</span><span class="p">[</span><span class="n">TUnknown</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span>
     <span class="p">],</span>
     <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]:</span>
     <span class="c1"># pyre-fixme: Missing parameter annotation [2]</span>
-    <span class="k">def</span> <span class="nf">intermediate_hook</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intermediate_hook</span><span class="p">(</span>
         <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
         <span class="c1"># pyre-fixme</span>
-        <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="n">_</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">hook</span><span class="p">(</span><span class="n">_</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">out</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">inp</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">in_size</span> <span class="o">=</span> <span class="n">_parse_batch_shape</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
@@ -1087,15 +1087,15 @@
     <span class="k">return</span> <span class="n">intermediate_hook</span>
 
 
-<span class="k">def</span> <span class="nf">_forward_time_pre_hook</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_forward_time_pre_hook</span><span class="p">(</span>
     <span class="n">timer_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
     <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]:</span>
     <span class="c1"># pyre-fixme: Missing parameter annotation [2]</span>
-    <span class="k">def</span> <span class="nf">intermediate_hook</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intermediate_hook</span><span class="p">(</span>
         <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
-        <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="n">_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">_inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">hook</span><span class="p">(</span><span class="n">_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">_inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">timer_mapping</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">hook</span>
@@ -1103,16 +1103,16 @@
     <span class="k">return</span> <span class="n">intermediate_hook</span>
 
 
-<span class="k">def</span> <span class="nf">_forward_time_hook</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_forward_time_hook</span><span class="p">(</span>
     <span class="n">timer_mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
     <span class="n">elapsed_times</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
     <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]:</span>
     <span class="c1"># pyre-fixme: Missing parameter annotation [2]</span>
-    <span class="k">def</span> <span class="nf">intermediate_hook</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">intermediate_hook</span><span class="p">(</span>
         <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]:</span>
-        <span class="k">def</span> <span class="nf">hook</span><span class="p">(</span><span class="n">_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">_inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">_out</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">hook</span><span class="p">(</span><span class="n">_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">_inp</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">_out</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
                 <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
             <span class="n">elapsed_times</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">timer_mapping</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span>
@@ -1122,7 +1122,7 @@
     <span class="k">return</span> <span class="n">intermediate_hook</span>
 
 
-<span class="k">def</span> <span class="nf">_register_hooks</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_register_hooks</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="c1"># pyre-fixme: Invalid type parameters [24]</span>
     <span class="n">hooks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">_HookType</span><span class="p">]],</span>

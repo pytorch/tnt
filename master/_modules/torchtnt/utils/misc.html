@@ -414,14 +414,14 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
 <span class="n">_SEC_IN_DAY</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">24</span>
 
 
-<div class="viewcode-block" id="days_to_secs"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.misc.days_to_secs.html#torchtnt.utils.misc.days_to_secs">[docs]</a><span class="k">def</span> <span class="nf">days_to_secs</span><span class="p">(</span><span class="n">days</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<div class="viewcode-block" id="days_to_secs"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.misc.days_to_secs.html#torchtnt.utils.misc.days_to_secs">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">days_to_secs</span><span class="p">(</span><span class="n">days</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert time from days to seconds&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">days</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -430,12 +430,12 @@
     <span class="k">return</span> <span class="n">days</span> <span class="o">*</span> <span class="n">_SEC_IN_DAY</span></div>
 
 
-<span class="k">def</span> <span class="nf">transfer_weights</span><span class="p">(</span><span class="n">src_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">dst_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">transfer_weights</span><span class="p">(</span><span class="n">src_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">dst_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">src_param</span><span class="p">,</span> <span class="n">dst_param</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">src_module</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">dst_module</span><span class="o">.</span><span class="n">parameters</span><span class="p">()):</span>
         <span class="n">dst_param</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">src_param</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dst_param</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="transfer_batch_norm_stats"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.misc.transfer_batch_norm_stats.html#torchtnt.utils.misc.transfer_batch_norm_stats">[docs]</a><span class="k">def</span> <span class="nf">transfer_batch_norm_stats</span><span class="p">(</span>
+<div class="viewcode-block" id="transfer_batch_norm_stats"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.misc.transfer_batch_norm_stats.html#torchtnt.utils.misc.transfer_batch_norm_stats">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">transfer_batch_norm_stats</span><span class="p">(</span>
     <span class="n">src_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">dst_module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>

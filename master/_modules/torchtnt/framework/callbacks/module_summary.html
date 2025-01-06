@@ -413,26 +413,26 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">MutableMapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">AppStateMixin</span><span class="p">,</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.module_summary</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callback</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">AppStateMixin</span><span class="p">,</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.module_summary</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_module_summary</span><span class="p">,</span>
     <span class="n">get_summary_table</span><span class="p">,</span>
     <span class="n">ModuleSummary</span> <span class="k">as</span> <span class="n">ModuleSummaryObj</span><span class="p">,</span>
     <span class="n">prune_module_summary</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.rank_zero_log</span> <span class="kn">import</span> <span class="n">rank_zero_info</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.rank_zero_log</span><span class="w"> </span><span class="kn">import</span> <span class="n">rank_zero_info</span>
 
 
-<span class="k">def</span> <span class="nf">_log_module_summary_tables</span><span class="p">(</span><span class="n">module_summaries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ModuleSummaryObj</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_module_summary_tables</span><span class="p">(</span><span class="n">module_summaries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ModuleSummaryObj</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">ms</span> <span class="ow">in</span> <span class="n">module_summaries</span><span class="p">:</span>
         <span class="n">rank_zero_info</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">get_summary_table</span><span class="p">(</span><span class="n">ms</span><span class="p">))</span>
 
 
-<div class="viewcode-block" id="ModuleSummary"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary">[docs]</a><span class="k">class</span> <span class="nc">ModuleSummary</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+<div class="viewcode-block" id="ModuleSummary"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">ModuleSummary</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A callback which generates and logs a summary of the modules.</span>
 
@@ -446,7 +446,7 @@
 <span class="sd">            If torcheval is not installed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">max_depth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">process_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span>
@@ -461,18 +461,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_process_fn</span> <span class="o">=</span> <span class="n">process_fn</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_module_inputs</span> <span class="o">=</span> <span class="n">module_inputs</span>
 
-<div class="viewcode-block" id="ModuleSummary.on_train_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary.on_train_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="ModuleSummary.on_train_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary.on_train_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_and_process_summaries</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ModuleSummary.on_eval_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary.on_eval_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="ModuleSummary.on_eval_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary.on_eval_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">entry_point</span> <span class="o">!=</span> <span class="n">EntryPoint</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_and_process_summaries</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ModuleSummary.on_predict_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary.on_predict_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="ModuleSummary.on_predict_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.ModuleSummary.html#torchtnt.framework.callbacks.ModuleSummary.on_predict_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_get_and_process_summaries</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_retrieve_module_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ModuleSummaryObj</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_retrieve_module_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ModuleSummaryObj</span><span class="p">]:</span>
         <span class="n">module_summaries</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">module_name</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">unit</span><span class="o">.</span><span class="n">tracked_modules</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="p">(),</span> <span class="p">{}</span>
@@ -487,7 +487,7 @@
             <span class="n">module_summaries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">module_summary</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">module_summaries</span>
 
-    <span class="k">def</span> <span class="nf">_get_and_process_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_and_process_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">module_summaries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_retrieve_module_summaries</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_process_fn</span><span class="p">(</span><span class="n">module_summaries</span><span class="p">)</span></div>
 </pre></div>

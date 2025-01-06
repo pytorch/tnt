@@ -414,25 +414,25 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">ctypes</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">unittest</span>
-<span class="kn">import</span> <span class="nn">uuid</span>
-<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
-<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">StringIO</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ctypes</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">unittest</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">StringIO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TypeVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.distributed.launcher</span> <span class="k">as</span> <span class="nn">pet</span>
-<span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">ParameterSpecification</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.distributed.launcher</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyre_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParameterSpecification</span>
 
 
 <span class="n">TParams</span> <span class="o">=</span> <span class="n">ParameterSpecification</span><span class="p">(</span><span class="s2">&quot;TParams&quot;</span><span class="p">)</span>
 <span class="n">TReturn</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TReturn&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_pet_launch_config"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.get_pet_launch_config.html#torchtnt.utils.test_utils.get_pet_launch_config">[docs]</a><span class="k">def</span> <span class="nf">get_pet_launch_config</span><span class="p">(</span><span class="n">nproc</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pet</span><span class="o">.</span><span class="n">LaunchConfig</span><span class="p">:</span>
+<div class="viewcode-block" id="get_pet_launch_config"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.get_pet_launch_config.html#torchtnt.utils.test_utils.get_pet_launch_config">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_pet_launch_config</span><span class="p">(</span><span class="n">nproc</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pet</span><span class="o">.</span><span class="n">LaunchConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize pet.LaunchConfig for single-node, multi-rank functions.</span>
 
@@ -459,27 +459,27 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="is_asan"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.is_asan.html#torchtnt.utils.test_utils.is_asan">[docs]</a><span class="k">def</span> <span class="nf">is_asan</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="is_asan"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.is_asan.html#torchtnt.utils.test_utils.is_asan">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_asan</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines if the Python interpreter is running with ASAN&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="s2">&quot;__asan_init&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="is_tsan"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.is_tsan.html#torchtnt.utils.test_utils.is_tsan">[docs]</a><span class="k">def</span> <span class="nf">is_tsan</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="is_tsan"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.is_tsan.html#torchtnt.utils.test_utils.is_tsan">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_tsan</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Determines if the Python interpreter is running with TSAN&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ctypes</span><span class="o">.</span><span class="n">CDLL</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="s2">&quot;__tsan_init&quot;</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">is_asan_or_tsan</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_asan_or_tsan</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">is_asan</span><span class="p">()</span> <span class="ow">or</span> <span class="n">is_tsan</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="skip_if_asan"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.skip_if_asan.html#torchtnt.utils.test_utils.skip_if_asan">[docs]</a><span class="k">def</span> <span class="nf">skip_if_asan</span><span class="p">(</span>
+<div class="viewcode-block" id="skip_if_asan"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.test_utils.skip_if_asan.html#torchtnt.utils.test_utils.skip_if_asan">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">skip_if_asan</span><span class="p">(</span>
     <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Skip test run if we are in ASAN mode.&quot;&quot;&quot;</span>
 
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">is_asan_or_tsan</span><span class="p">():</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Skipping test run since we are in ASAN mode.&quot;</span><span class="p">)</span>
             <span class="k">return</span>
@@ -489,7 +489,7 @@
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">captured_output</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">captured_output</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">TextIO</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
     <span class="n">new_out</span><span class="p">,</span> <span class="n">new_err</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(),</span> <span class="n">StringIO</span><span class="p">()</span>
     <span class="n">old_out</span><span class="p">,</span> <span class="n">old_err</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span>
     <span class="k">try</span><span class="p">:</span>

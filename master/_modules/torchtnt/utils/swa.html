@@ -413,14 +413,14 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 
 <span class="n">_AVERAGED_MODEL_AVAIL</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torch.optim.swa_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.optim.swa_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">AveragedModel</span> <span class="k">as</span> <span class="n">PyTorchAveragedModel</span><span class="p">,</span>
         <span class="n">get_ema_multi_avg_fn</span><span class="p">,</span>
         <span class="n">get_swa_multi_avg_fn</span><span class="p">,</span>
@@ -433,8 +433,8 @@
 <span class="n">TSWA_multi_avg_fn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="AveragedModel"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.swa.AveragedModel.html#torchtnt.utils.swa.AveragedModel">[docs]</a><span class="k">class</span> <span class="nc">AveragedModel</span><span class="p">(</span><span class="n">PyTorchAveragedModel</span><span class="p">):</span>
-<div class="viewcode-block" id="AveragedModel.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.swa.AveragedModel.html#torchtnt.utils.swa.AveragedModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="AveragedModel"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.swa.AveragedModel.html#torchtnt.utils.swa.AveragedModel">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">AveragedModel</span><span class="p">(</span><span class="n">PyTorchAveragedModel</span><span class="p">):</span>
+<div class="viewcode-block" id="AveragedModel.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.swa.AveragedModel.html#torchtnt.utils.swa.AveragedModel.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -512,7 +512,7 @@
                 <span class="n">use_buffers</span><span class="o">=</span><span class="n">use_buffers</span><span class="p">,</span>
             <span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_num_updates</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_lit</span><span class="p">:</span>
             <span class="n">decay</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>

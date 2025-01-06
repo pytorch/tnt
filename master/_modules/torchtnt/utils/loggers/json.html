@@ -414,17 +414,17 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">fsspec</span> <span class="kn">import</span> <span class="nb">open</span> <span class="k">as</span> <span class="n">fs_open</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.file</span> <span class="kn">import</span> <span class="n">FileLogger</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.logger</span> <span class="kn">import</span> <span class="n">MetricLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fsspec</span><span class="w"> </span><span class="kn">import</span> <span class="nb">open</span> <span class="k">as</span> <span class="n">fs_open</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.loggers.file</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.loggers.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricLogger</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="JSONLogger"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.JSONLogger.html#torchtnt.utils.loggers.JSONLogger">[docs]</a><span class="k">class</span> <span class="nc">JSONLogger</span><span class="p">(</span><span class="n">FileLogger</span><span class="p">,</span> <span class="n">MetricLogger</span><span class="p">):</span>
+<div class="viewcode-block" id="JSONLogger"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.JSONLogger.html#torchtnt.utils.loggers.JSONLogger">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">JSONLogger</span><span class="p">(</span><span class="n">FileLogger</span><span class="p">,</span> <span class="n">MetricLogger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    JSON file logger.</span>
 
@@ -434,7 +434,7 @@
 <span class="sd">        log_all_ranks: (bool, optional): Log all ranks if true, else log only on rank 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="JSONLogger.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.JSONLogger.html#torchtnt.utils.loggers.JSONLogger.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="JSONLogger.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.loggers.JSONLogger.html#torchtnt.utils.loggers.JSONLogger.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">steps_before_flushing</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
@@ -442,7 +442,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">steps_before_flushing</span><span class="p">,</span> <span class="n">log_all_ranks</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_all_ranks</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_buffer</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
@@ -451,7 +451,7 @@
             <span class="k">with</span> <span class="n">fs_open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
 </pre></div>
 

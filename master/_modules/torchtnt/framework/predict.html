@@ -413,31 +413,31 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyre_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">none_throws</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework._callback_handler</span> <span class="kn">import</span> <span class="n">CallbackHandler</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework._loop_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework._callback_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallbackHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework._loop_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_is_epoch_done</span><span class="p">,</span>
     <span class="n">_log_api_usage</span><span class="p">,</span>
     <span class="n">_reset_module_training_mode</span><span class="p">,</span>
     <span class="n">_set_module_training_mode</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.base_checkpointer</span> <span class="kn">import</span> <span class="n">BaseCheckpointer</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">ActivePhase</span><span class="p">,</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">PhaseState</span><span class="p">,</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TPredictData</span><span class="p">,</span> <span class="n">TPredictUnit</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">get_timing_context</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">get_timer_summary</span><span class="p">,</span> <span class="n">TimerProtocol</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="n">is_torch_version_geq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callback</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callbacks.base_checkpointer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseCheckpointer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActivePhase</span><span class="p">,</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">PhaseState</span><span class="p">,</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">TPredictData</span><span class="p">,</span> <span class="n">TPredictUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_timing_context</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.timer</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_timer_summary</span><span class="p">,</span> <span class="n">TimerProtocol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_torch_version_geq</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="predict"><a class="viewcode-back" href="../../../framework/predict.html#torchtnt.framework.predict.predict">[docs]</a><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span>
+<div class="viewcode-block" id="predict"><a class="viewcode-back" href="../../../framework/predict.html#torchtnt.framework.predict.predict">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
     <span class="n">predict_unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">,</span>
     <span class="n">predict_dataloader</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TPredictData</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
@@ -521,7 +521,7 @@
         <span class="k">raise</span> <span class="n">e</span></div>
 
 
-<span class="k">def</span> <span class="nf">_predict_impl</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_predict_impl</span><span class="p">(</span>
     <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
     <span class="n">predict_unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">,</span>
     <span class="n">callback_handler</span><span class="p">:</span> <span class="n">CallbackHandler</span><span class="p">,</span>

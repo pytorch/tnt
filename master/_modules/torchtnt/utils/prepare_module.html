@@ -413,9 +413,9 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">cast</span><span class="p">,</span>
@@ -427,49 +427,49 @@
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
-<span class="kn">from</span> <span class="nn">torch.distributed</span> <span class="kn">import</span> <span class="n">ProcessGroup</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.distributed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dist</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessGroup</span>
 
-<span class="kn">from</span> <span class="nn">torch.distributed._composable_state</span> <span class="kn">import</span> <span class="n">_get_module_state</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.algorithms._checkpoint.checkpoint_wrapper</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed._composable_state</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_module_state</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.algorithms._checkpoint.checkpoint_wrapper</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">apply_activation_checkpointing</span><span class="p">,</span>
     <span class="n">checkpoint_wrapper</span><span class="p">,</span>
     <span class="n">CheckpointImpl</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.fsdp</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">FSDP</span><span class="p">,</span>
     <span class="n">StateDictType</span> <span class="k">as</span> <span class="n">_StateDictType</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.fsdp._common_utils</span> <span class="kn">import</span> <span class="n">_FSDPState</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.fsdp.api</span> <span class="kn">import</span> <span class="n">OptimStateDictConfig</span><span class="p">,</span> <span class="n">StateDictConfig</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.fsdp.fully_sharded_data_parallel</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp._common_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_FSDPState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimStateDictConfig</span><span class="p">,</span> <span class="n">StateDictConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp.fully_sharded_data_parallel</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BackwardPrefetch</span> <span class="k">as</span> <span class="n">_BackwardPrefetch</span><span class="p">,</span>
     <span class="n">CPUOffload</span><span class="p">,</span>
     <span class="n">MixedPrecision</span> <span class="k">as</span> <span class="n">_MixedPrecision</span><span class="p">,</span>
     <span class="n">ShardingStrategy</span> <span class="k">as</span> <span class="n">_ShardingStrategy</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DistributedDataParallel</span> <span class="k">as</span> <span class="n">DDP</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.fsdp_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.parallel</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedDataParallel</span> <span class="k">as</span> <span class="n">DDP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.fsdp_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BackwardPrefetch</span><span class="p">,</span>
     <span class="n">MixedPrecision</span><span class="p">,</span>
     <span class="n">ShardingStrategy</span><span class="p">,</span>
     <span class="n">StateDictType</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.utils.rank_zero_log</span> <span class="kn">import</span> <span class="n">rank_zero_warn</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.version</span> <span class="kn">import</span> <span class="n">is_torch_version_geq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.rank_zero_log</span><span class="w"> </span><span class="kn">import</span> <span class="n">rank_zero_warn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.version</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_torch_version_geq</span>
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">Strategy</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Strategy</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dataclass representing a parallelization strategy&quot;&quot;&quot;</span>
 
     <span class="k">pass</span>
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">NOOPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NOOPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dataclass representing a no-op strategy. Nothing is applied to the module, and no device transfer occurs</span>
 <span class="sd">    Use this strategy if applying custom wrapping to module prior to passing it into class:`~torchtnt.framework.auto_unit.AutoUnit`</span>
@@ -480,7 +480,7 @@
 
 
 <div class="viewcode-block" id="DDPStrategy"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.DDPStrategy.html#torchtnt.utils.prepare_module.DDPStrategy">[docs]</a><span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">DDPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DDPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dataclass representing the `DistributedDataParallel &lt;https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html&gt;`_ strategy.</span>
 
@@ -509,7 +509,7 @@
 
 
 <div class="viewcode-block" id="FSDPStrategy"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.FSDPStrategy.html#torchtnt.utils.prepare_module.FSDPStrategy">[docs]</a><span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">FSDPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FSDPStrategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dataclass representing the `FullyShardedDataParallel &lt;https://pytorch.org/docs/stable/fsdp.html&gt;`_ strategy&quot;&quot;&quot;</span>
 
     <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -533,7 +533,7 @@
     <span class="n">state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">optim_state_dict_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OptimStateDictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sharding_strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">sharding_strategy</span> <span class="o">=</span> <span class="n">ShardingStrategy</span><span class="o">.</span><span class="n">to_native_sharding_strategy</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">sharding_strategy</span>
@@ -554,7 +554,7 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">TorchCompileParams</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TorchCompileParams</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dataclass to store parameters for torch compile. See https://pytorch.org/docs/stable/generated/torch.compile.html for details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -569,7 +569,7 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">ActivationCheckpointParams</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ActivationCheckpointParams</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dataclass to store parameters for activation checkpointing.</span>
 
@@ -586,7 +586,7 @@
     <span class="n">context_fn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">ContextManager</span><span class="p">,</span> <span class="n">ContextManager</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<div class="viewcode-block" id="prepare_ddp"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.prepare_ddp.html#torchtnt.utils.prepare_module.prepare_ddp">[docs]</a><span class="k">def</span> <span class="nf">prepare_ddp</span><span class="p">(</span>
+<div class="viewcode-block" id="prepare_ddp"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.prepare_ddp.html#torchtnt.utils.prepare_module.prepare_ddp">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">prepare_ddp</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
     <span class="n">strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DDPStrategy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -632,7 +632,7 @@
     <span class="k">return</span> <span class="n">module</span></div>
 
 
-<div class="viewcode-block" id="prepare_fsdp"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.prepare_fsdp.html#torchtnt.utils.prepare_module.prepare_fsdp">[docs]</a><span class="k">def</span> <span class="nf">prepare_fsdp</span><span class="p">(</span>
+<div class="viewcode-block" id="prepare_fsdp"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.prepare_fsdp.html#torchtnt.utils.prepare_module.prepare_fsdp">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">prepare_fsdp</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
     <span class="n">strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FSDPStrategy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -675,29 +675,29 @@
     <span class="k">return</span> <span class="n">module</span></div>
 
 
-<span class="k">class</span> <span class="nc">FSDPOptimizerWrapper</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FSDPOptimizerWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
 
-    <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="n">optim_state_dict</span> <span class="o">=</span> <span class="n">FSDP</span><span class="o">.</span><span class="n">optim_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">optim_state_dict</span>
 
-    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">optim_state_dict</span> <span class="o">=</span> <span class="n">FSDP</span><span class="o">.</span><span class="n">optim_state_dict_to_load</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">state_dict</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">optim_state_dict</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">FSDP</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">True</span>
 
@@ -709,7 +709,7 @@
     <span class="k">return</span> <span class="kc">False</span>
 
 
-<div class="viewcode-block" id="prepare_module"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.prepare_module.html#torchtnt.utils.prepare_module.prepare_module">[docs]</a><span class="k">def</span> <span class="nf">prepare_module</span><span class="p">(</span>
+<div class="viewcode-block" id="prepare_module"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.prepare_module.html#torchtnt.utils.prepare_module.prepare_module">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">prepare_module</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
     <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
@@ -754,7 +754,7 @@
                         <span class="s2">&quot;Compiled autograd should only be used when the module is compiled.&quot;</span>
                     <span class="p">)</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="kn">from</span> <span class="nn">torch._dynamo.trace_rules</span> <span class="kn">import</span> <span class="n">LEGACY_MOD_INLINELIST</span>
+                    <span class="kn">from</span><span class="w"> </span><span class="nn">torch._dynamo.trace_rules</span><span class="w"> </span><span class="kn">import</span> <span class="n">LEGACY_MOD_INLINELIST</span>
 
                     <span class="n">LEGACY_MOD_INLINELIST</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;torch.nn.parallel.distributed&quot;</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
@@ -807,7 +807,7 @@
     <span class="k">return</span> <span class="n">module</span></div>
 
 
-<div class="viewcode-block" id="convert_str_to_strategy"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.convert_str_to_strategy.html#torchtnt.utils.prepare_module.convert_str_to_strategy">[docs]</a><span class="k">def</span> <span class="nf">convert_str_to_strategy</span><span class="p">(</span>
+<div class="viewcode-block" id="convert_str_to_strategy"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.prepare_module.convert_str_to_strategy.html#torchtnt.utils.prepare_module.convert_str_to_strategy">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">convert_str_to_strategy</span><span class="p">(</span>
     <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">DDPStrategy</span><span class="p">,</span> <span class="n">FSDPStrategy</span><span class="p">,</span> <span class="n">NOOPStrategy</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>

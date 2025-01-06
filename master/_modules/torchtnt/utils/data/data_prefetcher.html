@@ -413,15 +413,15 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">TypeVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">TypeVar</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.device</span> <span class="kn">import</span> <span class="n">copy_data_to_device</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">copy_data_to_device</span>
 
 <span class="n">Batch</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;Batch&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="CudaDataPrefetcher"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.CudaDataPrefetcher.html#torchtnt.utils.data.CudaDataPrefetcher">[docs]</a><span class="k">class</span> <span class="nc">CudaDataPrefetcher</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Batch</span><span class="p">]):</span>
+<div class="viewcode-block" id="CudaDataPrefetcher"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.CudaDataPrefetcher.html#torchtnt.utils.data.CudaDataPrefetcher">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">CudaDataPrefetcher</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Batch</span><span class="p">]):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;CudaDataPrefetcher prefetches batches and moves them to the device.</span>
 
 <span class="sd">    This class can be used to interleave data loading, host-to-device copies, and computation more effectively.</span>
@@ -448,7 +448,7 @@
 <span class="sd">            # operate on batch</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="CudaDataPrefetcher.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.CudaDataPrefetcher.html#torchtnt.utils.data.CudaDataPrefetcher.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="CudaDataPrefetcher.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.CudaDataPrefetcher.html#torchtnt.utils.data.CudaDataPrefetcher.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">data_iterable</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Batch</span><span class="p">],</span>
         <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
@@ -469,21 +469,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">num_prefetch_batches</span> <span class="o">=</span> <span class="n">num_prefetch_batches</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_batches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Batch</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">Stream</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_iterable</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_prefetch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prefetch</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_prefetch_batches</span><span class="p">):</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_iter</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
                 <span class="k">return</span>
 
-    <span class="k">def</span> <span class="nf">_fetch_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Batch</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_next_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_iter</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Batch</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">next_batch</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">data_iter</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
@@ -497,11 +497,11 @@
         <span class="n">event</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prefetch_stream</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CudaDataPrefetcher[Batch]&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CudaDataPrefetcher[Batch]&quot;</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Batch</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Batch</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prefetch</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prefetched</span> <span class="o">=</span> <span class="kc">True</span>

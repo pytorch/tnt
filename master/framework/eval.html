@@ -433,7 +433,7 @@ and runs the evaluation loop.</p>
 </tbody>
 </table>
 <p>Below is an example of calling <code class="xref py py-func docutils literal notranslate"><span class="pre">evaluate()</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">torchtnt.framework.evaluate</span> <span class="kn">import</span> <span class="n">evaluate</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.evaluate</span><span class="w"> </span><span class="kn">import</span> <span class="n">evaluate</span>
 
 <span class="n">eval_unit</span> <span class="o">=</span> <span class="n">MyEvalUnit</span><span class="p">(</span><span class="n">module</span><span class="o">=...</span><span class="p">,</span> <span class="n">optimizer</span><span class="o">=...</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=...</span><span class="p">)</span>
 <span class="n">eval_dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>

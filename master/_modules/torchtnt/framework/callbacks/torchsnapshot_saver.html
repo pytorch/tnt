@@ -413,41 +413,41 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">ExitStack</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.distributed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dist</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks._checkpoint_utils</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callbacks._checkpoint_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_prepare_app_state</span><span class="p">,</span>
     <span class="n">_prepare_app_state_for_checkpoint</span><span class="p">,</span>
     <span class="n">_prepare_app_state_for_restore</span><span class="p">,</span>
     <span class="n">_TRAIN_DL_STATE_KEY</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.base_checkpointer</span> <span class="kn">import</span> <span class="n">BaseCheckpointer</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callbacks.checkpointer_types</span> <span class="kn">import</span> <span class="n">KnobOptions</span><span class="p">,</span> <span class="n">RestoreOptions</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callbacks.base_checkpointer</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseCheckpointer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callbacks.checkpointer_types</span><span class="w"> </span><span class="kn">import</span> <span class="n">KnobOptions</span><span class="p">,</span> <span class="n">RestoreOptions</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.unit</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AppStateMixin</span><span class="p">,</span>
     <span class="n">TEvalUnit</span><span class="p">,</span>
     <span class="n">TPredictUnit</span><span class="p">,</span>
     <span class="n">TTrainData</span><span class="p">,</span>
     <span class="n">TTrainUnit</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.utils</span> <span class="kn">import</span> <span class="n">get_timing_context</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.checkpoint</span> <span class="kn">import</span> <span class="n">BestCheckpointConfig</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.optimizer</span> <span class="kn">import</span> <span class="n">init_optim_state</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.rank_zero_log</span> <span class="kn">import</span> <span class="n">rank_zero_info</span><span class="p">,</span> <span class="n">rank_zero_warn</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">Stateful</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_timing_context</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.checkpoint</span><span class="w"> </span><span class="kn">import</span> <span class="n">BestCheckpointConfig</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_optim_state</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.rank_zero_log</span><span class="w"> </span><span class="kn">import</span> <span class="n">rank_zero_info</span><span class="p">,</span> <span class="n">rank_zero_warn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.stateful</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stateful</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">torchsnapshot</span>
-    <span class="kn">from</span> <span class="nn">torchsnapshot.knobs</span> <span class="kn">import</span> <span class="n">override_max_per_rank_io_concurrency</span>
-    <span class="kn">from</span> <span class="nn">torchsnapshot.snapshot</span> <span class="kn">import</span> <span class="n">PendingSnapshot</span><span class="p">,</span> <span class="n">Snapshot</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">torchsnapshot</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torchsnapshot.knobs</span><span class="w"> </span><span class="kn">import</span> <span class="n">override_max_per_rank_io_concurrency</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torchsnapshot.snapshot</span><span class="w"> </span><span class="kn">import</span> <span class="n">PendingSnapshot</span><span class="p">,</span> <span class="n">Snapshot</span>
 
     <span class="n">_TStateful</span> <span class="o">=</span> <span class="n">torchsnapshot</span><span class="o">.</span><span class="n">Stateful</span>
     <span class="n">_TORCHSNAPSHOT_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
@@ -461,7 +461,7 @@
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="TorchSnapshotSaver"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver">[docs]</a><span class="k">class</span> <span class="nc">TorchSnapshotSaver</span><span class="p">(</span><span class="n">BaseCheckpointer</span><span class="p">):</span>
+<div class="viewcode-block" id="TorchSnapshotSaver"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">TorchSnapshotSaver</span><span class="p">(</span><span class="n">BaseCheckpointer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A callback which periodically saves the application state during training using `TorchSnapshot &lt;https://pytorch.org/torchsnapshot/&gt;`_.</span>
 
@@ -505,7 +505,7 @@
 
     <span class="n">metadata_fnames</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;.snapshot_metadata&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dirpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
@@ -538,14 +538,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_storage_options</span> <span class="o">=</span> <span class="n">storage_options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_knob_options</span><span class="p">:</span> <span class="n">KnobOptions</span> <span class="o">=</span> <span class="n">knob_options</span> <span class="ow">or</span> <span class="n">KnobOptions</span><span class="p">()</span>
 
-<div class="viewcode-block" id="TorchSnapshotSaver.on_train_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_train_start">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TorchSnapshotSaver.on_train_start"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_train_start">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate there&#39;s no key collision for the app state.&quot;&quot;&quot;</span>
         <span class="n">app_state</span> <span class="o">=</span> <span class="n">_prepare_app_state</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
         <span class="n">_check_app_state_collision</span><span class="p">(</span><span class="n">app_state</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">on_train_start</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TorchSnapshotSaver.on_exception"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_exception">[docs]</a>    <span class="k">def</span> <span class="nf">on_exception</span><span class="p">(</span>
+<div class="viewcode-block" id="TorchSnapshotSaver.on_exception"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.on_exception">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_exception</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
         <span class="n">unit</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TTrainUnit</span><span class="p">,</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">],</span>
@@ -553,7 +553,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wait</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">_checkpoint_impl</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_checkpoint_impl</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
         <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">,</span>
@@ -600,11 +600,11 @@
                 <span class="n">checkpoint_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync_snapshot</span><span class="p">(</span><span class="n">checkpoint_id</span><span class="p">,</span> <span class="n">app_state</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">checkpoint_success</span>
 
-    <span class="k">def</span> <span class="nf">_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_wait</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev_snapshot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prev_snapshot</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_async_snapshot</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_async_snapshot</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">snapshot_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">],</span>
@@ -641,7 +641,7 @@
         <span class="n">rank_zero_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saving snapshot to path: </span><span class="si">{</span><span class="n">snapshot_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">_sync_snapshot</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sync_snapshot</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">snapshot_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">],</span>
@@ -667,7 +667,7 @@
         <span class="k">return</span> <span class="kc">True</span>
 
 <div class="viewcode-block" id="TorchSnapshotSaver.restore"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TorchSnapshotSaver.html#torchtnt.framework.callbacks.TorchSnapshotSaver.restore">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">restore</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">restore</span><span class="p">(</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">unit</span><span class="p">:</span> <span class="n">AppStateMixin</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
@@ -754,7 +754,7 @@
         <span class="n">rank_zero_info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Restored snapshot from path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">_exclude_progress_from_replicated</span><span class="p">(</span><span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_exclude_progress_from_replicated</span><span class="p">(</span><span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Excludes progress state from being replicated. Called if replicated=[&quot;**&quot;] is passed in.</span>
 <span class="sd">    Works by populating replicated with all possible keys from app_state, except for</span>
@@ -770,7 +770,7 @@
     <span class="k">return</span> <span class="n">filtered_replicated</span>
 
 
-<span class="k">def</span> <span class="nf">_validate_snapshot_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_snapshot_available</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">_TORCHSNAPSHOT_AVAILABLE</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
             <span class="s2">&quot;TorchSnapshotSaver support requires torchsnapshot. &quot;</span>
@@ -779,7 +779,7 @@
         <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_check_app_state_collision</span><span class="p">(</span><span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_app_state_collision</span><span class="p">(</span><span class="n">app_state</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_TStateful</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">keys_to_check</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">_TRAIN_DL_STATE_KEY</span><span class="p">,</span>
         <span class="n">_RNG_STATE_KEY</span><span class="p">,</span>
@@ -792,7 +792,7 @@
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">_override_knobs</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_override_knobs</span><span class="p">(</span>
     <span class="n">knob_options</span><span class="p">:</span> <span class="n">KnobOptions</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
     <span class="n">knobs</span> <span class="o">=</span> <span class="p">[]</span>

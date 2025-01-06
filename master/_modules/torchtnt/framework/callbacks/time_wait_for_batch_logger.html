@@ -414,20 +414,20 @@
 <span class="c1"># pyre-strict</span>
 
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
-<span class="kn">from</span> <span class="nn">torch.utils.tensorboard</span> <span class="kn">import</span> <span class="n">SummaryWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyre_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">none_throws</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.tensorboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">SummaryWriter</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.distributed</span> <span class="kn">import</span> <span class="n">rank_zero_fn</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.loggers.logger</span> <span class="kn">import</span> <span class="n">MetricLogger</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">TimerProtocol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callback</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">rank_zero_fn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.loggers.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricLogger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.timer</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimerProtocol</span>
 
 
-<div class="viewcode-block" id="TimeWaitForBatchLogger"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger">[docs]</a><span class="k">class</span> <span class="nc">TimeWaitForBatchLogger</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeWaitForBatchLogger"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">TimeWaitForBatchLogger</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A callback which logs time wait for batch as scalars to a MetricLogger.</span>
 
@@ -438,7 +438,7 @@
 <span class="sd">        warmup_steps: an int to control the number of warmup steps. We will start logging only after the amount of warmup steps were completed. Default is 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">logger</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricLogger</span><span class="p">,</span> <span class="n">SummaryWriter</span><span class="p">],</span>
         <span class="o">*</span><span class="p">,</span>
@@ -457,7 +457,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_warmup_steps</span> <span class="o">=</span> <span class="n">warmup_steps</span>
 
     <span class="nd">@rank_zero_fn</span>
-    <span class="k">def</span> <span class="nf">_log_step_metrics</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_step_metrics</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">timer</span><span class="p">:</span> <span class="n">TimerProtocol</span><span class="p">,</span>
@@ -487,21 +487,21 @@
                 <span class="n">step</span><span class="p">,</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="TimeWaitForBatchLogger.on_train_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_train_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TimeWaitForBatchLogger.on_train_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_train_step_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
             <span class="n">timer</span><span class="o">=</span><span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">train_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Time Wait For Batch (Train)&quot;</span><span class="p">,</span>
             <span class="n">step</span><span class="o">=</span><span class="n">unit</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="TimeWaitForBatchLogger.on_eval_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_eval_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TimeWaitForBatchLogger.on_eval_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_eval_step_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
             <span class="n">timer</span><span class="o">=</span><span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">eval_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Time Wait For Batch (Eval)&quot;</span><span class="p">,</span>
             <span class="n">step</span><span class="o">=</span><span class="n">unit</span><span class="o">.</span><span class="n">eval_progress</span><span class="o">.</span><span class="n">num_steps_completed</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="TimeWaitForBatchLogger.on_predict_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_predict_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TimeWaitForBatchLogger.on_predict_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.TimeWaitForBatchLogger.html#torchtnt.framework.callbacks.TimeWaitForBatchLogger.on_predict_step_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_log_step_metrics</span><span class="p">(</span>
             <span class="n">timer</span><span class="o">=</span><span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">predict_state</span><span class="p">)</span><span class="o">.</span><span class="n">iteration_timer</span><span class="p">,</span>
             <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Time Wait For Batch (Predict)&quot;</span><span class="p">,</span>

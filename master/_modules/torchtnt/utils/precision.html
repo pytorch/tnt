@@ -414,10 +414,10 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">torch.amp.grad_scaler</span> <span class="kn">import</span> <span class="n">GradScaler</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.amp.grad_scaler</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradScaler</span>
 
 <span class="n">_DTYPE_STRING_TO_DTYPE_MAPPING</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
@@ -426,7 +426,7 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="convert_precision_str_to_dtype"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.precision.convert_precision_str_to_dtype.html#torchtnt.utils.precision.convert_precision_str_to_dtype">[docs]</a><span class="k">def</span> <span class="nf">convert_precision_str_to_dtype</span><span class="p">(</span><span class="n">precision</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]:</span>
+<div class="viewcode-block" id="convert_precision_str_to_dtype"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.precision.convert_precision_str_to_dtype.html#torchtnt.utils.precision.convert_precision_str_to_dtype">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">convert_precision_str_to_dtype</span><span class="p">(</span><span class="n">precision</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts precision as a string to a torch.dtype</span>
 
@@ -444,7 +444,7 @@
     <span class="k">return</span> <span class="n">_DTYPE_STRING_TO_DTYPE_MAPPING</span><span class="p">[</span><span class="n">precision</span><span class="p">]</span></div>
 
 
-<span class="k">def</span> <span class="nf">get_grad_scaler_from_precision</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_grad_scaler_from_precision</span><span class="p">(</span>
     <span class="n">precision</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">is_fsdp_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GradScaler</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -461,7 +461,7 @@
 
     <span class="k">if</span> <span class="n">precision</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">is_fsdp_module</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">torch.distributed.fsdp.sharded_grad_scaler</span> <span class="kn">import</span> <span class="n">ShardedGradScaler</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp.sharded_grad_scaler</span><span class="w"> </span><span class="kn">import</span> <span class="n">ShardedGradScaler</span>
 
             <span class="k">return</span> <span class="n">ShardedGradScaler</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>

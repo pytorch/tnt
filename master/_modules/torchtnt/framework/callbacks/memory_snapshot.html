@@ -413,17 +413,17 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.memory_snapshot_profiler</span> <span class="kn">import</span> <span class="n">MemorySnapshotProfilerBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callback</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.unit</span><span class="w"> </span><span class="kn">import</span> <span class="n">TEvalUnit</span><span class="p">,</span> <span class="n">TPredictUnit</span><span class="p">,</span> <span class="n">TTrainUnit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.memory_snapshot_profiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">MemorySnapshotProfilerBase</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="MemorySnapshot"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot">[docs]</a><span class="k">class</span> <span class="nc">MemorySnapshot</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+<div class="viewcode-block" id="MemorySnapshot"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">MemorySnapshot</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A callback for memory snapshot collection during training, saving pickle files to the user-specified directory.</span>
 <span class="sd">    Uses `Memory Snapshots &lt;https://zdevito.github.io/2022/08/16/memory-snapshots.html&gt;`.</span>
@@ -436,20 +436,20 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">memory_snapshot_profiler</span><span class="p">:</span> <span class="n">MemorySnapshotProfilerBase</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">memory_snapshot_profiler</span> <span class="o">=</span> <span class="n">memory_snapshot_profiler</span>
 
-<div class="viewcode-block" id="MemorySnapshot.on_train_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_train_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_train_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="MemorySnapshot.on_train_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_train_step_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_train_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">memory_snapshot_profiler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="MemorySnapshot.on_eval_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_eval_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_eval_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="MemorySnapshot.on_eval_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_eval_step_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_eval_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TEvalUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">memory_snapshot_profiler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="MemorySnapshot.on_predict_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_predict_step_end">[docs]</a>    <span class="k">def</span> <span class="nf">on_predict_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="MemorySnapshot.on_predict_step_end"><a class="viewcode-back" href="../../../../framework/generated/torchtnt.framework.callbacks.MemorySnapshot.html#torchtnt.framework.callbacks.MemorySnapshot.on_predict_step_end">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">on_predict_step_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span> <span class="n">unit</span><span class="p">:</span> <span class="n">TPredictUnit</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">memory_snapshot_profiler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div></div>
 </pre></div>
 

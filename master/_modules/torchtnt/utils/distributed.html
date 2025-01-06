@@ -414,20 +414,20 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">tempfile</span>
-<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span>
-<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
-<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">dist</span><span class="p">,</span> <span class="n">multiprocessing</span><span class="p">,</span> <span class="n">Tensor</span>
-<span class="kn">from</span> <span class="nn">torch.distributed.elastic.utils.distributed</span> <span class="kn">import</span> <span class="n">get_free_port</span>
-<span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">ParamSpec</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">dist</span><span class="p">,</span> <span class="n">multiprocessing</span><span class="p">,</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.elastic.utils.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_free_port</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">ParamSpec</span>
 
 
 <span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
@@ -438,7 +438,7 @@
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="PGWrapper"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.PGWrapper.html#torchtnt.utils.distributed.PGWrapper">[docs]</a><span class="k">class</span> <span class="nc">PGWrapper</span><span class="p">:</span>
+<div class="viewcode-block" id="PGWrapper"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.PGWrapper.html#torchtnt.utils.distributed.PGWrapper">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">PGWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A wrapper around ProcessGroup that allows collectives to be issued in a</span>
 <span class="sd">    consistent fashion regardless of the following scenarios:</span>
@@ -448,23 +448,23 @@
 <span class="sd">        pg is not None:                             use pg</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="PGWrapper.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.PGWrapper.html#torchtnt.utils.distributed.PGWrapper.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="PGWrapper.__init__"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.PGWrapper.html#torchtnt.utils.distributed.PGWrapper.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">pg</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dist</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dist</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">group</span><span class="o">.</span><span class="n">WORLD</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="n">pg</span></div>
 
-    <span class="k">def</span> <span class="nf">get_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span>
         <span class="k">return</span> <span class="n">dist</span><span class="o">.</span><span class="n">get_rank</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">get_world_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_world_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">dist</span><span class="o">.</span><span class="n">get_world_size</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">barrier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">barrier</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="n">backend</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">)</span>
@@ -473,19 +473,19 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dist</span><span class="o">.</span><span class="n">barrier</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">broadcast_object_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_list</span><span class="p">:</span> <span class="n">DistObjList</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_object_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_list</span><span class="p">:</span> <span class="n">DistObjList</span><span class="p">,</span> <span class="n">src</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="n">dist</span><span class="o">.</span><span class="n">broadcast_object_list</span><span class="p">(</span><span class="n">obj_list</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">all_gather_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_list</span><span class="p">:</span> <span class="n">DistObjList</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">all_gather_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_list</span><span class="p">:</span> <span class="n">DistObjList</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">obj_list</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">obj_list</span><span class="p">)</span>  <span class="c1"># to make pyre happy</span>
             <span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
             <span class="k">return</span>
         <span class="n">dist</span><span class="o">.</span><span class="n">all_gather_object</span><span class="p">(</span><span class="n">obj_list</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">scatter_object_list</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scatter_object_list</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">output_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span>
         <span class="n">input_list</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DistObjList</span><span class="p">],</span>
@@ -519,7 +519,7 @@
         <span class="n">dist</span><span class="o">.</span><span class="n">scatter_object_list</span><span class="p">(</span><span class="n">output_list</span><span class="p">,</span> <span class="n">input_list</span><span class="p">,</span> <span class="n">src</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pg</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_global_rank"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_global_rank.html#torchtnt.utils.distributed.get_global_rank">[docs]</a><span class="k">def</span> <span class="nf">get_global_rank</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="get_global_rank"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_global_rank.html#torchtnt.utils.distributed.get_global_rank">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_global_rank</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get rank using torch.distributed if available. Otherwise, the RANK env var instead if initialized.</span>
 <span class="sd">    Returns 0 if neither condition is met.</span>
@@ -534,7 +534,7 @@
     <span class="k">return</span> <span class="mi">0</span></div>
 
 
-<div class="viewcode-block" id="get_local_rank"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_local_rank.html#torchtnt.utils.distributed.get_local_rank">[docs]</a><span class="k">def</span> <span class="nf">get_local_rank</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="get_local_rank"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_local_rank.html#torchtnt.utils.distributed.get_local_rank">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_local_rank</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get rank using the ``LOCAL_RANK`` environment variable, if populated: https://pytorch.org/docs/stable/elastic/run.html#environment-variables</span>
 <span class="sd">    Defaults to 0 if ``LOCAL_RANK`` is not set.</span>
@@ -545,7 +545,7 @@
     <span class="k">return</span> <span class="mi">0</span></div>
 
 
-<span class="k">def</span> <span class="nf">get_local_world_size</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_local_world_size</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get local world size using the ``LOCAL_WORLD_SIZE`` environment variable, if populated: https://pytorch.org/docs/stable/elastic/run.html#environment-variables</span>
 <span class="sd">    Defaults to 1 if ``LOCAL_WORLD_SIZE`` is not set.</span>
@@ -556,7 +556,7 @@
     <span class="k">return</span> <span class="mi">1</span>
 
 
-<div class="viewcode-block" id="get_world_size"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_world_size.html#torchtnt.utils.distributed.get_world_size">[docs]</a><span class="k">def</span> <span class="nf">get_world_size</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="get_world_size"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_world_size.html#torchtnt.utils.distributed.get_world_size">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_world_size</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get world size using torch.distributed if available. Otherwise, the WORLD_SIZE env var is used instead if initialized.</span>
 <span class="sd">    Returns 1 if neither condition is met.</span>
@@ -571,7 +571,7 @@
     <span class="k">return</span> <span class="mi">1</span></div>
 
 
-<div class="viewcode-block" id="barrier"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.barrier.html#torchtnt.utils.distributed.barrier">[docs]</a><span class="k">def</span> <span class="nf">barrier</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="barrier"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.barrier.html#torchtnt.utils.distributed.barrier">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">barrier</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add a synchronization point across all processes when using distributed.</span>
 <span class="sd">    If torch.distributed is initialized, this function will invoke a barrier across the global process group.</span>
@@ -586,18 +586,18 @@
         <span class="n">dist</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="destroy_process_group"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.destroy_process_group.html#torchtnt.utils.distributed.destroy_process_group">[docs]</a><span class="k">def</span> <span class="nf">destroy_process_group</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="destroy_process_group"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.destroy_process_group.html#torchtnt.utils.distributed.destroy_process_group">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">destroy_process_group</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Destroy the global process group, if one is already initialized.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">dist</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="ow">and</span> <span class="n">dist</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
         <span class="n">dist</span><span class="o">.</span><span class="n">destroy_process_group</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="get_process_group_backend_from_device"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_process_group_backend_from_device.html#torchtnt.utils.distributed.get_process_group_backend_from_device">[docs]</a><span class="k">def</span> <span class="nf">get_process_group_backend_from_device</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="get_process_group_backend_from_device"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_process_group_backend_from_device.html#torchtnt.utils.distributed.get_process_group_backend_from_device">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_process_group_backend_from_device</span><span class="p">(</span><span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function that gets the default process group backend from the device.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="s2">&quot;nccl&quot;</span> <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="k">else</span> <span class="s2">&quot;gloo&quot;</span></div>
 
 
-<span class="k">def</span> <span class="nf">_validate_global_rank_world_size</span><span class="p">(</span><span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_global_rank_world_size</span><span class="p">(</span><span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="k">if</span> <span class="n">world_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Invalid world_size value provided: </span><span class="si">{</span><span class="n">world_size</span><span class="si">}</span><span class="s2">. Value must be greater than 0.&quot;</span>
@@ -612,7 +612,7 @@
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="get_file_init_method"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_file_init_method.html#torchtnt.utils.distributed.get_file_init_method">[docs]</a><span class="k">def</span> <span class="nf">get_file_init_method</span><span class="p">(</span>
+<div class="viewcode-block" id="get_file_init_method"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_file_init_method.html#torchtnt.utils.distributed.get_file_init_method">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_file_init_method</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">rank</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -636,7 +636,7 @@
     <span class="k">return</span> <span class="n">init_method</span></div>
 
 
-<div class="viewcode-block" id="get_tcp_init_method"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_tcp_init_method.html#torchtnt.utils.distributed.get_tcp_init_method">[docs]</a><span class="k">def</span> <span class="nf">get_tcp_init_method</span><span class="p">(</span>
+<div class="viewcode-block" id="get_tcp_init_method"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.get_tcp_init_method.html#torchtnt.utils.distributed.get_tcp_init_method">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_tcp_init_method</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">rank</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -661,7 +661,7 @@
     <span class="k">return</span> <span class="n">init_method</span></div>
 
 
-<span class="k">def</span> <span class="nf">_simple_all_gather_tensors</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_simple_all_gather_tensors</span><span class="p">(</span>
     <span class="n">result</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">],</span> <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
     <span class="n">stacked_result_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">world_size</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
@@ -672,7 +672,7 @@
     <span class="k">return</span> <span class="n">gathered_result</span>
 
 
-<div class="viewcode-block" id="all_gather_tensors"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.all_gather_tensors.html#torchtnt.utils.distributed.all_gather_tensors">[docs]</a><span class="k">def</span> <span class="nf">all_gather_tensors</span><span class="p">(</span>
+<div class="viewcode-block" id="all_gather_tensors"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.all_gather_tensors.html#torchtnt.utils.distributed.all_gather_tensors">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">all_gather_tensors</span><span class="p">(</span>
     <span class="n">result</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to gather tensors from several distributed processes onto a list that is broadcasted to all processes.</span>
@@ -749,7 +749,7 @@
 <span class="n">TReturn</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;TReturn&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="rank_zero_fn"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.rank_zero_fn.html#torchtnt.utils.distributed.rank_zero_fn">[docs]</a><span class="k">def</span> <span class="nf">rank_zero_fn</span><span class="p">(</span>
+<div class="viewcode-block" id="rank_zero_fn"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.rank_zero_fn.html#torchtnt.utils.distributed.rank_zero_fn">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">rank_zero_fn</span><span class="p">(</span>
     <span class="n">fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Function that can be used as a decorator to enable a function to be called on global rank 0 only.</span>
@@ -776,7 +776,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapped_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapped_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TReturn</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">get_global_rank</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -784,7 +784,7 @@
     <span class="k">return</span> <span class="n">wrapped_fn</span></div>
 
 
-<span class="k">class</span> <span class="nc">_BatchNormXd</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">batchnorm</span><span class="o">.</span><span class="n">_BatchNorm</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_BatchNormXd</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">modules</span><span class="o">.</span><span class="n">batchnorm</span><span class="o">.</span><span class="n">_BatchNorm</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The only difference between :class:`torch.nn.BatchNorm1d`, :class:`torch.nn.BatchNorm2d`,</span>
 <span class="sd">    :class:`torch.nn.BatchNorm3d`, etc is this method that is overwritten by the sub-class.</span>
@@ -792,11 +792,11 @@
 <span class="sd">    When using :function:`revert_sync_batchnorm` this sanity check is lost.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_check_input_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_input_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span>
 
 
-<div class="viewcode-block" id="revert_sync_batchnorm"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.revert_sync_batchnorm.html#torchtnt.utils.distributed.revert_sync_batchnorm">[docs]</a><span class="k">def</span> <span class="nf">revert_sync_batchnorm</span><span class="p">(</span>
+<div class="viewcode-block" id="revert_sync_batchnorm"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.revert_sync_batchnorm.html#torchtnt.utils.distributed.revert_sync_batchnorm">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">revert_sync_batchnorm</span><span class="p">(</span>
     <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -851,7 +851,7 @@
     <span class="k">return</span> <span class="n">module_output</span></div>
 
 
-<div class="viewcode-block" id="sync_bool"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.sync_bool.html#torchtnt.utils.distributed.sync_bool">[docs]</a><span class="k">def</span> <span class="nf">sync_bool</span><span class="p">(</span>
+<div class="viewcode-block" id="sync_bool"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.sync_bool.html#torchtnt.utils.distributed.sync_bool">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">sync_bool</span><span class="p">(</span>
     <span class="n">val</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="n">pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">coherence_mode</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;rank_zero&quot;</span><span class="p">],</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;any&quot;</span><span class="p">,</span>
@@ -926,14 +926,14 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">ProcessGroupSetupParams</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProcessGroupSetupParams</span><span class="p">:</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">port</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">timeout_s</span><span class="p">:</span> <span class="nb">int</span>
 
 
-<div class="viewcode-block" id="spawn_multi_process"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.spawn_multi_process.html#torchtnt.utils.distributed.spawn_multi_process">[docs]</a><span class="k">def</span> <span class="nf">spawn_multi_process</span><span class="p">(</span>
+<div class="viewcode-block" id="spawn_multi_process"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.distributed.spawn_multi_process.html#torchtnt.utils.distributed.spawn_multi_process">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">spawn_multi_process</span><span class="p">(</span>
     <span class="n">world_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
@@ -989,7 +989,7 @@
     <span class="k">return</span> <span class="n">output_list</span></div>
 
 
-<span class="k">def</span> <span class="nf">_init_pg_and_rank_and_launch_method</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_init_pg_and_rank_and_launch_method</span><span class="p">(</span>
     <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">pg_setup_params</span><span class="p">:</span> <span class="n">ProcessGroupSetupParams</span><span class="p">,</span>
     <span class="n">mp_output_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">object</span><span class="p">],</span>
@@ -1017,7 +1017,7 @@
         <span class="n">destroy_process_group</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">rank_zero_read_and_broadcast</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">rank_zero_read_and_broadcast</span><span class="p">(</span>
     <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="n">TParams</span><span class="p">,</span> <span class="n">TReturn</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1028,7 +1028,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TReturn</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">TParams</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TReturn</span><span class="p">:</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">rank</span> <span class="o">=</span> <span class="n">get_global_rank</span><span class="p">()</span>
         <span class="n">process_group</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;process_group&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># pyre-ignore[16]</span>
@@ -1057,7 +1057,7 @@
 
 
 <span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">get_or_create_gloo_pg</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_or_create_gloo_pg</span><span class="p">(</span>
     <span class="n">candidate_pg</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">dist</span><span class="o">.</span><span class="n">ProcessGroup</span><span class="p">],</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>

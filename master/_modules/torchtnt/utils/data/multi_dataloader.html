@@ -414,28 +414,28 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">pyre_extensions</span> <span class="kn">import</span> <span class="n">none_throws</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyre_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">none_throws</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.utils.data.iterators</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.data.iterators</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DataIterationStrategy</span><span class="p">,</span>
     <span class="n">DataIterationStrategyRegistry</span><span class="p">,</span>
     <span class="n">MultiIterator</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.stateful</span> <span class="kn">import</span> <span class="n">Stateful</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.stateful</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stateful</span>
 
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="MultiDataLoader"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiDataLoader.html#torchtnt.utils.data.MultiDataLoader">[docs]</a><span class="k">class</span> <span class="nc">MultiDataLoader</span><span class="p">:</span>
+<div class="viewcode-block" id="MultiDataLoader"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiDataLoader.html#torchtnt.utils.data.MultiDataLoader">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">MultiDataLoader</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;MultiDataLoader cycles through individual dataloaders passed to it.</span>
 
 <span class="sd">    Attributes:</span>
@@ -453,7 +453,7 @@
 <span class="sd">        to the documentation for more details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MultiDataLoader.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiDataLoader.html#torchtnt.utils.data.MultiDataLoader.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="MultiDataLoader.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiDataLoader.html#torchtnt.utils.data.MultiDataLoader.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">DataIterationStrategy</span><span class="p">,</span>
@@ -477,7 +477,7 @@
                     <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterator_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterator functions for the collection of dataloaders.</span>
 
 <span class="sd">        Returns:</span>
@@ -499,7 +499,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">iterator_state</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_iterator</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an aggregated state dict based on individual dataloaders.</span>
 
 <span class="sd">        The state dict is keyed off the names provided by ``individual_dataloaders``.</span>
@@ -522,7 +522,7 @@
 
         <span class="k">return</span> <span class="n">state_dict</span>
 
-    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads aggregated state dict based on individual dataloaders.</span>
 
 <span class="sd">        The provided state dict should be keyed off the names provided by ``individual_dataloaders``.</span>

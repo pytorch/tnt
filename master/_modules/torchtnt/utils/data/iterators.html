@@ -414,16 +414,16 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
-<span class="kn">import</span> <span class="nn">random</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">cycle</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cycle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Any</span><span class="p">,</span>
     <span class="n">cast</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
@@ -438,22 +438,22 @@
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.distributed</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dist</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
 
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">DataIterationStrategy</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DataIterationStrategy</span><span class="p">:</span>
     <span class="k">pass</span>
 
 
-<div class="viewcode-block" id="MultiIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator">[docs]</a><span class="k">class</span> <span class="nc">MultiIterator</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
+<div class="viewcode-block" id="MultiIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">MultiIterator</span><span class="p">(</span><span class="n">Iterator</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;MultiIterator defines the iteration logic to get a batch, given</span>
 <span class="sd">    batches from all individual dataloaders.</span>
 <span class="sd">    iteration_strategy can include accompanying parameters for a particular</span>
@@ -471,7 +471,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MultiIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="MultiIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.MultiIterator.html#torchtnt.utils.data.MultiIterator.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">DataIterationStrategy</span><span class="p">,</span>
@@ -479,21 +479,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">individual_dataloaders</span> <span class="o">=</span> <span class="n">individual_dataloaders</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iteration_strategy</span> <span class="o">=</span> <span class="n">iteration_strategy</span></div>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_strategy</span><span class="p">)</span>
 
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">pass</span>
 
-    <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span></div>
 
 
-<span class="k">class</span> <span class="nc">StoppingMechanism</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StoppingMechanism</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="n">ALL_DATASETS_EXHAUSTED</span> <span class="o">=</span> <span class="s2">&quot;ALL_DATASETS_EXHAUSTED&quot;</span>
     <span class="n">SMALLEST_DATASET_EXHAUSTED</span> <span class="o">=</span> <span class="s2">&quot;SMALLEST_DATASET_EXHAUSTED&quot;</span>
     <span class="n">RESTART_UNTIL_ALL_DATASETS_EXHAUSTED</span> <span class="o">=</span> <span class="s2">&quot;RESTART_UNTIL_ALL_DATASETS_EXHAUSTED&quot;</span>
@@ -501,7 +501,7 @@
     <span class="c1"># used with RandomizedBatchSampler</span>
     <span class="n">WRAP_AROUND_UNTIL_KILLED</span> <span class="o">=</span> <span class="s2">&quot;WRAP_AROUND_UNTIL_KILLED&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StoppingMechanism</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StoppingMechanism</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Enable comparison betwen string and instances of StoppingMechanism</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -512,12 +512,12 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">RoundRobin</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RoundRobin</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
     <span class="n">stopping_mechanism</span><span class="p">:</span> <span class="n">StoppingMechanism</span> <span class="o">=</span> <span class="n">StoppingMechanism</span><span class="o">.</span><span class="n">ALL_DATASETS_EXHAUSTED</span>
     <span class="n">iteration_order</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<div class="viewcode-block" id="RoundRobinIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RoundRobinIterator.html#torchtnt.utils.data.RoundRobinIterator">[docs]</a><span class="k">class</span> <span class="nc">RoundRobinIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
+<div class="viewcode-block" id="RoundRobinIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RoundRobinIterator.html#torchtnt.utils.data.RoundRobinIterator">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">RoundRobinIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;RoundRobinIterator cycles over the dataloader one by one.</span>
 <span class="sd">    Iterating order can be defined via RobinRobin strategy.</span>
 
@@ -550,7 +550,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="RoundRobinIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RoundRobinIterator.html#torchtnt.utils.data.RoundRobinIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="RoundRobinIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RoundRobinIterator.html#torchtnt.utils.data.RoundRobinIterator.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">RoundRobin</span><span class="p">,</span>
@@ -575,7 +575,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">cur_dataloader</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">round_robin_order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">finished_dataloaders</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
 
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">finished_dataloaders</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">individual_iterators</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">StopIteration</span>
 
@@ -602,13 +602,13 @@
 
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__next__</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;finished_dataloaders&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">finished_dataloaders</span><span class="p">,</span>
             <span class="s2">&quot;cur_dataloader&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">cur_dataloader</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span> <span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_state_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Loading RoundRobinIterator state. Finished dataloaders: </span><span class="si">{</span><span class="n">state_dict</span><span class="p">[</span><span class="s1">&#39;finished_dataloaders&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> and trying to set cur_dataloader to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cur_dataloader</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
@@ -624,11 +624,11 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">AllDatasetBatches</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AllDatasetBatches</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
     <span class="n">stopping_mechanism</span><span class="p">:</span> <span class="n">StoppingMechanism</span> <span class="o">=</span> <span class="n">StoppingMechanism</span><span class="o">.</span><span class="n">ALL_DATASETS_EXHAUSTED</span>
 
 
-<div class="viewcode-block" id="AllDatasetBatchesIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator">[docs]</a><span class="k">class</span> <span class="nc">AllDatasetBatchesIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
+<div class="viewcode-block" id="AllDatasetBatchesIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">AllDatasetBatchesIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;AllDatasetBatchesIterator returns a dict containing batches from all dataloaders.</span>
 <span class="sd">    When the stopping mechanism is set to ALL_DATASETS_EXHAUSTED, it will skip over the</span>
 <span class="sd">    finished datasets.</span>
@@ -667,7 +667,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="AllDatasetBatchesIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="AllDatasetBatchesIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.AllDatasetBatchesIterator.html#torchtnt.utils.data.AllDatasetBatchesIterator.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">AllDatasetBatches</span><span class="p">,</span>
@@ -686,7 +686,7 @@
         <span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">iter</span><span class="p">(</span><span class="n">dl</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dl</span> <span class="ow">in</span> <span class="n">individual_dataloaders</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterators_finished</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
 
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="n">batch_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">iterator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">individual_iterators</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
@@ -718,13 +718,13 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">RandomizedBatchSampler</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RandomizedBatchSampler</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
     <span class="n">weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">stopping_mechanism</span><span class="p">:</span> <span class="n">StoppingMechanism</span> <span class="o">=</span> <span class="n">StoppingMechanism</span><span class="o">.</span><span class="n">ALL_DATASETS_EXHAUSTED</span>
     <span class="n">enforce_same_loader_across_ranks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
-<div class="viewcode-block" id="RandomizedBatchSamplerIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.html#torchtnt.utils.data.RandomizedBatchSamplerIterator">[docs]</a><span class="k">class</span> <span class="nc">RandomizedBatchSamplerIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
+<div class="viewcode-block" id="RandomizedBatchSamplerIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.html#torchtnt.utils.data.RandomizedBatchSamplerIterator">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">RandomizedBatchSamplerIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;RandomizedBatchSamplerIterator randomly samples from each dataset</span>
 <span class="sd">    using the provided weights.</span>
 
@@ -754,7 +754,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="RandomizedBatchSamplerIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.html#torchtnt.utils.data.RandomizedBatchSamplerIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="RandomizedBatchSamplerIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.RandomizedBatchSamplerIterator.html#torchtnt.utils.data.RandomizedBatchSamplerIterator.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">RandomizedBatchSampler</span><span class="p">,</span>
@@ -794,7 +794,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_iterators_finished</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
 
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stopping_mechanism</span> <span class="o">==</span> <span class="n">StoppingMechanism</span><span class="o">.</span><span class="n">SMALLEST_DATASET_EXHAUSTED</span>
             <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterator_is_exhausted</span><span class="p">)</span>
@@ -873,11 +873,11 @@
 
 
 <span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">InOrder</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InOrder</span><span class="p">(</span><span class="n">DataIterationStrategy</span><span class="p">):</span>
     <span class="n">iteration_order</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
 
-<div class="viewcode-block" id="InOrderIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.InOrderIterator.html#torchtnt.utils.data.InOrderIterator">[docs]</a><span class="k">class</span> <span class="nc">InOrderIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
+<div class="viewcode-block" id="InOrderIterator"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.InOrderIterator.html#torchtnt.utils.data.InOrderIterator">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">InOrderIterator</span><span class="p">(</span><span class="n">MultiIterator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;InOrderIterator returns all batches from a single dataset</span>
 <span class="sd">    till it is exhausted and then moves to the next one.</span>
 
@@ -906,7 +906,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="InOrderIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.InOrderIterator.html#torchtnt.utils.data.InOrderIterator.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="InOrderIterator.__init__"><a class="viewcode-back" href="../../../../utils/generated/torchtnt.utils.data.InOrderIterator.html#torchtnt.utils.data.InOrderIterator.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">individual_dataloaders</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">DataLoader</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">object</span><span class="p">]]],</span>
         <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">InOrder</span><span class="p">,</span>
@@ -922,7 +922,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">num_iterators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_order</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">iterators_finished</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
 
-    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterators_finished</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_iterators</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">StopIteration</span>
 
@@ -942,7 +942,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__next__</span><span class="p">()</span></div>
 
 
-<span class="k">class</span> <span class="nc">DataIterationStrategyRegistry</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DataIterationStrategyRegistry</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A generic iterator registry.</span>
 
 <span class="sd">    This will be used to provide default iterators.</span>
@@ -956,7 +956,7 @@
     <span class="p">}</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">DataIterationStrategy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">MultiIterator</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">iteration_strategy</span><span class="p">:</span> <span class="n">DataIterationStrategy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">MultiIterator</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">iteration_strategy</span><span class="o">.</span><span class="vm">__class__</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">REGISTRY</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">REGISTRY</span><span class="p">[</span><span class="n">iteration_strategy</span><span class="o">.</span><span class="vm">__class__</span><span class="p">]</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>

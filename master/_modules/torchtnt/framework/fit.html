@@ -413,27 +413,27 @@
 
 <span class="c1"># pyre-strict</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
-<span class="kn">from</span> <span class="nn">torchtnt.framework._callback_handler</span> <span class="kn">import</span> <span class="n">CallbackHandler</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework._loop_utils</span> <span class="kn">import</span> <span class="n">_log_api_usage</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.callback</span> <span class="kn">import</span> <span class="n">Callback</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.state</span> <span class="kn">import</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">PhaseState</span><span class="p">,</span> <span class="n">State</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.train</span> <span class="kn">import</span> <span class="n">_train_impl</span>
-<span class="kn">from</span> <span class="nn">torchtnt.framework.unit</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework._callback_handler</span><span class="w"> </span><span class="kn">import</span> <span class="n">CallbackHandler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework._loop_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_log_api_usage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.callback</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callback</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntryPoint</span><span class="p">,</span> <span class="n">PhaseState</span><span class="p">,</span> <span class="n">State</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">_train_impl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.unit</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">EvalUnit</span><span class="p">,</span>
     <span class="n">TEvalData</span><span class="p">,</span>
     <span class="n">TrainUnit</span><span class="p">,</span>
     <span class="n">TTrainData</span><span class="p">,</span>
     <span class="n">TTrainUnit</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">torchtnt.utils.timer</span> <span class="kn">import</span> <span class="n">get_timer_summary</span><span class="p">,</span> <span class="n">TimerProtocol</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.timer</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_timer_summary</span><span class="p">,</span> <span class="n">TimerProtocol</span>
 
 <span class="n">logger</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="fit"><a class="viewcode-back" href="../../../framework/fit.html#torchtnt.framework.fit.fit">[docs]</a><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+<div class="viewcode-block" id="fit"><a class="viewcode-back" href="../../../framework/fit.html#torchtnt.framework.fit.fit">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span>
     <span class="n">unit</span><span class="p">:</span> <span class="n">TTrainUnit</span><span class="p">,</span>
     <span class="n">train_dataloader</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TTrainData</span><span class="p">],</span>
     <span class="n">eval_dataloader</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">TEvalData</span><span class="p">],</span>
