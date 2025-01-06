@@ -748,6 +748,98 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
                         expected_keys_with_dl,
                     )
 
+    def test_save_restore_fit_save_every_n_eval_epochs(self) -> None:
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+
+        my_unit = DummyAutoUnit(module=nn.Linear(input_dim, 2))
+        my_unit.output_mean = DummyMeanMetric()
+        my_unit.loss = 0.1
+
+        train_dataloader = generate_dummy_stateful_dataloader(
+            dataset_len, input_dim, batch_size
+        )
+
+        eval_dataloader = generate_dummy_stateful_dataloader(
+            dataset_len, input_dim, batch_size
+        )
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dcp_cb = DistributedCheckpointSaver(
+                temp_dir,
+                knob_options=KnobOptions(1),
+                save_every_n_eval_epochs=1,
+                best_checkpoint_config=BestCheckpointConfig(monitored_metric="loss"),
+            )
+
+            fit(
+                my_unit,
+                max_epochs=1,
+                evaluate_every_n_steps=1,
+                train_dataloader=train_dataloader,
+                eval_dataloader=eval_dataloader,
+                callbacks=[dcp_cb],
+            )
+
+            generated_ckpts = os.listdir(temp_dir)
+            # fbvscode.set_trace()
+            # Since we are using FIT, the metric value should be included
+            expected_ckpts_to_dl_mapping = {
+                "epoch_0_train_step_1_eval_step_5_loss=0.1",
+                "epoch_0_train_step_2_eval_step_10_loss=0.1",
+                "epoch_0_train_step_3_eval_step_15_loss=0.1",
+                "epoch_0_train_step_4_eval_step_20_loss=0.1",
+                "epoch_0_train_step_5_eval_step_25_loss=0.1",
+                "epoch_1_train_step_5_eval_step_30_loss=0.1",
+            }
+            self.assertCountEqual(generated_ckpts, [*expected_ckpts_to_dl_mapping])
+
+            expected_keys = [
+                "module",  # Both train and eval checkpoints save full app_state in fit
+                "optimizer",
+                "lr_scheduler",
+                "train_progress",
+                "eval_progress",
+                "predict_progress",  # included because of AutoUnit
+                "output_mean",
+                "eval_dataloader",
+                "train_dataloader",
+            ]
+
+            for ckpt_path in expected_ckpts_to_dl_mapping:
+                full_ckpt_path = os.path.join(temp_dir, ckpt_path)
+                expected_keys_with_dl = list(expected_keys)
+                storage_reader = FsspecReader(full_ckpt_path)
+                metadata = storage_reader.read_metadata()
+                if ckpt_path == "epoch_1_train_step_5_eval_step_30_loss=0.1":
+                    # remove dataloader keys as final checkpoint wont have them
+                    expected_keys_with_dl = expected_keys_with_dl[:-1]
+                appstate_keys = {
+                    key.split(".")[1] for key in metadata.state_dict_metadata.keys()
+                }
+                self.assertCountEqual(
+                    # Get base keys after the app_state wrapper
+                    appstate_keys,
+                    expected_keys_with_dl,
+                    msg=f"key: {ckpt_path}, {expected_keys_with_dl=}, {appstate_keys=},",
+                )
+
+                # Now make sure that the same exact keys are used when restoring
+                with patch(
+                    "torchtnt.framework.callbacks.dcp_saver.dcp.load"
+                ) as mock_load:
+                    DistributedCheckpointSaver.restore(
+                        full_ckpt_path,
+                        my_unit,
+                        train_dataloader=train_dataloader,
+                        eval_dataloader=eval_dataloader,
+                    )
+                    self.assertCountEqual(
+                        [*mock_load.call_args[0][0]["app_state"].state_dict().keys()],
+                        expected_keys_with_dl,
+                    )
+
     def test_save_fit_eval_every_n_steps(self) -> None:
         input_dim = 2
 
