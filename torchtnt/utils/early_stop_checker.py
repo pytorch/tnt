@@ -14,6 +14,7 @@ import torch
 from typing_extensions import final, Literal
 
 _log: logging.Logger = logging.getLogger(__name__)
+_log.setLevel(logging.DEBUG)
 
 
 @final
@@ -179,10 +180,12 @@ class EarlyStopChecker:
             divergence_threshold = divergence_threshold.to(val.device)
         improvement_threshold = self.min_delta
         if self._threshold_mode == "rel":
-            base_val = self._best_value if torch.isfinite(self._best_value) else 0.0
+            base_val = (
+                self._best_value.to(val.device)
+                if torch.isfinite(self._best_value)
+                else 0.0
+            )
             improvement_threshold = self.min_delta.to(val.device) * base_val
-
-        improvement_threshold = improvement_threshold.to(val.device)
 
         # Check finite
         if self.check_finite and not torch.isfinite(val):
@@ -212,7 +215,7 @@ class EarlyStopChecker:
 
         # Check if improvement is happening
         if self._mode_func(
-            val - improvement_threshold, self._best_value.to(val.device)
+            val - improvement_threshold.to(val.device), self._best_value.to(val.device)
         ):
             # Still improving
             should_stop = False
@@ -259,9 +262,12 @@ class EarlyStopChecker:
         """Formats a log message that informs the user about an improvement in the monitored score."""
         if torch.isfinite(self._best_value):
             improvement = (
-                torch.abs(self._best_value - val)
+                torch.abs(self._best_value.to(val.device) - val)
                 if self.threshold_mode == "abs"
-                else torch.abs((self._best_value - val) / (1.0 * self._best_value))
+                else torch.abs(
+                    (self._best_value.to(val.device) - val)
+                    / (1.0 * self._best_value.to(val.device))
+                )
             )
             msg = (
                 f"Metric improved by {self.threshold_mode} {improvement} >="
