@@ -421,6 +421,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">final</span><span class="p">,</span> <span class="n">Literal</span>
 
 <span class="n">_log</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">_log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="EarlyStopChecker"><a class="viewcode-back" href="../../../utils/generated/torchtnt.utils.early_stop_checker.EarlyStopChecker.html#torchtnt.utils.early_stop_checker.EarlyStopChecker">[docs]</a><span class="nd">@final</span>
@@ -586,10 +587,12 @@
             <span class="n">divergence_threshold</span> <span class="o">=</span> <span class="n">divergence_threshold</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">improvement_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_delta</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold_mode</span> <span class="o">==</span> <span class="s2">&quot;rel&quot;</span><span class="p">:</span>
-            <span class="n">base_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="n">base_val</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="p">)</span>
+                <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
             <span class="n">improvement_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_delta</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">*</span> <span class="n">base_val</span>
-
-        <span class="n">improvement_threshold</span> <span class="o">=</span> <span class="n">improvement_threshold</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="c1"># Check finite</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_finite</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
@@ -619,7 +622,7 @@
 
         <span class="c1"># Check if improvement is happening</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode_func</span><span class="p">(</span>
-            <span class="n">val</span> <span class="o">-</span> <span class="n">improvement_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">-</span> <span class="n">improvement_threshold</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="p">):</span>
             <span class="c1"># Still improving</span>
             <span class="n">should_stop</span> <span class="o">=</span> <span class="kc">False</span>
@@ -666,9 +669,12 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Formats a log message that informs the user about an improvement in the monitored score.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="p">):</span>
             <span class="n">improvement</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span> <span class="o">-</span> <span class="n">val</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-</span> <span class="n">val</span><span class="p">)</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold_mode</span> <span class="o">==</span> <span class="s2">&quot;abs&quot;</span>
-                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span> <span class="o">-</span> <span class="n">val</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="p">))</span>
+                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-</span> <span class="n">val</span><span class="p">)</span>
+                    <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_best_value</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+                <span class="p">)</span>
             <span class="p">)</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Metric improved by </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold_mode</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">improvement</span><span class="si">}</span><span class="s2"> &gt;=&quot;</span>
