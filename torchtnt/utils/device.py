@@ -86,10 +86,16 @@ def copy_data_to_device(
                 for k, v in data.items()
             },
         )
-    elif issubclass(data_type, dict):
+    elif (
+        hasattr(data, "items")
+        and hasattr(data, "__getitem__")
+        and hasattr(data, "__iter__")
+    ):
+        # pyre-ignore: Too many arguments [19]: Call `object.__init__` expects 0 positional arguments, 1
         return data_type(
             {
                 k: copy_data_to_device(v, device, *args, **kwargs)
+                # pyre-ignore: Undefined attribute [16]: `Variable[T]` has no attribute `items`.
                 for k, v in data.items()
             }
         )

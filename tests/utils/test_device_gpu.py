@@ -10,7 +10,7 @@
 import dataclasses
 import os
 import unittest
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, UserDict
 from dataclasses import dataclass
 from typing import Any, Dict
 from unittest import mock
@@ -98,6 +98,21 @@ class DeviceGPUTest(unittest.TestCase):
         f = torch.tensor([1, 2, 3])
         g = torch.tensor([4, 5, 6])
         original_dict = {"f": f, "g": g}
+        self.assertEqual(f.device.type, "cpu")
+        self.assertEqual(g.device.type, "cpu")
+        new_dict = copy_data_to_device(original_dict, cuda_0)
+        for key in new_dict.keys():
+            self.assertEqual(new_dict[key].device.type, "cuda")
+
+    @skip_if_not_gpu
+    def test_copy_data_to_device_mapping(self) -> None:
+        cuda_0 = torch.device("cuda:0")
+        f = torch.tensor([1, 2, 3])
+        g = torch.tensor([4, 5, 6])
+
+        # Use UserDict instead of a regular dictionary
+        original_dict = UserDict({"f": f, "g": g})
+
         self.assertEqual(f.device.type, "cpu")
         self.assertEqual(g.device.type, "cpu")
         new_dict = copy_data_to_device(original_dict, cuda_0)
