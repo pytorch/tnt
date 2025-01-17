@@ -183,6 +183,11 @@ class _AutoUnitMixin(Generic[TData]):
         )
 
         self.detect_anomaly = detect_anomaly
+        if torch_compile_params is not None:
+            # torch compile is not compatible with detect anomaly
+            # so we disable detect anomaly if torch compile is enabled
+            self.detect_anomaly = None
+            _logger.warning("torch.compile is enabled, so detect_anomaly is disabled")
 
         # create autocast context based on precision and device type
         self.maybe_autocast_precision = torch.autocast(
