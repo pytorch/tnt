@@ -40,7 +40,7 @@ from torchtnt.utils.device import copy_data_to_device
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import DDPStrategy, FSDPStrategy
+from torchtnt.utils.prepare_module import DDPStrategy, FSDPStrategy, TorchCompileParams
 from torchtnt.utils.progress import Progress
 from torchtnt.utils.swa import _AVERAGED_MODEL_AVAIL
 from torchtnt.utils.test_utils import skip_if_not_distributed
@@ -740,6 +740,15 @@ class TestAutoUnit(unittest.TestCase):
         auto_unit = DummyAutoUnit(module=torch.nn.Linear(2, 2), enable_prefetch=False)
         _ = auto_unit._get_next_batch(get_dummy_train_state(), iter(data))
         self.assertIsNone(auto_unit._phase_to_next_batch[ActivePhase.TRAIN])
+
+    def test_detect_anomaly_disabled_with_torch_compile(self) -> None:
+        auto_unit = DummyAutoUnit(
+            module=torch.nn.Linear(2, 2),
+            detect_anomaly=True,
+            torch_compile_params=TorchCompileParams(),
+        )
+
+        self.assertIsNone(auto_unit.detect_anomaly)
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
