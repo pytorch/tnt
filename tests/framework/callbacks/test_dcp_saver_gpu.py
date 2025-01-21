@@ -116,6 +116,7 @@ class DistributedCheckpointSaverGPUTest(unittest.TestCase):
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
             )
         finally:
+            dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
@@ -165,5 +166,6 @@ class DistributedCheckpointSaverGPUTest(unittest.TestCase):
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
             )
         finally:
+            dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory

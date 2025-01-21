@@ -17,6 +17,7 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import torch
+import torch.distributed as dist
 from torch import nn
 from torch.utils.data import DataLoader
 from torchsnapshot.test_utils import assert_state_dict_eq, check_state_dict_eq
@@ -322,6 +323,7 @@ class TorchSnapshotSaverTest(unittest.TestCase):
                 tc, my_new_unit.module.state_dict(), my_unit.module.state_dict()
             )
         finally:
+            dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
