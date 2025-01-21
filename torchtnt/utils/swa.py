@@ -6,9 +6,10 @@
 
 # pyre-strict
 
-from typing import Callable, List, Literal, Optional
+from typing import Any, Callable, List, Literal, Optional
 
 import torch
+from torch.distributed.fsdp import FullyShardedDataParallel, ShardingStrategy
 
 _AVERAGED_MODEL_AVAIL: bool = True
 
@@ -104,6 +105,20 @@ class AveragedModel(PyTorchAveragedModel):
                 multi_avg_fn=multi_avg_fn,
                 use_buffers=use_buffers,
             )
+
+    # pyre-ignore: Missing return annotation [3]: Return type must be specified as type other than `Any`
+    def forward(self, *args: Any, **kwargs: Any) -> Any:
+        output = self.module(*args, **kwargs)
+
+        # for fsdp modules, we need to manually reshard the swa_model in case the
+        # model fwd was used in evaluation loop, due to how fsdp manages the param state
+        # see https://github.com/pytorch/pytorch/issues/117742
+        for m in FullyShardedDataParallel.fsdp_modules(self.module):
+            if m._has_params and m.sharding_strategy is not ShardingStrategy.NO_SHARD:
+                # pyre-ignore: Incompatible parameter type [6]: In call `torch.distributed.fsdp._runtime_utils._reshard`, for 2nd positional argument, expected `FlatParamHandle` but got `Optional[FlatParamHandle]`.
+                torch.distributed.fsdp._runtime_utils._reshard(m, m._handle, True)
+
+        return output
 
     def update_parameters(self, model: torch.nn.Module) -> None:
         self._num_updates += 1
