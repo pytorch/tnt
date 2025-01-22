@@ -886,7 +886,7 @@
 <span class="sd">        detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection</span>
 <span class="sd">        clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html</span>
 <span class="sd">        clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html</span>
-<span class="sd">        swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging</span>
+<span class="sd">        swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging (Please see note if using with FSDP)</span>
 <span class="sd">        torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html</span>
 <span class="sd">        activation_checkpoint_params: params for enabling activation checkpointing</span>
 <span class="sd">        training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.</span>
@@ -905,6 +905,10 @@
 
 <span class="sd">    Note:</span>
 <span class="sd">        Torch compile support is only available in PyTorch 2.0 or higher.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        If using SWA with FSDP, the SWA model will be sharded with the same FSDP configuration as the original model. If you need the swa model&#39;s output in evaluation / prediction step,</span>
+<span class="sd">        please call `self.swa_model(inputs, ...)` to ensure all hooks (especially for FSDP) are fired correctly.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 

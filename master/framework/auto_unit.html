@@ -469,7 +469,7 @@ and <a class="reference internal" href="unit.html#torchtnt.framework.unit.Predic
 <li><strong>detect_anomaly</strong> – whether to enable anomaly detection for the autograd engine <a class="reference external" href="https://pytorch.org/docs/stable/autograd.html#anomaly-detection" target="_blank">https://pytorch.org/docs/stable/autograd.html#anomaly-detection</a></li>
 <li><strong>clip_grad_norm</strong> – max norm of the gradients for clipping <a class="reference external" href="https://pytorch.org/docs/stable/generated/" target="_blank">https://pytorch.org/docs/stable/generated/</a><a href="#id3"><span class="problematic" id="id4">torch.nn.utils.clip_grad_norm_</span></a>.html</li>
 <li><strong>clip_grad_value</strong> – max value of the gradients for clipping <a class="reference external" href="https://pytorch.org/docs/stable/generated/" target="_blank">https://pytorch.org/docs/stable/generated/</a><a href="#id5"><span class="problematic" id="id6">torch.nn.utils.clip_grad_value_</span></a>.html</li>
-<li><strong>swa_params</strong> – params for stochastic weight averaging <a class="reference external" href="https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging" target="_blank">https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging</a></li>
+<li><strong>swa_params</strong> – params for stochastic weight averaging <a class="reference external" href="https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging" target="_blank">https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging</a> (Please see note if using with FSDP)</li>
 <li><strong>torch_compile_params</strong> – params for Torch compile <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.compile.html" target="_blank">https://pytorch.org/docs/stable/generated/torch.compile.html</a></li>
 <li><strong>activation_checkpoint_params</strong> – params for enabling activation checkpointing</li>
 <li><strong>training</strong> – if True, the optimizer and optionally LR scheduler will be created after the class is initialized.</li>
@@ -495,6 +495,11 @@ in a much more efficient way.</li>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Torch compile support is only available in PyTorch 2.0 or higher.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If using SWA with FSDP, the SWA model will be sharded with the same FSDP configuration as the original model. If you need the swa model’s output in evaluation / prediction step,
+please call <cite>self.swa_model(inputs, …)</cite> to ensure all hooks (especially for FSDP) are fired correctly.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchtnt.framework.auto_unit.AutoUnit.compute_loss">
