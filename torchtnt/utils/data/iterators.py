@@ -10,11 +10,9 @@
 from __future__ import annotations
 
 import logging
-
 import random
 from abc import abstractmethod
 from dataclasses import dataclass
-from enum import Enum
 from itertools import cycle
 from typing import (
     Any,
@@ -30,6 +28,16 @@ from typing import (
     TYPE_CHECKING,
     Union,
 )
+
+try:
+    # pyre-ignore[21]: Could not find name `StrEnum` in `enum`
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
+
 
 import torch
 import torch.distributed as dist
@@ -86,22 +94,13 @@ class MultiIterator(Iterator[Dict[str, Any]]):
         pass
 
 
-class StoppingMechanism(Enum):
+class StoppingMechanism(StrEnum):
     ALL_DATASETS_EXHAUSTED = "ALL_DATASETS_EXHAUSTED"
     SMALLEST_DATASET_EXHAUSTED = "SMALLEST_DATASET_EXHAUSTED"
     RESTART_UNTIL_ALL_DATASETS_EXHAUSTED = "RESTART_UNTIL_ALL_DATASETS_EXHAUSTED"
 
     # used with RandomizedBatchSampler
     WRAP_AROUND_UNTIL_KILLED = "WRAP_AROUND_UNTIL_KILLED"
-
-    def __eq__(self, other: Union[str, StoppingMechanism]) -> bool:
-        """
-        Enable comparison betwen string and instances of StoppingMechanism
-        """
-        if isinstance(other, str):
-            return self.value == other
-
-        return super().__eq__(other)
 
 
 @dataclass
