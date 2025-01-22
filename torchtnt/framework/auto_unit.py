@@ -461,7 +461,7 @@ class AutoUnit(
         detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
         clip_grad_norm: max norm of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_norm_.html
         clip_grad_value: max value of the gradients for clipping https://pytorch.org/docs/stable/generated/torch.nn.utils.clip_grad_value_.html
-        swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging
+        swa_params: params for stochastic weight averaging https://pytorch.org/docs/stable/optim.html#stochastic-weight-averaging (Please see note if using with FSDP)
         torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html
         activation_checkpoint_params: params for enabling activation checkpointing
         training: if True, the optimizer and optionally LR scheduler will be created after the class is initialized.
@@ -480,6 +480,10 @@ class AutoUnit(
 
     Note:
         Torch compile support is only available in PyTorch 2.0 or higher.
+
+    Note:
+        If using SWA with FSDP, the SWA model will be sharded with the same FSDP configuration as the original model. If you need the swa model's output in evaluation / prediction step,
+        please call `self.swa_model(inputs, ...)` to ensure all hooks (especially for FSDP) are fired correctly.
 
     """
 

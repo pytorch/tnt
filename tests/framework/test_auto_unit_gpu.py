@@ -10,7 +10,7 @@
 import unittest
 
 from copy import deepcopy
-from typing import TypeVar
+from typing import Tuple, TypeVar
 from unittest.mock import MagicMock, patch
 
 import torch
@@ -27,7 +27,9 @@ from torchtnt.framework._test_utils import (
 
 from torchtnt.framework.auto_unit import AutoPredictUnit, SWALRParams, SWAParams
 from torchtnt.framework.evaluate import evaluate
+from torchtnt.framework.fit import fit
 from torchtnt.framework.predict import predict
+from torchtnt.framework.state import ActivePhase, State
 from torchtnt.framework.train import train
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env, seed
@@ -36,6 +38,25 @@ from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
 
 TParams = ParamSpec("TParams")
 T = TypeVar("T")
+
+
+Batch = Tuple[torch.Tensor, torch.Tensor]
+
+
+class DummySWAAutoUnit(DummyAutoUnit):
+    def compute_loss(self, state: State, data: Batch) -> Tuple[torch.Tensor, object]:
+        """
+        Computes loss for given batch. If in EVAL or PREDICT phase, uses swa model's output
+        """
+        inputs, targets = data
+        if state.active_phase == ActivePhase.TRAIN:
+            outputs = self.module(inputs)
+        else:
+            outputs = self.swa_model(inputs) if self.swa_model else self.module(inputs)
+
+        loss = torch.nn.functional.cross_entropy(outputs, targets)
+
+        return loss, outputs
 
 
 class TestAutoUnitGPU(unittest.TestCase):
@@ -183,6 +204,112 @@ class TestAutoUnitGPU(unittest.TestCase):
             # Iterate and compare each parameter
             for p1, p2 in zip(swa_params, swa_fsdp_params, strict=True):
                 torch.testing.assert_close(p2, p1, check_device=False)
+
+    @skip_if_not_distributed
+    @skip_if_not_gpu
+    def test_stochastic_weight_averaging_fsdp_with_eval(self) -> None:
+        """
+        Test that swa params with FSDP is identical to non-FSDP swa
+        """
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_stochastic_weight_averaging_fsdp_with_eval,
+        )
+
+    @staticmethod
+    def _test_stochastic_weight_averaging_fsdp_with_eval() -> None:
+        """
+        Compares the swa model parameters after training without FSDP and with FSDP.
+        They should be identical.
+        """
+
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.l1 = torch.nn.Linear(2, 2)
+                self.b1 = torch.nn.BatchNorm1d(2)
+                self.l2 = torch.nn.Linear(2, 2)
+
+            def forward(self, x):
+                x = self.l1(x)
+                x = self.b1(x)
+                x = self.l2(x)
+                return x
+
+        # so all ranks start with same initialized weights
+        device = init_from_env()
+        seed(0)
+        my_module = Net()
+
+        auto_unit = DummySWAAutoUnit(
+            module=deepcopy(my_module),
+            device=device,
+            step_lr_interval="step",
+            swa_params=SWAParams(
+                warmup_steps_or_epochs=1,
+                step_or_epoch_update_freq=1,
+                swalr_params=SWALRParams(
+                    anneal_steps_or_epochs=3,
+                ),
+                averaging_method="ema",
+            ),
+        )
+
+        auto_unit_fsdp = DummySWAAutoUnit(
+            module=my_module,
+            device=device,
+            step_lr_interval="step",
+            strategy=FSDPStrategy(),
+            swa_params=SWAParams(
+                warmup_steps_or_epochs=1,
+                step_or_epoch_update_freq=1,
+                swalr_params=SWALRParams(
+                    anneal_steps_or_epochs=3,
+                ),
+                averaging_method="ema",
+            ),
+        )
+
+        input_dim = 2
+        dataset_len = 10
+        batch_size = 2
+
+        dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        eval_dataloader = generate_random_dataloader(dataset_len, input_dim, batch_size)
+        fit(
+            auto_unit,
+            dataloader,
+            eval_dataloader,
+            max_epochs=3,
+            max_train_steps_per_epoch=5,
+            evaluate_every_n_epochs=0,
+        )
+
+        fit(
+            auto_unit_fsdp,
+            dataloader,
+            eval_dataloader,
+            max_epochs=3,
+            max_train_steps_per_epoch=5,
+            # this is key arg, to ensure that swa model is updated
+            # even after swa model forward pass is used in eval
+            evaluate_every_n_epochs=1,
+        )
+
+        swa_params = list(auto_unit.swa_model.parameters())
+        swa_buffers = list(auto_unit.swa_model.buffers())
+        with FSDP.summon_full_params(auto_unit_fsdp.swa_model):
+            swa_fsdp_params = auto_unit_fsdp.swa_model.parameters()
+            swa_fsdp_buffers = auto_unit_fsdp.swa_model.buffers()
+
+            # Iterate and compare each parameter
+            for p1, p2 in zip(swa_params, swa_fsdp_params, strict=True):
+                torch.testing.assert_close(p2, p1, check_device=False)
+
+            # Iterate and compare each buffer
+            for b1, b2 in zip(swa_buffers, swa_fsdp_buffers, strict=True):
+                torch.testing.assert_close(b2, b1, check_device=False)
 
     @skip_if_not_gpu
     @patch("torch.autocast")
