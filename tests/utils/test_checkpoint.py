@@ -1324,6 +1324,7 @@ class CheckpointUtilsTest(unittest.TestCase):
                 get_checkpoint_dirpaths(temp_dir, metadata_fname=".metadata"), []
             )
         finally:
+            dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 

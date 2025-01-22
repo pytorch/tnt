@@ -13,6 +13,7 @@ import tempfile
 import unittest
 
 import torch
+import torch.distributed as dist
 from torchtnt.framework._test_utils import DummyAutoUnit, generate_random_dataloader
 from torchtnt.framework.callbacks.torchsnapshot_saver import TorchSnapshotSaver
 from torchtnt.framework.train import train
@@ -68,5 +69,6 @@ class TorchSnapshotSaverGPUTest(unittest.TestCase):
                 my_new_unit.optimizer.state_dict(), my_unit.optimizer.state_dict()
             )
         finally:
+            dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory

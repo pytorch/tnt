@@ -659,6 +659,7 @@ class BaseCheckpointerTest(unittest.TestCase):
             tc.assertTrue("tmp" in dirpath)
             tc.assertFalse("foo" in dirpath)
         finally:
+            dist.barrier()  # avoid race condition
             if get_global_rank() == 0:
                 shutil.rmtree(temp_dir)  # delete temp directory
 
