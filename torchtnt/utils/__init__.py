@@ -51,6 +51,7 @@ from .module_summary import (
     ModuleSummary,
     prune_module_summary,
 )
+from .nan import check_for_nan_or_inf, register_nan_hooks_on_whole_graph
 from .oom import (
     attach_oom_observer,
     is_out_of_cpu_memory,
@@ -89,6 +90,8 @@ from .version import (
 )
 
 __all__ = [
+    "check_for_nan_or_inf",
+    "register_nan_hooks_on_whole_graph",
     "IsNaNEvaluator",
     "ThresholdEvaluator",
     "CheckpointPath",
