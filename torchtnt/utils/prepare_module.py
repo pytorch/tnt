@@ -50,7 +50,7 @@ from torchtnt.utils.fsdp_utils import (
     StateDictType,
 )
 
-from torchtnt.utils.rank_zero_log import rank_zero_warn
+from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.version import is_torch_version_geq
 
 
@@ -188,7 +188,7 @@ def prepare_ddp(
     Utility to move a module to device and wrap in `DistributedDataParallel <https://pytorch.org/docs/stable/generated/torch.nn.parallel.DistributedDataParallel.html>`_.
 
     Args:
-        module: module to be wrapped in DDP
+        module: module to be wrapped in DDP. If module has params on meta device, they will be materialized on the device prior to DDP wrapping
         device: device to which module will be moved
         strategy: an instance of :class:`~torchtnt.utils.prepare_module.DDPStrategy` which defines the settings of DDP APIs
 
@@ -207,6 +207,10 @@ def prepare_ddp(
     # remove ddp comm hook variables from params dict
     del params_dict["comm_state"]
     del params_dict["comm_hook"]
+
+    materialize_meta_params(module, device)
+
+    # now move rest of module to device
     module = module.to(device)
 
     # remove sync batch norm from params dict before converting module
@@ -424,3 +428,24 @@ def convert_str_to_strategy(
             f"Strategy {strategy} not supported. Please use one of {list(string_to_strategy_mapping.keys())}"
         )
     return string_to_strategy_mapping[strategy]
+
+
+def on_meta_device(module: torch.nn.Module) -> bool:
+    try:
+        return next(module.parameters(recurse=False)).device.type == "meta"
+    except StopIteration:
+        return False
+
+
+def materialize_meta_params(module: torch.nn.Module, device: torch.device) -> None:
+    """
+    Materialize meta device parameters to the given device.
+
+    Args:
+        module: module to be used.
+        device: device to which module will be moved.
+    """
+    for name, submodule in module.named_modules():
+        if on_meta_device(submodule):
+            rank_zero_info(f"{name} is on meta device, intializing on device {device}")
+            submodule.to_empty(device=device, recurse=False)

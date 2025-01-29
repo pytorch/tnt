@@ -41,10 +41,27 @@ class PrepareModelGPUTest(unittest.TestCase):
             "nccl",
             self._test_prepare_ddp,
         )
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_prepare_ddp_meta_device,
+        )
 
     @staticmethod
     def _test_prepare_ddp() -> None:
         module = torch.nn.Linear(2, 2)
+        device = init_from_env()
+        ddp_module = prepare_ddp(
+            module,
+            device,
+            DDPStrategy(find_unused_parameters=True, gradient_as_bucket_view=True),
+        )
+        tc = unittest.TestCase()
+        tc.assertTrue(isinstance(ddp_module, DDP))
+
+    @staticmethod
+    def _test_prepare_ddp_meta_device() -> None:
+        module = torch.nn.Linear(2, 2, device="meta")
         device = init_from_env()
         ddp_module = prepare_ddp(
             module,
