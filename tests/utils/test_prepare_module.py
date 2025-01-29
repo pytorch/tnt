@@ -17,7 +17,9 @@ from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
     DDPStrategy,
     FSDPStrategy,
+    materialize_meta_params,
     NOOPStrategy,
+    on_meta_device,
     prepare_module,
     TorchCompileParams,
 )
@@ -214,3 +216,29 @@ class PrepareModelTest(unittest.TestCase):
                 torch.allclose(my_module_state_dict[k], compiled_state_dict[k])
             )
         self.assertIsNotNone(compiled_module._compiled_call_impl)
+
+    @unittest.skipUnless(
+        torch_version_geq_2_1_0,
+        reason="Must be on torch 2.1.0+ to run test",
+    )
+    def test_materialize_meta_params(self) -> None:
+        # Create a simple module with parameters on the meta device
+        class SimpleModule(torch.nn.Module):
+            def __init__(self):
+                super(SimpleModule, self).__init__()
+                self.linear1 = torch.nn.Linear(10, 10, device="meta")
+                self.linear2 = torch.nn.Linear(10, 10, device="cpu")
+
+        module = SimpleModule()
+        device = torch.device("cpu")
+
+        self.assertFalse(on_meta_device(module))  # top level module has no params
+        self.assertTrue(on_meta_device(module.linear1))
+        self.assertFalse(on_meta_device(module.linear2))
+
+        # Call the function to test
+        materialize_meta_params(module, device)
+
+        # Check if the parameters are moved to the specified device
+        for param in module.parameters():
+            self.assertEqual(param.device, device)
