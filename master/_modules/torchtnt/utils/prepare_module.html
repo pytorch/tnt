@@ -440,8 +440,11 @@
     <span class="n">ContextManager</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
     <span class="n">Iterable</span><span class="p">,</span>
+    <span class="n">Literal</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Set</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
+    <span class="n">Type</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -455,6 +458,29 @@
     <span class="n">checkpoint_wrapper</span><span class="p">,</span>
     <span class="n">CheckpointImpl</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.device_mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">init_device_mesh</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">CPUOffloadPolicy</span><span class="p">,</span>
+        <span class="n">fully_shard</span><span class="p">,</span>
+        <span class="n">MixedPrecisionPolicy</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp._fully_shard._fsdp_state</span><span class="w"> </span><span class="kn">import</span> <span class="n">FSDPState</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">noop</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">NOOP</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="n">fully_shard</span> <span class="o">=</span> <span class="n">noop</span>
+    <span class="n">MixedPrecisionPolicy</span> <span class="o">=</span> <span class="n">NOOP</span>
+    <span class="n">CPUOffloadPolicy</span> <span class="o">=</span> <span class="n">NOOP</span>
+    <span class="n">FSDPState</span> <span class="o">=</span> <span class="n">NOOP</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">FullyShardedDataParallel</span> <span class="k">as</span> <span class="n">FSDP</span><span class="p">,</span>
     <span class="n">StateDictType</span> <span class="k">as</span> <span class="n">_StateDictType</span><span class="p">,</span>
@@ -569,6 +595,52 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span><span class="p">,</span> <span class="n">MixedPrecision</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span><span class="o">.</span><span class="n">to_native_mixed_precision</span><span class="p">()</span></div>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FSDP2Strategy</span><span class="p">(</span><span class="n">Strategy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dataclass representing the `FSDP2 &lt;https://pytorch.org/docs/2.6/distributed.fsdp.fully_shard.html&gt;`_ strategy.</span>
+<span class="sd">    For more details on the args, see the link.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        modules_to_shard: A list of modules that should be sharded across devices. Options are &#39;all&#39; to shard all submodules, or a list of module names/module types.</span>
+<span class="sd">        reshard_after_forward: If True, reshards parameters after the forward pass to optimize memory usage.</span>
+<span class="sd">        mp_policy: Controls mixed precision policy. If only dtype is provided, it will be used to cast all relevant parts of model. If None, no mixed precision is used</span>
+<span class="sd">        cpu_offload: If True, enables CPU offloading of model parameters to reduce GPU memory usage.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        It is recommended to specify specific modules to shard to avoid unnecessary sharding of all submodules, which has</span>
+<span class="sd">        communication overhead.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; model</span>
+<span class="sd">            TransformerDecoder(</span>
+<span class="sd">                (tok_embeddings): Embedding(128256, 4096)</span>
+<span class="sd">                (layers): ModuleList(</span>
+<span class="sd">                    (0-31): 32 x TransformerSelfAttentionLayer(</span>
+<span class="sd">                    (attn): MultiHeadAttention(</span>
+<span class="sd">                        (q_proj): Linear(in_features=4096, out_features=4096, bias=False)</span>
+<span class="sd">                        (k_proj): Linear(in_features=4096, out_features=1024, bias=False)</span>
+<span class="sd">                        (v_proj): Linear(in_features=4096, out_features=1024, bias=False)</span>
+<span class="sd">                        (output_proj): Linear(in_features=4096, out_features=4096, bias=False)</span>
+<span class="sd">                        (pos_embeddings): RotaryPositionalEmbeddings()</span>
+<span class="sd">                    )</span>
+<span class="sd">                    ...</span>
+<span class="sd">                )</span>
+<span class="sd">                (output): Linear(in_features=4096, out_features=128256, bias=False)</span>
+<span class="sd">            )</span>
+<span class="sd">        &gt;&gt;&gt; # You can either specify the module to shard as a name (&quot;Linear&quot;) or the module type (torch.nn.Linear)</span>
+<span class="sd">        &gt;&gt;&gt; strategy = FSDP2Strategy(modules_to_shard=[&quot;TransformerSelfAttentionLayer&quot;, &quot;Linear&quot;])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">modules_to_shard</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+        <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">],</span>
+        <span class="n">Iterable</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]]],</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span>
+    <span class="n">reshard_after_forward</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">mp_policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">MixedPrecisionPolicy</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cpu_offload</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 
 <span class="nd">@dataclass</span>
@@ -697,6 +769,89 @@
     <span class="k">return</span> <span class="n">module</span></div>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">prepare_fsdp2</span><span class="p">(</span>
+    <span class="n">module</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FSDP2Strategy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">process_group</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProcessGroup</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility to move a module to device and wrap in `FSDP2 &lt;https://pytorch.org/docs/2.6/distributed.fsdp.fully_shard.html&gt;`_</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        module: module to be wrapped in FSDP</span>
+<span class="sd">        device: device to which module will be moved</span>
+<span class="sd">        strategy: an instance of :class:`~torchtnt.utils.prepare_module.FSDP2Strategy` which defines the settings of FSDP APIs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">strategy</span> <span class="o">=</span> <span class="n">strategy</span> <span class="ow">or</span> <span class="n">FSDP2Strategy</span><span class="p">()</span>
+
+    <span class="c1"># prepare kwargs for fully_shard api</span>
+    <span class="n">pg</span> <span class="o">=</span> <span class="n">process_group</span> <span class="ow">or</span> <span class="n">dist</span><span class="o">.</span><span class="n">distributed_c10d</span><span class="o">.</span><span class="n">_get_default_group</span><span class="p">()</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">init_device_mesh</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">mesh_shape</span><span class="o">=</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">size</span><span class="p">(),))</span>
+    <span class="n">fsdp_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;mesh&quot;</span><span class="p">:</span> <span class="n">mesh</span><span class="p">,</span>  <span class="c1"># TODO we only configure 1D mesh for now, look into supporting HSDP</span>
+        <span class="s2">&quot;reshard_after_forward&quot;</span><span class="p">:</span> <span class="n">strategy</span><span class="o">.</span><span class="n">reshard_after_forward</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">strategy</span><span class="o">.</span><span class="n">cpu_offload</span><span class="p">:</span>
+        <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;offload_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CPUOffloadPolicy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mp_policy</span> <span class="o">:=</span> <span class="n">strategy</span><span class="o">.</span><span class="n">mp_policy</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mp_policy</span><span class="p">,</span> <span class="n">MixedPrecisionPolicy</span><span class="p">):</span>
+            <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;mixed_precision&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mp_policy</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;mixed_precision&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MixedPrecisionPolicy</span><span class="p">(</span>
+                <span class="n">param_dtype</span><span class="o">=</span><span class="n">mp_policy</span><span class="p">,</span>
+                <span class="n">reduce_dtype</span><span class="o">=</span><span class="n">mp_policy</span><span class="p">,</span>
+                <span class="n">output_dtype</span><span class="o">=</span><span class="n">mp_policy</span><span class="p">,</span>
+                <span class="n">cast_forward_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># parse out the modules_to_shard argument</span>
+    <span class="n">modules_to_shard</span> <span class="o">=</span> <span class="n">strategy</span><span class="o">.</span><span class="n">modules_to_shard</span>
+
+    <span class="n">shard_all</span> <span class="o">=</span> <span class="n">modules_to_shard</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+    <span class="n">shard_module_names</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">shard_module_types</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">shard_all</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">modules_to_shard</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">str</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;modules_to_shard must be an iterable of modules or &#39;all&#39;, got </span><span class="si">{</span><span class="n">shard_all</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">modules_to_shard</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">shard_module_names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">shard_module_types</span> <span class="o">=</span> <span class="n">shard_module_types</span> <span class="o">+</span> <span class="p">(</span><span class="n">item</span><span class="p">,)</span>
+
+    <span class="c1"># apply the fsdp2 sharding bottoms up</span>
+    <span class="n">num_layers_sharded</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">named_modules</span><span class="p">())):</span>
+        <span class="k">if</span> <span class="n">shard_all</span><span class="p">:</span>
+            <span class="c1"># fully_shard does not support containers that do not implement forward</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">)):</span>
+                <span class="n">fully_shard</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="o">**</span><span class="n">fsdp_kwargs</span><span class="p">)</span>
+                <span class="n">num_layers_sharded</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">shard_module_types</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="n">shard_module_names</span>
+        <span class="p">):</span>
+            <span class="c1"># if m exists in shard_module_types, then shard it</span>
+            <span class="n">fully_shard</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="o">**</span><span class="n">fsdp_kwargs</span><span class="p">)</span>
+            <span class="n">num_layers_sharded</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">num_layers_sharded</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;No layer modules were sharded with fsdp2. Please check if shard conditions are working as expected.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># shard the top level model, so that all params are moved off cpu to gpu</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+        <span class="n">fully_shard</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="o">**</span><span class="n">fsdp_kwargs</span><span class="p">)</span>
+
+    <span class="c1"># materialized sharded meta weights to device</span>
+    <span class="n">materialize_meta_params</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">module</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">FSDPOptimizerWrapper</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.</span>
@@ -726,7 +881,7 @@
     <span class="c1"># Also check for composable FSDP API</span>
     <span class="n">maybe_composable_state</span> <span class="o">=</span> <span class="n">_get_module_state</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">maybe_composable_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">maybe_composable_state</span><span class="p">,</span> <span class="n">_FSDPState</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">maybe_composable_state</span><span class="p">,</span> <span class="p">(</span><span class="n">_FSDPState</span><span class="p">,</span> <span class="n">FSDPState</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="kc">False</span>
 
@@ -791,6 +946,8 @@
                     <span class="s2">&quot;Torch compile requires FSDPStrategy&#39;s use_orig_params to be True, since AOTAutograd needs to be aware of the original parameters&quot;</span>
                 <span class="p">)</span>
             <span class="n">module</span> <span class="o">=</span> <span class="n">prepare_fsdp</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="n">FSDP2Strategy</span><span class="p">):</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="n">prepare_fsdp2</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
