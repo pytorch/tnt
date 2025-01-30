@@ -15,8 +15,11 @@ from typing import (
     ContextManager,
     Dict,
     Iterable,
+    Literal,
     Optional,
+    Set,
     Tuple,
+    Type,
     Union,
 )
 
@@ -30,6 +33,29 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     checkpoint_wrapper,
     CheckpointImpl,
 )
+from torch.distributed.device_mesh import init_device_mesh
+
+try:
+    from torch.distributed.fsdp import (
+        CPUOffloadPolicy,
+        fully_shard,
+        MixedPrecisionPolicy,
+    )
+    from torch.distributed.fsdp._fully_shard._fsdp_state import FSDPState
+except ImportError:
+
+    def noop(*args: Any, **kwargs: Any) -> None:
+        pass
+
+    class NOOP:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+    fully_shard = noop
+    MixedPrecisionPolicy = NOOP
+    CPUOffloadPolicy = NOOP
+    FSDPState = NOOP
+
 from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
     StateDictType as _StateDictType,
@@ -144,6 +170,52 @@ class FSDPStrategy(Strategy):
 
         if isinstance(self.mixed_precision, MixedPrecision):
             self.mixed_precision = self.mixed_precision.to_native_mixed_precision()
+
+
+@dataclass
+class FSDP2Strategy(Strategy):
+    """
+    Dataclass representing the `FSDP2 <https://pytorch.org/docs/2.6/distributed.fsdp.fully_shard.html>`_ strategy.
+    For more details on the args, see the link.
+
+    Args:
+        modules_to_shard: A list of modules that should be sharded across devices. Options are 'all' to shard all submodules, or a list of module names/module types.
+        reshard_after_forward: If True, reshards parameters after the forward pass to optimize memory usage.
+        mp_policy: Controls mixed precision policy. If only dtype is provided, it will be used to cast all relevant parts of model. If None, no mixed precision is used
+        cpu_offload: If True, enables CPU offloading of model parameters to reduce GPU memory usage.
+
+    Note:
+        It is recommended to specify specific modules to shard to avoid unnecessary sharding of all submodules, which has
+        communication overhead.
+
+    Example:
+        >>> model
+            TransformerDecoder(
+                (tok_embeddings): Embedding(128256, 4096)
+                (layers): ModuleList(
+                    (0-31): 32 x TransformerSelfAttentionLayer(
+                    (attn): MultiHeadAttention(
+                        (q_proj): Linear(in_features=4096, out_features=4096, bias=False)
+                        (k_proj): Linear(in_features=4096, out_features=1024, bias=False)
+                        (v_proj): Linear(in_features=4096, out_features=1024, bias=False)
+                        (output_proj): Linear(in_features=4096, out_features=4096, bias=False)
+                        (pos_embeddings): RotaryPositionalEmbeddings()
+                    )
+                    ...
+                )
+                (output): Linear(in_features=4096, out_features=128256, bias=False)
+            )
+        >>> # You can either specify the module to shard as a name ("Linear") or the module type (torch.nn.Linear)
+        >>> strategy = FSDP2Strategy(modules_to_shard=["TransformerSelfAttentionLayer", "Linear"])
+    """
+
+    modules_to_shard: Union[
+        Literal["all"],
+        Iterable[Union[str, Type[torch.nn.Module]]],
+    ] = "all"
+    reshard_after_forward: Union[bool, int] = True
+    mp_policy: Optional[Union[torch.dtype, MixedPrecisionPolicy]] = None
+    cpu_offload: bool = False
 
 
 @dataclass
@@ -272,6 +344,89 @@ def prepare_fsdp(
     return module
 
 
+def prepare_fsdp2(
+    module: torch.nn.Module,
+    device: torch.device,
+    strategy: Optional[FSDP2Strategy] = None,
+    process_group: Optional[ProcessGroup] = None,
+) -> torch.nn.Module:
+    """
+    Utility to move a module to device and wrap in `FSDP2 <https://pytorch.org/docs/2.6/distributed.fsdp.fully_shard.html>`_
+
+    Args:
+        module: module to be wrapped in FSDP
+        device: device to which module will be moved
+        strategy: an instance of :class:`~torchtnt.utils.prepare_module.FSDP2Strategy` which defines the settings of FSDP APIs
+    """
+    strategy = strategy or FSDP2Strategy()
+
+    # prepare kwargs for fully_shard api
+    pg = process_group or dist.distributed_c10d._get_default_group()
+    mesh = init_device_mesh(device.type, mesh_shape=(pg.size(),))
+    fsdp_kwargs: Dict[str, Any] = {
+        "mesh": mesh,  # TODO we only configure 1D mesh for now, look into supporting HSDP
+        "reshard_after_forward": strategy.reshard_after_forward,
+    }
+    if strategy.cpu_offload:
+        fsdp_kwargs["offload_policy"] = CPUOffloadPolicy()
+    if (mp_policy := strategy.mp_policy) is not None:
+        if isinstance(mp_policy, MixedPrecisionPolicy):
+            fsdp_kwargs["mixed_precision"] = mp_policy
+        else:
+            fsdp_kwargs["mixed_precision"] = MixedPrecisionPolicy(
+                param_dtype=mp_policy,
+                reduce_dtype=mp_policy,
+                output_dtype=mp_policy,
+                cast_forward_inputs=True,
+            )
+
+    # parse out the modules_to_shard argument
+    modules_to_shard = strategy.modules_to_shard
+
+    shard_all = modules_to_shard == "all"
+    shard_module_names: Set[str] = set()
+    shard_module_types: Tuple[Type[torch.nn.Module], ...] = ()
+    if not shard_all:
+        assert (
+            type(modules_to_shard) is not str
+        ), f"modules_to_shard must be an iterable of modules or 'all', got {shard_all}"
+
+        for item in modules_to_shard:
+            if isinstance(item, str):
+                shard_module_names.add(item)
+            else:
+                shard_module_types = shard_module_types + (item,)
+
+    # apply the fsdp2 sharding bottoms up
+    num_layers_sharded = 0
+    for _, m in reversed(list(module.named_modules())):
+        if shard_all:
+            # fully_shard does not support containers that do not implement forward
+            if not isinstance(m, (torch.nn.ModuleList, torch.nn.ModuleDict)):
+                fully_shard(m, **fsdp_kwargs)
+                num_layers_sharded += 1
+        elif (
+            isinstance(m, shard_module_types) or type(m).__name__ in shard_module_names
+        ):
+            # if m exists in shard_module_types, then shard it
+            fully_shard(m, **fsdp_kwargs)
+            num_layers_sharded += 1
+
+    if num_layers_sharded == 0:
+        raise ValueError(
+            "No layer modules were sharded with fsdp2. Please check if shard conditions are working as expected."
+        )
+
+    # shard the top level model, so that all params are moved off cpu to gpu
+    if not _is_fsdp_module(module):
+        fully_shard(module, **fsdp_kwargs)
+
+    # materialized sharded meta weights to device
+    materialize_meta_params(module, device)
+
+    return module
+
+
 class FSDPOptimizerWrapper:
     """
     Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.
@@ -301,7 +456,7 @@ def _is_fsdp_module(module: torch.nn.Module) -> bool:
     # Also check for composable FSDP API
     maybe_composable_state = _get_module_state(module)
     if maybe_composable_state is not None:
-        return isinstance(maybe_composable_state, _FSDPState)
+        return isinstance(maybe_composable_state, (_FSDPState, FSDPState))
 
     return False
 
@@ -366,6 +521,8 @@ def prepare_module(
                     "Torch compile requires FSDPStrategy's use_orig_params to be True, since AOTAutograd needs to be aware of the original parameters"
                 )
             module = prepare_fsdp(module, device, strategy)
+        elif isinstance(strategy, FSDP2Strategy):
+            module = prepare_fsdp2(module, device, strategy)
     else:
         module = module.to(device)
 

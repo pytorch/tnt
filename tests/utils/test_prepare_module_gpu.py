@@ -7,9 +7,20 @@
 
 # pyre-strict
 import unittest
+from typing import Any
 
 import torch
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
+try:
+    from torch.distributed.fsdp import fully_shard
+except ImportError:
+
+    def noop(*args: Any, **kwargs: Any) -> None:
+        pass
+
+    fully_shard = noop
+
 from torch.distributed.fsdp.fully_sharded_data_parallel import MixedPrecision
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.utils.distributed import spawn_multi_process
@@ -17,9 +28,11 @@ from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
     _is_fsdp_module,
     DDPStrategy,
+    FSDP2Strategy,
     FSDPStrategy,
     prepare_ddp,
     prepare_fsdp,
+    prepare_fsdp2,
     prepare_module,
 )
 from torchtnt.utils.test_utils import skip_if_not_distributed, skip_if_not_gpu
@@ -109,6 +122,11 @@ class PrepareModelGPUTest(unittest.TestCase):
         assert _is_fsdp_module(model)
         model = torch.nn.Linear(1, 1, device=device)
         model = FSDP(model)
+        assert _is_fsdp_module(model)
+
+        # test fsdp2
+        model = torch.nn.Linear(1, 1, device=device)
+        fully_shard(model)
         assert _is_fsdp_module(model)
 
     @skip_if_not_distributed
@@ -276,3 +294,118 @@ class PrepareModelGPUTest(unittest.TestCase):
         tc = unittest.TestCase()
 
         tc.assertTrue(isinstance(fsdp_module, FSDP))
+
+    @skip_if_not_distributed
+    @skip_if_not_gpu
+    def test_prepare_fsdp2(self) -> None:
+        """
+        Launch tests of FSDP2 strategy
+        """
+
+        spawn_multi_process(
+            1,
+            "nccl",
+            self._test_prepare_fsdp2_none_sharded_raises,
+        )
+
+        spawn_multi_process(
+            1,
+            "nccl",
+            self._test_prepare_fsdp2_shard_all,
+        )
+
+        spawn_multi_process(
+            1,
+            "nccl",
+            self._test_prepare_fsdp2_submodule,
+        )
+
+        spawn_multi_process(
+            1,
+            "nccl",
+            self._test_prepare_fsdp2_meta_device,
+        )
+
+    @staticmethod
+    def _test_prepare_fsdp2_none_sharded_raises() -> None:
+        """
+        Test with a strategy that does not shard any modules, should raise error
+        """
+        tc = unittest.TestCase()
+
+        module = SimpleModule()
+        device = torch.device("cuda")
+        strategy = FSDP2Strategy(modules_to_shard=[])
+        with tc.assertRaises(ValueError):
+            prepare_fsdp2(module, device, strategy)
+
+    @staticmethod
+    def _test_prepare_fsdp2_shard_all() -> None:
+        """
+        Test with a strategy that shards all modules
+        """
+        tc = unittest.TestCase()
+
+        module = SimpleModule()
+        device = torch.device("cuda")
+        strategy = FSDP2Strategy(modules_to_shard="all")
+        prepare_fsdp2(module, device, strategy)
+
+        for submodule in module.modules():
+            tc.assertTrue(_is_fsdp_module(submodule))
+
+    @staticmethod
+    def _test_prepare_fsdp2_submodule() -> None:
+        """
+        Test with a strategy that shards modules (either str or module type)
+        """
+        tc = unittest.TestCase()
+
+        for t in (torch.nn.Linear, "Linear"):
+            module = SimpleModule()
+            device = torch.device("cuda")
+            strategy = FSDP2Strategy(modules_to_shard=(t,))
+            prepare_fsdp2(module, device, strategy)
+
+            for submodule in module.modules():
+                if isinstance(submodule, torch.nn.Conv2d):
+                    tc.assertFalse(_is_fsdp_module(submodule))
+                else:
+                    # linear and SimpleModule are fsdp modules
+                    tc.assertTrue(_is_fsdp_module(submodule))
+
+    @staticmethod
+    def _test_prepare_fsdp2_meta_device() -> None:
+        """
+        Test with a strategy that shards specific modules on meta device
+        """
+        tc = unittest.TestCase()
+
+        module = SimpleModule(meta_device=True)
+        device = torch.device("cuda")
+        strategy = FSDP2Strategy(modules_to_shard=(torch.nn.Linear,))
+        prepare_fsdp2(module, device, strategy)
+
+        for submodule in module.modules():
+            if isinstance(submodule, torch.nn.Conv2d):
+                tc.assertFalse(_is_fsdp_module(submodule))
+            else:
+                # linear and SimpleModule are fsdp modules
+                tc.assertTrue(_is_fsdp_module(submodule))
+
+
+class SimpleModule(torch.nn.Module):
+    def __init__(self, meta_device: bool = False) -> None:
+        super(SimpleModule, self).__init__()
+        self.linear = torch.nn.Linear(10, 10, device="meta" if meta_device else None)
+        self.conv1 = torch.nn.Conv2d(
+            in_channels=3,
+            out_channels=16,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            device="meta" if meta_device else None,
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.linear(x)
