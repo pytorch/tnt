@@ -52,3 +52,20 @@ class StateTest(unittest.TestCase):
 
         predict_phase = ActivePhase.PREDICT
         self.assertEqual(predict_phase.into_phase(), Phase.PREDICT)
+
+    def test_set_evaluate_every_n_steps_or_epochs(self) -> None:
+        state = PhaseState(dataloader=[], evaluate_every_n_steps=2)
+        state.evaluate_every_n_steps = None
+        state.evaluate_every_n_steps = 100
+        with self.assertRaisesRegex(
+            ValueError, "Invalid value provided for evaluate_every_n_steps"
+        ):
+            state.evaluate_every_n_steps = -2
+
+        state = PhaseState(dataloader=[], evaluate_every_n_epochs=2)
+        state.evaluate_every_n_epochs = None
+        state.evaluate_every_n_epochs = 100
+        with self.assertRaisesRegex(
+            ValueError, "Invalid value provided for evaluate_every_n_epochs"
+        ):
+            state.evaluate_every_n_epochs = -2
