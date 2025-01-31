@@ -133,10 +133,20 @@ class PhaseState(Generic[TData, TStepOutput]):
         """Frequency with which to evaluate in terms of training steps, when running :func:`~torchtnt.framework.fit`. Defined by the user."""
         return self._evaluate_every_n_steps
 
+    @evaluate_every_n_steps.setter
+    def evaluate_every_n_steps(self, value: Optional[int]) -> None:
+        _check_loop_condition("evaluate_every_n_steps", value)
+        self._evaluate_every_n_steps = value
+
     @property
     def evaluate_every_n_epochs(self) -> Optional[int]:
         """Frequency with which to evaluate in terms of training epochs, when running :func:`~torchtnt.framework.fit`. Defined by the user."""
         return self._evaluate_every_n_epochs
+
+    @evaluate_every_n_epochs.setter
+    def evaluate_every_n_epochs(self, value: Optional[int]) -> None:
+        _check_loop_condition("evaluate_every_n_epochs", value)
+        self._evaluate_every_n_epochs = value
 
     @property
     def step_output(self) -> Optional[TStepOutput]:
