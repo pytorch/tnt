@@ -743,6 +743,23 @@ train dataloader, and can return any data the user wishes.</p>
 </table>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="torchtnt.framework.auto_unit.AutoUnit.zero_grad">
+<code class="sig-name descname"><span class="pre">zero_grad</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/torchtnt/framework/auto_unit.html#AutoUnit.zero_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchtnt.framework.auto_unit.AutoUnit.zero_grad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zeroes the gradients of the module’s parameters. Override this if you need to log the gradients before zeroing them.</p>
+<dl class="docutils">
+<dt>Example of overriding:</dt><dd><dl class="docutils">
+<dt>class CustomAutoUnit(MyAutoUnit):</dt><dd><p>…</p>
+<dl class="docutils">
+<dt>def zero_grad(self):</dt><dd># log before zeroing gradients
+super().zero_grad()</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
