@@ -829,6 +829,22 @@ class AutoUnit(
         """
         none_throws(self.lr_scheduler).step()
 
+    def zero_grad(self) -> None:
+        """
+        Zeroes the gradients of the module's parameters. Override this if you need to log the gradients before zeroing them.
+
+        Example of overriding:
+            class CustomAutoUnit(MyAutoUnit):
+                ...
+
+                def zero_grad(self):
+                    # log before zeroing gradients
+                    super().zero_grad()
+        """
+
+        optimizer = none_throws(self.optimizer)
+        optimizer.zero_grad(set_to_none=True)
+
     def _update_weights(self, state: State) -> Optional[torch.Tensor]:
         """
         Updates weights of the module, handles clip gradient norm, etc.
@@ -892,7 +908,7 @@ class AutoUnit(
         with get_timing_context(
             state, f"{self.__class__.__name__}.optimizer_zero_grad"
         ):
-            optimizer.zero_grad(set_to_none=True)
+            self.zero_grad()
 
         if self.step_lr_interval == "step":
             self._update_lr_and_swa(state, self.train_progress.num_steps_completed)
