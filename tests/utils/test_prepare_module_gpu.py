@@ -348,7 +348,7 @@ class PrepareModelGPUTest(unittest.TestCase):
 
         module = SimpleModule()
         device = torch.device("cuda")
-        strategy = FSDP2Strategy(modules_to_shard="all")
+        strategy = FSDP2Strategy(modules_to_shard="all", mp_policy=torch.bfloat16)
         prepare_fsdp2(module, device, strategy)
 
         for submodule in module.modules():

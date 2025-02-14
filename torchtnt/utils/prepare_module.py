@@ -371,9 +371,9 @@ def prepare_fsdp2(
         fsdp_kwargs["offload_policy"] = CPUOffloadPolicy()
     if (mp_policy := strategy.mp_policy) is not None:
         if isinstance(mp_policy, MixedPrecisionPolicy):
-            fsdp_kwargs["mixed_precision"] = mp_policy
+            fsdp_kwargs["mp_policy"] = mp_policy
         else:
-            fsdp_kwargs["mixed_precision"] = MixedPrecisionPolicy(
+            fsdp_kwargs["mp_policy"] = MixedPrecisionPolicy(
                 param_dtype=mp_policy,
                 reduce_dtype=mp_policy,
                 output_dtype=mp_policy,
