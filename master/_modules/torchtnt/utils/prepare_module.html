@@ -796,9 +796,9 @@
         <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;offload_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">CPUOffloadPolicy</span><span class="p">()</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">mp_policy</span> <span class="o">:=</span> <span class="n">strategy</span><span class="o">.</span><span class="n">mp_policy</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mp_policy</span><span class="p">,</span> <span class="n">MixedPrecisionPolicy</span><span class="p">):</span>
-            <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;mixed_precision&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mp_policy</span>
+            <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;mp_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mp_policy</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;mixed_precision&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MixedPrecisionPolicy</span><span class="p">(</span>
+            <span class="n">fsdp_kwargs</span><span class="p">[</span><span class="s2">&quot;mp_policy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">MixedPrecisionPolicy</span><span class="p">(</span>
                 <span class="n">param_dtype</span><span class="o">=</span><span class="n">mp_policy</span><span class="p">,</span>
                 <span class="n">reduce_dtype</span><span class="o">=</span><span class="n">mp_policy</span><span class="p">,</span>
                 <span class="n">output_dtype</span><span class="o">=</span><span class="n">mp_policy</span><span class="p">,</span>
