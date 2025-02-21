@@ -896,6 +896,7 @@
 <span class="sd">            this option to True is not needed and often can be worked around</span>
 <span class="sd">            in a much more efficient way.</span>
 <span class="sd">        enable_prefetch: if True, the data will be prefetched to the device before the next batch is loaded</span>
+<span class="sd">        zero_grad_at_train_step_start: if True, the optimizer&#39;s gradients will be zeroed at the start of each train step, rather than at the end. Useful if you want to inspect/log the gradients via custom callback.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.</span>
@@ -931,6 +932,7 @@
         <span class="n">enable_compiled_autograd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">loss_backward_retain_graph</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">enable_prefetch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">zero_grad_at_train_step_start</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">module</span><span class="o">=</span><span class="n">module</span><span class="p">,</span>
@@ -1000,6 +1002,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TLRScheduler</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">swa_scheduler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SWALR</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zero_grad_at_train_step_start</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">zero_grad_at_train_step_start</span>
+        <span class="c1"># keep track of when to zero grad at train step start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_updated_in_prev_step</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
@@ -1077,6 +1083,11 @@
         <span class="n">should_update_weights</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed_in_epoch</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradient_accumulation_steps</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_last_batch</span>
+
+        <span class="c1"># zero the gradients if previous step updated weights</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_updated_in_prev_step</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_grad_at_train_step_start</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_updated_in_prev_step</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="c1"># for pyre, assign to local variable</span>
         <span class="n">module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span>
@@ -1254,21 +1265,24 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">)</span><span class="o">.</span><span class="n">step</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="AutoUnit.zero_grad"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.zero_grad">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">zero_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="AutoUnit.zero_grad"><a class="viewcode-back" href="../../../framework/auto_unit.html#torchtnt.framework.auto_unit.AutoUnit.zero_grad">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">zero_grad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Zeroes the gradients of the module&#39;s parameters. Override this if you need to log the gradients before zeroing them.</span>
+<span class="sd">        Zeroes the gradients of the module&#39;s parameters. You can override this if you want to log the gradients before zeroing them.</span>
 
 <span class="sd">        Example of overriding:</span>
 <span class="sd">            class CustomAutoUnit(MyAutoUnit):</span>
 <span class="sd">                ...</span>
 
-<span class="sd">                def zero_grad(self):</span>
+<span class="sd">                def zero_grad(self, state):</span>
 <span class="sd">                    # log before zeroing gradients</span>
 <span class="sd">                    super().zero_grad()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">optimizer</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">)</span>
-        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.optimizer_zero_grad&quot;</span>
+        <span class="p">):</span>
+            <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">set_to_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_update_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">State</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1329,11 +1343,12 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
-        <span class="c1"># sets gradients to zero</span>
-        <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-            <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.optimizer_zero_grad&quot;</span>
-        <span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_grad_at_train_step_start</span><span class="p">:</span>
+            <span class="c1"># mark that weights were updated in this step</span>
+            <span class="c1"># so in next step we know to zero the gradients</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weight_updated_in_prev_step</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_lr_interval</span> <span class="o">==</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_lr_and_swa</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_progress</span><span class="o">.</span><span class="n">num_steps_completed</span><span class="p">)</span>
