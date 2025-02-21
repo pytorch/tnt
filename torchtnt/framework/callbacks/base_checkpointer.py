@@ -378,6 +378,9 @@ class BaseCheckpointer(Callback, metaclass=abc.ABCMeta):
 
         self._generate_checkpoint_and_upkeep(state, unit, hook="on_predict_step_end")
 
+    def on_predict_end(self, state: State, unit: TPredictUnit) -> None:
+        self._generate_checkpoint_and_upkeep(state, unit, hook="on_predict_end")
+
     def _disable_ckpt_optimality_tracking(self) -> None:
         """
         Disables checkpoint optimality tracking. This means that best_checkpoint and keep_last_n_checkpoints
