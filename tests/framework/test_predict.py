@@ -21,6 +21,7 @@ from torchtnt.framework.callbacks.dcp_saver import DistributedCheckpointSaver
 from torchtnt.framework.predict import predict
 from torchtnt.framework.state import State
 from torchtnt.framework.unit import PredictUnit, TPredictUnit
+from torchtnt.utils.progress import Progress
 from torchtnt.utils.timer import Timer
 
 
@@ -241,6 +242,16 @@ class PredictTest(unittest.TestCase):
             with patch(mock_autograd_mode) as mock_autograd_mode:
                 predict(unit, dataloader, callbacks=cast(List[Callback], callbacks))
                 mock_autograd_mode.assert_called_once()
+
+    def test_predict_epoch_check(self) -> None:
+        unit = MagicMock(wraps=DummyPredictUnit(2))
+        unit.predict_progress = Progress(num_epochs_completed=1, num_steps_completed=5)
+
+        dataloader = generate_random_dataloader(10, 2, 2)
+
+        predict(unit, dataloader, max_steps_per_epoch=100)
+
+        unit.on_predict_start.assert_not_called()
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
