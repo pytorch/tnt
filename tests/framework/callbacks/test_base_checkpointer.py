@@ -339,6 +339,11 @@ class BaseCheckpointerTest(unittest.TestCase):
             expected_ckpts = [
                 f"{temp_dir}/epoch_0_predict_step_{i}" for i in range(1, 11)
             ]
+
+            expected_ckpts.append(
+                f"{temp_dir}/epoch_1_predict_step_10"
+            )  # We always expect checkpoint on predict end
+
             self.assertEqual(ckpt_container, expected_ckpts)
 
     @unittest.mock.patch("sys.stdout", new_callable=io.StringIO)
