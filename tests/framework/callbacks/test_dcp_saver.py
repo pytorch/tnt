@@ -536,18 +536,24 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
             expected_ckpts = [
                 "epoch_0_predict_step_2",
                 "epoch_0_predict_step_4",
+                "epoch_1_predict_step_5",
             ]
 
             self.assertCountEqual(generated_ckpts, expected_ckpts)
 
-            ckpt_path = none_throws(get_latest_checkpoint_path(temp_dir))
-            self.assertEqual(ckpt_path, os.path.join(temp_dir, expected_ckpts[-1]))
+            latest_ckpt_path = none_throws(get_latest_checkpoint_path(temp_dir))
+            self.assertEqual(
+                latest_ckpt_path, os.path.join(temp_dir, expected_ckpts[-1])
+            )
 
             expected_keys = [
                 "predict_progress",
                 "predict_dataloader",
                 "output_mean",
             ]
+
+            # Check keys on a checkpoint other than the latest since it won't have dataloader state
+            ckpt_path = f"{temp_dir}/{expected_ckpts[0]}"
 
             storage_reader = FsspecReader(ckpt_path)
             metadata = storage_reader.read_metadata()

@@ -169,6 +169,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             "on_eval_epoch_end",
             "on_eval_step_end",
             "on_predict_step_end",
+            "on_predict_end",
         ]:
             raise RuntimeError(f"Unexpected hook encountered '{hook}'")
 
@@ -178,7 +179,7 @@ class DistributedCheckpointSaver(BaseCheckpointer):
         intra_epoch = "step_end" in hook or (
             "on_eval_epoch_end" == hook and state.entry_point == EntryPoint.FIT
         )
-        curr_snapshot_wait = hook == "on_train_end"
+        curr_snapshot_wait = hook in ("on_train_end", "on_predict_end")
 
         if planner is None:
             planner = DefaultSavePlanner()
