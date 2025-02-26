@@ -122,6 +122,12 @@ def _predict_impl(
     # input validation
     predict_state = none_throws(state.predict_state)
 
+    if predict_unit.predict_progress.num_epochs_completed >= 1:
+        logger.warning(
+            "Predict epoch has already been completed. Skipping to avoid duplicate outputs."
+        )
+        return
+
     state._active_phase = ActivePhase.PREDICT
     logger.info(
         f"Started predict with max_steps_per_epoch={predict_state.max_steps_per_epoch}"
