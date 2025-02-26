@@ -547,6 +547,12 @@
     <span class="c1"># input validation</span>
     <span class="n">predict_state</span> <span class="o">=</span> <span class="n">none_throws</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">predict_state</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">predict_unit</span><span class="o">.</span><span class="n">predict_progress</span><span class="o">.</span><span class="n">num_epochs_completed</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Predict epoch has already been completed. Skipping to avoid duplicate outputs.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+
     <span class="n">state</span><span class="o">.</span><span class="n">_active_phase</span> <span class="o">=</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">&quot;Started predict with max_steps_per_epoch=</span><span class="si">{</span><span class="n">predict_state</span><span class="o">.</span><span class="n">max_steps_per_epoch</span><span class="si">}</span><span class="s2">&quot;</span>
