@@ -20,7 +20,12 @@ from torchtnt.framework._unit_utils import (
 
 from torchtnt.framework.state import State
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import _is_fsdp_module, FSDPOptimizerWrapper
+from torchtnt.utils.prepare_module import (
+    _is_fsdp2_module,
+    _is_fsdp_module,
+    FSDP2OptimizerWrapper,
+    FSDPOptimizerWrapper,
+)
 from torchtnt.utils.progress import Progress
 from torchtnt.utils.stateful import MetricStateful, Stateful
 
@@ -199,13 +204,27 @@ class AppStateMixin:
 
     def _construct_tracked_optimizers_and_schedulers(
         self,
-    ) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]]:
+    ) -> Dict[
+        str,
+        Union[
+            torch.optim.Optimizer,
+            FSDPOptimizerWrapper,
+            FSDP2OptimizerWrapper,
+            TLRScheduler,
+        ],
+    ]:
         """
-        Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
+        Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper/FSDP2OptimizerWrapper.
         """
         # construct custom tracked optimizers with FSDP optimizers
         tracked_optimizers_and_schedulers: Dict[
-            str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, TLRScheduler]
+            str,
+            Union[
+                torch.optim.Optimizer,
+                FSDPOptimizerWrapper,
+                FSDP2OptimizerWrapper,
+                TLRScheduler,
+            ],
         ] = {}
         tracked_optimizers_and_schedulers.update(self._construct_tracked_optimizers())
 
@@ -224,25 +243,38 @@ class AppStateMixin:
 
     def _construct_tracked_optimizers(
         self,
-    ) -> Dict[str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]]:
+    ) -> Dict[
+        str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper, FSDP2OptimizerWrapper]
+    ]:
         """
-        Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.
+        Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper/FSDP2OptimizerWrapper.
         """
-        fsdp_tracked_optimizers: Dict[str, FSDPOptimizerWrapper] = {}
+        fsdp_tracked_optimizers: Dict[
+            str, Union[FSDPOptimizerWrapper, FSDP2OptimizerWrapper]
+        ] = {}
         for module in self.tracked_modules().values():
             if _is_fsdp_module(module):
                 # find optimizers for module, if exists
                 optimizer_list = _find_optimizers_for_module(
                     module, self.tracked_optimizers()
                 )
+
+                is_fsdp2 = _is_fsdp2_module(module)
+
                 for optim_name, optimizer in optimizer_list:
-                    fsdp_tracked_optimizers[optim_name] = FSDPOptimizerWrapper(
-                        module, optimizer
-                    )
+                    if is_fsdp2:
+                        fsdp_tracked_optimizers[optim_name] = FSDP2OptimizerWrapper(
+                            module, optimizer
+                        )
+                    else:
+                        fsdp_tracked_optimizers[optim_name] = FSDPOptimizerWrapper(
+                            module, optimizer
+                        )
 
         # construct custom tracked optimizers with FSDP optimizers
         tracked_optimizers: Dict[
-            str, Union[torch.optim.Optimizer, FSDPOptimizerWrapper]
+            str,
+            Union[torch.optim.Optimizer, FSDPOptimizerWrapper, FSDP2OptimizerWrapper],
         ] = {
             key: value
             for key, value in self.tracked_optimizers().items()
