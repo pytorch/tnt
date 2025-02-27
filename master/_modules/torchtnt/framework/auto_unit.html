@@ -1304,19 +1304,13 @@
         <span class="n">total_grad_norm</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># gradient norm clipping</span>
         <span class="k">if</span> <span class="n">clip_grad_norm</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">FSDP</span><span class="p">):</span>
-                    <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
-                        <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_norm&quot;</span>
-                    <span class="p">):</span>
-                        <span class="n">total_grad_norm</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
-                            <span class="n">max_norm</span><span class="o">=</span><span class="n">clip_grad_norm</span>
-                        <span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-                        <span class="s2">&quot;Composable FSDP clip_grad_norm is not yet implemented: https://github.com/pytorch/pytorch/issues/97271&quot;</span>
-                    <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">FSDP</span><span class="p">):</span>
+                <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
+                    <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_norm&quot;</span>
+                <span class="p">):</span>
+                    <span class="n">total_grad_norm</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="n">max_norm</span><span class="o">=</span><span class="n">clip_grad_norm</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># strategy=None, DDP, and FSDP2 will work with this</span>
                 <span class="k">with</span> <span class="n">get_timing_context</span><span class="p">(</span>
                     <span class="n">state</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.clip_grad_norm&quot;</span>
                 <span class="p">):</span>
