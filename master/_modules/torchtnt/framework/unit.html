@@ -445,7 +445,12 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.framework.state</span><span class="w"> </span><span class="kn">import</span> <span class="n">State</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.lr_scheduler</span><span class="w"> </span><span class="kn">import</span> <span class="n">TLRScheduler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.prepare_module</span><span class="w"> </span><span class="kn">import</span> <span class="n">_is_fsdp_module</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.prepare_module</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_is_fsdp2_module</span><span class="p">,</span>
+    <span class="n">_is_fsdp_module</span><span class="p">,</span>
+    <span class="n">FSDP2OptimizerWrapper</span><span class="p">,</span>
+    <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">Progress</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchtnt.utils.stateful</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricStateful</span><span class="p">,</span> <span class="n">Stateful</span>
 
@@ -624,13 +629,27 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_construct_tracked_optimizers_and_schedulers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span>
+        <span class="nb">str</span><span class="p">,</span>
+        <span class="n">Union</span><span class="p">[</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span>
+            <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span>
+            <span class="n">FSDP2OptimizerWrapper</span><span class="p">,</span>
+            <span class="n">TLRScheduler</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.</span>
+<span class="sd">        Combines tracked optimizers and schedulers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper/FSDP2OptimizerWrapper.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># construct custom tracked optimizers with FSDP optimizers</span>
         <span class="n">tracked_optimizers_and_schedulers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
-            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">TLRScheduler</span><span class="p">]</span>
+            <span class="nb">str</span><span class="p">,</span>
+            <span class="n">Union</span><span class="p">[</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span>
+                <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span>
+                <span class="n">FSDP2OptimizerWrapper</span><span class="p">,</span>
+                <span class="n">TLRScheduler</span><span class="p">,</span>
+            <span class="p">],</span>
         <span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">tracked_optimizers_and_schedulers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_construct_tracked_optimizers</span><span class="p">())</span>
 
@@ -649,25 +668,38 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_construct_tracked_optimizers</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span>
+        <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">FSDP2OptimizerWrapper</span><span class="p">]</span>
+    <span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper.</span>
+<span class="sd">        Constructs tracked optimizers. Handles optimizers working on FSDP modules, wrapping them in FSDPOptimizerWrapper/FSDP2OptimizerWrapper.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">fsdp_tracked_optimizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">fsdp_tracked_optimizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">FSDP2OptimizerWrapper</span><span class="p">]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracked_modules</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">_is_fsdp_module</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
                 <span class="c1"># find optimizers for module, if exists</span>
                 <span class="n">optimizer_list</span> <span class="o">=</span> <span class="n">_find_optimizers_for_module</span><span class="p">(</span>
                     <span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracked_optimizers</span><span class="p">()</span>
                 <span class="p">)</span>
+
+                <span class="n">is_fsdp2</span> <span class="o">=</span> <span class="n">_is_fsdp2_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+
                 <span class="k">for</span> <span class="n">optim_name</span><span class="p">,</span> <span class="n">optimizer</span> <span class="ow">in</span> <span class="n">optimizer_list</span><span class="p">:</span>
-                    <span class="n">fsdp_tracked_optimizers</span><span class="p">[</span><span class="n">optim_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">(</span>
-                        <span class="n">module</span><span class="p">,</span> <span class="n">optimizer</span>
-                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">is_fsdp2</span><span class="p">:</span>
+                        <span class="n">fsdp_tracked_optimizers</span><span class="p">[</span><span class="n">optim_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">FSDP2OptimizerWrapper</span><span class="p">(</span>
+                            <span class="n">module</span><span class="p">,</span> <span class="n">optimizer</span>
+                        <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">fsdp_tracked_optimizers</span><span class="p">[</span><span class="n">optim_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">(</span>
+                            <span class="n">module</span><span class="p">,</span> <span class="n">optimizer</span>
+                        <span class="p">)</span>
 
         <span class="c1"># construct custom tracked optimizers with FSDP optimizers</span>
         <span class="n">tracked_optimizers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
-            <span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">]</span>
+            <span class="nb">str</span><span class="p">,</span>
+            <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">,</span> <span class="n">FSDPOptimizerWrapper</span><span class="p">,</span> <span class="n">FSDP2OptimizerWrapper</span><span class="p">],</span>
         <span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">key</span><span class="p">:</span> <span class="n">value</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracked_optimizers</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
