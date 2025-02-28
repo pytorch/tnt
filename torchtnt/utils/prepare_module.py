@@ -33,6 +33,10 @@ from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import (
     checkpoint_wrapper,
     CheckpointImpl,
 )
+from torch.distributed.checkpoint.state_dict import (
+    get_optimizer_state_dict,
+    set_optimizer_state_dict,
+)
 from torch.distributed.device_mesh import init_device_mesh
 
 try:
@@ -449,6 +453,24 @@ class FSDPOptimizerWrapper:
         self.optimizer.load_state_dict(optim_state_dict)
 
 
+class FSDP2OptimizerWrapper:
+    """
+    Wrapper for FSDP2 optimizer which uses distributed state dict APIs.
+    """
+
+    def __init__(
+        self, module: torch.nn.Module, optimizer: torch.optim.Optimizer
+    ) -> None:
+        self.module = module
+        self.optimizer = optimizer
+
+    def state_dict(self) -> Dict[str, Any]:
+        return get_optimizer_state_dict(self.module, self.optimizer)
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        set_optimizer_state_dict(self.module, self.optimizer, state_dict)
+
+
 def _is_fsdp_module(module: torch.nn.Module) -> bool:
     if isinstance(module, FSDP):
         return True
@@ -457,6 +479,14 @@ def _is_fsdp_module(module: torch.nn.Module) -> bool:
     maybe_composable_state = _get_module_state(module)
     if maybe_composable_state is not None:
         return isinstance(maybe_composable_state, (_FSDPState, FSDPState))
+
+    return False
+
+
+def _is_fsdp2_module(module: torch.nn.Module) -> bool:
+    maybe_composable_state = _get_module_state(module)
+    if maybe_composable_state is not None:
+        return isinstance(maybe_composable_state, FSDPState)
 
     return False
 

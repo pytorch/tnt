@@ -19,7 +19,7 @@ from torchtnt.framework.unit import AppStateMixin
 
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import FSDPOptimizerWrapper
+from torchtnt.utils.prepare_module import FSDP2OptimizerWrapper, FSDPOptimizerWrapper
 from torchtnt.utils.stateful import MultiStateful
 
 
@@ -267,5 +267,17 @@ class AppStateMixinTest(unittest.TestCase):
             result = auto_unit._construct_tracked_optimizers_and_schedulers()
 
         self.assertIsInstance(result["optimizer"], FSDPOptimizerWrapper)
+        self.assertIsInstance(result["optim2"], torch.optim.Optimizer)
+        self.assertIsInstance(result["lr_scheduler"], TLRScheduler)
+
+        with patch(
+            "torchtnt.framework.unit._is_fsdp_module", side_effect=lambda m: m == module
+        ), patch(
+            "torchtnt.framework.unit._is_fsdp2_module",
+            side_effect=lambda m: m == module,
+        ):
+            result = auto_unit._construct_tracked_optimizers_and_schedulers()
+
+        self.assertIsInstance(result["optimizer"], FSDP2OptimizerWrapper)
         self.assertIsInstance(result["optim2"], torch.optim.Optimizer)
         self.assertIsInstance(result["lr_scheduler"], TLRScheduler)

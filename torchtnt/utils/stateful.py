@@ -10,7 +10,7 @@ from typing import Any, Dict, Union
 
 import torch
 from torchtnt.utils.lr_scheduler import TLRScheduler
-from torchtnt.utils.prepare_module import FSDPOptimizerWrapper
+from torchtnt.utils.prepare_module import FSDP2OptimizerWrapper, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
 
 from typing_extensions import Protocol, runtime_checkable
@@ -28,7 +28,10 @@ class Stateful(Protocol):
 StatefulDict = Dict[str, Stateful]
 ModuleDict = Dict[str, torch.nn.Module]
 OptimizerAndLRSchedulerDict = Dict[
-    str, Union[TLRScheduler, torch.optim.Optimizer, FSDPOptimizerWrapper]
+    str,
+    Union[
+        TLRScheduler, torch.optim.Optimizer, FSDPOptimizerWrapper, FSDP2OptimizerWrapper
+    ],
 ]
 ProgressDict = Dict[str, Progress]
 
