@@ -74,6 +74,16 @@ class ActivePhase(Enum):
         else:
             raise AssertionError("Should match an ActivePhase")
 
+    def __str__(self) -> str:
+        if self == ActivePhase.TRAIN:
+            return "train"
+        elif self == ActivePhase.EVALUATE:
+            return "eval"
+        elif self == ActivePhase.PREDICT:
+            return "predict"
+        else:
+            raise AssertionError("Should match an ActivePhase")
+
 
 class PhaseState(Generic[TData, TStepOutput]):
     """State for each phase (train, eval, predict).
