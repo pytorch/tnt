@@ -499,6 +499,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Should match an ActivePhase&quot;</span><span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;train&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">EVALUATE</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;eval&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">ActivePhase</span><span class="o">.</span><span class="n">PREDICT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;predict&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Should match an ActivePhase&quot;</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="PhaseState"><a class="viewcode-back" href="../../../framework/state.html#torchtnt.framework.state.PhaseState">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">PhaseState</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">TData</span><span class="p">,</span> <span class="n">TStepOutput</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;State for each phase (train, eval, predict).</span>
