@@ -53,6 +53,16 @@ class StateTest(unittest.TestCase):
         predict_phase = ActivePhase.PREDICT
         self.assertEqual(predict_phase.into_phase(), Phase.PREDICT)
 
+    def test_active_phase_str(self) -> None:
+        active_phase = ActivePhase.TRAIN
+        self.assertEqual(str(active_phase), "train")
+
+        eval_phase = ActivePhase.EVALUATE
+        self.assertEqual(str(eval_phase), "eval")
+
+        predict_phase = ActivePhase.PREDICT
+        self.assertEqual(str(predict_phase), "predict")
+
     def test_set_evaluate_every_n_steps_or_epochs(self) -> None:
         state = PhaseState(dataloader=[], evaluate_every_n_steps=2)
         state.evaluate_every_n_steps = None
