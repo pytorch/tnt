@@ -29,3 +29,8 @@ class TestUtilities(unittest.TestCase):
 
         valid_ndarray = np.array([[[float_x]]])
         self.assertAlmostEqual(scalar_to_float(valid_ndarray), float_x)
+
+    def test_scalar_to_float_bf16(self) -> None:
+        float_x = 3.45
+        valid_tensor = torch.Tensor([float_x]).to(torch.bfloat16)
+        self.assertAlmostEqual(scalar_to_float(valid_tensor), float_x, delta=0.01)
