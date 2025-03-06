@@ -14,6 +14,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import (
     Any,
+    cast,
     ContextManager,
     Generic,
     Iterator,
@@ -26,7 +27,7 @@ from typing import (
 
 import torch
 from pyre_extensions import none_throws
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import FSDPModule, FullyShardedDataParallel as FSDP
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import SWALR
 from torchtnt.framework._unit_utils import _step_requires_iterator
@@ -42,6 +43,7 @@ from torchtnt.utils.precision import (
     GradScaler,
 )
 from torchtnt.utils.prepare_module import (
+    _is_fsdp2_module,
     _is_fsdp_module,
     ActivationCheckpointParams,
     FSDPStrategy,
@@ -672,12 +674,19 @@ class AutoUnit(
         # https://pytorch.org/docs/stable/_modules/torch/nn/parallel/distributed.html#DistributedDataParallel.no_sync
         # https://pytorch.org/docs/stable/fsdp.html#torch.distributed.fsdp.FullyShardedDataParallel.no_sync
         maybe_no_sync = (
-            # pyre-fixme[29]: `Union[Tensor, Module]` is not a function.
             module.no_sync()
             if not should_update_weights
-            and (isinstance(module, DDP) or _is_fsdp_module(module))
+            and (isinstance(module, DDP) or isinstance(module, FSDP))
             else contextlib.nullcontext()
         )
+        # fsdp2 has separate way of disabling gradient sync
+        if _is_fsdp2_module(module):
+            if not should_update_weights:
+                cast(FSDPModule, module).set_requires_gradient_sync(False)
+            elif should_update_weights and self.gradient_accumulation_steps > 1:
+                # if gradient accumulation is used and it's time to update weights,
+                # we need to re-enable gradient sync
+                cast(FSDPModule, module).set_requires_gradient_sync(True)
 
         # if detect_anomaly is true, run forward and backward pass in detect_anomaly context
         detect_anomaly = self.detect_anomaly
