@@ -750,6 +750,36 @@ class TestAutoUnit(unittest.TestCase):
 
         self.assertIsNone(auto_unit.detect_anomaly)
 
+    @patch("torchtnt.framework.auto_unit._is_fsdp2_module", return_value=True)
+    def test_gradient_accumulation_fsdp2(self, _) -> None:
+        auto_unit = DummyAutoUnit(
+            module=torch.nn.Linear(1, 1),
+            gradient_accumulation_steps=3,
+        )
+
+        # Dynamically add a mocked method as an attribute to module
+        fsdp_module_mock = MagicMock()
+        auto_unit.module.set_requires_gradient_sync = fsdp_module_mock
+        auto_unit._is_last_batch = False
+
+        state = get_dummy_train_state()
+
+        # Simulate train steps
+        for step in range(4):
+            # Call train_step to trigger set_requires_gradient_sync
+            auto_unit.train_step(state, (torch.rand(1, 1), torch.rand(1, 1)))
+
+            # Check if set_requires_gradient_sync is called with the correct boolean
+            if (step + 1) % auto_unit.gradient_accumulation_steps == 0:
+                auto_unit.module.set_requires_gradient_sync.assert_called_with(True)
+            else:
+                auto_unit.module.set_requires_gradient_sync.assert_called_with(False)
+
+            # Reset mock for the next iteration
+            auto_unit.module.set_requires_gradient_sync.reset_mock()
+
+            auto_unit.train_progress.increment_step()
+
 
 Batch = Tuple[torch.Tensor, torch.Tensor]
 
