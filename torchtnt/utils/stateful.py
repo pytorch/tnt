@@ -75,3 +75,14 @@ class MetricStateful(Protocol):
     def state_dict(self) -> Dict[str, Any]: ...
 
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None: ...
+
+
+class DictStateful(Stateful, Dict[str, Any]):
+    """A dictionary that implements the stateful interface that can be saved and loaded from checkpoints."""
+
+    def state_dict(self) -> Dict[str, Any]:
+        return self
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        self.clear()
+        self.update(state_dict)
