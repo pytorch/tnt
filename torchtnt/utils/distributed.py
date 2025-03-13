@@ -377,6 +377,41 @@ def rank_zero_fn(
     return wrapped_fn
 
 
+def local_rank_zero_fn(
+    fn: Callable[TParams, TReturn]
+) -> Callable[TParams, Optional[TReturn]]:
+    """Function that can be used as a decorator to enable a function to be called on local rank 0 only.
+
+    Note:
+        This decorator should be used judiciously. it should never be used on functions that need synchronization.
+        It should be used very carefully with functions that mutate local state as well
+
+    Example:
+
+        >>> from torchtnt.utilities.distributed import local_rank_zero_fn
+        >>> @local_rank_zero_fn
+        ... def foo():
+        ...     return 1
+        ...
+        >>> x = foo() # x is 1 if local rank is 0 else x is None
+
+    Args:
+        fn: the desired function to be executed on rank 0 only
+
+    Return:
+        wrapped_fn: the wrapped function that executes only if the global rank is  0
+
+    """
+
+    @wraps(fn)
+    def wrapped_fn(*args: TParams.args, **kwargs: TParams.kwargs) -> Optional[TReturn]:
+        if get_local_rank() == 0:
+            return fn(*args, **kwargs)
+        return None
+
+    return wrapped_fn
+
+
 class _BatchNormXd(torch.nn.modules.batchnorm._BatchNorm):
     """
     The only difference between :class:`torch.nn.BatchNorm1d`, :class:`torch.nn.BatchNorm2d`,
