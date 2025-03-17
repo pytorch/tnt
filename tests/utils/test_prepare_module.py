@@ -11,10 +11,12 @@ import unittest
 from unittest.mock import patch
 
 import torch
+from torch.distributed.fsdp import MixedPrecisionPolicy
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
+    _check_and_convert_mp_policy_dtypes,
     DDPStrategy,
     FSDPStrategy,
     materialize_meta_params,
@@ -242,3 +244,25 @@ class PrepareModelTest(unittest.TestCase):
         # Check if the parameters are moved to the specified device
         for param in module.parameters():
             self.assertEqual(param.device, device)
+
+    def test_check_and_convert_mp_policy_dtypes(self) -> None:
+        mp_policy = MixedPrecisionPolicy(
+            # pyre-ignore: Incompatible parameter type [6] (intentional for this test)
+            param_dtype="bf16",
+            # pyre-ignore: Incompatible parameter type [6] (intentional for this test)
+            reduce_dtype="fp16",
+            cast_forward_inputs=False,
+        )
+        new_mp_policy = _check_and_convert_mp_policy_dtypes(mp_policy)
+        self.assertEqual(new_mp_policy.param_dtype, torch.bfloat16)
+        self.assertEqual(new_mp_policy.reduce_dtype, torch.float16)
+        self.assertEqual(new_mp_policy.output_dtype, None)
+        self.assertFalse(new_mp_policy.cast_forward_inputs)
+
+        # pyre-ignore: Incompatible parameter type [6] (intentional for this test)
+        invalid_mp_policy = MixedPrecisionPolicy(param_dtype=16)
+        with self.assertRaisesRegex(
+            ValueError,
+            "MixedPrecisionPolicy requires all dtypes to be torch.dtype.",
+        ):
+            _check_and_convert_mp_policy_dtypes(invalid_mp_policy)

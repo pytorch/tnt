@@ -10,7 +10,10 @@ import unittest
 from typing import Any
 
 import torch
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+from torch.distributed.fsdp import (
+    FullyShardedDataParallel as FSDP,
+    MixedPrecisionPolicy,
+)
 
 try:
     from torch.distributed.fsdp import fully_shard
@@ -329,13 +332,19 @@ class PrepareModelGPUTest(unittest.TestCase):
     @staticmethod
     def _test_prepare_fsdp2_none_sharded_raises() -> None:
         """
-        Test with a strategy that does not shard any modules, should raise error
+        Test with a strategy that does not shard any modules, should raise error. And also raise error
+        for invalid mp_policy.
         """
         tc = unittest.TestCase()
 
         module = SimpleModule()
         device = torch.device("cuda")
         strategy = FSDP2Strategy(modules_to_shard=[])
+        with tc.assertRaises(ValueError):
+            prepare_fsdp2(module, device, strategy)
+
+        # pyre-ignore[6]: Incompatible parameter type (intentional for testing)
+        strategy = FSDP2Strategy(mp_policy=MixedPrecisionPolicy(param_dtype=16))
         with tc.assertRaises(ValueError):
             prepare_fsdp2(module, device, strategy)
 
@@ -364,7 +373,9 @@ class PrepareModelGPUTest(unittest.TestCase):
         for t in (torch.nn.Linear, "Linear"):
             module = SimpleModule()
             device = torch.device("cuda")
-            strategy = FSDP2Strategy(modules_to_shard=(t,))
+            # pyre-ignore: Incompatible parameter type [6] (intentional for this test)
+            mp_policy = MixedPrecisionPolicy(param_dtype="bf16")
+            strategy = FSDP2Strategy(modules_to_shard=(t,), mp_policy=mp_policy)
             prepare_fsdp2(module, device, strategy)
 
             for submodule in module.modules():
