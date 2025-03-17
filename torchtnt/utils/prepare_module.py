@@ -38,6 +38,7 @@ from torch.distributed.checkpoint.state_dict import (
     set_optimizer_state_dict,
 )
 from torch.distributed.device_mesh import init_device_mesh
+from torchtnt.utils.precision import convert_precision_str_to_dtype
 
 try:
     from torch.distributed.fsdp import (
@@ -218,7 +219,7 @@ class FSDP2Strategy(Strategy):
         Iterable[Union[str, Type[torch.nn.Module]]],
     ] = "all"
     reshard_after_forward: Union[bool, int] = True
-    mp_policy: Optional[Union[torch.dtype, MixedPrecisionPolicy]] = None
+    mp_policy: Optional[Union[str, torch.dtype, MixedPrecisionPolicy]] = None
     cpu_offload: bool = False
 
 
@@ -375,13 +376,20 @@ def prepare_fsdp2(
         fsdp_kwargs["offload_policy"] = CPUOffloadPolicy()
     if (mp_policy := strategy.mp_policy) is not None:
         if isinstance(mp_policy, MixedPrecisionPolicy):
+            mp_policy = _check_and_convert_mp_policy_dtypes(mp_policy)
             fsdp_kwargs["mp_policy"] = mp_policy
-        else:
+        elif isinstance(mp_policy, str):
+            dtype = convert_precision_str_to_dtype(mp_policy)
+            fsdp_kwargs["mp_policy"] = MixedPrecisionPolicy(
+                param_dtype=dtype,
+                reduce_dtype=dtype,
+                output_dtype=dtype,
+            )
+        elif isinstance(mp_policy, torch.dtype):
             fsdp_kwargs["mp_policy"] = MixedPrecisionPolicy(
                 param_dtype=mp_policy,
                 reduce_dtype=mp_policy,
                 output_dtype=mp_policy,
-                cast_forward_inputs=True,
             )
 
     # parse out the modules_to_shard argument
@@ -636,3 +644,39 @@ def materialize_meta_params(module: torch.nn.Module, device: torch.device) -> No
         if on_meta_device(submodule):
             rank_zero_info(f"{name} is on meta device, intializing on device {device}")
             submodule.to_empty(device=device, recurse=False)
+
+
+def _check_and_convert_mp_policy_dtypes(
+    mp_policy: MixedPrecisionPolicy,
+) -> MixedPrecisionPolicy:
+    """
+    Converts precision strings to torch.dtype and validates that all dtypes are of type torch.dtype.
+    Returns new MixedPrecisionPolicy as its attributes are frozen (cannot assign new values to fields)
+    """
+
+    dtypes = (mp_policy.param_dtype, mp_policy.reduce_dtype, mp_policy.output_dtype)
+    dtypes = filter(None, dtypes)
+    for dtype in dtypes:
+        if not isinstance(dtype, (str, torch.dtype)):
+            raise ValueError(
+                f"MixedPrecisionPolicy requires all dtypes to be torch.dtype or string. Got dtype={dtype} with type {type(dtype)}"
+            )
+
+    param_dtype = mp_policy.param_dtype
+    reduce_dtype = mp_policy.reduce_dtype
+    output_dtype = mp_policy.output_dtype
+    if isinstance(mp_policy.param_dtype, str):
+        param_dtype = convert_precision_str_to_dtype(mp_policy.param_dtype)
+    if isinstance(mp_policy.reduce_dtype, str):
+        reduce_dtype = convert_precision_str_to_dtype(mp_policy.reduce_dtype)
+    if isinstance(mp_policy.output_dtype, str):
+        output_dtype = convert_precision_str_to_dtype(mp_policy.output_dtype)
+
+    new_mp_policy = MixedPrecisionPolicy(
+        param_dtype=param_dtype,
+        reduce_dtype=reduce_dtype,
+        output_dtype=output_dtype,
+        cast_forward_inputs=mp_policy.cast_forward_inputs,
+    )
+
+    return new_mp_policy
