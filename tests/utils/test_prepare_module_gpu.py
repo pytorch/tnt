@@ -14,6 +14,10 @@ from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
     MixedPrecisionPolicy,
 )
+from torchtnt.framework._test_utils import DummyAutoUnit, generate_random_dataloader
+from torchtnt.framework.train import train
+from torchtnt.utils.distributed import get_global_rank
+from torchtnt.utils.prepare_module import get_module_state_dict
 
 try:
     from torch.distributed.fsdp import fully_shard
@@ -403,6 +407,62 @@ class PrepareModelGPUTest(unittest.TestCase):
             else:
                 # linear and SimpleModule are fsdp modules
                 tc.assertTrue(_is_fsdp_module(submodule))
+
+    def test_get_module_state_dict(self) -> None:
+        spawn_multi_process(
+            2,
+            "nccl",
+            self._test_get_module_state_dict,
+        )
+
+    @staticmethod
+    def _test_get_module_state_dict() -> None:
+        rank = get_global_rank()
+
+        fsdp_strategy = FSDPStrategy(
+            sharding_strategy="FULL_SHARD",
+            auto_wrap_policy=lambda module, recurse, nonwrapped_numel: True,
+        )
+        ddp_strategy = DDPStrategy()
+
+        for strategy, rank0_only in (
+            (fsdp_strategy, True),
+            (fsdp_strategy, False),
+            (ddp_strategy, True),
+            (ddp_strategy, False),
+            (None, True),
+            (None, False),
+        ):
+            module = torch.nn.Sequential(
+                torch.nn.Linear(2, 100),
+                torch.nn.Linear(100, 2),
+            )
+
+            unit = DummyAutoUnit(
+                module=module,
+                strategy=strategy,
+            )
+
+            dataloader = generate_random_dataloader(10, 2, 10)
+            train(unit, dataloader, max_epochs=1)
+
+            module_sd = get_module_state_dict(unit.module, rank0_only=rank0_only)
+
+            tc = unittest.TestCase()
+
+            # For FSDP, if the user passed rank0_only=True, we should get an empty state dict
+            # on all ranks except rank 0
+            if rank0_only and isinstance(strategy, FSDPStrategy) and rank != 0:
+                tc.assertEqual(module_sd, {})
+
+            else:
+                # Make sure that the generated state dict has the actual model keys,
+                # and the values are actual tensors as opposed to ShardedTensor.
+                tc.assertCountEqual(
+                    ["0.weight", "0.bias", "1.weight", "1.bias"],
+                    list(module_sd.keys()),
+                )
+                tc.assertIsInstance(module_sd["0.weight"], torch.Tensor)
 
 
 class SimpleModule(torch.nn.Module):
