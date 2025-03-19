@@ -30,6 +30,7 @@ from torchtnt.utils.distributed import (
     get_process_group_backend_from_device,
     get_tcp_init_method,
     get_world_size,
+    local_rank_zero_fn,
     PGWrapper,
     rank_zero_fn,
     rank_zero_read_and_broadcast,
@@ -168,6 +169,14 @@ class DistributedTest(unittest.TestCase):
 
         x = foo()
         assert x is None
+
+    def test_local_rank_zero_fn(self) -> None:
+        @local_rank_zero_fn
+        def foo() -> int:
+            return 1
+
+        x = foo()
+        assert x == 1
 
     def test_revert_sync_batchnorm(self) -> None:
         original_batchnorm = torch.nn.modules.batchnorm.BatchNorm1d(4)
