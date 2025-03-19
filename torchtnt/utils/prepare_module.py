@@ -6,6 +6,7 @@
 
 # pyre-strict
 
+import logging
 from dataclasses import asdict, dataclass
 from functools import partial
 from typing import (
@@ -38,6 +39,7 @@ from torch.distributed.checkpoint.state_dict import (
     set_optimizer_state_dict,
 )
 from torch.distributed.device_mesh import init_device_mesh
+from torch.distributed.fsdp.fully_sharded_data_parallel import FullStateDictConfig
 from torchtnt.utils.precision import convert_precision_str_to_dtype
 
 try:
@@ -83,6 +85,9 @@ from torchtnt.utils.fsdp_utils import (
 
 from torchtnt.utils.rank_zero_log import rank_zero_info, rank_zero_warn
 from torchtnt.utils.version import is_torch_version_geq
+
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -680,3 +685,40 @@ def _check_and_convert_mp_policy_dtypes(
     )
 
     return new_mp_policy
+
+
+def get_module_state_dict(
+    module: torch.nn.Module, rank0_only: bool = False
+) -> Dict[str, Any]:
+    """
+    Given a module, return a state dict that can be loaded into a CPU instance of the module. This requires different implementation depending on strategy:
+    - If FSDP, we need to gather all the sharded parameters and offload state dict to CPU in order to avoid OOM.
+    - If DDP, we need to unwrap the module to avoid extra state_dict prefix
+    - Otherwise, we can just return the state dict as is
+
+    Args:
+        module: module to be used.
+        rank0_only: This flag only works for FSDP. If True, only rank 0 will return the state dict. Other ranks will return an empty dict.
+            For DDP or no strategy case, we don't move the state dice to CPU -- it can be loaded directly into the module.
+
+    Note: Even if the state_dict parameters are on GPU, it can still be loaded into a CPU module.
+    """
+    logger.info("Generating module state dict")
+
+    # TODO: Add support for FSDP2
+    if isinstance(module, FSDP):
+        state_cfg = FullStateDictConfig(offload_to_cpu=True, rank0_only=rank0_only)
+        with FSDP.state_dict_type(module, _StateDictType.FULL_STATE_DICT, state_cfg):
+            return module.state_dict()
+
+    if rank0_only:
+        logger.warning(
+            "Provided rank0_only=True, but this is no-op for DDP or no strategy. Returning state dict in module's device."
+        )
+
+    if isinstance(module, DDP):
+        module = module.module
+
+    state_dict = module.state_dict()
+
+    return state_dict
