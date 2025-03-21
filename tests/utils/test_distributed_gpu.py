@@ -14,6 +14,7 @@ import torch.distributed as dist
 from torchtnt.utils.device import get_device_from_env
 from torchtnt.utils.distributed import (
     all_gather_tensors,
+    broadcast_str,
     get_global_rank,
     get_local_rank,
     PGWrapper,
@@ -79,3 +80,23 @@ class DistributedGPUTest(unittest.TestCase):
     def test_spawn_multi_process(self) -> None:
         mp_list = spawn_multi_process(2, "nccl", self._test_method, 3, offset_kwarg=2)
         self.assertEqual(mp_list, [1, 2])
+
+    @skip_if_not_gpu
+    @skip_if_not_distributed
+    def test_broadcast_str(self) -> None:
+        spawn_multi_process(2, "gloo", self._test_broadcast_str)
+
+    @staticmethod
+    def _test_broadcast_str() -> None:
+        """
+        Tests that test_broadcast_strworks as expected
+        """
+
+        val = None
+        if dist.get_rank() == 0:
+            val = "foo"
+
+        broadcasted_val = broadcast_str(val)
+
+        tc = unittest.TestCase()
+        tc.assertEqual(broadcasted_val, "foo")
