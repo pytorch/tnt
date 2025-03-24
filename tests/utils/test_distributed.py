@@ -21,6 +21,7 @@ from torch.distributed import ProcessGroup
 from torchtnt.utils.distributed import (
     _validate_global_rank_world_size,
     all_gather_tensors,
+    broadcast_str,
     destroy_process_group,
     get_file_init_method,
     get_global_rank,
@@ -571,3 +572,22 @@ class DistributedTest(unittest.TestCase):
                     raise Exception("Test Exception")
 
         mock_destroy_process_group.assert_called_once_with(pg)
+
+    @skip_if_not_distributed
+    def test_broadcast_str(self) -> None:
+        spawn_multi_process(2, "gloo", self._test_broadcast_str)
+
+    @staticmethod
+    def _test_broadcast_str() -> None:
+        """
+        Tests that test_broadcast_str works as expected
+        """
+
+        val = None
+        if dist.get_rank() == 0:
+            val = "foo"
+
+        broadcasted_val = broadcast_str(val)
+
+        tc = unittest.TestCase()
+        tc.assertEqual(broadcasted_val, "foo")
