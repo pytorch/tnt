@@ -684,6 +684,69 @@ def rank_zero_read_and_broadcast(
     return wrapper
 
 
+def broadcast_str(
+    val: Optional[str],
+    src: int = 0,
+    process_group: Optional[dist.ProcessGroup] = None,
+) -> Optional[str]:
+    """
+    Broadcasts a string from a source rank to all other ranks in a process group.
+    Serializes string as sequence of uint8 and broadcasts as a tensor. This avoids
+    issues with broadcast_object_list and related apis which use pickle to serialize objects.
+
+    Args:
+        val: the string to broadcast
+        src: the source rank to broadcast from
+        process_group: the process group to broadcast in. Defaults to the WORLD process group.
+
+    Returns:
+        The broadcasted string.
+
+    Note:
+        This function issues two collective calls, one to broadcast the size of the serialized string and
+        one to broadcast the string itself. This can theoretically be limited to one collective call
+        by hardcoding maximum buffer size to use, and filling unused buffer slots with preselected
+        null tokens. However, this is not implemented to avoid unnecessary complexity.
+    """
+    if not dist.is_available() or not dist.is_initialized():
+        return val
+
+    rank = dist.get_rank(group=process_group)
+
+    # device to use when broadcasting the string
+    device = torch.device(
+        torch.cuda.current_device()
+        if dist.get_backend(process_group) == "nccl"
+        else "cpu"
+    )
+
+    # dummy instantiation to keep pyre happy
+    buffer = torch.empty((1), dtype=torch.uint8)
+    buffer_length = torch.empty((1), dtype=torch.int, device=device)
+    if rank == src:
+        assert (
+            val is not None
+        ), "Source rank must provide a string to broadcast, got None"
+
+        # convert string to tensor
+        buffer = torch.frombuffer(val.encode("utf-8"), dtype=torch.uint8)
+        buffer = buffer.to(device=device)
+        buffer_length = torch.tensor((len(buffer)), dtype=torch.int, device=device)
+
+    # first broadcast the buffer length so receiving ranks can allocate the correct amount of memory
+    dist.broadcast(buffer_length, src=src, group=process_group)
+    if rank != src:
+        size = int(buffer_length.item())
+        buffer = torch.empty((size), dtype=torch.uint8, device=device)
+
+    # now broadcast string
+    dist.broadcast(buffer, src=src, group=process_group)
+
+    # convert tensor to string
+    string = bytes(buffer.tolist()).decode(encoding="utf-8")
+    return string
+
+
 @contextmanager
 def get_or_create_gloo_pg(
     candidate_pg: Optional[dist.ProcessGroup] = None,
