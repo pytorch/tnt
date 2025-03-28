@@ -30,6 +30,7 @@ class TQDMProgressBar(Callback):
 
     Args:
         refresh_rate: Determines at which rate (in number of steps) the progress bars get updated.
+        mininterval: Minimum display update interval (in seconds). If None, use TQDM's default.
         file: specifies where to output the progress messages (default: sys.stderr)
     """
 
@@ -37,8 +38,11 @@ class TQDMProgressBar(Callback):
         self,
         refresh_rate: int = 1,
         file: Optional[Union[TextIO, io.StringIO]] = None,
+        *,
+        mininterval: float | None = None,
     ) -> None:
         self._refresh_rate = refresh_rate
+        self._mininterval = mininterval
         self._file = file
 
         self._train_progress_bar: Optional[tqdm] = None
@@ -56,6 +60,7 @@ class TQDMProgressBar(Callback):
                 max_steps=train_state.max_steps,
                 max_steps_per_epoch=train_state.max_steps_per_epoch,
                 file=self._file,
+                mininterval=self._mininterval,
             )
 
     def on_train_step_end(self, state: State, unit: TTrainUnit) -> None:
@@ -87,6 +92,7 @@ class TQDMProgressBar(Callback):
                 max_steps=eval_state.max_steps,
                 max_steps_per_epoch=eval_state.max_steps_per_epoch,
                 file=self._file,
+                mininterval=self._mininterval,
             )
 
     def on_eval_step_end(self, state: State, unit: TEvalUnit) -> None:
