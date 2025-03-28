@@ -25,6 +25,7 @@ def create_progress_bar(
     num_steps_completed: int,
     max_steps: Optional[int],
     max_steps_per_epoch: Optional[int],
+    mininterval: float | None = None,
     file: Optional[Union[TextIO, io.StringIO]] = None,
 ) -> tqdm:
     """Constructs a :func:`tqdm` progress bar. The number of steps in an epoch is inferred from the dataloader, num_steps_completed, max_steps and max_steps_per_epoch.
@@ -36,6 +37,7 @@ def create_progress_bar(
         num_steps_completed: an integer for the number of steps completed so far in the loop.
         max_steps: an optional integer for the number of max steps in the loop.
         max_steps_per_epoch: an optional integer for the number of max steps per epoch.
+        mininterval: Minimum display update interval (in seconds). If None, use TQDM's default.
         file: specifies where to output the progress messages (default: sys.stderr)
     """
     current_epoch = num_epochs_completed
@@ -45,12 +47,16 @@ def create_progress_bar(
         max_steps=max_steps,
         max_steps_per_epoch=max_steps_per_epoch,
     )
+    kwargs = {}
+    if mininterval is not None:
+        kwargs["mininterval"] = mininterval
     return tqdm(
         desc=f"{desc} {current_epoch}",
         total=total,
         initial=num_steps_completed,
         bar_format="{l_bar}{bar}{r_bar}\n",
         file=file,
+        **kwargs,
     )
 
 
