@@ -29,13 +29,14 @@ from typing import (
     Union,
 )
 
+from python.migrations.py310 import StrEnum310
+
 try:
     # pyre-ignore[21]: Could not find name `StrEnum` in `enum`
     from enum import StrEnum
 except ImportError:
-    from enum import Enum
 
-    class StrEnum(str, Enum):
+    class StrEnum(StrEnum310):
         pass
 
 
