@@ -991,7 +991,9 @@ class DummyStorageWriter(FileSystemWriter):
     def __init__(self, path: str) -> None:
         super().__init__(path)
 
-    def set_up_storage_writer(self, is_coordinator: bool) -> None:
+    def set_up_storage_writer(
+        self, is_coordinator: bool, *args: Any, **kwargs: Any
+    ) -> None:
         pass
 
 
@@ -999,5 +1001,7 @@ class DummyStorageReader(FileSystemReader):
     def __init__(self, path: str) -> None:
         super().__init__(path)
 
-    def set_up_storage_writer(self, is_coordinator: bool) -> None:
+    def set_up_storage_reader(
+        self, is_coordinator: bool, *args: Any, **kwargs: Any
+    ) -> None:
         pass
