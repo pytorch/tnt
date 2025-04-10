@@ -688,6 +688,7 @@ def broadcast_str(
     val: Optional[str],
     src: int = 0,
     process_group: Optional[dist.ProcessGroup] = None,
+    fixed_buffer_size: Optional[int] = None,
 ) -> Optional[str]:
     """
     Broadcasts a string from a source rank to all other ranks in a process group.
@@ -698,18 +699,23 @@ def broadcast_str(
         val: the string to broadcast
         src: the source rank to broadcast from
         process_group: the process group to broadcast in. Defaults to the WORLD process group.
+        fixed_buffer_size (int, optional): The fixed buffer size to use. Defaults to none.
+            If provided, it reduces the number of collective calls by padding the string to a fixed length.
 
     Returns:
         The broadcasted string.
 
     Note:
         This function issues two collective calls, one to broadcast the size of the serialized string and
-        one to broadcast the string itself. This can theoretically be limited to one collective call
-        by hardcoding maximum buffer size to use, and filling unused buffer slots with preselected
-        null tokens. However, this is not implemented to avoid unnecessary complexity.
+        one to broadcast the string itself. If you want to avoid two collective calls, you can pass a fixed_buffer_size
+        parameter. This will cause the string to be padded to the fixed length and only one broadcast will be performed.
+        However, this comes with the cost of extra memory usage.
+        If the string length is less than the buffer size, src rank will terminate early. However, receiving ranks may see collective hang, as expecting data from src rank. Please ensure the buffer size is large enough to avoid this issue.
     """
     if not dist.is_available() or not dist.is_initialized():
         return val
+    if fixed_buffer_size is not None and fixed_buffer_size <= 0:
+        raise ValueError(f"Expected fixed_buffer_size > 0, got {fixed_buffer_size}")
 
     rank = dist.get_rank(group=process_group)
 
@@ -720,9 +726,10 @@ def broadcast_str(
         else "cpu"
     )
 
-    # dummy instantiation to keep pyre happy
+    # Initialize buffer and buffer_length for all ranks
     buffer = torch.empty((1), dtype=torch.uint8)
     buffer_length = torch.empty((1), dtype=torch.int, device=device)
+
     if rank == src:
         assert (
             val is not None
@@ -733,17 +740,35 @@ def broadcast_str(
         buffer = buffer.to(device=device)
         buffer_length = torch.tensor((len(buffer)), dtype=torch.int, device=device)
 
+        if fixed_buffer_size is not None:
+            if len(buffer) > fixed_buffer_size:
+                raise ValueError(
+                    f"Serialized string size ({len(buffer)}) exceeds buffer size ({fixed_buffer_size})"
+                )
+            # Pad the buffer with a special value (e.g., 0) to indicate the end of the string
+            buffer = F.pad(buffer, (0, fixed_buffer_size - len(buffer)), value=0)
+
     # first broadcast the buffer length so receiving ranks can allocate the correct amount of memory
-    dist.broadcast(buffer_length, src=src, group=process_group)
-    if rank != src:
-        size = int(buffer_length.item())
-        buffer = torch.empty((size), dtype=torch.uint8, device=device)
+    if fixed_buffer_size is None:
+        dist.broadcast(buffer_length, src=src, group=process_group)
 
-    # now broadcast string
+        if rank != src:
+            size = int(buffer_length.item())
+            buffer = torch.empty((size), dtype=torch.uint8, device=device)
+
+    elif rank != src:
+        buffer = torch.empty((fixed_buffer_size), dtype=torch.uint8, device=device)
+
     dist.broadcast(buffer, src=src, group=process_group)
-
-    # convert tensor to string
-    string = bytes(buffer.tolist()).decode(encoding="utf-8")
+    buffer_list = buffer.tolist()
+    null_index = next(
+        (i for i, x in enumerate(buffer_list) if x == 0), len(buffer_list)
+    )
+    if null_index == 0:
+        truncated_buffer = buffer_list
+    else:
+        truncated_buffer = buffer_list[:null_index]
+    string = bytes(truncated_buffer).decode(encoding="utf-8", errors="strict")
     return string
 
 
