@@ -574,6 +574,25 @@ class DistributedTest(unittest.TestCase):
         mock_destroy_process_group.assert_called_once_with(pg)
 
     @skip_if_not_distributed
+    def test_broadcast_str_fixed_buffer_size(self) -> None:
+        spawn_multi_process(2, "gloo", self._test_broadcast_str_fixed_buffer_size)
+
+    @staticmethod
+    def _test_broadcast_str_fixed_buffer_size() -> None:
+        val = None
+        if dist.get_rank() == 0:
+            val = "foo"
+
+        # Test case 1: fixed_buffer_size == len(val)
+        broadcasted_val = broadcast_str(val, fixed_buffer_size=3)
+        tc = unittest.TestCase()
+        tc.assertEqual(broadcasted_val, "foo")
+
+        # Test case 2: fixed_buffer_size > len(val)
+        broadcasted_val = broadcast_str(val, fixed_buffer_size=10)
+        tc.assertEqual(broadcasted_val, "foo")
+
+    @skip_if_not_distributed
     def test_broadcast_str(self) -> None:
         spawn_multi_process(2, "gloo", self._test_broadcast_str)
 
