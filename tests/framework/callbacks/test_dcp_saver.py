@@ -255,6 +255,27 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         app_state = mock_dist_cp.load.call_args.args[0]["app_state"].state_dict()
         self.assertIn("lr_scheduler", app_state)
 
+    @patch("torchtnt.framework.callbacks.dcp_saver._init_optim_state")
+    @patch("torchtnt.framework.callbacks.dcp_saver.dcp")
+    def test_save_restore_no_init_optim_state(
+        self, _: MagicMock, mock_init_optim_state: MagicMock
+    ) -> None:
+        my_unit = DummyTrainUnit(input_dim=2)
+        restore_options = RestoreOptions(init_optim_states=False)
+        DistributedCheckpointSaver.restore(
+            path="path/to/snapshot",
+            unit=my_unit,
+            restore_options=restore_options,
+        )
+        mock_init_optim_state.assert_not_called()
+
+        DistributedCheckpointSaver.restore(
+            path="path/to/snapshot",
+            unit=my_unit,
+            restore_options=RestoreOptions(),
+        )
+        mock_init_optim_state.assert_called()
+
     @skip_if_not_distributed
     def test_save_restore_ddp(self) -> None:
         spawn_multi_process(
