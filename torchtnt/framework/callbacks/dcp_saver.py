@@ -370,14 +370,15 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             predict_dataloader,
         )
 
-        # necessary for loading optimizers since states are initialized lazy
-        for obj in app_state.values():
-            # sometimes optimizers are actually held in a wrapper which handles calling
-            # state_dict and load_state_dict, sa is the case for
-            # `torchtnt.utils.prepare_module.FSDPOptimizerWrapper`, this handles that case.
-            optimizer = getattr(obj, "optimizer", obj)
-            if isinstance(optimizer, torch.optim.Optimizer):
-                _init_optim_state(optimizer)
+        if restore_options.init_optim_states:
+            # if optimizers states are initialized lazy
+            for obj in app_state.values():
+                # sometimes optimizers are actually held in a wrapper which handles calling
+                # state_dict and load_state_dict, sa is the case for
+                # `torchtnt.utils.prepare_module.FSDPOptimizerWrapper`, this handles that case.
+                optimizer = getattr(obj, "optimizer", obj)
+                if isinstance(optimizer, torch.optim.Optimizer):
+                    _init_optim_state(optimizer)
 
         with get_or_create_gloo_pg(candidate_pg=process_group) as pg:
             dcp.load(
