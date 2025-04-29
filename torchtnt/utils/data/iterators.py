@@ -511,6 +511,7 @@ class InOrderIterator(MultiIterator):
         self.cur_iter: Union[Iterator[DataLoader], Iterator[object]] = iter(
             self.individual_dataloaders[self.iteration_order[0]]
         )
+        self.cur_iterator_idx: int = 0
         self.cur_iterator: str = self.iteration_order[0]
         self.num_iterators: int = len(self.iteration_order)
         self.iterators_finished: int = 0
@@ -518,6 +519,17 @@ class InOrderIterator(MultiIterator):
     def __next__(self) -> Dict[str, Any]:
         if self.iterators_finished == self.num_iterators:
             raise StopIteration
+
+        # If the current iterator doesn't match the expected number of finished iterators,
+        # it means we restored from checkpoint and we need to initialize expected iterator
+        # This is to avoid calling iter() in the load_state_dict() function.
+        if self.iterators_finished != self.cur_iterator_idx:
+            logger.info(
+                f"Initializing iterator {self.cur_iterator} after resuming from checkpoint"
+            )
+            self.cur_iterator_idx = self.iterators_finished
+            self.cur_iterator = self.iteration_order[self.iterators_finished]
+            self.cur_iter = iter(self.individual_dataloaders[self.cur_iterator])
 
         try:
             return {self.cur_iterator: next(self.cur_iter)}
@@ -528,11 +540,35 @@ class InOrderIterator(MultiIterator):
             if self.iterators_finished == self.num_iterators:
                 raise StopIteration
 
+            self.cur_iterator_idx += 1
             self.cur_iterator = self.iteration_order[self.iterators_finished]
-
             self.cur_iter = iter(self.individual_dataloaders[self.cur_iterator])
 
             return self.__next__()
+
+    def state_dict(self) -> Dict[str, Any]:
+        return {
+            "iterators_finished": self.iterators_finished,
+            "cur_iterator": self.cur_iterator,
+        }
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        iterators_finished: int = state_dict["iterators_finished"]
+        cur_iterator: str = state_dict["cur_iterator"]
+        logger.info(
+            f"Loading InOrderIterator state. Trying to set iterators_finished to {iterators_finished} to restore {cur_iterator}"
+        )
+
+        if cur_iterator not in self.iteration_order or iterators_finished > len(
+            self.iteration_order
+        ):
+            logger.warning(
+                f"Will not restore InOrderIterator state, since expected dataloader was not found in available iterators: {cur_iterator}"
+            )
+            return
+
+        self.iterators_finished = iterators_finished
+        # We do not initialize actual iterator here to avoid checkpoint restore taking longer
 
 
 class DataIterationStrategyRegistry:
