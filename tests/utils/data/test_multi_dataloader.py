@@ -14,12 +14,16 @@ from typing import Any, cast, Dict, Iterable, Iterator, List, Mapping, Union
 
 import torch
 from torch.utils.data import DataLoader, Dataset
-from torchtnt.framework._test_utils import generate_random_dataloader
+from torchtnt.framework._test_utils import (
+    generate_random_dataloader,
+    generate_tensor_dataloader,
+)
 
 from torchtnt.utils.data.iterators import (
     AllDatasetBatches,
     DataIterationStrategy,
     InOrder,
+    InOrderIterator,
     MultiIterator,
     RandomizedBatchSampler,
     RoundRobin,
@@ -580,3 +584,68 @@ class TestMultiDataLoader(unittest.TestCase):
         self, first_dataloader: DataLoader, second_dataloader: DataLoader
     ) -> Dict[str, Union[DataLoader, Iterable[object]]]:
         return {"1": first_dataloader, "2": second_dataloader}
+
+    def test_state_dict_with_inorder_iterator(self) -> None:
+        dataloader_1 = generate_tensor_dataloader(torch.tensor([1, 2]), batch_size=1)
+        dataloader_2 = generate_tensor_dataloader(torch.tensor([3, 4]), batch_size=1)
+        dataloader_3 = generate_tensor_dataloader(torch.tensor([5, 6]), batch_size=1)
+
+        dataloaders_dict: Dict[str, Union[DataLoader, Iterable[object]]] = {
+            "dataloader_1": dataloader_1,
+            "dataloader_2": dataloader_2,
+            "dataloader_3": dataloader_3,
+        }
+
+        multi_dataloader = MultiDataLoader(
+            dataloaders_dict,
+            InOrder(iteration_order=["dataloader_1", "dataloader_2", "dataloader_3"]),
+        )
+
+        mdl_iter = iter(multi_dataloader)
+
+        # Exhaust first dataset
+        self.assertEqual(next(mdl_iter)["dataloader_1"], [torch.tensor([1])])
+        self.assertEqual(next(mdl_iter)["dataloader_1"], [torch.tensor([2])])
+
+        # We expect same iterator since we haven't raise StopIteration
+        mdl_sd = multi_dataloader.state_dict()
+        self.assertEqual(
+            mdl_sd["iterator_state"],
+            {
+                "iterators_finished": 0,
+                "cur_iterator": "dataloader_1",
+            },
+        )
+
+        # Start second dataset
+        self.assertEqual(next(mdl_iter)["dataloader_2"], [torch.tensor([3])])
+
+        mdl_sd = multi_dataloader.state_dict()
+        self.assertEqual(
+            mdl_sd["iterator_state"],
+            {
+                "iterators_finished": 1,
+                "cur_iterator": "dataloader_2",
+            },
+        )
+
+        # Create new dataloader and verify restore
+        multi_dataloader_2 = MultiDataLoader(
+            dataloaders_dict,
+            InOrder(iteration_order=["dataloader_1", "dataloader_2", "dataloader_3"]),
+        )
+        multi_dataloader_2.load_state_dict(mdl_sd)
+        in_order_iter = cast(InOrderIterator, iter(multi_dataloader_2))
+        self.assertEqual(in_order_iter.cur_iterator, "dataloader_1")
+        self.assertEqual(in_order_iter.iterators_finished, 1)
+
+        # Calling next should update the currrent iterator
+        # individual dl is not stateful
+        self.assertEqual(next(in_order_iter)["dataloader_2"], [torch.tensor([3])])
+        self.assertEqual(in_order_iter.cur_iterator, "dataloader_2")
+
+        # verify that after calling iter(), everything is reset
+        in_order_iter_2 = cast(InOrderIterator, iter(multi_dataloader_2))
+        self.assertEqual(in_order_iter_2.cur_iterator, "dataloader_1")
+        self.assertEqual(in_order_iter_2.iterators_finished, 0)
+        self.assertEqual(next(in_order_iter_2)["dataloader_1"], [torch.tensor([1])])

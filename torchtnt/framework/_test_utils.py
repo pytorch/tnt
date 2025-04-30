@@ -280,6 +280,17 @@ def generate_dummy_stateful_dataloader(
     )
 
 
+def generate_tensor_dataloader(
+    samples: torch.Tensor, batch_size: int
+) -> DummyStatefulDataLoader:
+    return DummyStatefulDataLoader(
+        DataLoader(
+            dataset=TensorDataset(samples),
+            batch_size=batch_size,
+        )
+    )
+
+
 class DummyMeanMetric:
     def __init__(self) -> None:
         super().__init__()
