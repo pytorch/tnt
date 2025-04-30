@@ -6,6 +6,7 @@
 
 # pyre-strict
 
+import logging
 from typing import Literal
 
 from torchtnt.framework.callback import Callback
@@ -13,6 +14,8 @@ from torchtnt.framework.state import State
 from torchtnt.framework.unit import AppStateMixin, TEvalUnit, TTrainUnit
 from torchtnt.utils.distributed import get_global_rank, sync_bool
 from torchtnt.utils.early_stop_checker import EarlyStopChecker
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class EarlyStopping(Callback):
@@ -102,4 +105,5 @@ class EarlyStopping(Callback):
 
         should_stop = sync_bool(should_stop, coherence_mode="rank_zero")
         if should_stop:
+            logger.warning("Stopping training early due to early stopping criteria.")
             state.stop()
