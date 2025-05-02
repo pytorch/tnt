@@ -189,7 +189,7 @@ class EarlyStopChecker:
 
         # Check finite
         if self.check_finite and not torch.isfinite(val):
-            _log.debug(
+            _log.warning(
                 f"Metric is not finite: {val}."
                 f" Previous best value was {self._best_value}."
             )
@@ -197,7 +197,7 @@ class EarlyStopChecker:
 
         # Check if reached stopping threshold
         if stopping_threshold is not None and self._mode_func(val, stopping_threshold):
-            _log.debug(
+            _log.warning(
                 "Stopping threshold reached:"
                 f" {val} {self._mode_char} {stopping_threshold}."
             )
@@ -207,7 +207,7 @@ class EarlyStopChecker:
         if divergence_threshold is not None and self._mode_func(
             -val, -divergence_threshold
         ):
-            _log.debug(
+            _log.warning(
                 "Divergence threshold reached:"
                 f" {val} {self._mode_char} {divergence_threshold}."
             )
@@ -222,6 +222,8 @@ class EarlyStopChecker:
             message = self._improvement_message(val)
             self._best_value = val
             self._patience_count = 0
+            _log.debug(message)
+
         else:
             # Not improving
             self._patience_count += 1
@@ -241,7 +243,8 @@ class EarlyStopChecker:
                     f" {self.patience - self._patience_count} checks of patience remaining."
                 )
 
-        _log.debug(message)
+            _log.warning(message)
+
         return should_stop
 
     @property
