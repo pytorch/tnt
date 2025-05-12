@@ -9,7 +9,7 @@
 
 import unittest
 from typing import Any, Literal, Optional, Tuple, TypeVar
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import torch
 
@@ -37,6 +37,7 @@ from torchtnt.framework.state import ActivePhase, State
 from torchtnt.framework.train import train
 from torchtnt.framework.unit import TPredictData
 from torchtnt.utils.device import copy_data_to_device
+from torchtnt.utils.device_mesh import GlobalMeshCoordinator
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
@@ -779,6 +780,34 @@ class TestAutoUnit(unittest.TestCase):
             auto_unit.module.set_requires_gradient_sync.reset_mock()
 
             auto_unit.train_progress.increment_step()
+
+    @patch("torchtnt.framework.auto_unit.prepare_module")
+    def test_global_mesh(self, mock_prepare_module: Mock) -> None:
+        """
+        Test that the global mesh is forwarded correctly in the AutoUnit.
+        """
+        module = torch.nn.Linear(1, 1)
+        device = torch.device("cpu")
+        strategy = DDPStrategy()
+        mock_global_mesh = MagicMock(spec=GlobalMeshCoordinator)
+        mock_prepare_module.return_value = module
+
+        DummyAutoUnit(
+            module=module,
+            device=device,
+            strategy=strategy,
+            global_mesh=mock_global_mesh,
+        )
+
+        mock_prepare_module.assert_called_once_with(
+            module,
+            device,
+            strategy=strategy,
+            torch_compile_params=None,
+            activation_checkpoint_params=None,
+            enable_compiled_autograd=False,
+            global_mesh=mock_global_mesh,
+        )
 
 
 Batch = Tuple[torch.Tensor, torch.Tensor]

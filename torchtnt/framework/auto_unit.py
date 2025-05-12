@@ -35,6 +35,7 @@ from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
 from torchtnt.framework.utils import get_timing_context
 from torchtnt.utils.device import copy_data_to_device
+from torchtnt.utils.device_mesh import GlobalMeshCoordinator
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.precision import (
@@ -326,6 +327,7 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
         torch_compile_params: Optional[TorchCompileParams] = None,
         detect_anomaly: Optional[bool] = None,
         enable_prefetch: bool = False,
+        global_mesh: Optional[GlobalMeshCoordinator] = None,
     ) -> None:
         """
         AutoPredictUnit is a convenience for users who are running inference and would like to have certain features handled for them, such as:
@@ -348,6 +350,7 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
             strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp`` or ``fsdp``.
             torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html
             detect_anomaly: whether to enable anomaly detection for the autograd engine https://pytorch.org/docs/stable/autograd.html#anomaly-detection
+            global_mesh: an instance of :class:`~torchtnt.utils.device_mesh.GlobalMeshCoordinator` which defines the global mesh topology. Needed to configure TP or 2D parallelism strategies.
 
         Note:
             Torch compile support is only available in PyTorch 2.0 or higher.
@@ -365,6 +368,7 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
             self.device,
             strategy=strategy,
             torch_compile_params=torch_compile_params,
+            global_mesh=global_mesh,
         )
 
     # pyre-fixme[3]: Return annotation cannot be `Any`.
@@ -474,6 +478,7 @@ class AutoUnit(
             in a much more efficient way.
         enable_prefetch: if True, the data will be prefetched to the device before the next batch is loaded
         zero_grad_at_train_step_start: if True, the optimizer's gradients will be zeroed at the start of each train step, rather than at the end. Useful if you want to inspect/log the gradients via custom callback.
+        global_mesh: an instance of :class:`~torchtnt.utils.device_mesh.GlobalMeshCoordinator` which defines the global mesh topology. Needed to configure TP or 2D parallelism strategies.
 
     Note:
         Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.
@@ -510,6 +515,7 @@ class AutoUnit(
         loss_backward_retain_graph: Optional[bool] = None,
         enable_prefetch: bool = True,
         zero_grad_at_train_step_start: bool = False,
+        global_mesh: Optional[GlobalMeshCoordinator] = None,
     ) -> None:
         super().__init__(
             module=module,
@@ -554,6 +560,7 @@ class AutoUnit(
             torch_compile_params=torch_compile_params,
             activation_checkpoint_params=activation_checkpoint_params,
             enable_compiled_autograd=enable_compiled_autograd,
+            global_mesh=global_mesh,
         )
 
         self.grad_scaler: Optional[GradScaler] = None
