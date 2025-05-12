@@ -444,6 +444,36 @@ def prepare_fsdp2(
     return module
 
 
+def apply_ac(
+    module: torch.nn.Module, activation_checkpoint_params: ActivationCheckpointParams
+) -> None:
+    """
+    Applies activation checkpointing in-place.
+
+    Args:
+        module: module to apply activation checkpointing on
+        activation_checkpoint_params: params to configure the activation checkpointing
+    """
+    checkpoint_impl = activation_checkpoint_params.checkpoint_impl
+    check_fn = activation_checkpoint_params.check_fn
+    auto_wrap_policy = activation_checkpoint_params.auto_wrap_policy
+    context_fn = activation_checkpoint_params.context_fn
+    additional_params = {}
+    if context_fn:
+        additional_params["context_fn"] = context_fn
+    custom_checkpoint_wrapper = partial(
+        checkpoint_wrapper,
+        checkpoint_impl=checkpoint_impl,
+        **additional_params,
+    )
+    apply_activation_checkpointing(
+        module,
+        checkpoint_wrapper_fn=custom_checkpoint_wrapper,
+        check_fn=check_fn,
+        auto_wrap_policy=auto_wrap_policy,
+    )
+
+
 class FSDPOptimizerWrapper:
     """
     Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.
@@ -570,24 +600,7 @@ def prepare_module(
         module = module.to(device)
 
     if activation_checkpoint_params:
-        checkpoint_impl = activation_checkpoint_params.checkpoint_impl
-        check_fn = activation_checkpoint_params.check_fn
-        auto_wrap_policy = activation_checkpoint_params.auto_wrap_policy
-        context_fn = activation_checkpoint_params.context_fn
-        additional_params = {}
-        if context_fn:
-            additional_params["context_fn"] = context_fn
-        custom_checkpoint_wrapper = partial(
-            checkpoint_wrapper,
-            checkpoint_impl=checkpoint_impl,
-            **additional_params,
-        )
-        apply_activation_checkpointing(
-            module,
-            checkpoint_wrapper_fn=custom_checkpoint_wrapper,
-            check_fn=check_fn,
-            auto_wrap_policy=auto_wrap_policy,
-        )
+        apply_ac(module, activation_checkpoint_params)
 
     if torch_compile_params:
         try:
