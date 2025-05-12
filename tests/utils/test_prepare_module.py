@@ -19,6 +19,7 @@ from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
     _check_and_convert_mp_policy_dtypes,
+    _prepare_module_2d,
     apply_torch_compile,
     DDPStrategy,
     FSDP2Strategy,
@@ -29,6 +30,7 @@ from torchtnt.utils.prepare_module import (
     prepare_fsdp2,
     prepare_module,
     TorchCompileParams,
+    TPStrategy,
 )
 from torchtnt.utils.test_utils import skip_if_not_distributed
 from torchtnt.utils.version import is_torch_version_geq
@@ -293,6 +295,75 @@ class PrepareModelTest(unittest.TestCase):
         mock_fully_shard.assert_called_with(
             module, mesh=mock_mesh, reshard_after_forward=True
         )
+
+    @patch("torchtnt.utils.prepare_module._prepare_module_2d")
+    @patch("torchtnt.utils.prepare_module._prepare_module_1d")
+    def test_prepare_module_dispatching(
+        self, mock_prepare_module_1d: Mock, mock_prepare_module_2d: Mock
+    ) -> None:
+        """
+        Test that prepare_module dispatches to the correct 1d/2d function based on the strategy
+        """
+
+        module = torch.nn.Linear(2, 2, device="cpu")
+        device = torch.device("cpu")
+        strategy = TPStrategy(tp_plan={}, fsdp2_strategy=None)
+
+        with self.assertRaisesRegex(ValueError, "TPStrategy expects global_mesh"):
+            prepare_module(
+                module,
+                device,
+                strategy=strategy,
+                global_mesh=None,
+            )
+
+        mock_global_mesh = MagicMock(spec=GlobalMeshCoordinator)
+        prepare_module(
+            module,
+            device,
+            strategy=strategy,
+            global_mesh=mock_global_mesh,
+        )
+        mock_prepare_module_2d.assert_called_with(
+            module,
+            device,
+            strategy=strategy,
+            global_mesh=mock_global_mesh,
+            torch_compile_params=None,
+            activation_checkpoint_params=None,
+        )
+
+        strategy = FSDP2Strategy()
+        prepare_module(
+            module,
+            device,
+            strategy=strategy,
+            global_mesh=mock_global_mesh,
+        )
+        mock_prepare_module_1d.assert_called_with(
+            module,
+            device,
+            strategy=strategy,
+            global_mesh=mock_global_mesh,
+            torch_compile_params=None,
+            activation_checkpoint_params=None,
+            enable_compiled_autograd=False,
+        )
+
+    @patch("torchtnt.utils.prepare_module.parallelize_module")
+    def test_prepare_module_2d(self, mock_parallelize_module: Mock) -> None:
+        """
+        Test that prepare_module_2d invokes TP apis
+        """
+
+        module = torch.nn.Linear(2, 2, device="cpu")
+        device = torch.device("cpu")
+        strategy = TPStrategy(tp_plan={}, fsdp2_strategy=None)
+        mock_global_mesh = MagicMock(spec=GlobalMeshCoordinator)
+        _prepare_module_2d(
+            module, device, strategy=strategy, global_mesh=mock_global_mesh
+        )
+        mock_parallelize_module.assert_called_once()
 
     def test_apply_torch_compile_recursive_module_types(self) -> None:
         """
