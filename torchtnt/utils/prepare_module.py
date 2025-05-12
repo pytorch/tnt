@@ -41,6 +41,7 @@ from torch.distributed.checkpoint.state_dict import (
 )
 from torch.distributed.device_mesh import init_device_mesh
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullStateDictConfig
+from torchtnt.utils.device_mesh import GlobalMeshCoordinator
 from torchtnt.utils.precision import convert_precision_str_to_dtype
 
 try:
@@ -367,7 +368,7 @@ def prepare_fsdp2(
     module: torch.nn.Module,
     device: torch.device,
     strategy: Optional[FSDP2Strategy] = None,
-    process_group: Optional[ProcessGroup] = None,
+    global_mesh: Optional[GlobalMeshCoordinator] = None,
 ) -> torch.nn.Module:
     """
     Utility to move a module to device and wrap in `FSDP2 <https://pytorch.org/docs/2.6/distributed.fsdp.fully_shard.html>`_
@@ -376,12 +377,18 @@ def prepare_fsdp2(
         module: module to be wrapped in FSDP
         device: device to which module will be moved
         strategy: an instance of :class:`~torchtnt.utils.prepare_module.FSDP2Strategy` which defines the settings of FSDP APIs
+        global_mesh: an instance of :class:`~torchtnt.utils.device_mesh.GlobalMeshCoordinator` which defines the global mesh topology.
+            If not provided, a 1D default mesh will be created covering the entire world size.
     """
     strategy = strategy or FSDP2Strategy()
 
     # prepare kwargs for fully_shard api
-    pg = process_group or dist.distributed_c10d._get_default_group()
-    mesh = init_device_mesh(device.type, mesh_shape=(pg.size(),))
+    if global_mesh is None:
+        pg = dist.distributed_c10d._get_default_group()
+        mesh = init_device_mesh(device.type, mesh_shape=(pg.size(),))
+    else:
+        mesh = global_mesh.dp_mesh
+
     fsdp_kwargs: Dict[str, Any] = {
         "mesh": mesh,  # TODO we only configure 1D mesh for now, look into supporting HSDP
         "reshard_after_forward": strategy.reshard_after_forward,
@@ -599,6 +606,7 @@ def prepare_module(
     torch_compile_params: Optional[TorchCompileParams] = None,
     activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
     enable_compiled_autograd: bool = False,
+    global_mesh: Optional[GlobalMeshCoordinator] = None,
 ) -> torch.nn.Module:
     """
     Utility to move a module to device, set up parallelism, activation checkpointing and compile.
@@ -610,6 +618,8 @@ def prepare_module(
         torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html.
         activation_checkpoint_params: params for enabling activation checkpointing.
         enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.
+        global_mesh: an instance of :class:`~torchtnt.utils.device_mesh.GlobalMeshCoordinator` which defines the global mesh topology.
+            Only pass here if wanting to configure HSDP setup with FSDP2
     """
 
     if strategy:
@@ -652,7 +662,7 @@ def prepare_module(
                 )
             module = prepare_fsdp(module, device, strategy)
         elif isinstance(strategy, FSDP2Strategy):
-            module = prepare_fsdp2(module, device, strategy)
+            module = prepare_fsdp2(module, device, strategy, global_mesh=global_mesh)
     else:
         module = module.to(device)
 
