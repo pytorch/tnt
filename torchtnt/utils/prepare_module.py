@@ -473,6 +473,27 @@ def apply_ac(
     )
 
 
+def apply_torch_compile(
+    module: torch.nn.Module,
+    torch_compile_params: TorchCompileParams,
+) -> None:
+    """
+    Applies torch.compile in-place.
+
+    Args:
+        module: module to apply torch.compile on
+        torch_compile_params: params to configure the torch.compile
+    """
+
+    try:
+        # use in-place compile to avoid altering the state_dict keys
+        module.compile(**asdict(torch_compile_params))
+    except AttributeError:
+        rank_zero_warn(
+            "Please install PyTorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing. Skipping torch compile."
+        )
+
+
 class FSDPOptimizerWrapper:
     """
     Wrapper for FSDP optimizer to call specific FSDP optimizer state checkpointing APIs.
@@ -607,16 +628,7 @@ def prepare_module(
         apply_ac(module, activation_checkpoint_params)
 
     if torch_compile_params:
-        try:
-            # use in-place compile to avoid altering the state_dict keys
-            module.compile(**asdict(torch_compile_params))
-        except AttributeError:
-            rank_zero_warn(
-                "Please install PyTorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing."
-            )
-            return cast(
-                torch.nn.Module, torch.compile(module, **asdict(torch_compile_params))
-            )
+        apply_torch_compile(module, torch_compile_params)
 
     return module
 
