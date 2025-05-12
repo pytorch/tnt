@@ -7,12 +7,13 @@
 # pyre-strict
 
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from functools import partial
 from typing import (
     Any,
     Callable,
     cast,
+    Collection,
     ContextManager,
     Dict,
     Iterable,
@@ -231,6 +232,10 @@ class FSDP2Strategy(Strategy):
 class TorchCompileParams:
     """
     Dataclass to store parameters for torch compile. See https://pytorch.org/docs/stable/generated/torch.compile.html for details.
+
+    TNT specific args:
+        recursive_module_types: list of module types to recursively compile. If not specified, applies compile to top-level module only.
+            ex. ["TransformerCrossAttentionLayer", torch.nn.Linear] both work
     """
 
     fullgraph: bool = False
@@ -240,6 +245,11 @@ class TorchCompileParams:
     mode: Union[str, None] = None
     options: Optional[Dict[str, Union[str, int, bool]]] = None
     disable: bool = False
+
+    # TNT specific params
+    recursive_module_types: Collection[Union[str, Type[torch.nn.Module]]] = field(
+        default_factory=list
+    )
 
 
 @dataclass
@@ -478,16 +488,38 @@ def apply_torch_compile(
     torch_compile_params: TorchCompileParams,
 ) -> None:
     """
-    Applies torch.compile in-place.
+    Applies torch.compile in-place on a given module.
 
     Args:
         module: module to apply torch.compile on
         torch_compile_params: params to configure the torch.compile
     """
-
+    recursive_module_types = torch_compile_params.recursive_module_types
+    params_dict = asdict(torch_compile_params)
+    # remove recursive_module_types from params dict as we pass this directly to torch.compile
+    params_dict.pop("recursive_module_types")
     try:
         # use in-place compile to avoid altering the state_dict keys
-        module.compile(**asdict(torch_compile_params))
+
+        if len(recursive_module_types) == 0:
+            # compile only top-level module
+            module.compile(**params_dict)
+        else:
+            # compile submodules recursively based on recursive_module_types
+
+            # 1) separate str and torch.nn.Module types from recursive_module_types
+            module_names: Set[str] = set()
+            module_types: Tuple[Type[torch.nn.Module], ...] = ()
+            for v in recursive_module_types:
+                if isinstance(v, str):
+                    module_names.add(v)
+                else:
+                    module_types = module_types + (v,)
+
+            # 2) apply torch.compile recursively
+            for m in reversed(list(module.modules())):
+                if isinstance(m, module_types) or type(m).__name__ in module_names:
+                    m.compile(**params_dict)
     except AttributeError:
         rank_zero_warn(
             "Please install PyTorch nightlies to use in-place compile to avoid altering the state_dict keys when checkpointing. Skipping torch compile."
