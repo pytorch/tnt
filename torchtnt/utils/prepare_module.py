@@ -619,7 +619,7 @@ def prepare_module(
 
 def convert_str_to_strategy(
     strategy: str,
-) -> Union[DDPStrategy, FSDPStrategy, NOOPStrategy]:
+) -> Union[DDPStrategy, FSDPStrategy, FSDP2Strategy, NOOPStrategy]:
     """
     Converts strategy as a string to a default instance of the Strategy dataclass.
 
@@ -633,6 +633,7 @@ def convert_str_to_strategy(
     string_to_strategy_mapping = {
         "ddp": DDPStrategy(),
         "fsdp": FSDPStrategy(),
+        "fsdp2": FSDP2Strategy(),
         "noop": NOOPStrategy(),
     }
 
