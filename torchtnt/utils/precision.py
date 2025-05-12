@@ -38,22 +38,23 @@ def convert_precision_str_to_dtype(precision: str) -> Optional[torch.dtype]:
 
 
 def get_grad_scaler_from_precision(
-    precision: torch.dtype, *, is_fsdp_module: Optional[bool] = False
+    precision: torch.dtype, *, is_fsdp1_module: Optional[bool] = False
 ) -> Optional[GradScaler]:
     """
     Returns the correct grad scaler to use based on the precision and whether
-    or not the model is FSDP.
+    or not the model is FSDP. FSDP required it's own sharded grad scaler. FSDP2 uses
+    the original grad scaler (amp.grad_scaler). See https://github.com/pytorch/torchtitan/blob/main/docs/fsdp.md
 
     Args:
         precision: the precision being used
-        is_fsdp_module: whether the grad scaler is for an FSDP module
+        is_fsdp1_module: whether the grad scaler is for an FSDP1 module
 
     Returns:
         The appropriate grad scaler to use, ``None`` if no grad scaler should be used.
     """
 
     if precision == torch.float16:
-        if is_fsdp_module:
+        if is_fsdp1_module:
             from torch.distributed.fsdp.sharded_grad_scaler import ShardedGradScaler
 
             return ShardedGradScaler()
