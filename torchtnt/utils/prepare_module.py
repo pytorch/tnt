@@ -41,6 +41,8 @@ from torch.distributed.checkpoint.state_dict import (
 )
 from torch.distributed.device_mesh import init_device_mesh
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullStateDictConfig
+from torch.distributed.tensor.parallel import parallelize_module
+from torch.distributed.tensor.parallel.style import ParallelStyle
 from torchtnt.utils.device_mesh import GlobalMeshCoordinator
 from torchtnt.utils.precision import convert_precision_str_to_dtype
 
@@ -227,6 +229,20 @@ class FSDP2Strategy(Strategy):
     reshard_after_forward: Union[bool, int] = True
     mp_policy: Optional[Union[str, torch.dtype, MixedPrecisionPolicy]] = None
     cpu_offload: bool = False
+
+
+@dataclass
+class TPStrategy(Strategy):
+    """
+    Dataclass representing Tensor Parallelism strategy. Specify the FSDP strategy for 2D parallelism setup.
+
+    Args:
+        tp_plan: The plan used to parallelize the module. See https://pytorch.org/docs/stable/distributed.tensor.parallel.html#torch.distributed.tensor.parallel.parallelize_module for details.
+        fsdp2_strategy (optional): fsdp2 strategy to configure 2D parallel strategy
+    """
+
+    tp_plan: Union[ParallelStyle, Dict[str, ParallelStyle]]
+    fsdp2_strategy: Optional[FSDP2Strategy] = None
 
 
 @dataclass
@@ -609,7 +625,55 @@ def prepare_module(
     global_mesh: Optional[GlobalMeshCoordinator] = None,
 ) -> torch.nn.Module:
     """
-    Utility to move a module to device, set up parallelism, activation checkpointing and compile.
+    Utility to move a module to device, set up parallelism (None, DDP, FSDP, HSDP, TP), activation checkpointing and compile.
+    This function acts as a dispatcher to choose between 1D and 2D parallelism setup, depending on the strategy used.
+
+    Args:
+        module: module to be used.
+        device: device to which module will be moved.
+        strategy: the data parallelization strategy to be used. if a string, must be one of ``ddp``, ``fsdp``, or ``noop``.
+        torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html.
+        activation_checkpoint_params: params for enabling activation checkpointing.
+        enable_compiled_autograd: if True, `compiled_autograd` will be used to compile the backward, this is an experimental flag.
+        global_mesh: an instance of :class:`~torchtnt.utils.device_mesh.GlobalMeshCoordinator` which defines the global mesh topology.
+    """
+    if isinstance(strategy, TPStrategy):
+        if global_mesh is None:
+            raise ValueError(
+                "TPStrategy expects global_mesh (GlobalMeshCoordinator) to be defined. Got None."
+            )
+        return _prepare_module_2d(
+            module,
+            device,
+            strategy=strategy,
+            global_mesh=global_mesh,
+            torch_compile_params=torch_compile_params,
+            activation_checkpoint_params=activation_checkpoint_params,
+        )
+
+    return _prepare_module_1d(
+        module,
+        device,
+        strategy=strategy,
+        torch_compile_params=torch_compile_params,
+        activation_checkpoint_params=activation_checkpoint_params,
+        enable_compiled_autograd=enable_compiled_autograd,
+        global_mesh=global_mesh,
+    )
+
+
+def _prepare_module_1d(
+    module: torch.nn.Module,
+    device: torch.device,
+    *,
+    strategy: Optional[Union[Strategy, str]] = None,
+    torch_compile_params: Optional[TorchCompileParams] = None,
+    activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
+    enable_compiled_autograd: bool = False,
+    global_mesh: Optional[GlobalMeshCoordinator] = None,
+) -> torch.nn.Module:
+    """
+    Utility to move a module to device, set up 1D parallelism (None, DDP, FSDP), activation checkpointing and compile.
 
     Args:
         module: module to be used.
@@ -671,6 +735,51 @@ def prepare_module(
 
     if torch_compile_params:
         apply_torch_compile(module, torch_compile_params)
+
+    return module
+
+
+def _prepare_module_2d(
+    module: torch.nn.Module,
+    device: torch.device,
+    *,
+    strategy: TPStrategy,
+    global_mesh: GlobalMeshCoordinator,
+    torch_compile_params: Optional[TorchCompileParams] = None,
+    activation_checkpoint_params: Optional[ActivationCheckpointParams] = None,
+) -> torch.nn.Module:
+    """
+    Utility to move a module to device, set up 2D parallelism (FSDP / TP / HSDP), activation checkpointing and compile.
+
+    Order of composability is TP -> AC -> compile -> fsdp2.
+
+    Args:
+        module: module to be used.
+        device: device to which module will be moved.
+        strategy: the TP parallelization strategy to be used.
+        global_mesh: an instance of :class:`~torchtnt.utils.device_mesh.GlobalMeshCoordinator` which defines the global mesh topology.
+        torch_compile_params: params for Torch compile https://pytorch.org/docs/stable/generated/torch.compile.html.
+        activation_checkpoint_params: params for enabling activation checkpointing.
+    """
+
+    # 1) apply TP
+    parallelize_module(module, global_mesh.tp_mesh, parallelize_plan=strategy.tp_plan)
+
+    # 2) apply AC if specified
+    if activation_checkpoint_params:
+        apply_ac(module, activation_checkpoint_params)
+
+    # 3) apply torch.compile is specified
+    if torch_compile_params:
+        apply_torch_compile(module, torch_compile_params)
+
+    # 4) apply data parallel / HSDP sharding (via FSDP2 apis) if specified in TPStrategy
+    if (fsdp2_strategy := strategy.fsdp2_strategy) is not None:
+        prepare_fsdp2(module, device, fsdp2_strategy, global_mesh)
+    else:
+        # prepare_fsdp2 will handle materializing meta weights
+        # so if fsdp2strategy isn't used, we do it manually here
+        materialize_meta_params(module, device)
 
     return module
 
