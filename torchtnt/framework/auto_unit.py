@@ -43,8 +43,8 @@ from torchtnt.utils.precision import (
     GradScaler,
 )
 from torchtnt.utils.prepare_module import (
+    _is_fsdp1_module,
     _is_fsdp2_module,
-    _is_fsdp_module,
     ActivationCheckpointParams,
     FSDPStrategy,
     prepare_fsdp,
@@ -560,7 +560,7 @@ class AutoUnit(
         if self.precision:
             self.grad_scaler = get_grad_scaler_from_precision(
                 self.precision,
-                is_fsdp_module=_is_fsdp_module(self.module),
+                is_fsdp1_module=_is_fsdp1_module(self.module),
             )
 
         self.step_lr_interval = step_lr_interval

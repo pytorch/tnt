@@ -67,7 +67,6 @@ from torch.distributed.fsdp import (
     FullyShardedDataParallel as FSDP,
     StateDictType as _StateDictType,
 )
-from torch.distributed.fsdp._common_utils import _FSDPState
 from torch.distributed.fsdp.api import OptimStateDictConfig, StateDictConfig
 from torch.distributed.fsdp.fully_sharded_data_parallel import (
     BackwardPrefetch as _BackwardPrefetch,
@@ -435,7 +434,7 @@ def prepare_fsdp2(
         )
 
     # shard the top level model, so that all params are moved off cpu to gpu
-    if not _is_fsdp_module(module):
+    if not _is_fsdp2_module(module):
         fully_shard(module, **fsdp_kwargs)
 
     # materialized sharded meta weights to device
@@ -515,18 +514,23 @@ class FSDP2OptimizerWrapper:
 
 
 def _is_fsdp_module(module: torch.nn.Module) -> bool:
-    if isinstance(module, FSDP):
-        return True
+    """
+    Checks if a module is wrapped in FSDP or FSDP2
+    """
+    return _is_fsdp1_module(module) or _is_fsdp2_module(module)
 
-    # Also check for composable FSDP API
-    maybe_composable_state = _get_module_state(module)
-    if maybe_composable_state is not None:
-        return isinstance(maybe_composable_state, (_FSDPState, FSDPState))
 
-    return False
+def _is_fsdp1_module(module: torch.nn.Module) -> bool:
+    """
+    Checks if a module is sharded by original FSDP
+    """
+    return isinstance(module, FSDP)
 
 
 def _is_fsdp2_module(module: torch.nn.Module) -> bool:
+    """
+    Checks if a module is sharded by FSDP2
+    """
     maybe_composable_state = _get_module_state(module)
     if maybe_composable_state is not None:
         return isinstance(maybe_composable_state, FSDPState)
