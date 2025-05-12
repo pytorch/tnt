@@ -17,6 +17,7 @@ from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
     _check_and_convert_mp_policy_dtypes,
+    apply_torch_compile,
     DDPStrategy,
     FSDPStrategy,
     materialize_meta_params,
@@ -266,3 +267,67 @@ class PrepareModelTest(unittest.TestCase):
             "MixedPrecisionPolicy requires all dtypes to be torch.dtype.",
         ):
             _check_and_convert_mp_policy_dtypes(invalid_mp_policy)
+
+    def test_apply_torch_compile_recursive_module_types(self) -> None:
+        """
+        Test that recursive_module_types is apply correctly.
+        """
+
+        # Create a mock module with submodules
+        class B(torch.nn.Module):
+            def forward(self, x):
+                return x
+
+        class C(torch.nn.Module):
+            def forward(self, x):
+                return x
+
+        class A(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.b = B()
+                self.c = C()
+
+            def forward(self, x):
+                x = self.b(x)
+                x = self.c(x)
+                return x
+
+        module = A()
+
+        # Mock the torch.compile function
+        with patch("torch.compile", return_value=None) as mock_compile:
+            # Define TorchCompileParams with recursive_module_types
+            torch_compile_params = TorchCompileParams(
+                fullgraph=False,
+                dynamic=False,
+                backend="inductor",
+                mode=None,
+                options=None,
+                disable=False,
+                recursive_module_types=[B, "C"],
+            )
+
+            # Apply torch compile
+            apply_torch_compile(module, torch_compile_params)
+
+            # Check that torch.compile was called on C and B
+            self.assertEqual(mock_compile.call_count, 2)
+            mock_compile.assert_any_call(
+                module.b._call_impl,
+                fullgraph=False,
+                dynamic=False,
+                backend="inductor",
+                mode=None,
+                options=None,
+                disable=False,
+            )
+            mock_compile.assert_any_call(
+                module.c._call_impl,
+                fullgraph=False,
+                dynamic=False,
+                backend="inductor",
+                mode=None,
+                options=None,
+                disable=False,
+            )
