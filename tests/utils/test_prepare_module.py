@@ -8,21 +8,25 @@
 # pyre-strict
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 import torch
+from torch.distributed.device_mesh import DeviceMesh
 from torch.distributed.fsdp import MixedPrecisionPolicy
 from torch.nn.parallel import DistributedDataParallel as DDP
+from torchtnt.utils.device_mesh import GlobalMeshCoordinator
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.env import init_from_env
 from torchtnt.utils.prepare_module import (
     _check_and_convert_mp_policy_dtypes,
     apply_torch_compile,
     DDPStrategy,
+    FSDP2Strategy,
     FSDPStrategy,
     materialize_meta_params,
     NOOPStrategy,
     on_meta_device,
+    prepare_fsdp2,
     prepare_module,
     TorchCompileParams,
 )
@@ -267,6 +271,28 @@ class PrepareModelTest(unittest.TestCase):
             "MixedPrecisionPolicy requires all dtypes to be torch.dtype.",
         ):
             _check_and_convert_mp_policy_dtypes(invalid_mp_policy)
+
+    @patch("torchtnt.utils.prepare_module.fully_shard")
+    def test_fsdp2_mesh(self, mock_fully_shard: Mock) -> None:
+        """
+        Test that device mesh is forwarded appropriately
+        """
+
+        module = torch.nn.Linear(2, 2, device="cpu")
+        mock_mesh = MagicMock(spec=DeviceMesh)
+        mock_global_mesh = MagicMock(spec=GlobalMeshCoordinator)
+        mock_global_mesh.fsdp2_mesh = mock_mesh
+
+        strategy = FSDP2Strategy()
+        module = prepare_fsdp2(
+            module,
+            torch.device("cpu"),
+            strategy,
+            global_mesh=mock_global_mesh,
+        )
+        mock_fully_shard.assert_called_with(
+            module, mesh=mock_mesh, reshard_after_forward=True
+        )
 
     def test_apply_torch_compile_recursive_module_types(self) -> None:
         """
