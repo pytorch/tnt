@@ -42,14 +42,16 @@ class PrecisionTest(unittest.TestCase):
 
     def test_get_grad_scaler_from_precision(self) -> None:
         grad_scaler = get_grad_scaler_from_precision(
-            torch.float32, is_fsdp_module=False
+            torch.float32, is_fsdp1_module=False
         )
         self.assertIsNone(grad_scaler)
 
         grad_scaler = get_grad_scaler_from_precision(
-            torch.float16, is_fsdp_module=False
+            torch.float16, is_fsdp1_module=False
         )
         self.assertIsInstance(grad_scaler, GradScaler)
 
-        grad_scaler = get_grad_scaler_from_precision(torch.float16, is_fsdp_module=True)
+        grad_scaler = get_grad_scaler_from_precision(
+            torch.float16, is_fsdp1_module=True
+        )
         self.assertIsInstance(grad_scaler, ShardedGradScaler)
