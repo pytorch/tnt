@@ -728,6 +728,9 @@ def _prepare_module_1d(
         elif isinstance(strategy, FSDP2Strategy):
             module = prepare_fsdp2(module, device, strategy, global_mesh=global_mesh)
     else:
+        # materialize any meta device params
+        materialize_meta_params(module=module, device=device)
+        # then move entire module to device
         module = module.to(device)
 
     if activation_checkpoint_params:
