@@ -20,6 +20,7 @@ from pyre_extensions import none_throws
 from torch.distributed import ProcessGroup
 from torchtnt.utils.distributed import (
     _validate_global_rank_world_size,
+    all_gather_str,
     all_gather_tensors,
     broadcast_str,
     destroy_process_group,
@@ -610,3 +611,29 @@ class DistributedTest(unittest.TestCase):
 
         tc = unittest.TestCase()
         tc.assertEqual(broadcasted_val, "foo")
+
+    @skip_if_not_distributed
+    def test_all_gather_str(self) -> None:
+        backend = "gloo"
+        if torch.cuda.is_available():
+            backend = "nccl"
+
+        spawn_multi_process(2, backend, self._test_all_gather_str)
+
+    @staticmethod
+    def _test_all_gather_str() -> None:
+        if torch.cuda.is_available():
+            torch.cuda.set_device(dist.get_rank())
+
+        val = None
+        if dist.get_rank() == 0:
+            val = "foo"
+        else:
+            val = "barzoo"
+
+        # Test case 1: fixed_buffer_size == len(val)
+        vals = all_gather_str(val)
+
+        tc = unittest.TestCase()
+        tc.assertEqual(vals[0], "foo")
+        tc.assertEqual(vals[1], "barzoo")

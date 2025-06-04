@@ -772,6 +772,46 @@ def broadcast_str(
     return string
 
 
+def all_gather_str(
+    val: str, process_group: Optional[dist.ProcessGroup] = None
+) -> List[str]:
+    """
+    Optimized all gather-ing string without invoking all_gather_object
+    which is subject to hang issues on nccl.
+
+    Args:
+        val: string to include in all_gather
+        process_group: the process group to broadcast in
+
+    Returns:
+        List of all strings
+
+    Note:
+        Will construct and use a temporary gloo process group to minimize device to host transfers
+
+    TODO: support fixed_buffer_size
+    """
+
+    if not dist.is_available() or not dist.is_initialized():
+        return [val]
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # use gloo so that we avoid gpu->cpu (device to host) transfers
+    # with get_or_create_gloo_pg(process_group) as gloo_pg:
+
+    # Initialize buffer and buffer_length for all ranks
+    buffer = torch.frombuffer(val.encode("utf-8"), dtype=torch.uint8).to(device)
+    # use `all_gather_tensors` which handles all gathering tensors
+    # of same shape but different lengths (since strings may be different
+    # length on each rank)
+    buffer_strings = all_gather_tensors(buffer, group=process_group)
+
+    result = [bytes(buffer.tolist()).decode("utf-8") for buffer in buffer_strings]
+
+    return result
+
+
 @contextmanager
 def get_or_create_gloo_pg(
     candidate_pg: Optional[dist.ProcessGroup] = None,
