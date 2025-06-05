@@ -210,7 +210,7 @@ class TensorBoardLogger(AnomalyLogger):
             )
 
     def log_histogram(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
-        """Add histogram to TensorBoard.
+        """Compute and add histogram to TensorBoard.
 
         Args:
             *args (Any): Positional arguments passed to SummaryWriter.add_histogram
@@ -218,6 +218,16 @@ class TensorBoardLogger(AnomalyLogger):
         """
         if self._writer:
             self._writer.add_histogram(*args, **kwargs)
+
+    def log_histogram_raw(self: TensorBoardLogger, *args: Any, **kwargs: Any) -> None:
+        """Add pre-computed histogram to TensorBoard.
+
+        Args:
+            *args (Any): Positional arguments passed to SummaryWriter.add_histogram_raw
+            **kwargs(Any): Keyword arguments passed to SummaryWriter.add_histogram_raw
+        """
+        if self._writer:
+            self._writer.add_histogram_raw(*args, **kwargs)
 
     def flush(self: TensorBoardLogger) -> None:
         """Writes pending logs to disk."""
