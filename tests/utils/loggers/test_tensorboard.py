@@ -81,6 +81,61 @@ class TensorBoardLoggerTest(unittest.TestCase):
                 )
                 self.assertEqual(tensor_tag.step, 1)
 
+    def test_log_histogram_raw(self: TensorBoardLoggerTest) -> None:
+        with tempfile.TemporaryDirectory() as log_dir:
+            logger = TensorBoardLogger(path=log_dir)
+
+            # generate a histogram with 4 bins in the range [0, 1]
+            data_range = [0.0, 1.0]
+            bucket_counts = [1, 3, 5, 4]
+            bucket_width = (data_range[1] - data_range[0]) / len(bucket_counts)
+            bucket_limits = [
+                ix * bucket_width + data_range[0]
+                for ix in range(len(bucket_counts) + 1)
+            ]
+            bucket_centers = [
+                (lower + upper) / 2
+                for lower, upper in zip(bucket_limits[:-1], bucket_limits[1:])
+            ]
+            # sum of the binned values
+            value_sum = float(
+                sum(
+                    value * count for value, count in zip(bucket_centers, bucket_counts)
+                )
+            )
+
+            logger.log_histogram_raw(
+                "histogram_raw",
+                min=0,
+                max=1,
+                num=sum(bucket_counts),
+                sum=value_sum,
+                sum_squares=value_sum**2,
+                bucket_limits=bucket_limits,
+                # add an extra leading 0 to match the format of the histogram_raw
+                bucket_counts=[0] + bucket_counts,
+            )
+            logger.close()
+
+            acc = EventAccumulator(log_dir)
+            acc.Reload()
+
+            # check that the histogram is logged correctly
+            self.assertIn("histogram_raw", acc.Tags()["histograms"])
+            # ensure that we logged exactly one histogram
+            self.assertEqual(len(acc.Histograms("histogram_raw")), 1)
+            histogram_event = acc.Histograms("histogram_raw")[0]
+            histogram_value = histogram_event.histogram_value
+            # check that the histogram is logged correctly
+            self.assertEqual(histogram_value.min, 0)
+            self.assertEqual(histogram_value.max, 1)
+            self.assertEqual(histogram_value.num, sum(bucket_counts))
+            self.assertEqual(histogram_value.sum, value_sum)
+            self.assertEqual(histogram_value.sum_squares, value_sum**2)
+            self.assertListEqual(histogram_value.bucket_limit, bucket_limits)
+            self.assertListEqual(histogram_value.bucket[1:], bucket_counts)
+            self.assertEqual(histogram_value.bucket[0], 0)
+
     def test_log_text(self: TensorBoardLoggerTest) -> None:
         with tempfile.TemporaryDirectory() as log_dir:
             logger = TensorBoardLogger(path=log_dir)
