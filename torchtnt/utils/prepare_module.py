@@ -7,6 +7,7 @@
 # pyre-strict
 
 import logging
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from functools import partial
 from typing import (
@@ -468,7 +469,13 @@ def prepare_fsdp2(
 
     # shard the top level model, so that all params are moved off cpu to gpu
     if not _is_fsdp2_module(module):
-        fully_shard(module, **fsdp_kwargs)
+        # disable reshard_after_forward for top level module
+        # as result is DTensor which may be incompatible with
+        # certain loss computation
+        root_kwargs = deepcopy(fsdp_kwargs)
+        root_kwargs["reshard_after_forward"] = False
+
+        fully_shard(module, **root_kwargs)
 
     # materialized sharded meta weights to device
     materialize_meta_params(module, device)

@@ -293,7 +293,7 @@ class PrepareModelTest(unittest.TestCase):
             global_mesh=mock_global_mesh,
         )
         mock_fully_shard.assert_called_with(
-            module, mesh=mock_mesh, reshard_after_forward=True
+            module, mesh=mock_mesh, reshard_after_forward=False
         )
 
     @patch("torchtnt.utils.prepare_module._prepare_module_2d")
