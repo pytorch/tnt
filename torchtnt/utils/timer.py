@@ -12,6 +12,8 @@ import logging
 import os
 from collections import defaultdict
 from contextlib import contextmanager
+from dataclasses import dataclass
+from functools import total_ordering
 from time import perf_counter
 from typing import (
     Any,
@@ -22,7 +24,6 @@ from typing import (
     Protocol,
     runtime_checkable,
     Sequence,
-    Tuple,
 )
 
 import numpy as np
@@ -33,10 +34,8 @@ from tabulate import tabulate
 from torch.distributed.distributed_c10d import Work
 from torchtnt.utils.distributed import PGWrapper
 
-logger: logging.Logger = logging.getLogger(__name__)
 
-_TABLE_ROW = Tuple[str, float, int, float, float]
-_TABLE_DATA = List[_TABLE_ROW]
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -67,6 +66,28 @@ def log_elapsed_time(
             torch.cuda.synchronize()
         interval_time: float = perf_counter() - start_time
         logger.info(f"{action_name} took {interval_time} seconds")
+
+
+@total_ordering
+@dataclass
+class TimedActionStats:
+    """Dataclass for storing timed action stats. These can be consumed by report generation methods, so metrics should be aggregated."""
+
+    action_name: str
+    mean_duration: float = 0.0
+    num_calls: int = 0
+    total_duration: float = 0.0
+    percentage_of_total_time: float = 0.0
+
+    def __le__(self, other: "TimedActionStats") -> bool:
+        return self.percentage_of_total_time <= other.percentage_of_total_time
+
+
+@dataclass
+class TimerReport:
+    timed_action_stats: List[TimedActionStats]
+    total_calls: int
+    total_duration: float
 
 
 @runtime_checkable
@@ -194,31 +215,30 @@ class BoundedTimer(Timer):
             )
 
 
-def _get_total_time(timer: TimerProtocol) -> float:
+def _make_report(self: TimerProtocol) -> TimerReport:
     total_time = 0.0
-    for _, durations in timer.recorded_durations.items():
+    for _, durations in self.recorded_durations.items():
         array_value = np.array(durations)
         array_sum = np.sum(array_value)
         total_time += array_sum
 
-    return total_time
-
-
-def _make_report(timer: TimerProtocol) -> Tuple[_TABLE_DATA, float, float]:
-    total_time = _get_total_time(timer)
-    report = [
-        (
-            a,
-            np.mean(d),
-            len(d),
-            np.sum(d),
-            100.0 * np.sum(d) / total_time,
+    action_stats = [
+        TimedActionStats(
+            action_name=a,
+            mean_duration=np.mean(d),
+            num_calls=len(d),
+            total_duration=np.sum(d),
+            percentage_of_total_time=100.0 * np.sum(d) / total_time,
         )
-        for a, d in timer.recorded_durations.items()
+        for a, d in self.recorded_durations.items()
     ]
-    report.sort(key=lambda x: x[4], reverse=True)
-    total_calls = sum(x[2] for x in report)
-    return report, total_calls, total_time
+    action_stats.sort(reverse=True)
+    total_calls = sum(x.num_calls for x in action_stats)
+    return TimerReport(
+        timed_action_stats=action_stats,
+        total_calls=total_calls,
+        total_duration=total_time,
+    )
 
 
 def get_timer_summary(timer: TimerProtocol) -> str:
@@ -231,13 +251,16 @@ def get_timer_summary(timer: TimerProtocol) -> str:
         ValueError
             If the input Timer has no recorded actions
     """
+    report: TimerReport = _make_report(timer)
+
     sep: str = os.linesep
     output_string = f"Timer Report{sep}"
 
-    if len(timer.recorded_durations) == 0:
+    # Handle empty timer case
+    if not report.timed_action_stats:
         return output_string
 
-    max_key = max(len(k) for k in timer.recorded_durations.keys())
+    max_key = max(len(a.action_name) for a in report.timed_action_stats)
 
     # pyre-fixme[53]: Captured variable `max_key` is not annotated.
     def log_row(action: str, mean: str, num_calls: str, total: str, per: str) -> str:
@@ -252,32 +275,23 @@ def get_timer_summary(timer: TimerProtocol) -> str:
         "Total time (s)",
         "Percentage %",
     )
+
     output_string_len = len(header_string.expandtabs()) - 1
     sep_lines = f"{sep}{'-' * output_string_len}"
     output_string += sep_lines + header_string + sep_lines
-    report: _TABLE_DATA
-    (
-        report,
-        total_calls,
-        total_duration,
-    ) = _make_report(timer)
+
     output_string += log_row(
-        "Total", "-", f"{total_calls:}", f"{total_duration:.5}", "100 %"
+        "Total", "-", f"{report.total_calls:}", f"{report.total_duration:.5}", "100 %"
     )
     output_string += sep_lines
-    for (
-        action,
-        mean_duration,
-        num_calls,
-        total_duration,
-        duration_per,
-    ) in report:
+
+    for action in report.timed_action_stats:
         output_string += log_row(
-            action,
-            f"{mean_duration:.5}",
-            f"{num_calls}",
-            f"{total_duration:.5}",
-            f"{duration_per:.5}",
+            action.action_name,
+            f"{action.mean_duration:.5}",
+            f"{action.num_calls}",
+            f"{action.total_duration:.5}",
+            f"{action.percentage_of_total_time:.5}",
         )
     output_string += sep_lines
 
