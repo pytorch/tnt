@@ -19,6 +19,7 @@ from pyre_extensions import none_throws
 from torchtnt.utils.distributed import spawn_multi_process
 from torchtnt.utils.test_utils import skip_if_not_distributed
 from torchtnt.utils.timer import (
+    AggregatedTimer,
     BoundedTimer,
     FullSyncPeriodicTimer,
     get_durations_histogram,
@@ -234,6 +235,69 @@ class TimerTest(unittest.TestCase):
             valid_input
             == "\n| Name   |   p50 |   p90 |\n|:-------|------:|------:|\n| op     |     1 |     2 |"
         )
+
+    def test_aggregated_timer_statistics(self) -> None:
+        """Test that AggregatedTimer maintains correct statistics"""
+        timer = AggregatedTimer()
+
+        # Time an action multiple times with known durations
+        sleep_times = [1.0, 1.5, 2, 2.5, 1.0]
+        for sleep_time in sleep_times:
+            with timer.time("test_action"):
+                time.sleep(sleep_time)
+
+        with timer.time("fast_action"):
+            time.sleep(0.05)
+
+        # Generate report to calculate mean_duration
+        report = timer._make_report()
+        # test_action should be first
+        test_action_report = report.timed_action_stats[0]
+        fast_action_report = report.timed_action_stats[1]
+
+        # Verify for test_action
+        self.assertEqual(test_action_report.num_calls, 5)
+        expected_total = sum(sleep_times)
+        self.assert_within_tolerance(
+            test_action_report.total_duration, expected_total, 20
+        )
+        self.assert_within_tolerance(
+            test_action_report.mean_duration, expected_total / 5
+        )
+
+        # Verify for fast_action
+        self.assertEqual(fast_action_report.num_calls, 1)
+        self.assert_within_tolerance(fast_action_report.total_duration, 0.05)
+        self.assertGreater(
+            test_action_report.mean_duration, fast_action_report.mean_duration
+        )
+
+    def test_aggregated_timer_multiple_actions(self) -> None:
+        timer = AggregatedTimer()
+
+        actions = ["dataloader", "forward", "backward", "optimizer"]
+        call_counts = [10, 10, 10, 5]
+
+        for action, count in zip(actions, call_counts):
+            for _ in range(count):
+                with timer.time(action):
+                    time.sleep(0.001)
+
+        # Check that all actions are recorded
+        self.assertEqual(len(timer._aggregate_stats), 4)
+
+        for action, expected_count in zip(actions, call_counts):
+            self.assertEqual(timer._aggregate_stats[action].num_calls, expected_count)
+
+        # Check report
+        report = timer._make_report()
+        self.assertEqual(len(report.timed_action_stats), 4)
+        self.assertEqual(report.total_calls, sum(call_counts))
+
+        total_percentage = sum(
+            stats.percentage_of_total_time for stats in report.timed_action_stats
+        )
+        self.assert_within_tolerance(total_percentage, 100.0, 1)
 
 
 class FullSyncPeriodicTimerTest(unittest.TestCase):

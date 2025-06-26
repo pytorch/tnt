@@ -208,6 +208,75 @@ class Timer(TimerProtocol):
         )
 
 
+class AggregatedTimer(Timer):
+    """
+    A Timer class which implements TimerProtocol and stores aggregated timing stats. Instead of
+    storing the recorded durations for each action, it accumulates running metrics and computes
+    final stats at the end when generating the report. This is useful for cases where the number
+    of samples is too large to store in memory.
+    """
+
+    def __init__(
+        self,
+        cuda_sync: Optional[bool] = None,
+        verbose: bool = False,
+    ) -> None:
+        super().__init__(cuda_sync=cuda_sync, verbose=verbose)
+        self._aggregate_stats: Dict[str, TimedActionStats] = defaultdict(
+            lambda: TimedActionStats(action_name="")  # Filled in on time() method
+        )
+
+    @contextmanager
+    def time(
+        self,
+        action_name: str,
+    ) -> Generator[None, None, None]:
+        # Run base class context manager first
+        with super().time(action_name):
+            yield
+
+        # Update aggregate stats
+        latest_duration: float = self.recorded_durations[action_name][-1]
+        self._aggregate_stats[action_name].action_name = action_name
+        self._aggregate_stats[action_name].num_calls += 1
+        self._aggregate_stats[action_name].total_duration += latest_duration
+
+        # Reset recorded durations to avoid storing data
+        self.recorded_durations.clear()
+
+    def _make_report(self) -> TimerReport:
+        """
+        Creates the report but considering that the data is aggregated in the correct structure.
+        """
+        total_time = 0.0
+        total_calls = 0
+
+        # Calculate total time and calls across all actions
+        for stats in self._aggregate_stats.values():
+            total_time += stats.total_duration
+            total_calls += stats.num_calls
+
+        # Build report data
+        action_stats: List[TimedActionStats] = []
+        for stats in self._aggregate_stats.values():
+            stats.mean_duration = (
+                stats.total_duration / stats.num_calls if stats.num_calls > 0 else 0.0
+            )
+            stats.percentage_of_total_time = (
+                100.0 * stats.total_duration / total_time if total_time > 0 else 0.0
+            )
+            action_stats.append(stats)
+
+        # Sort by percentage (descending)
+        action_stats.sort(key=lambda x: x.percentage_of_total_time, reverse=True)
+
+        return TimerReport(
+            timed_action_stats=action_stats,
+            total_calls=total_calls,
+            total_duration=total_time,
+        )
+
+
 class BoundedTimer(Timer):
     """
     A Timer class which implements TimerProtocol and stores timings in a dictionary `recorded_durations`.
