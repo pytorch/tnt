@@ -114,6 +114,12 @@ class TimerProtocol(Protocol):
         """
         ...
 
+    def _make_report(self) -> TimerReport:
+        """
+        Creates a report of timing data.
+        """
+        ...
+
 
 class Timer(TimerProtocol):
     def __init__(
@@ -176,6 +182,31 @@ class Timer(TimerProtocol):
         """
         self.recorded_durations = defaultdict(list)
 
+    def _make_report(self: TimerProtocol) -> TimerReport:
+        total_time = 0.0
+        for _, durations in self.recorded_durations.items():
+            array_value = np.array(durations)
+            array_sum = np.sum(array_value)
+            total_time += array_sum
+
+        action_stats = [
+            TimedActionStats(
+                action_name=a,
+                mean_duration=np.mean(d),
+                num_calls=len(d),
+                total_duration=np.sum(d),
+                percentage_of_total_time=100.0 * np.sum(d) / total_time,
+            )
+            for a, d in self.recorded_durations.items()
+        ]
+        action_stats.sort(reverse=True)
+        total_calls = sum(x.num_calls for x in action_stats)
+        return TimerReport(
+            timed_action_stats=action_stats,
+            total_calls=total_calls,
+            total_duration=total_time,
+        )
+
 
 class BoundedTimer(Timer):
     """
@@ -215,32 +246,6 @@ class BoundedTimer(Timer):
             )
 
 
-def _make_report(self: TimerProtocol) -> TimerReport:
-    total_time = 0.0
-    for _, durations in self.recorded_durations.items():
-        array_value = np.array(durations)
-        array_sum = np.sum(array_value)
-        total_time += array_sum
-
-    action_stats = [
-        TimedActionStats(
-            action_name=a,
-            mean_duration=np.mean(d),
-            num_calls=len(d),
-            total_duration=np.sum(d),
-            percentage_of_total_time=100.0 * np.sum(d) / total_time,
-        )
-        for a, d in self.recorded_durations.items()
-    ]
-    action_stats.sort(reverse=True)
-    total_calls = sum(x.num_calls for x in action_stats)
-    return TimerReport(
-        timed_action_stats=action_stats,
-        total_calls=total_calls,
-        total_duration=total_time,
-    )
-
-
 def get_timer_summary(timer: TimerProtocol) -> str:
     """Given a timer, generate a summary of all the recorded actions.
 
@@ -251,7 +256,7 @@ def get_timer_summary(timer: TimerProtocol) -> str:
         ValueError
             If the input Timer has no recorded actions
     """
-    report: TimerReport = _make_report(timer)
+    report: TimerReport = timer._make_report()
 
     sep: str = os.linesep
     output_string = f"Timer Report{sep}"
@@ -279,7 +284,6 @@ def get_timer_summary(timer: TimerProtocol) -> str:
     output_string_len = len(header_string.expandtabs()) - 1
     sep_lines = f"{sep}{'-' * output_string_len}"
     output_string += sep_lines + header_string + sep_lines
-
     output_string += log_row(
         "Total", "-", f"{report.total_calls:}", f"{report.total_duration:.5}", "100 %"
     )
