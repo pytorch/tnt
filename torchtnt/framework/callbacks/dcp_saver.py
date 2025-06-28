@@ -193,13 +193,14 @@ class DistributedCheckpointSaver(BaseCheckpointer):
             with get_timing_context(state, f"{self.__class__.__name__}.async_save"):
                 # Redundant check for safety
                 self._wait(log_warning=True)
-                self._prev_snapshot = dcp.async_save(
+                prev_snapshot = dcp.async_save(
                     state_dict={"app_state": MultiStateful(app_state)},
                     checkpoint_id=checkpoint_id,
                     process_group=self._process_group,
                     storage_writer=storage_writer,
                     planner=planner,
                 )
+                self._prev_snapshot = cast(Future, prev_snapshot)
                 if curr_snapshot_wait:
                     self._wait(log_warning=False)
         else:
