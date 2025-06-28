@@ -13,7 +13,6 @@ from functools import partial
 from typing import (
     Any,
     Callable,
-    cast,
     Collection,
     ContextManager,
     Dict,
