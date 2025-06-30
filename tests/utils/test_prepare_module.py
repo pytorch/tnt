@@ -275,6 +275,32 @@ class PrepareModelTest(unittest.TestCase):
             _check_and_convert_mp_policy_dtypes(invalid_mp_policy)
 
     @patch("torchtnt.utils.prepare_module.fully_shard")
+    def test_fsdp2_strategy_shard_predicates(self, mock_fully_shard: Mock) -> None:
+        """
+        Ensure modules_to_shard and shard_predicates are applied sequentially
+        """
+
+        class SimpleModule(torch.nn.Module):
+            def __init__(self):
+                super(SimpleModule, self).__init__()
+                self.linear1 = torch.nn.Linear(10, 10, device="meta")
+                self.conv = torch.nn.Conv2d(10, 10, kernel_size=3, device="meta")
+
+        module = SimpleModule()
+        strategy = FSDP2Strategy(
+            modules_to_shard=[torch.nn.Conv2d],
+            shard_predicates=[lambda n, _: "linear" in n],
+        )
+        mock_mesh = MagicMock(spec=DeviceMesh)
+        mock_global_mesh = MagicMock(spec=GlobalMeshCoordinator)
+        mock_global_mesh.dp_mesh = mock_mesh
+        module = prepare_fsdp2(
+            module, torch.device("cpu"), strategy, global_mesh=mock_global_mesh
+        )
+        # shards self.linear, self.conv, and self
+        self.assertEqual(mock_fully_shard.call_count, 3)
+
+    @patch("torchtnt.utils.prepare_module.fully_shard")
     def test_fsdp2_mesh(self, mock_fully_shard: Mock) -> None:
         """
         Test that device mesh is forwarded appropriately
@@ -285,7 +311,7 @@ class PrepareModelTest(unittest.TestCase):
         mock_global_mesh = MagicMock(spec=GlobalMeshCoordinator)
         mock_global_mesh.dp_mesh = mock_mesh
 
-        strategy = FSDP2Strategy()
+        strategy = FSDP2Strategy(modules_to_shard=[torch.nn.Linear])
         module = prepare_fsdp2(
             module,
             torch.device("cpu"),
