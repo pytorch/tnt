@@ -738,7 +738,7 @@ def broadcast_str(
         # convert string to tensor
         buffer = torch.frombuffer(val.encode("utf-8"), dtype=torch.uint8)
         buffer = buffer.to(device=device)
-        buffer_length = torch.tensor((len(buffer)), dtype=torch.int, device=device)
+        buffer_length = torch.tensor([len(buffer)], dtype=torch.int, device=device)
 
         if fixed_buffer_size is not None:
             if len(buffer) > fixed_buffer_size:

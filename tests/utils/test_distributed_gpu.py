@@ -86,12 +86,17 @@ class DistributedGPUTest(unittest.TestCase):
     def test_broadcast_str(self) -> None:
         spawn_multi_process(2, "gloo", self._test_broadcast_str)
 
+    @skip_if_not_gpu
+    @skip_if_not_distributed
+    def test_broadcast_str_gpu(self) -> None:
+        spawn_multi_process(2, "nccl", self._test_broadcast_str)
+
     @staticmethod
     def _test_broadcast_str() -> None:
         """
         Tests that test_broadcast_strworks as expected
         """
-
+        init_from_env()
         val = None
         if dist.get_rank() == 0:
             val = "foo"
