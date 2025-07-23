@@ -12,7 +12,6 @@ import torch
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import FSDP2OptimizerWrapper, FSDPOptimizerWrapper
 from torchtnt.utils.progress import Progress
-
 from typing_extensions import Protocol, runtime_checkable
 
 
@@ -69,7 +68,6 @@ class MetricStateful(Protocol):
 
     def update(self, *_: Any, **__: Any) -> None: ...
 
-    # pyre-ignore[3]: Metric computation may return any type depending on the implementation
     def compute(self) -> Any: ...
 
     def state_dict(self) -> Dict[str, Any]: ...

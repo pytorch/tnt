@@ -362,7 +362,6 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def train_step(self, state: State, data: TTrainData) -> Any:
         """Core required method for user to implement. This method will be called at each iteration of the
         train dataloader, and can return any data the user wishes.
@@ -476,7 +475,6 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def eval_step(self, state: State, data: TEvalData) -> Any:
         """
         Core required method for user to implement. This method will be called at each iteration of the
@@ -597,7 +595,6 @@ class PredictUnit(
         pass
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def predict_step(self, state: State, data: TPredictData) -> Any:
         """
         Core required method for user to implement. This method will be called at each iteration of the

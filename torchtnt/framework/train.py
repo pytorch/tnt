@@ -247,6 +247,8 @@ def _train_epoch_impl(
             ):
                 _evaluate_impl(
                     state,
+                    # pyre-fixme[6]: For 2nd argument expected `EvalUnit[Any]` but
+                    #  got `TrainUnit[Any]`.
                     train_unit,
                     callback_handler,
                 )
@@ -293,6 +295,8 @@ def _train_epoch_impl(
     ):
         _evaluate_impl(
             state,
+            # pyre-fixme[6]: For 2nd argument expected `EvalUnit[Any]` but got
+            #  `TrainUnit[Any]`.
             train_unit,
             callback_handler,
         )

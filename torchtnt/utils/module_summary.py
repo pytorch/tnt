@@ -31,7 +31,6 @@ from torch.nn.parameter import UninitializedParameter
 from torch.utils._pytree import PyTree, tree_flatten
 from torch.utils.hooks import RemovableHandle
 from torchtnt.utils.flops import FlopTensorDispatchMode
-
 from typing_extensions import Literal
 
 _ATTRIB_TO_COL_HEADER = {
@@ -211,9 +210,7 @@ def _clean_flops(flop: DefaultDict[str, DefaultDict[str, int]], N: int) -> None:
 
 def _get_module_flops_and_activation_sizes(
     module: torch.nn.Module,
-    # pyre-fixme
     module_args: Optional[Tuple[Any, ...]] = None,
-    # pyre-fixme
     module_kwargs: Optional[MutableMapping[str, Any]] = None,
 ) -> _ModuleSummaryData:
     # a mapping from module name to activation size tuple (in_size, out_size)
@@ -301,9 +298,7 @@ def _has_tensor(item: Optional[PyTree]) -> bool:
 
 def get_module_summary(
     module: torch.nn.Module,
-    # pyre-fixme
     module_args: Optional[Tuple[Any, ...]] = None,
-    # pyre-fixme
     module_kwargs: Optional[MutableMapping[str, Any]] = None,
 ) -> ModuleSummary:
     """
@@ -663,11 +658,9 @@ def _activation_size_hook(
     ],
     # pyre-fixme: Invalid type parameters [24]
 ) -> Callable[[str], Callable]:
-    # pyre-fixme: Missing parameter annotation [2]
     def intermediate_hook(
         module_name: str,
     ) -> Callable[[torch.nn.Module, Any, Any], None]:
-        # pyre-fixme
         def hook(_: torch.nn.Module, inp: Any, out: Any) -> None:
             if len(inp) == 1:
                 inp = inp[0]
@@ -684,7 +677,6 @@ def _forward_time_pre_hook(
     timer_mapping: Dict[str, float]
     # pyre-fixme: Invalid type parameters [24]
 ) -> Callable[[str], Callable]:
-    # pyre-fixme: Missing parameter annotation [2]
     def intermediate_hook(
         module_name: str,
     ) -> Callable[[torch.nn.Module, Any], None]:
@@ -701,7 +693,6 @@ def _forward_time_hook(
     elapsed_times: Dict[str, float],
     # pyre-fixme: Invalid type parameters [24]
 ) -> Callable[[str], Callable]:
-    # pyre-fixme: Missing parameter annotation [2]
     def intermediate_hook(
         module_name: str,
     ) -> Callable[[torch.nn.Module, Any, Any], None]:

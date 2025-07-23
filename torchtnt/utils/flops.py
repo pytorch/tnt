@@ -147,7 +147,6 @@ def _conv_backward_flop_jit(
     return flop_count
 
 
-# pyre-fixme [5]
 flop_mapping: Dict[Callable[..., Any], Callable[[Tuple[Any], Tuple[Any]], Number]] = {
     aten.mm: _matmul_flop_jit,
     aten.matmul: _matmul_flop_jit,
@@ -224,8 +223,8 @@ class FlopTensorDispatchMode(TorchDispatchMode):
 
     def __torch_dispatch__(
         self,
-        func: Callable[..., Any],  # pyre-fixme [2] func can be any func
-        types: Tuple[Any],  # pyre-fixme [2]
+        func: Callable[..., Any],
+        types: Tuple[Any],
         args=(),  # pyre-fixme [2]
         kwargs=None,  # pyre-fixme [2]
     ) -> PyTree:
@@ -242,7 +241,6 @@ class FlopTensorDispatchMode(TorchDispatchMode):
 
         return rs
 
-    # pyre-fixme [3]
     def _create_backwards_push(self, name: str) -> Callable[..., Any]:
         class PushState(torch.autograd.Function):
             @staticmethod
@@ -265,7 +263,6 @@ class FlopTensorDispatchMode(TorchDispatchMode):
         # using a function parameter.
         return PushState.apply
 
-    # pyre-fixme [3]
     def _create_backwards_pop(self, name: str) -> Callable[..., Any]:
         class PopState(torch.autograd.Function):
             @staticmethod
@@ -289,9 +286,8 @@ class FlopTensorDispatchMode(TorchDispatchMode):
         # using a function parameter.
         return PopState.apply
 
-    # pyre-fixme [3] Return a callable function
     def _enter_module(self, name: str) -> Callable[..., Any]:
-        # pyre-fixme [2, 3]
+        # pyre-fixme [3]
         def f(module: torch.nn.Module, inputs: Tuple[Any]):
             parents = self._parents
             parents.append(name)
@@ -301,9 +297,8 @@ class FlopTensorDispatchMode(TorchDispatchMode):
 
         return f
 
-    # pyre-fixme [3] Return a callable function
     def _exit_module(self, name: str) -> Callable[..., Any]:
-        # pyre-fixme [2, 3]
+        # pyre-fixme [3]
         def f(module: torch.nn.Module, inputs: Tuple[Any], outputs: Tuple[Any]):
             parents = self._parents
             assert parents[-1] == name

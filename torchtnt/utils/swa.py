@@ -106,7 +106,6 @@ class AveragedModel(PyTorchAveragedModel):
                 use_buffers=use_buffers,
             )
 
-    # pyre-ignore: Missing return annotation [3]: Return type must be specified as type other than `Any`
     def forward(self, *args: Any, **kwargs: Any) -> Any:
         output = self.module(*args, **kwargs)
 
