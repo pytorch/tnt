@@ -26,7 +26,6 @@ class CustomCSVWriter(BaseCSVWriter):
         self,
         state: State,
         unit: PredictUnit[TPredictData],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:
         return [["1"], ["2"]]
@@ -37,7 +36,6 @@ class CustomCSVWriterSingleRow(BaseCSVWriter):
         self,
         state: State,
         unit: PredictUnit[TPredictData],
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]:
         return ["1"]

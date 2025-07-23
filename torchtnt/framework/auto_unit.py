@@ -131,7 +131,6 @@ class TrainStepResults:
 
     loss: torch.Tensor
     total_grad_norm: Optional[torch.Tensor]
-    # pyre-fixme[4]: Attribute `outputs` of class `TrainStepResults` must have a type other than `Any`.
     outputs: Any
 
 
@@ -371,7 +370,6 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
             global_mesh=global_mesh,
         )
 
-    # pyre-fixme[3]: Return annotation cannot be `Any`.
     def predict_step(self, state: State, data: TPredictData) -> Any:
         # if detect_anomaly is true, run forward pass under detect_anomaly context
         detect_anomaly = self.detect_anomaly
@@ -394,7 +392,6 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
         state: State,
         data: TPredictData,
         step: int,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         outputs: Any,
     ) -> None:
         """
@@ -645,7 +642,6 @@ class AutoUnit(
         ...
 
     @abstractmethod
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def compute_loss(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         """
         The user should implement this method with their loss computation. This will be called every ``train_step``/``eval_step``.
@@ -662,7 +658,6 @@ class AutoUnit(
         """
         ...
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def train_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         should_update_weights = (
             self.train_progress.num_steps_completed_in_epoch + 1
@@ -779,7 +774,6 @@ class AutoUnit(
 
         self._is_last_batch = False
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def eval_step(self, state: State, data: TData) -> Tuple[torch.Tensor, Any]:
         with self.maybe_autocast_precision:
             # users must override this
@@ -800,7 +794,6 @@ class AutoUnit(
         data: TData,
         step: int,
         loss: torch.Tensor,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         outputs: Any,
     ) -> None:
         """
@@ -816,7 +809,6 @@ class AutoUnit(
         """
         pass
 
-    # pyre-fixme[3]: Return annotation cannot contain `Any`.
     def predict_step(self, state: State, data: TData) -> Any:
         with self.maybe_autocast_precision:
             with get_timing_context(state, f"{self.__class__.__name__}.forward"):
@@ -835,7 +827,6 @@ class AutoUnit(
         state: State,
         data: TData,
         step: int,
-        # pyre-fixme[2]: Parameter annotation cannot be `Any`.
         outputs: Any,
     ) -> None:
         """

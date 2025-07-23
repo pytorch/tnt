@@ -220,16 +220,17 @@ class MemoryTest(unittest.TestCase):
             len(tensor_map), 2 * len(inputs.metric_list[0].window_buffer.buffers) + 6
         )
         for metric in inputs.metric_list:
-            self.assertTrue(metric.x in tensor_map)
+            metric = cast(RandomModule, metric)
+            self.assertIn(metric.x, tensor_map)
             self.assertEqual(
                 tensor_map[metric.x], metric.x.size().numel() * metric.x.element_size()
             )
-            self.assertTrue(metric.y[0] in tensor_map)
+            self.assertIn(metric.y[0], tensor_map)
             self.assertEqual(
                 tensor_map[metric.y[0]],
                 metric.y[0].size().numel() * metric.y[0].element_size(),
             )
-            self.assertTrue(metric.y[1] in tensor_map)
+            self.assertIn(metric.y[1], tensor_map)
             self.assertEqual(
                 tensor_map[metric.y[1]],
                 metric.y[1].size().numel() * metric.y[1].element_size(),

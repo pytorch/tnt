@@ -45,7 +45,6 @@ class ModuleSummary(Callback):
         process_fn: Callable[
             [List[ModuleSummaryObj]], None
         ] = _log_module_summary_tables,
-        # pyre-fixme
         module_inputs: Optional[
             MutableMapping[str, Tuple[Tuple[Any, ...], Dict[str, Any]]]
         ] = None,

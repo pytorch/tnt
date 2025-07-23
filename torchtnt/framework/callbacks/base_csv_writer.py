@@ -12,7 +12,6 @@ from abc import ABC, abstractmethod
 from typing import Any, List, TextIO, Union
 
 from pyre_extensions import none_throws
-
 from torchtnt.framework.callback import Callback
 from torchtnt.framework.state import EntryPoint, State
 from torchtnt.framework.unit import TEvalUnit, TPredictUnit, TTrainUnit
@@ -61,7 +60,6 @@ class BaseCSVWriter(Callback, ABC):
         self,
         state: State,
         unit: TPredictUnit,
-        # pyre-fixme: Missing parameter annotation [2]
         step_output: Any,
     ) -> Union[List[str], List[List[str]]]: ...
 

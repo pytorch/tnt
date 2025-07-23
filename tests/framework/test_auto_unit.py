@@ -15,7 +15,6 @@ import torch
 
 from pyre_extensions import none_throws, ParameterSpecification as ParamSpec
 from torch import nn
-
 from torch.distributed import GradBucket
 from torchtnt.framework._test_utils import (
     DummyAutoUnit,
@@ -456,7 +455,6 @@ class TestAutoUnit(unittest.TestCase):
         ) -> torch.futures.Future[torch.Tensor]:
             nonlocal custom_noop_hook_called
 
-            # pyre-fixme[29]: `Type[torch.futures.Future]` is not a function.
             fut: torch.futures.Future[torch.Tensor] = torch.futures.Future()
             fut.set_result(bucket.buffer())
             custom_noop_hook_called = True
