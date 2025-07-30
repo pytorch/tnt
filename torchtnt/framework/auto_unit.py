@@ -28,6 +28,7 @@ from typing import (
 import torch
 from pyre_extensions import none_throws
 from torch.distributed.fsdp import FSDPModule, FullyShardedDataParallel as FSDP
+from torch.distributed.tensor import DTensor
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import SWALR
 from torchtnt.framework._unit_utils import _step_requires_iterator
@@ -900,6 +901,9 @@ class AutoUnit(
                         parameters=module.parameters(),
                         max_norm=clip_grad_norm,
                     )
+                    # If sharded, collect the DTensor here
+                    if isinstance(total_grad_norm, DTensor):
+                        total_grad_norm = total_grad_norm.full_tensor()
 
         # gradient value clipping
         if clip_grad_value:
