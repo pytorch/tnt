@@ -79,6 +79,19 @@ class GlobalMeshCoordinator:
         return None
 
 
+def get_dp_mesh(global_mesh: GlobalMeshCoordinator) -> DeviceMesh:
+    """
+    Retrieves the data parallel mesh from the global mesh coordinator.
+
+    Args:
+        global_mesh (GlobalMeshCoordinator): The global mesh coordinator instance.
+
+    Returns:
+        DeviceMesh: The data parallel mesh.
+    """
+    return global_mesh.dp_mesh
+
+
 def get_dp_mesh_size(global_mesh: GlobalMeshCoordinator) -> int:
     """
     Retrieves the size of the data parallel mesh from the global mesh coordinator.
