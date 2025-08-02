@@ -14,6 +14,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import (
     Any,
+    Callable,
     cast,
     ContextManager,
     Generic,
@@ -29,6 +30,7 @@ import torch
 from pyre_extensions import none_throws
 from torch.distributed.fsdp import FSDPModule, FullyShardedDataParallel as FSDP
 from torch.distributed.tensor import DTensor
+from torch.distributed.tensor.parallel.loss import loss_parallel
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import SWALR
 from torchtnt.framework._unit_utils import _step_requires_iterator
@@ -53,6 +55,7 @@ from torchtnt.utils.prepare_module import (
     prepare_module,
     Strategy,
     TorchCompileParams,
+    TPStrategy,
 )
 from torchtnt.utils.swa import AveragedModel
 from typing_extensions import Literal
@@ -477,6 +480,7 @@ class AutoUnit(
         enable_prefetch: if True, the data will be prefetched to the device before the next batch is loaded
         zero_grad_at_train_step_start: if True, the optimizer's gradients will be zeroed at the start of each train step, rather than at the end. Useful if you want to inspect/log the gradients via custom callback.
         global_mesh: an instance of :class:`~torchtnt.utils.device_mesh.GlobalMeshCoordinator` which defines the global mesh topology. Needed to configure TP or 2D parallelism strategies.
+        enable_loss_parallel: if True, the loss will be computed in parallel across all ranks. This is only supported for TP strategy + cross entropy loss.
 
     Note:
         Certain strategies, like :class:`~torchtnt.utils.prepare_module.FSDPStrategy` also support mixed precision as an argument, so can be configured through that class as well.
@@ -514,6 +518,7 @@ class AutoUnit(
         enable_prefetch: bool = True,
         zero_grad_at_train_step_start: bool = False,
         global_mesh: Optional[GlobalMeshCoordinator] = None,
+        enable_loss_parallel: bool = False,
     ) -> None:
         super().__init__(
             module=module,
@@ -588,6 +593,16 @@ class AutoUnit(
         self.zero_grad_at_train_step_start: bool = zero_grad_at_train_step_start
         # keep track of when to zero grad at train step start
         self._weight_updated_in_prev_step = False
+
+        if enable_loss_parallel:
+            if not isinstance(strategy, TPStrategy):
+                raise ValueError(
+                    "enable_loss_parallel is only supported with TPStrategy"
+                )
+        # pyre-fixme[24]: Attribute must be annotated.
+        self.maybe_loss_parallel: Callable = (
+            loss_parallel if enable_loss_parallel else contextlib.nullcontext
+        )
 
     def __setattr__(self, name: str, value: object) -> None:
         if isinstance(value, torch.nn.Module):
@@ -700,7 +715,7 @@ class AutoUnit(
         )
 
         grad_scaler = self.grad_scaler
-        with maybe_no_sync, maybe_detect_anomaly:
+        with maybe_no_sync, maybe_detect_anomaly, self.maybe_loss_parallel():
             with self.maybe_autocast_precision:
                 with get_timing_context(
                     state, f"{self.__class__.__name__}.compute_loss"
