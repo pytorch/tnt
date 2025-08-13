@@ -13,11 +13,11 @@ from abc import ABC, abstractmethod
 from typing import Any, cast, Dict, Generic, Iterator, TypeVar, Union
 
 import torch
+from pyre_extensions import none_throws
 from torchtnt.framework._unit_utils import (
     _find_optimizers_for_module,
     _step_requires_iterator,
 )
-
 from torchtnt.framework.state import State
 from torchtnt.utils.lr_scheduler import TLRScheduler
 from torchtnt.utils.prepare_module import (
@@ -344,6 +344,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
     def __init__(self) -> None:
         super().__init__()
         self.train_progress = Progress()
+        self.first_train_batch: TTrainData | None = None
 
     def on_train_start(self, state: State) -> None:
         """Hook called before training starts.
@@ -360,6 +361,14 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
             state: a :class:`~torchtnt.framework.state.State` object containing metadata about the training run.
         """
         pass
+
+    @property
+    def first_train_batch(self) -> TTrainData:
+        return none_throws(self.first_train_batch)
+
+    @first_train_batch.setter
+    def first_train_batch(self, data: TTrainData) -> None:
+        self.first_train_batch = data
 
     @abstractmethod
     def train_step(self, state: State, data: TTrainData) -> Any:
