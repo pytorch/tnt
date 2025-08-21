@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import wraps
+from multiprocessing.managers import SyncManager
 from typing import Any, Callable, cast, Dict, Generator, List, Optional, TypeVar, Union
 
 import torch
@@ -587,7 +588,9 @@ def spawn_multi_process(
     Returns:
         A list, l, where l[i] is the return value of method(*method_args, **methods_kwargs) on rank i
     """
-    manager = multiprocessing.Manager()
+    mp_init_mode = "spawn" if torch.version.hip is not None else None
+    manager = SyncManager(ctx=multiprocessing.get_context(mp_init_mode))
+    manager.start()
     mp_output_dict = manager.dict()
 
     port = str(get_free_port())
