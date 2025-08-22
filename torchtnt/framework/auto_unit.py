@@ -33,7 +33,6 @@ from torch.distributed.tensor import DTensor
 from torch.distributed.tensor.parallel.loss import loss_parallel
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.swa_utils import SWALR
-from torchtnt.framework._unit_utils import _step_requires_iterator
 from torchtnt.framework.state import ActivePhase, EntryPoint, State
 from torchtnt.framework.unit import EvalUnit, PredictUnit, TPredictData, TrainUnit
 from torchtnt.framework.utils import get_timing_context
@@ -414,8 +413,7 @@ class AutoPredictUnit(_AutoUnitMixin[TPredictData], PredictUnit[TPredictData]):
         self, state: State, data_iter: Iterator[TPredictData]
     ) -> Union[Iterator[TPredictData], TPredictData]:
         # Override the default behavior from PredictUnit in order to enable prefetching if possible.
-        pass_data_iter_to_step = _step_requires_iterator(self.predict_step)
-        if pass_data_iter_to_step:
+        if self._predict_step_requires_iterator:
             return data_iter
         return self._get_next_batch(state, data_iter)
 
@@ -954,8 +952,7 @@ class AutoUnit(
         self, state: State, data_iter: Iterator[TData]
     ) -> Union[Iterator[TData], TData]:
         # Override the default behavior from PredictUnit in order to enable prefetching if possible.
-        pass_data_iter_to_step = _step_requires_iterator(self.train_step)
-        if pass_data_iter_to_step:
+        if self._train_step_requires_iterator:
             return data_iter
         return self._get_next_batch(state, data_iter)
 
@@ -963,8 +960,7 @@ class AutoUnit(
         self, state: State, data_iter: Iterator[TData]
     ) -> Union[Iterator[TData], TData]:
         # Override the default behavior from PredictUnit in order to enable prefetching if possible.
-        pass_data_iter_to_step = _step_requires_iterator(self.eval_step)
-        if pass_data_iter_to_step:
+        if self._eval_step_requires_iterator:
             return data_iter
         return self._get_next_batch(state, data_iter)
 
@@ -972,8 +968,7 @@ class AutoUnit(
         self, state: State, data_iter: Iterator[TData]
     ) -> Union[Iterator[TData], TData]:
         # Override the default behavior from PredictUnit in order to enable prefetching if possible.
-        pass_data_iter_to_step = _step_requires_iterator(self.predict_step)
-        if pass_data_iter_to_step:
+        if self._predict_step_requires_iterator:
             return data_iter
         return self._get_next_batch(state, data_iter)
 
