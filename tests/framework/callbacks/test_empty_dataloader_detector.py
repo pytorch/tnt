@@ -9,17 +9,13 @@
 import unittest
 from unittest.mock import patch
 
-import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 
 from torchtnt.framework._test_utils import Batch, DummyTrainUnit, get_dummy_train_state
 from torchtnt.framework.callbacks.empty_dataloader_detector import (
     EmptyDataloaderDetectorCallback,
 )
-from torchtnt.framework.state import State
 from torchtnt.framework.train import train
-from torchtnt.framework.unit import TrainUnit
 
 
 class MockTrainUnit(DummyTrainUnit):

@@ -344,6 +344,9 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
     def __init__(self) -> None:
         super().__init__()
         self.train_progress = Progress()
+        self._train_step_requires_iterator: bool = _step_requires_iterator(
+            self.train_step
+        )
 
     def on_train_start(self, state: State) -> None:
         """Hook called before training starts.
@@ -414,8 +417,7 @@ class TrainUnit(AppStateMixin, _OnExceptionMixin, Generic[TTrainData], ABC):
         Returns:
             Either the next batch of train data or the iterator over the training dataset.
         """
-        pass_data_iter_to_step = _step_requires_iterator(self.train_step)
-        if pass_data_iter_to_step:
+        if self._train_step_requires_iterator:
             return cast(Iterator[TTrainData], data_iter)
 
         return cast(TTrainData, next(data_iter))
@@ -457,6 +459,9 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
     def __init__(self) -> None:
         super().__init__()
         self.eval_progress = Progress()
+        self._eval_step_requires_iterator: bool = _step_requires_iterator(
+            self.eval_step
+        )
 
     def on_eval_start(self, state: State) -> None:
         """Hook called before evaluation starts.
@@ -529,8 +534,7 @@ class EvalUnit(AppStateMixin, _OnExceptionMixin, Generic[TEvalData], ABC):
         Returns:
             Either the next batch of eval data or the iterator over the eval dataset.
         """
-        pass_data_iter_to_step = _step_requires_iterator(self.eval_step)
-        if pass_data_iter_to_step:
+        if self._eval_step_requires_iterator:
             return cast(Iterator[TEvalData], data_iter)
 
         return cast(TEvalData, next(data_iter))
@@ -577,6 +581,9 @@ class PredictUnit(
     def __init__(self) -> None:
         super().__init__()
         self.predict_progress = Progress()
+        self._predict_step_requires_iterator: bool = _step_requires_iterator(
+            self.predict_step
+        )
 
     def on_predict_start(self, state: State) -> None:
         """Hook called before prediction starts.
@@ -648,8 +655,7 @@ class PredictUnit(
         Returns:
             Either the next batch of predict data or the iterator over the predict dataset.
         """
-        pass_data_iter_to_step = _step_requires_iterator(self.predict_step)
-        if pass_data_iter_to_step:
+        if self._predict_step_requires_iterator:
             return cast(Iterator[TPredictData], data_iter)
 
         return cast(TPredictData, next(data_iter))
