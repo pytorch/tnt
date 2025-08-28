@@ -188,7 +188,7 @@ class _AutoUnitMixin(Generic[TData]):
         )
 
         self.detect_anomaly = detect_anomaly
-        if torch_compile_params is not None:
+        if torch_compile_params is not None and not torch_compile_params.disable:
             # torch compile is not compatible with detect anomaly
             # so we disable detect anomaly if torch compile is enabled
             self.detect_anomaly = None
