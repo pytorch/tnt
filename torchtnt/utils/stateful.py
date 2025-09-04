@@ -79,7 +79,7 @@ class DictStateful(Stateful, Dict[str, Any]):
     """A dictionary that implements the stateful interface that can be saved and loaded from checkpoints."""
 
     def state_dict(self) -> Dict[str, Any]:
-        return self
+        return self.copy()
 
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
         self.clear()
