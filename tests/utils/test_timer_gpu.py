@@ -20,11 +20,29 @@ class TimerGPUTest(unittest.TestCase):
     @skip_if_not_gpu
     @patch("torch.cuda.synchronize")
     def test_timer_synchronize(self, mock_synchronize: MagicMock) -> None:
-        """Make sure that torch.cuda.synchronize() is called when GPU is present."""
+        """Make sure that torch.cuda.synchronize() is not called by default when GPU is present."""
 
         start_event = torch.cuda.Event(enable_timing=True)
         end_event = torch.cuda.Event(enable_timing=True)
         timer = Timer()
+
+        # Do not explicitly call synchronize, timer must call it for test to pass.
+
+        with timer.time("action_1"):
+            start_event.record()
+            time.sleep(0.5)
+            end_event.record()
+
+        self.assertEqual(mock_synchronize.call_count, 0)
+
+    @skip_if_not_gpu
+    @patch("torch.cuda.synchronize")
+    def test_timer_synchronize_when_explicit(self, mock_synchronize: MagicMock) -> None:
+        """Make sure that torch.cuda.synchronize() is called when GPU is present and sync is explicit."""
+
+        start_event = torch.cuda.Event(enable_timing=True)
+        end_event = torch.cuda.Event(enable_timing=True)
+        timer = Timer(cuda_sync=True)
 
         # Do not explicitly call synchronize, timer must call it for test to pass.
 

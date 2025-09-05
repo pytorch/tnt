@@ -146,9 +146,7 @@ class Timer(TimerProtocol):
             raise ValueError(
                 "CUDA must be available in order to enable CUDA synchronization."
             )
-        self.cuda_sync: bool = (
-            cuda_sync if cuda_sync is not None else torch.cuda.is_available()
-        )
+        self.cuda_sync: bool = cuda_sync if cuda_sync is not None else False
         self.verbose = verbose
         self.recorded_durations: Dict[str, List[float]] = defaultdict(list)
 
