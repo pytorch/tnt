@@ -14,12 +14,16 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import total_ordering
 from operator import xor
-from typing import Dict, List, Literal, Optional, Pattern, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Pattern, Tuple, Union
 
 import fsspec
+import torch
 import torch.distributed as dist
 from fsspec.core import url_to_fs
 from pyre_extensions import none_throws
+from torch import nn
+from torch.distributed.tensor import distribute_tensor
+from torch.nn.modules.module import _IncompatibleKeys
 from torchtnt.utils.distributed import PGWrapper, rank_zero_read_and_broadcast
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -849,3 +853,50 @@ def _metadata_exists(
     fs: fsspec.AbstractFileSystem, dirpath: str, metadata_fname: str
 ) -> bool:
     return fs.exists(os.path.join(dirpath, metadata_fname))
+
+
+def load_from_full_model_state_dict(
+    model: torch.nn.Module,
+    full_sd: Dict[str, Any],
+    device: torch.device,
+    strict: bool = False,
+    cpu_offload: bool = False,
+    release_sd: bool = True,
+) -> _IncompatibleKeys:
+    """
+    Converting full state dict into a sharded state dict
+    and loading it into FSDP model
+    Args:
+        model (Module): Model to generate fully qualified names for cpu_state_dict
+        full_sd (dict[str, Any]): a full state dict to load into the model (mmap=True for efficient loading)
+        device (torch.device): device used to move full state dict tensors
+        strict (bool): flag to check if to load the model in strict mode
+        cpu_offload (bool): flag to check if offload to CPU is enabled
+        release_sd (bool): whether to release memory of full_sd to save ram usage
+    Returns:
+        ``NamedTuple`` with ``missing_keys`` and ``unexpected_keys`` fields:
+            * **missing_keys** is a list of str containing the missing keys
+            * **unexpected_keys** is a list of str containing the unexpected keys
+    """
+    meta_sharded_sd = model.state_dict()
+    sharded_sd = {}
+    for param_name, full_tensor in sorted(full_sd.items()):
+        sharded_meta_param = meta_sharded_sd.get(param_name)
+        assert sharded_meta_param is not None, f"{param_name} not found in model"
+        full_tensor = full_tensor.to(sharded_meta_param.dtype).to(device)
+        if not hasattr(sharded_meta_param, "device_mesh"):
+            # In cases where parts of the model aren't sharded, some parameters will be plain tensors
+            sharded_tensor = full_tensor
+        else:
+            sharded_tensor = distribute_tensor(
+                full_tensor,
+                sharded_meta_param.device_mesh,
+                sharded_meta_param.placements,
+            )
+        if cpu_offload:
+            sharded_tensor = sharded_tensor.cpu()
+        sharded_sd[param_name] = nn.Parameter(sharded_tensor)
+        if release_sd:
+            full_sd[param_name] = None
+    # choose `assign=True` since we cannot call `copy_` on meta tensor
+    return model.load_state_dict(sharded_sd, strict=strict, assign=True)
