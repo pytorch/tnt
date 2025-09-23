@@ -3,6 +3,7 @@ numpy==1.24.4
 fsspec
 tensorboard
 packaging
+importlib-metadata;python_version<'3.8'
 psutil
 pyre_extensions
 typing_extensions
