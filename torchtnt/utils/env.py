@@ -26,6 +26,7 @@ from torchtnt.utils.distributed import (
 from typing_extensions import Literal
 
 _log: logging.Logger = logging.getLogger(__name__)
+_log.setLevel(logging.DEBUG)  # Set logger level to DEBUG to see all messages
 
 
 def _check_dist_env() -> bool:
