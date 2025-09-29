@@ -1022,7 +1022,7 @@ class DummyStorageReader(FileSystemReader):
     def __init__(self, path: str) -> None:
         super().__init__(path)
 
-    def set_up_storage_writer(
+    def set_up_storage_reader(
         self, is_coordinator: bool, *args: Any, **kwargs: Any
     ) -> None:
         pass
