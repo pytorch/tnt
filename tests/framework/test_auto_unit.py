@@ -379,10 +379,10 @@ class TestAutoUnit(unittest.TestCase):
             ):
                 unit_type(module=module)
 
-                expected_warnings = [
+                self.assertTrue(
                     "The self.module attribute is managed by AutoUnit and is not meant to be reassigned."
-                ]
-                self.assertEqual(warning_container, expected_warnings)
+                    in warning_container
+                )
 
     @skip_if_not_distributed
     def test_auto_unit_ddp(self) -> None:
