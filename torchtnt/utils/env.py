@@ -26,7 +26,6 @@ from torchtnt.utils.distributed import (
 from typing_extensions import Literal
 
 _log: logging.Logger = logging.getLogger(__name__)
-_log.setLevel(logging.DEBUG)  # Set logger level to DEBUG to see all messages
 
 
 def _check_dist_env() -> bool:
@@ -136,7 +135,7 @@ def seed(seed: int, deterministic: Optional[Union[str, int]] = None) -> None:
         raise ValueError(
             f"Invalid seed value provided: {seed}. Value must be in the range [{min_val}, {max_val}]"
         )
-    _log.debug(f"Setting seed to {seed}")
+    _log.info(f"Setting seed to {seed}")
 
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -144,15 +143,15 @@ def seed(seed: int, deterministic: Optional[Union[str, int]] = None) -> None:
     os.environ["PYTHONHASHSEED"] = str(seed)
 
     if deterministic is not None:
-        _log.debug(f"Setting deterministic debug mode to {deterministic}")
+        _log.info(f"Setting deterministic debug mode to {deterministic}")
         torch.set_deterministic_debug_mode(deterministic)
         deterministic_debug_mode = torch.get_deterministic_debug_mode()
         if deterministic_debug_mode == 0:
-            _log.debug("Disabling cuDNN deterministic mode")
+            _log.info("Disabling cuDNN deterministic mode")
             torch.backends.cudnn.deterministic = False
             torch.backends.cudnn.benchmark = True
         else:
-            _log.debug("Enabling cuDNN deterministic mode")
+            _log.info("Enabling cuDNN deterministic mode")
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
             # reference: https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility

@@ -14,7 +14,6 @@ import torch
 from typing_extensions import final, Literal
 
 _log: logging.Logger = logging.getLogger(__name__)
-_log.setLevel(logging.DEBUG)
 
 
 @final
