@@ -322,6 +322,29 @@ class PrepareModelTest(unittest.TestCase):
             module, mesh=mock_mesh, reshard_after_forward=False
         )
 
+    @patch("torchtnt.utils.prepare_module.fully_shard")
+    def test_fsdp2_shard_on_largest_dim(self, mock_fully_shard: Mock) -> None:
+        """
+        Test that shard on largest dim function is used
+        """
+
+        module = torch.nn.Linear(2, 2, device="cpu")
+        mock_mesh = MagicMock(spec=DeviceMesh)
+        mock_global_mesh = MagicMock(spec=GlobalMeshCoordinator)
+        mock_global_mesh.dp_mesh = mock_mesh
+
+        strategy = FSDP2Strategy(
+            modules_to_shard=[torch.nn.Linear], shard_on_largest_dim=True
+        )
+        module = prepare_fsdp2(
+            module,
+            torch.device("cpu"),
+            strategy,
+            global_mesh=mock_global_mesh,
+        )
+        # Check that "shard_placement_fn" is in the kwargs passed to fully_shard
+        self.assertIn("shard_placement_fn", mock_fully_shard.call_args.kwargs)
+
     @patch("torchtnt.utils.prepare_module._prepare_module_2d")
     @patch("torchtnt.utils.prepare_module._prepare_module_1d")
     def test_prepare_module_dispatching(

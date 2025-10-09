@@ -41,8 +41,9 @@ from torch.distributed.checkpoint.state_dict import (
     get_optimizer_state_dict,
     set_optimizer_state_dict,
 )
-from torch.distributed.device_mesh import init_device_mesh
+from torch.distributed.device_mesh import DeviceMesh, init_device_mesh
 from torch.distributed.fsdp.fully_sharded_data_parallel import FullStateDictConfig
+from torch.distributed.tensor import Shard
 from torch.distributed.tensor.parallel import parallelize_module
 from torch.distributed.tensor.parallel.style import ParallelStyle
 from torchtnt.utils.device_mesh import GlobalMeshCoordinator
@@ -199,6 +200,8 @@ class FSDP2Strategy(Strategy):
         reshard_after_forward: If True, reshards parameters post-forward pass to save memory.
         mp_policy: Controls mixed precision policy. If only dtype is provided, it will be used to cast all relevant parts of model. If None, no mixed precision is used
         cpu_offload: If True, enables CPU offloading of model parameters to reduce GPU memory usage.
+        shard_on_largest_dim: If True, shards on the largest dimension of the parameter. By default FSDP shards on the first dimension, and if it is small will end up replicated on all ranks, which ends up increasing
+            memory usage as world size increases.
 
     Note:
         It is recommended to specify specific modules to shard to avoid unnecessary sharding of all submodules, which has
@@ -239,6 +242,9 @@ class FSDP2Strategy(Strategy):
     reshard_after_forward: Union[bool, int] = True
     mp_policy: Optional[Union[str, torch.dtype, MixedPrecisionPolicy]] = None
     cpu_offload: bool = False
+
+    # experimental flag
+    shard_on_largest_dim: bool = False
 
 
 @dataclass
@@ -409,6 +415,7 @@ def prepare_fsdp2(
     strategy = strategy or FSDP2Strategy()
 
     # prepare kwargs for fully_shard api
+    mesh: DeviceMesh
     if global_mesh is None:
         pg = dist.distributed_c10d._get_default_group()
         mesh = init_device_mesh(device.type, mesh_shape=(pg.size(),))
@@ -438,6 +445,22 @@ def prepare_fsdp2(
                 reduce_dtype=mp_policy,
                 output_dtype=mp_policy,
             )
+    if strategy.shard_on_largest_dim:
+
+        # From the docs: https://docs.pytorch.org/docs/stable/distributed.fsdp.fully_shard.html
+        # "If sharding on a nonzero dim, we currently require even sharding, i.e. the tensor dim size on that dim must be divisible by the FSDP shard mesh size."
+
+        # So we shard on a candidate nonzero dim only when it's divisible by the fsdp world size
+
+        def _shard_placement_fn(param: torch.nn.Parameter) -> Optional[Shard]:
+            largest_dim_size = max(param.shape)
+            idx = param.shape.index(largest_dim_size)
+            if idx != 0 and largest_dim_size % mesh.size() != 0:
+                # not divisible, so we return None to shard on default dim 0
+                return None
+            return Shard(idx)
+
+        fsdp_kwargs["shard_placement_fn"] = _shard_placement_fn
 
     # parse out the modules_to_shard argument
     modules_to_shard = strategy.modules_to_shard
