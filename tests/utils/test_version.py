@@ -8,10 +8,15 @@
 # pyre-strict
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import torch
 from packaging.version import Version
+
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 
 from torchtnt.utils import version
 
@@ -46,6 +51,18 @@ class TestVersion(unittest.TestCase):
         with patch.object(torch, "__version__", "1.12.0"):
             self.assertNotEqual(version.get_torch_version(), Version("1.8.3"))
             self.assertEqual(version.get_torch_version(), Version("1.12.0"))
+
+    def test_get_torch_version_importlib(self) -> None:
+        with patch.object(torch, "__version__", new_callable=PropertyMock):
+            delattr(torch, "__version__")
+
+            with patch.object(importlib_metadata, "version", return_value="1.8.3"):
+                self.assertEqual(version.get_torch_version(), Version("1.8.3"))
+                self.assertNotEqual(version.get_torch_version(), Version("1.12.0"))
+
+            with patch.object(importlib_metadata, "version", return_value="1.12.0"):
+                self.assertNotEqual(version.get_torch_version(), Version("1.8.3"))
+                self.assertEqual(version.get_torch_version(), Version("1.12.0"))
 
     def test_torch_version_comparators(self) -> None:
         with patch.object(torch, "__version__", "2.0.0a0"):
