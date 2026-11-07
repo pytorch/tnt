@@ -92,6 +92,13 @@ class DistributedCheckpointSaverTest(unittest.TestCase):
         # needed for github test, to reset WORLD_SIZE env var
         os.environ.pop("WORLD_SIZE", None)
 
+    def test_file_system_is_used_for_checkpoint_management(self) -> None:
+        file_system = MagicMock()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            dcp_cb = DistributedCheckpointSaver(temp_dir, file_system=file_system)
+
+        self.assertIs(dcp_cb._checkpoint_manager._file_system, file_system)
+
     @patch("torchtnt.framework.callbacks.dcp_saver.dcp.save")
     def test_sync_save_exposes_completion_metadata(self, save: MagicMock) -> None:
         metadata = Metadata(state_dict_metadata={})
